@@ -1,4 +1,5 @@
 Copyright (c) 2024 Humanspeak, Inc.
+
 Copyright (c) 2022-2024 Bryan Lee
 
 Permission is hereby granted, free of charge, to any person obtaining
