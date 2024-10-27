@@ -2,7 +2,7 @@
 module.exports = {
   content: [
     './src/**/*.{html,js,svelte,ts,md}',
-    './node_modules/@svelteness/kit-docs/client/**/*.svelte'
+    './node_modules/@svelteness/kit-docs/client/**/*.svelte',
   ],
   darkMode: 'class',
   corePlugins: {
@@ -44,11 +44,7 @@ module.exports = {
       typography: kitDocsTypography,
     },
   },
-  plugins: [
-    require('@tailwindcss/typography'),
-    kitDocsVariants,
-    require('./tailwindcss/size.cjs')
-  ],
+  plugins: [require('@tailwindcss/typography'), kitDocsVariants, require('./tailwindcss/size.cjs')],
 };
 
 function kitDocsVariants({ addVariant }) {

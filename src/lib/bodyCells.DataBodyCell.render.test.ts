@@ -1,77 +1,75 @@
-import { DataBodyCell } from './bodyCells.js';
-import { DataBodyRow } from './bodyRows.js';
-import { DataColumn } from './columns.js';
-import type { TableState } from './createViewModel.js';
+import { DataBodyCell } from './bodyCells.js'
+import { DataBodyRow } from './bodyRows.js'
+import { DataColumn } from './columns.js'
+import type { TableState } from './createViewModel.js'
 
 interface User {
-	firstName: string;
-	lastName: string;
-	age: number;
-	visits: number;
-	progress: number;
-	status: string;
+    firstName: string
+    lastName: string
+    age: number
+    visits: number
+    progress: number
+    status: string
 }
 
 const user: User = {
-	firstName: 'Adam',
-	lastName: 'Smith',
-	age: 43,
-	visits: 2,
-	progress: 50,
-	status: 'complicated',
-};
+    firstName: 'Adam',
+    lastName: 'Smith',
+    age: 43,
+    visits: 2,
+    progress: 50,
+    status: 'complicated'
+}
 
 const row = new DataBodyRow({
-	id: '0',
-	dataId: '0',
-	original: user,
-	cells: [],
-	cellForId: {},
-});
+    id: '0',
+    dataId: '0',
+    original: user,
+    cells: [],
+    cellForId: {}
+})
 
 const column = new DataColumn<User>({
-	header: '',
-	accessor: 'firstName',
-});
+    header: '',
+    accessor: 'firstName'
+})
 
 it('renders static label', () => {
-	const actual = new DataBodyCell<User>({
-		column,
-		row,
-		value: 'Adam',
-	});
+    const actual = new DataBodyCell<User>({
+        column,
+        row,
+        value: 'Adam'
+    })
 
-	expect(actual.render()).toBe('Adam');
-});
+    expect(actual.render()).toBe('Adam')
+})
 
 const state = {
-	columns: [],
-} as unknown as TableState<User>;
+    columns: []
+} as unknown as TableState<User>
 
 it('renders dynamic label with state', () => {
-	const actual = new DataBodyCell<User>({
-		column,
-		row,
-		value: 'Adam',
-		label: ({ value }, { columns }) =>
-			`${String(value).toLowerCase()} with ${columns.length} columns`,
-	});
+    const actual = new DataBodyCell<User>({
+        column,
+        row,
+        value: 'Adam',
+        label: ({ value }, { columns }) => `${String(value).toLowerCase()} with ${columns.length} columns`
+    })
 
-	actual.injectState(state);
+    actual.injectState(state)
 
-	expect(actual.render()).toBe('adam with 0 columns');
-});
+    expect(actual.render()).toBe('adam with 0 columns')
+})
 
 it('throws if rendering dynamically without state', () => {
-	const actual = new DataBodyCell<User>({
-		column,
-		row,
-		value: 'Adam',
-		label: ({ value }, { columns }) =>
-			`${String(value).toLowerCase()} with ${columns.length} columns`,
-	});
+    const actual = new DataBodyCell<User>({
+        column,
+        row,
+        value: 'Adam',
+        label: ({ value }, { columns }) => `${String(value).toLowerCase()} with ${columns.length} columns`
+    })
 
-	expect(() => {
-		actual.render();
-	}).toThrowError('Missing `state` reference');
-});
+    expect(() => {
+        actual.render()
+    }).toThrowError('Missing `state` reference')
+})

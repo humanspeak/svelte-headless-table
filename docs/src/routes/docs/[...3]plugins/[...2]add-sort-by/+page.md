@@ -89,7 +89,7 @@ If `leftValue` should come before `rightValue`, return a negative number.
 
 If `rightValue` should come before `leftValue`, return a positive number.
 
-Otherwise if both values are equal in sorting priority, return 0. 
+Otherwise if both values are equal in sorting priority, return 0.
 
 ### `getSortValue?: (value) => string | number | (string | number)[]`
 

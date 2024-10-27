@@ -24,13 +24,13 @@ Visit the [documentation](https://svelte-headless-table.bryanmylee.com/) for cod
 
 Svelte Headless Table is designed to work **seamlessly** with Svelte. If you love Svelte, you will love Svelte Headless Table.
 
-- **Full TypeScript support**
-- Compatible with **SvelteKit** and SSR
-- Manage state with Svelte stores
-- Headless and fully customizable
-- Intuitive column-first declarative model
-- Highly performant
-- Feature-rich
+-   **Full TypeScript support**
+-   Compatible with **SvelteKit** and SSR
+-   Manage state with Svelte stores
+-   Headless and fully customizable
+-   Intuitive column-first declarative model
+-   Highly performant
+-   Feature-rich
 
 ## All the features you could ever need!
 
@@ -40,18 +40,18 @@ Easily extend Svelte Headless Table with complex **sorting**, **filtering**, **g
 
 ### Plugin roadmap
 
-- [x] [addSortBy](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-sort-by)
-- [x] [addColumnFilters](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-column-filters)
-- [x] [addTableFilter](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-table-filter)
-- [x] [addColumnOrder](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-column-order)
-- [x] [addHiddenColumns](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-hidden-columns)
-- [x] [addPagination](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-pagination)
-- [x] [addSubRows](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-sub-rows)
-- [x] [addGroupBy](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-group-by)
-- [x] [addExpandedRows](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-expanded-rows)
-- [x] [addSelectedRows](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-selected-rows)
-- [x] [addResizedColumns](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-resized-columns)
-- [x] [addGridLayout](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-grid-layout)
+-   [x] [addSortBy](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-sort-by)
+-   [x] [addColumnFilters](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-column-filters)
+-   [x] [addTableFilter](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-table-filter)
+-   [x] [addColumnOrder](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-column-order)
+-   [x] [addHiddenColumns](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-hidden-columns)
+-   [x] [addPagination](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-pagination)
+-   [x] [addSubRows](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-sub-rows)
+-   [x] [addGroupBy](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-group-by)
+-   [x] [addExpandedRows](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-expanded-rows)
+-   [x] [addSelectedRows](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-selected-rows)
+-   [x] [addResizedColumns](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-resized-columns)
+-   [x] [addGridLayout](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-grid-layout)
 
 ## Examples
 
