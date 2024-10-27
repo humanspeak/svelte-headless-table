@@ -18,7 +18,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+ssh://git@github.com/bryanmylee/svelte-headless-table.git"
+		"url": "git+ssh://git@github.com/humanspeak/svelte-headless-table.git"
 	},
 	"keywords": [
 		"svelte",
