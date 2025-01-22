@@ -64,9 +64,9 @@
         "test:watch": "vitest"
     },
     "dependencies": {
-        "@humanspeak/svelte-keyed": "^4.0.0",
+        "@humanspeak/svelte-keyed": "^5.0.0",
         "@humanspeak/svelte-render": "^5.0.0",
-        "@humanspeak/svelte-subscribe": "^4.0.0"
+        "@humanspeak/svelte-subscribe": "^5.0.0"
     },
     "devDependencies": {
         "@sveltejs/adapter-auto": "^3.0.0",
