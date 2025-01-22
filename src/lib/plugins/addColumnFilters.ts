@@ -1,4 +1,4 @@
-import { keyed } from 'svelte-keyed'
+import { keyed } from '@humanspeak/svelte-keyed'
 import type { RenderConfig } from '@humanspeak/svelte-subscribe'
 import type { BodyRow } from '../bodyRows.js'
 import type { TablePlugin, NewTablePropSet, DeriveRowsFn } from '../types/TablePlugin.js'

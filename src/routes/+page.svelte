@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { derived, readable, get } from 'svelte/store';
-	import { createRender } from '@humanspeak/svelte-subscribe';
+	import { createRender } from '@humanspeak/svelte-render';
 	import { Render, Subscribe, createTable } from '../lib/index.js';
 	import {
 		addColumnFilters,
