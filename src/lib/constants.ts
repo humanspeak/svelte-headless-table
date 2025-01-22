@@ -1,1 +1,1 @@
-export const NBSP = ' ';
+export const NBSP = ' '

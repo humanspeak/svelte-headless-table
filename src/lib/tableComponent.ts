@@ -1,59 +1,59 @@
-import { derived, type Readable } from 'svelte/store';
-import { derivedKeys } from 'svelte-subscribe';
+import { derived, type Readable } from 'svelte/store'
+import { derivedKeys } from '@humanspeak/svelte-subscribe'
 import type {
-	AnyPlugins,
-	ComponentKeys,
-	ElementHook,
-	PluginTablePropSet,
-} from './types/TablePlugin.js';
-import type { TableState } from './createViewModel.js';
-import type { Clonable } from './utils/clone.js';
-import { finalizeAttributes, mergeAttributes } from './utils/attributes.js';
+    AnyPlugins,
+    ComponentKeys,
+    ElementHook,
+    PluginTablePropSet
+} from './types/TablePlugin.js'
+import type { TableState } from './createViewModel.js'
+import type { Clonable } from './utils/clone.js'
+import { finalizeAttributes, mergeAttributes } from './utils/attributes.js'
 
 export interface TableComponentInit {
-	id: string;
+    id: string
 }
 
 export abstract class TableComponent<Item, Plugins extends AnyPlugins, Key extends ComponentKeys>
-	implements Clonable<TableComponent<Item, Plugins, Key>>
+    implements Clonable<TableComponent<Item, Plugins, Key>>
 {
-	id: string;
-	constructor({ id }: TableComponentInit) {
-		this.id = id;
-	}
+    id: string
+    constructor({ id }: TableComponentInit) {
+        this.id = id
+    }
 
-	private attrsForName: Record<string, Readable<Record<string, unknown>>> = {};
-	attrs(): Readable<Record<string, unknown>> {
-		return derived(Object.values(this.attrsForName), ($attrsArray) => {
-			let $mergedAttrs: Record<string, unknown> = {};
-			$attrsArray.forEach(($attrs) => {
-				$mergedAttrs = mergeAttributes($mergedAttrs, $attrs);
-			});
-			return finalizeAttributes($mergedAttrs);
-		});
-	}
+    private attrsForName: Record<string, Readable<Record<string, unknown>>> = {}
+    attrs(): Readable<Record<string, unknown>> {
+        return derived(Object.values(this.attrsForName), ($attrsArray) => {
+            let $mergedAttrs: Record<string, unknown> = {}
+            $attrsArray.forEach(($attrs) => {
+                $mergedAttrs = mergeAttributes($mergedAttrs, $attrs)
+            })
+            return finalizeAttributes($mergedAttrs)
+        })
+    }
 
-	private propsForName: Record<string, Readable<Record<string, unknown>>> = {};
-	props(): Readable<PluginTablePropSet<Plugins>[Key]> {
-		return derivedKeys(this.propsForName) as Readable<PluginTablePropSet<Plugins>[Key]>;
-	}
+    private propsForName: Record<string, Readable<Record<string, unknown>>> = {}
+    props(): Readable<PluginTablePropSet<Plugins>[Key]> {
+        return derivedKeys(this.propsForName) as Readable<PluginTablePropSet<Plugins>[Key]>
+    }
 
-	state?: TableState<Item, Plugins>;
-	injectState(state: TableState<Item, Plugins>) {
-		this.state = state;
-	}
+    state?: TableState<Item, Plugins>
+    injectState(state: TableState<Item, Plugins>) {
+        this.state = state
+    }
 
-	applyHook(
-		pluginName: string,
-		hook: ElementHook<Record<string, unknown>, Record<string, unknown>>
-	) {
-		if (hook.props !== undefined) {
-			this.propsForName[pluginName] = hook.props;
-		}
-		if (hook.attrs !== undefined) {
-			this.attrsForName[pluginName] = hook.attrs;
-		}
-	}
+    applyHook(
+        pluginName: string,
+        hook: ElementHook<Record<string, unknown>, Record<string, unknown>>
+    ) {
+        if (hook.props !== undefined) {
+            this.propsForName[pluginName] = hook.props
+        }
+        if (hook.attrs !== undefined) {
+            this.attrsForName[pluginName] = hook.attrs
+        }
+    }
 
-	abstract clone(): TableComponent<Item, Plugins, Key>;
+    abstract clone(): TableComponent<Item, Plugins, Key>
 }

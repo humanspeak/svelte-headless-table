@@ -5,12 +5,12 @@
 
 <div align="center">
 
-[![npm version](http://img.shields.io/npm/v/svelte-headless-table.svg)](https://www.npmjs.com/package/svelte-headless-table)
-[![npm downloads](https://img.shields.io/npm/dm/svelte-headless-table.svg)](https://www.npmjs.com/package/svelte-headless-table)
-![license](https://img.shields.io/npm/l/svelte-headless-table)
-![build](https://img.shields.io/github/actions/workflow/status/bryanmylee/svelte-headless-table/publish.yml)
+[![npm version](http://img.shields.io/npm/v/@humanspeak/svelte-headless-table.svg)](https://www.npmjs.com/package/svelte-headless-table)
+[![npm downloads](https://img.shields.io/npm/dm/@humanspeak/svelte-headless-table.svg)](https://www.npmjs.com/package/svelte-headless-table)
+![license](https://img.shields.io/npm/l/@humanspeak/svelte-headless-table)
+![build](https://img.shields.io/github/actions/workflow/status/humanspeak/svelte-headless-table/publish.yml)
 
-<!--[![coverage](https://coveralls.io/repos/github/bryanmylee/svelte-headless-table/badge.svg?branch=main)](https://coveralls.io/github/bryanmylee/svelte-headless-table?branch=main)-->
+<!--[![coverage](https://coveralls.io/repos/github/humanspeak/svelte-headless-table/badge.svg?branch=main)](https://coveralls.io/github/humanspeak/svelte-headless-table?branch=main)-->
 
 </div>
 
