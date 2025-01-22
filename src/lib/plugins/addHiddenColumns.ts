@@ -1,37 +1,37 @@
-import type { DeriveFlatColumnsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js';
-import { derived, writable, type Writable } from 'svelte/store';
+import type { DeriveFlatColumnsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
+import { derived, writable, type Writable } from 'svelte/store'
 
 export interface HiddenColumnsConfig {
-	initialHiddenColumnIds?: string[];
+    initialHiddenColumnIds?: string[]
 }
 
 export interface HiddenColumnsState {
-	hiddenColumnIds: Writable<string[]>;
+    hiddenColumnIds: Writable<string[]>
 }
 
 export const addHiddenColumns =
-	<Item>({ initialHiddenColumnIds = [] }: HiddenColumnsConfig = {}): TablePlugin<
-		Item,
-		HiddenColumnsState,
-		Record<string, never>,
-		NewTablePropSet<never>
-	> =>
-	() => {
-		const hiddenColumnIds = writable<string[]>(initialHiddenColumnIds);
+    <Item>({ initialHiddenColumnIds = [] }: HiddenColumnsConfig = {}): TablePlugin<
+        Item,
+        HiddenColumnsState,
+        Record<string, never>,
+        NewTablePropSet<never>
+    > =>
+    () => {
+        const hiddenColumnIds = writable<string[]>(initialHiddenColumnIds)
 
-		const pluginState: HiddenColumnsState = { hiddenColumnIds };
+        const pluginState: HiddenColumnsState = { hiddenColumnIds }
 
-		const deriveFlatColumns: DeriveFlatColumnsFn<Item> = (flatColumns) => {
-			return derived([flatColumns, hiddenColumnIds], ([$flatColumns, $hiddenColumnIds]) => {
-				if ($hiddenColumnIds.length === 0) {
-					return $flatColumns;
-				}
-				return $flatColumns.filter((c) => !$hiddenColumnIds.includes(c.id));
-			});
-		};
+        const deriveFlatColumns: DeriveFlatColumnsFn<Item> = (flatColumns) => {
+            return derived([flatColumns, hiddenColumnIds], ([$flatColumns, $hiddenColumnIds]) => {
+                if ($hiddenColumnIds.length === 0) {
+                    return $flatColumns
+                }
+                return $flatColumns.filter((c) => !$hiddenColumnIds.includes(c.id))
+            })
+        }
 
-		return {
-			pluginState,
-			deriveFlatColumns,
-		};
-	};
+        return {
+            pluginState,
+            deriveFlatColumns
+        }
+    }

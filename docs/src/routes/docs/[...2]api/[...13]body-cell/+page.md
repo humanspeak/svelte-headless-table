@@ -71,7 +71,6 @@ Returns `true` if the body cell is an instance of [`DataBodyCell`](#databodycell
 
 Returns `true` if the body cell is an instance of [`DisplayBodyCell`](#displaybodycell).
 
-
 <br/>
 
 # Variants

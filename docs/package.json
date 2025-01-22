@@ -2,15 +2,15 @@
   "name": "svelte-headless-table.bryanmylee.com",
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
     "build": "vite build",
-    "package": "svelte-kit package",
-    "preview": "vite preview",
-    "prepare": "svelte-kit sync",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
+    "dev": "vite dev",
+    "format": "prettier --ignore-path .gitignore --write --plugin-search-dir=. .",
     "lint": "prettier --ignore-path .gitignore --check --plugin-search-dir=. . && eslint --ignore-path .gitignore .",
-    "format": "prettier --ignore-path .gitignore --write --plugin-search-dir=. ."
+    "package": "svelte-kit package",
+    "prepare": "svelte-kit sync",
+    "preview": "vite preview"
   },
   "devDependencies": {
     "@iconify-json/ic": "^1.1.13",
