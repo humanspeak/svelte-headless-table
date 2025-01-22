@@ -1,5 +1,5 @@
 import { derived, type Readable } from 'svelte/store'
-import { derivedKeys } from 'svelte-subscribe'
+import { derivedKeys } from '@humanspeak/svelte-subscribe'
 import type {
     AnyPlugins,
     ComponentKeys,

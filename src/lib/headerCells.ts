@@ -3,7 +3,7 @@ import { NBSP } from './constants.js'
 import { TableComponent } from './tableComponent.js'
 import type { HeaderLabel } from './types/Label.js'
 import type { AnyPlugins } from './types/TablePlugin.js'
-import type { RenderConfig } from 'svelte-render'
+import type { RenderConfig } from '@humanspeak/svelte-subscribe'
 
 export type HeaderCellInit<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     id: string

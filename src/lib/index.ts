@@ -1,6 +1,6 @@
 // components
-export * from 'svelte-render'
-export { Subscribe } from 'svelte-subscribe'
+export * from '@humanspeak/svelte-subscribe'
+export { Subscribe } from '@humanspeak/svelte-subscribe'
 // table core
 export { createTable } from './createTable.js'
 // models

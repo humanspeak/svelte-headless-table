@@ -1,5 +1,5 @@
 import { keyed } from 'svelte-keyed'
-import type { RenderConfig } from 'svelte-render'
+import type { RenderConfig } from '@humanspeak/svelte-subscribe'
 import type { BodyRow } from '../bodyRows.js'
 import type { TablePlugin, NewTablePropSet, DeriveRowsFn } from '../types/TablePlugin.js'
 import { derived, writable, type Readable, type Writable } from 'svelte/store'

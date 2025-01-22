@@ -1,7 +1,7 @@
 import type { BodyRow } from '../bodyRows.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { recordSetStore, type RecordSetStore } from '../utils/store.js'
-import { keyed } from 'svelte-keyed'
+import { keyed } from '@humanspeak/svelte-keyed'
 import { derived, readable, type Readable, type Writable } from 'svelte/store'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
