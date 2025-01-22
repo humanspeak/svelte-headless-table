@@ -1,6 +1,6 @@
 {
     "name": "@humanspeak/svelte-headless-table",
-    "version": "4.9.9",
+    "version": "5.0.0",
     "description": "Unopinionated and extensible data tables for Svelte",
     "keywords": [
         "svelte",
