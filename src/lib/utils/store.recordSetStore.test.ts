@@ -1,191 +1,191 @@
-import { get } from 'svelte/store'
-import { recordSetStore } from './store.js'
+import { get } from 'svelte/store';
+import { recordSetStore } from './store.js';
 
 it('initializes correctly', () => {
-    const actual = recordSetStore()
+	const actual = recordSetStore();
 
-    const expected: Record<string, never> = {}
+	const expected: Record<string, never> = {};
 
-    expect(get(actual)).toStrictEqual(expected)
-})
+	expect(get(actual)).toStrictEqual(expected);
+});
 
 it('initializes with values correctly', () => {
-    const actual = recordSetStore<number>({
-        1: true,
-        2: true,
-        3: true
-    })
+	const actual = recordSetStore<number>({
+		1: true,
+		2: true,
+		3: true,
+	});
 
-    const expected = {
-        1: true,
-        2: true,
-        3: true
-    }
+	const expected = {
+		1: true,
+		2: true,
+		3: true,
+	};
 
-    expect(get(actual)).toStrictEqual(expected)
-})
+	expect(get(actual)).toStrictEqual(expected);
+});
 
 it('toggles an existing value to remove it', () => {
-    const actual = recordSetStore<number>({
-        1: true,
-        2: true,
-        3: true
-    })
+	const actual = recordSetStore<number>({
+		1: true,
+		2: true,
+		3: true,
+	});
 
-    actual.toggle(1)
+	actual.toggle(1);
 
-    const expected = {
-        2: true,
-        3: true
-    }
+	const expected = {
+		2: true,
+		3: true,
+	};
 
-    expect(get(actual)).toStrictEqual(expected)
-})
+	expect(get(actual)).toStrictEqual(expected);
+});
 
 it('toggles the last value to remove it', () => {
-    const actual = recordSetStore<number>({
-        1: true,
-        2: true,
-        3: true
-    })
+	const actual = recordSetStore<number>({
+		1: true,
+		2: true,
+		3: true,
+	});
 
-    actual.toggle(3)
+	actual.toggle(3);
 
-    const expected = {
-        1: true,
-        2: true
-    }
+	const expected = {
+		1: true,
+		2: true,
+	};
 
-    expect(get(actual)).toStrictEqual(expected)
-})
+	expect(get(actual)).toStrictEqual(expected);
+});
 
 it('toggles a non-existing value to add it', () => {
-    const actual = recordSetStore<number>({
-        1: true,
-        2: true,
-        3: true
-    })
+	const actual = recordSetStore<number>({
+		1: true,
+		2: true,
+		3: true,
+	});
 
-    actual.toggle(4)
+	actual.toggle(4);
 
-    const expected = {
-        1: true,
-        2: true,
-        3: true,
-        4: true
-    }
+	const expected = {
+		1: true,
+		2: true,
+		3: true,
+		4: true,
+	};
 
-    expect(get(actual)).toStrictEqual(expected)
-})
+	expect(get(actual)).toStrictEqual(expected);
+});
 
 it('adds a value', () => {
-    const actual = recordSetStore<number>({
-        1: true,
-        2: true,
-        3: true
-    })
+	const actual = recordSetStore<number>({
+		1: true,
+		2: true,
+		3: true,
+	});
 
-    actual.add(4)
+	actual.add(4);
 
-    const expected = {
-        1: true,
-        2: true,
-        3: true,
-        4: true
-    }
+	const expected = {
+		1: true,
+		2: true,
+		3: true,
+		4: true,
+	};
 
-    expect(get(actual)).toStrictEqual(expected)
-})
+	expect(get(actual)).toStrictEqual(expected);
+});
 
 it('adds an existing value and changes nothing', () => {
-    const actual = recordSetStore<number>({
-        1: true,
-        2: true,
-        3: true
-    })
+	const actual = recordSetStore<number>({
+		1: true,
+		2: true,
+		3: true,
+	});
 
-    actual.add(3)
+	actual.add(3);
 
-    const expected = {
-        1: true,
-        2: true,
-        3: true
-    }
+	const expected = {
+		1: true,
+		2: true,
+		3: true,
+	};
 
-    expect(get(actual)).toStrictEqual(expected)
-})
+	expect(get(actual)).toStrictEqual(expected);
+});
 
 it('removes a value', () => {
-    const actual = recordSetStore<number>({
-        1: true,
-        2: true,
-        3: true
-    })
+	const actual = recordSetStore<number>({
+		1: true,
+		2: true,
+		3: true,
+	});
 
-    actual.remove(3)
+	actual.remove(3);
 
-    const expected = {
-        1: true,
-        2: true
-    }
+	const expected = {
+		1: true,
+		2: true,
+	};
 
-    expect(get(actual)).toStrictEqual(expected)
-})
+	expect(get(actual)).toStrictEqual(expected);
+});
 
 it('removes a non-existing value and changes nothing', () => {
-    const actual = recordSetStore<number>({
-        1: true,
-        2: true,
-        3: true
-    })
+	const actual = recordSetStore<number>({
+		1: true,
+		2: true,
+		3: true,
+	});
 
-    actual.remove(4)
+	actual.remove(4);
 
-    const expected = {
-        1: true,
-        2: true,
-        3: true
-    }
+	const expected = {
+		1: true,
+		2: true,
+		3: true,
+	};
 
-    expect(get(actual)).toStrictEqual(expected)
-})
+	expect(get(actual)).toStrictEqual(expected);
+});
 
 it('resets the set', () => {
-    const actual = recordSetStore<number>({
-        1: true,
-        2: true,
-        3: true
-    })
+	const actual = recordSetStore<number>({
+		1: true,
+		2: true,
+		3: true,
+	});
 
-    actual.clear()
+	actual.clear();
 
-    const expected = {}
+	const expected = {};
 
-    expect(get(actual)).toStrictEqual(expected)
-})
+	expect(get(actual)).toStrictEqual(expected);
+});
 
 it('removes false values on init', () => {
-    const actual = recordSetStore<number>({
-        1: false,
-        2: true,
-        3: true
-    })
+	const actual = recordSetStore<number>({
+		1: false,
+		2: true,
+		3: true,
+	});
 
-    const expected = { 2: true, 3: true }
+	const expected = { 2: true, 3: true };
 
-    expect(get(actual)).toStrictEqual(expected)
-})
+	expect(get(actual)).toStrictEqual(expected);
+});
 
 it('removes false values on update', () => {
-    const actual = recordSetStore<number>({
-        1: true,
-        2: true,
-        3: true
-    })
+	const actual = recordSetStore<number>({
+		1: true,
+		2: true,
+		3: true,
+	});
 
-    actual.update(($set) => ({ ...$set, 1: false }))
+	actual.update(($set) => ({ ...$set, 1: false }));
 
-    const expected = { 2: true, 3: true }
+	const expected = { 2: true, 3: true };
 
-    expect(get(actual)).toStrictEqual(expected)
-})
+	expect(get(actual)).toStrictEqual(expected);
+});

@@ -1,5 +1,5 @@
 {
-    "type": "module",
-    "svelte": "./index.js",
-    "types": "../lib/plugins/index.d.ts"
+	"type": "module",
+	"svelte": "./index.js",
+	"types": "../lib/plugins/index.d.ts"
 }
