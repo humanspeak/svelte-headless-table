@@ -30,7 +30,6 @@ lint:
               packages:
                   - prettier-plugin-svelte
                   - prettier-plugin-organize-imports
-                  - prettier-plugin-tailwindcss
         - trufflehog@3.88.2
         - yamllint@1.35.1
 actions:
