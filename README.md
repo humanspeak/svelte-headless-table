@@ -18,7 +18,7 @@
 
 > Build and design powerful datagrid experiences while retaining 100% control over styles and markup.
 
-<!-- Visit the [documentation](https://svelte-headless-table.bryanmylee.com/) for code examples and API reference, and get started with the [quick start guide](https://svelte-headless-table.bryanmylee.com/docs/getting-started/quick-start)! -->
+Visit the [documentation](https://svelte-headless-table.bryanmylee.com/) for code examples and API reference, and get started with the [quick start guide](https://svelte-headless-table.bryanmylee.com/docs/getting-started/quick-start)!
 
 ## Why Svelte Headless Table?
 
