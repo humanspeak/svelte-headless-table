@@ -124,6 +124,7 @@ export const addColumnFilters =
             deriveRows,
             hooks: {
                 'thead.tr.th': (headerCell) => {
+                    console.log('headerCell', filterValues, headerCell.id)
                     const filterValue = keyed(filterValues, headerCell.id)
                     const props = derived([], () => {
                         const columnOption = columnOptions[headerCell.id]
