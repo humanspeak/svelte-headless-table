@@ -6,8 +6,8 @@ export default defineConfig({
     test: {
         include: ['src/**/*.test.ts'],
         globals: true,
-
-        coverage: { reporter: 'lcov', exclude: ['docs/**'] },
+        coverage: { reporter: 'lcov',
+            exclude: ['docs/**', '.trunk/**', '.svelte-kit/**', 'tests/**', 'src/routes/**'], },
         reporters: ['verbose', ['junit', { outputFile: './junit-vitest.xml' }]]
     }
 })
