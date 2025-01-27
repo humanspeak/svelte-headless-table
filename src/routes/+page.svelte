@@ -22,6 +22,7 @@
     import { mean, sum } from '../lib/utils/math.js'
     import { getShuffled } from './_getShuffled.js'
     import { createSamples } from './_createSamples.js'
+    import { page } from '$app/stores'
     import Italic from './_Italic.svelte'
     import Profile from './_Profile.svelte'
     import Tick from './_Tick.svelte'
@@ -32,7 +33,10 @@
     import { getDistinct } from '../lib/utils/array.js'
     import SelectIndicator from './_SelectIndicator.svelte'
 
-    const data = readable(createSamples(2, 2))
+    const seed = $page.url.searchParams.get('seed')
+    const data = readable(
+        createSamples({ seed: isNaN(Number(seed)) ? undefined : Number(seed) }, 2, 2)
+    )
 
     let serverSide = false
 
