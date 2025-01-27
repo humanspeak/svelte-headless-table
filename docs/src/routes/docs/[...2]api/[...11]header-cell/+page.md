@@ -37,13 +37,13 @@ Returns the [render configuration](../--render.md#renderconfig) of the header ce
 
 ```svelte
 <tr>
-  {#each headerRow.cells as cell (cell.id)}
-    <Subscribe attrs={cell.attrs()} let:attrs>
-      <th {...attrs}>
-        <Render of={cell.render()} />
-      </th>
-    </Subscribe>
-  {/each}
+    {#each headerRow.cells as cell (cell.id)}
+        <Subscribe attrs={cell.attrs()} let:attrs>
+            <th {...attrs}>
+                <Render of={cell.render()} />
+            </th>
+        </Subscribe>
+    {/each}
 </tr>
 ```
 

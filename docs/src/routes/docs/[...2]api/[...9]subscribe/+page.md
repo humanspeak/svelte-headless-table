@@ -26,7 +26,8 @@ For every Svelte store prop that `<Subscribe/>` receives, it exposes a slot prop
 
 ```svelte
 <Subscribe age={writable(21)} let:age>
-  {age} <!-- 21 -->
+    {age}
+    <!-- 21 -->
 </Subscribe>
 ```
 
@@ -35,21 +36,18 @@ For every Svelte store prop that `<Subscribe/>` receives, it exposes a slot prop
 ```svelte
 ...
 <tr>
-  {#each headerRow.cells as cell (cell.id)}
-    <Subscribe
-      attrs={cell.attrs()} let:attrs
-      props={cell.props()} let:props
-    >
-      <th {...attrs} on:click={props.sort.toggle}>
-        <Render of={cell.render()} />
-        {#if props.sort.order === 'asc'}
-          ⬇️
-        {:else if props.sort.order === 'desc'}
-          ⬆️
-        {/if}
-      </th>
-    </Subscribe>
-  {/each}
+    {#each headerRow.cells as cell (cell.id)}
+        <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
+            <th {...attrs} on:click={props.sort.toggle}>
+                <Render of={cell.render()} />
+                {#if props.sort.order === 'asc'}
+                    ⬇️
+                {:else if props.sort.order === 'desc'}
+                    ⬆️
+                {/if}
+            </th>
+        </Subscribe>
+    {/each}
 </tr>
 ...
 ```

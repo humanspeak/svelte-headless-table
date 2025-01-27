@@ -158,25 +158,25 @@ _Defaults to returning `dataCell.value`_.
 
 ```ts copy {6-9,19}
 const columns = table.createColumns([
-  table.column({
-    header: 'First Name',
-    accessor: 'firstName',
-    cell: ({ value }) =>
-      createRender(Bold, {
-        text: value,
-      }),
-  }),
-  table.column({
-    header: 'Last Name',
-    accessor: 'lastName',
-  }),
-  table.column({
-    header: 'Age',
-    accessor: (item) => item.info.age,
-    id: 'age',
-    cell: ({ value }) => `${value} yo`,
-  }),
-]);
+    table.column({
+        header: 'First Name',
+        accessor: 'firstName',
+        cell: ({ value }) =>
+            createRender(Bold, {
+                text: value
+            })
+    }),
+    table.column({
+        header: 'Last Name',
+        accessor: 'lastName'
+    }),
+    table.column({
+        header: 'Age',
+        accessor: (item) => item.info.age,
+        id: 'age',
+        cell: ({ value }) => `${value} yo`
+    })
+])
 ```
 
 <script>
@@ -208,30 +208,30 @@ Defines the columns grouped by the group column.
 
 ```ts copy {5-14,18-24}
 const columns = table.createColumns([
-  table.group({
-    header: 'Name',
-    columns: [
-      table.column({
-        header: 'First Name',
-        accessor: 'firstName',
-      }),
-      table.column({
-        header: 'Last Name',
-        accessor: 'lastName',
-      }),
-    ],
-  }),
-  table.group({
-    header: 'Info',
-    columns: [
-      table.column({
-        header: 'Age',
-        accessor: (item) => item.info.age,
-        id: 'age',
-      }),
-    ],
-  }),
-]);
+    table.group({
+        header: 'Name',
+        columns: [
+            table.column({
+                header: 'First Name',
+                accessor: 'firstName'
+            }),
+            table.column({
+                header: 'Last Name',
+                accessor: 'lastName'
+            })
+        ]
+    }),
+    table.group({
+        header: 'Info',
+        columns: [
+            table.column({
+                header: 'Age',
+                accessor: (item) => item.info.age,
+                id: 'age'
+            })
+        ]
+    })
+])
 ```
 
 <script>
@@ -310,18 +310,18 @@ _Defaults to the value of `header`_.
 
 ```ts copy {4}
 const columns = table.createColumns([
-  table.display({
-    id: 'selected',
-  }),
-  table.column({
-    header: 'First Name',
-    accessor: 'firstName',
-  }),
-  table.column({
-    header: 'Last Name',
-    accessor: 'lastName',
-  }),
-]);
+    table.display({
+        id: 'selected'
+    }),
+    table.column({
+        header: 'First Name',
+        accessor: 'firstName'
+    }),
+    table.column({
+        header: 'Last Name',
+        accessor: 'lastName'
+    })
+])
 ```
 
 :::

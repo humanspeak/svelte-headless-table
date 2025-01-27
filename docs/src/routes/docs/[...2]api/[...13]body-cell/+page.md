@@ -37,13 +37,13 @@ Returns the [render configuration](../--render.md#renderconfig) of the body cell
 
 ```svelte
 <tr>
-  {#each row.cells as cell (cell.id)}
-    <Subscribe attrs={cell.attrs()} let:attrs>
-      <td {...attrs}>
-        <Render of={cell.render()} />
-      </td>
-    </Subscribe>
-  {/each}
+    {#each row.cells as cell (cell.id)}
+        <Subscribe attrs={cell.attrs()} let:attrs>
+            <td {...attrs}>
+                <Render of={cell.render()} />
+            </td>
+        </Subscribe>
+    {/each}
 </tr>
 ```
 

@@ -1,7 +1,7 @@
 {
     "name": "@humanspeak/svelte-headless-table",
     "version": "5.0.0",
-    "description": "Unopinionated and extensible data tables for Svelte",
+    "description": "A powerful, headless table library for Svelte that provides complete control over table UI while handling complex data operations like sorting, filtering, pagination, grouping, and row expansion. Build custom, accessible data tables with zero styling opinions.",
     "keywords": [
         "svelte",
         "table",
@@ -16,7 +16,17 @@
         "grouping",
         "selecting",
         "expanding",
-        "resizing"
+        "data-table",
+        "data-grid",
+        "table-component",
+        "pagination",
+        "column-sorting",
+        "row-selection",
+        "typescript",
+        "sveltekit",
+        "customizable",
+        "accessible",
+        "a11y"
     ],
     "homepage": "https://github.com/humanspeak/svelte-headless-table#readme",
     "bugs": {
@@ -94,5 +104,8 @@
         "typescript": "^5.0.0",
         "vite": "^5.0.3",
         "vitest": "^1.0.0"
+    },
+    "volta": {
+        "node": "22.13.1"
     }
 }

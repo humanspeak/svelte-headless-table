@@ -1,5 +1,5 @@
 import { keyed } from '@humanspeak/svelte-keyed'
-import type { RenderConfig } from '@humanspeak/svelte-subscribe'
+import type { RenderConfig } from '@humanspeak/svelte-render'
 import type { BodyRow } from '../bodyRows.js'
 import type { TablePlugin, NewTablePropSet, DeriveRowsFn } from '../types/TablePlugin.js'
 import { derived, writable, type Readable, type Writable } from 'svelte/store'
@@ -124,7 +124,6 @@ export const addColumnFilters =
             deriveRows,
             hooks: {
                 'thead.tr.th': (headerCell) => {
-                    console.log('headerCell', filterValues, headerCell.id)
                     const filterValue = keyed(filterValues, headerCell.id)
                     const props = derived([], () => {
                         const columnOption = columnOptions[headerCell.id]
