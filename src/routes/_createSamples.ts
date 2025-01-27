@@ -1,4 +1,4 @@
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 
 export interface Sample {
     firstName: string
@@ -10,7 +10,12 @@ export interface Sample {
     children?: Sample[]
 }
 
-export const createSamples = (...lengths: number[]) => {
+type CreateSamplesOptions = {
+    seed?: number
+}
+
+export const createSamples = (options?: CreateSamplesOptions, ...lengths: number[]) => {
+    if (options?.seed !== undefined) faker.seed(options.seed)
     const createSamplesLevel = (depth = 0): Sample[] => {
         const length = lengths[depth]
         return [...Array(length)].map(() => {
@@ -26,14 +31,12 @@ export const createSamples = (...lengths: number[]) => {
 }
 
 const getSample = (): Sample => {
-    const statusChance = Math.random()
     return {
-        firstName: faker.name.firstName(),
-        lastName: faker.name.lastName(),
-        age: Math.floor(Math.random() * 30),
-        visits: Math.floor(Math.random() * 100),
-        progress: Math.floor(Math.random() * 100),
-        status:
-            statusChance > 0.66 ? 'relationship' : statusChance > 0.33 ? 'complicated' : 'single'
+        firstName: faker.person.firstName(),
+        lastName: faker.person.lastName(),
+        age: faker.number.int({ min: 18, max: 65 }),
+        visits: faker.number.int({ min: 0, max: 100 }),
+        progress: faker.number.int({ min: 0, max: 100 }),
+        status: faker.helpers.arrayElement(['relationship', 'complicated', 'single'])
     }
 }

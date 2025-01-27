@@ -7,4 +7,11 @@ export interface Sample {
     status: string
     children?: Sample[]
 }
-export declare const createSamples: (...lengths: number[]) => Sample[]
+type CreateSamplesOptions = {
+    seed?: number
+}
+export declare const createSamples: (
+    options?: CreateSamplesOptions,
+    ...lengths: number[]
+) => Sample[]
+export {}
