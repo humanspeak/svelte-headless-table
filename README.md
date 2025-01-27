@@ -5,10 +5,10 @@
 
 <div align="center">
 
-[![npm version](http://img.shields.io/npm/v/@humanspeak/svelte-headless-table.svg)](https://www.npmjs.com/package/svelte-headless-table)
+[![npm version](http://img.shields.io/npm/v/@humanspeak/svelte-headless-table.svg)](https://www.npmjs.com/package/@humanspeak/svelte-headless-table)
 [![npm downloads](https://img.shields.io/npm/dm/@humanspeak/svelte-headless-table.svg)](https://www.npmjs.com/package/svelte-headless-table)
 ![license](https://img.shields.io/npm/l/@humanspeak/svelte-headless-table)
-![build](https://img.shields.io/github/actions/workflow/status/humanspeak/svelte-headless-table/publish.yml)
+![build](https://img.shields.io/github/actions/workflow/status/humanspeak/svelte-headless-table/npm-publish.yml)
 
 <!--[![coverage](https://coveralls.io/repos/github/humanspeak/svelte-headless-table/badge.svg?branch=main)](https://coveralls.io/github/humanspeak/svelte-headless-table?branch=main)-->
 

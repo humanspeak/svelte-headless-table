@@ -48,11 +48,11 @@ A `Readable` store with an array of [`HeaderRow`](../header-row.md)s that repres
 
 ```svelte
 <thead>
-  {#each $headerRows as headerRow (headerRow.id)}
-    <Subscribe attrs={headerRow.attrs()} let:attrs>
-      <tr {...attrs}>...</tr>
-    </Subscribe>
-  {/each}
+    {#each $headerRows as headerRow (headerRow.id)}
+        <Subscribe attrs={headerRow.attrs()} let:attrs>
+            <tr {...attrs}>...</tr>
+        </Subscribe>
+    {/each}
 </thead>
 ```
 
@@ -62,11 +62,11 @@ A `Readable` store with an array of [`BodyRow`](../body-row.md)s that represent 
 
 ```svelte
 <tbody>
-  {#each $rows as row (row.id)}
-    <Subscribe attrs={row.attrs()} let:attrs>
-      <tr {...attrs}>...</tr>
-    </Subscribe>
-  {/each}
+    {#each $rows as row (row.id)}
+        <Subscribe attrs={row.attrs()} let:attrs>
+            <tr {...attrs}>...</tr>
+        </Subscribe>
+    {/each}
 </tbody>
 ```
 
@@ -78,11 +78,11 @@ A `Readable` store with an array of `BodyRow`s that represent `<tr>` elements **
 
 ```svelte
 <tbody>
-  {#each $pageRows as row (row.id)}
-    <Subscribe attrs={row.attrs()} let:attrs>
-      <tr {...attrs}>...</tr>
-    </Subscribe>
-  {/each}
+    {#each $pageRows as row (row.id)}
+        <Subscribe attrs={row.attrs()} let:attrs>
+            <tr {...attrs}>...</tr>
+        </Subscribe>
+    {/each}
 </tbody>
 ```
 

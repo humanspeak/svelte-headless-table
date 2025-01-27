@@ -79,14 +79,16 @@ Subscribe to `.props()` on the respective table components.
 
 ```svelte
 {#each $headerRows as headerRow (headerRow.id)}
-  <Subscribe rowProps={headerRow.props()} let:rowProps>
-    {rowProps.resize} <!-- HeaderRow props -->
-    {#each headerRow.cells as cell (cell.id)}
-      <Subscribe props={cell.props()} let:props>
-        {props.resize} <!-- HeaderCell props -->
-      </Subscribe>
-    {/each}
-  </Subscribe>
+    <Subscribe rowProps={headerRow.props()} let:rowProps>
+        {rowProps.resize}
+        <!-- HeaderRow props -->
+        {#each headerRow.cells as cell (cell.id)}
+            <Subscribe props={cell.props()} let:props>
+                {props.resize}
+                <!-- HeaderCell props -->
+            </Subscribe>
+        {/each}
+    </Subscribe>
 {/each}
 ```
 
@@ -98,14 +100,9 @@ Use the action on the header cell element to initialize the plugin properly.
 
 ```svelte {7}
 {#each headerRow.cells as cell (cell.id)}
-  <Subscribe
-    attrs={cell.attrs()} let:attrs
-    props={cell.props()} let:props
-  >
-    <th {...attrs} use:props.resize>
-      ...
-    </th>
-  </Subscribe>
+    <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
+        <th {...attrs} use:props.resize> ... </th>
+    </Subscribe>
 {/each}
 ```
 
@@ -115,33 +112,30 @@ Use `drag` on a resizer element to provide drag-to-resize behaviour.
 
 ```svelte {8}
 {#each headerRow.cells as cell (cell.id)}
-  <Subscribe
-    attrs={cell.attrs()} let:attrs
-    props={cell.props()} let:props
-  >
-    <th {...attrs} use:props.resize>
-      <div class="resizer" use:props.resize.drag />
-    </th>
-  </Subscribe>
+    <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
+        <th {...attrs} use:props.resize>
+            <div class="resizer" use:props.resize.drag />
+        </th>
+    </Subscribe>
 {/each}
 
 ...
 
 <style>
-  th {
-    position: relative;
-  }
+    th {
+        position: relative;
+    }
 
-  .resizer {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    right: -4px;
-    width: 8px;
-    background: lightgray;
-    cursor: col-resize;
-    z-index: 1;
-  }
+    .resizer {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: -4px;
+        width: 8px;
+        background: lightgray;
+        cursor: col-resize;
+        z-index: 1;
+    }
 </style>
 ```
 
@@ -151,33 +145,30 @@ Use `reset` on a resizer element to reset column to initial width.
 
 ```svelte {8}
 {#each headerRow.cells as cell (cell.id)}
-  <Subscribe
-    attrs={cell.attrs()} let:attrs
-    props={cell.props()} let:props
-  >
-    <th {...attrs} use:props.resize>
-      <div class="resizer" use:props.resize.reset />
-    </th>
-  </Subscribe>
+    <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
+        <th {...attrs} use:props.resize>
+            <div class="resizer" use:props.resize.reset />
+        </th>
+    </Subscribe>
 {/each}
 
 ...
 
 <style>
-  th {
-    position: relative;
-  }
+    th {
+        position: relative;
+    }
 
-  .resizer {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    right: -4px;
-    width: 8px;
-    background: lightgray;
-    cursor: col-resize;
-    z-index: 1;
-  }
+    .resizer {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: -4px;
+        width: 8px;
+        background: lightgray;
+        cursor: col-resize;
+        z-index: 1;
+    }
 </style>
 ```
 

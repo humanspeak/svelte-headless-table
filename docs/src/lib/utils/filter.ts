@@ -1,1 +1,1 @@
-export const isNumber = (value: unknown): value is number => typeof value === 'number';
+export const isNumber = (value: unknown): value is number => typeof value === 'number'

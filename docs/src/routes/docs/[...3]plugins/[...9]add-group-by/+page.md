@@ -108,14 +108,16 @@ Subscribe to `.props()` on the respective table components.
 
 ```svelte
 {#each $headerRows as headerRow (headerRow.id)}
-  <Subscribe rowProps={headerRow.props()} let:rowProps>
-    {rowProps.group} <!-- HeaderRow props -->
-    {#each headerRow.cells as cell (cell.id)}
-      <Subscribe props={cell.props()} let:props>
-        {props.group} <!-- HeaderCell props -->
-      </Subscribe>
-    {/each}
-  </Subscribe>
+    <Subscribe rowProps={headerRow.props()} let:rowProps>
+        {rowProps.group}
+        <!-- HeaderRow props -->
+        {#each headerRow.cells as cell (cell.id)}
+            <Subscribe props={cell.props()} let:props>
+                {props.group}
+                <!-- HeaderCell props -->
+            </Subscribe>
+        {/each}
+    </Subscribe>
 {/each}
 ```
 

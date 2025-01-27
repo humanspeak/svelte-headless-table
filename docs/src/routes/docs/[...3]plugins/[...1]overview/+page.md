@@ -33,9 +33,9 @@ For this example, we extend a basic table with `addSortBy` and `addColumnOrder`.
 
 ```ts {3-4}
 const table = createTable(data, {
-  sort: addSortBy({ disableMultiSort: true }),
-  colOrder: addColumnOrder(),
-});
+    sort: addSortBy({ disableMultiSort: true }),
+    colOrder: addColumnOrder()
+})
 ```
 
 Plugins are configurable via function arguments.
@@ -52,18 +52,18 @@ Plugins optionally define additional **column options** to configure column beha
 
 ```ts {6-8}
 const columns = table.createColumns([
-  table.column({
-    header: 'Name',
-    accessor: 'name',
-    plugins: {
-      sort: { invert: true },
-    },
-  }),
-  table.column({
-    header: 'Age',
-    accessor: 'age',
-  }),
-]);
+    table.column({
+        header: 'Name',
+        accessor: 'name',
+        plugins: {
+            sort: { invert: true }
+        }
+    }),
+    table.column({
+        header: 'Age',
+        accessor: 'age'
+    })
+])
 ```
 
 :::admonition type="info"
@@ -78,44 +78,41 @@ Plugins extend the view model with **prop sets** that provide additional props t
 
 ```svelte {10,12,14-18}
 <table {...$tableAttrs}>
-  <thead>
-    {#each $headerRows as headerRow (headerRow.id)}
-      <Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
-        <tr {...rowAttrs}>
-          {#each headerRow.cells as cell (cell.id)}
-            <Subscribe
-              attrs={cell.attrs()} let:attrs
-              props={cell.props()} let:props
-            >
-              <th {...attrs} on:click={props.sort.toggle}>
-                <Render of={cell.render()} />
-                {#if props.sort.order === 'asc'}
-                  ⬇️
-                {:else if props.sort.order === 'desc'}
-                  ⬆️
-                {/if}
-              </th>
+    <thead>
+        {#each $headerRows as headerRow (headerRow.id)}
+            <Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
+                <tr {...rowAttrs}>
+                    {#each headerRow.cells as cell (cell.id)}
+                        <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
+                            <th {...attrs} on:click={props.sort.toggle}>
+                                <Render of={cell.render()} />
+                                {#if props.sort.order === 'asc'}
+                                    ⬇️
+                                {:else if props.sort.order === 'desc'}
+                                    ⬆️
+                                {/if}
+                            </th>
+                        </Subscribe>
+                    {/each}
+                </tr>
             </Subscribe>
-          {/each}
-        </tr>
-      </Subscribe>
-    {/each}
-  </thead>
-  <tbody {...$tableBodyAttrs}>
-    {#each $rows as row (row.id)}
-      <Subscribe rowAttrs={row.attrs()} let:rowAttrs>
-        <tr {...rowAttrs}>
-          {#each row.cells as cell (cell.id)}
-            <Subscribe attrs={cell.attrs()} let:attrs>
-              <td {...attrs}>
-                <Render of={cell.render()} />
-              </td>
+        {/each}
+    </thead>
+    <tbody {...$tableBodyAttrs}>
+        {#each $rows as row (row.id)}
+            <Subscribe rowAttrs={row.attrs()} let:rowAttrs>
+                <tr {...rowAttrs}>
+                    {#each row.cells as cell (cell.id)}
+                        <Subscribe attrs={cell.attrs()} let:attrs>
+                            <td {...attrs}>
+                                <Render of={cell.render()} />
+                            </td>
+                        </Subscribe>
+                    {/each}
+                </tr>
             </Subscribe>
-          {/each}
-        </tr>
-      </Subscribe>
-    {/each}
-  </tbody>
+        {/each}
+    </tbody>
 </table>
 ```
 
@@ -161,97 +158,89 @@ Explore this example in the [REPL](https://svelte.dev/repl/ff08194b4de6407b8f96f
 
 ```svelte
 <script>
-  const data = readable([
-    { name: 'Ada Lovelace', age: 21 },
-    { name: 'Barbara Liskov', age: 52 },
-    { name: 'Richard Hamming', age: 38 },
-  ]);
+    const data = readable([
+        { name: 'Ada Lovelace', age: 21 },
+        { name: 'Barbara Liskov', age: 52 },
+        { name: 'Richard Hamming', age: 38 }
+    ])
 
-  const table = createTable(data, {
-    sort: addSortBy({ disableMultiSort: true }),
-    colOrder: addColumnOrder(),
-  });
+    const table = createTable(data, {
+        sort: addSortBy({ disableMultiSort: true }),
+        colOrder: addColumnOrder()
+    })
 
-  const columns = table.createColumns([
-    table.column({
-      header: 'Name',
-      accessor: 'name',
-      plugins: {
-        sort: { invert: true },
-      },
-    }),
-    table.column({
-      header: 'Age',
-      accessor: 'age',
-    }),
-  ]);
+    const columns = table.createColumns([
+        table.column({
+            header: 'Name',
+            accessor: 'name',
+            plugins: {
+                sort: { invert: true }
+            }
+        }),
+        table.column({
+            header: 'Age',
+            accessor: 'age'
+        })
+    ])
 
-  const {
-    headerRows,
-    rows,
-    tableAttrs,
-    tableBodyAttrs,
-    pluginStates,
-  } = table.createViewModel(columns);
-  const { columnIdOrder } = pluginStates.colOrder;
-  $columnIdOrder = ['age', 'name'];
+    const { headerRows, rows, tableAttrs, tableBodyAttrs, pluginStates } =
+        table.createViewModel(columns)
+    const { columnIdOrder } = pluginStates.colOrder
+    $columnIdOrder = ['age', 'name']
 </script>
 
 <table {...$tableAttrs}>
-  <thead>
-    {#each $headerRows as headerRow (headerRow.id)}
-      <Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
-        <tr {...rowAttrs}>
-          {#each headerRow.cells as cell (cell.id)}
-            <Subscribe
-              attrs={cell.attrs()} let:attrs
-              props={cell.props()} let:props
-            >
-              <th {...attrs} on:click={props.sort.toggle}>
-                <Render of={cell.render()} />
-                {#if props.sort.order === 'asc'}
-                  ⬇️
-                {:else if props.sort.order === 'desc'}
-                  ⬆️
-                {/if}
-              </th>
+    <thead>
+        {#each $headerRows as headerRow (headerRow.id)}
+            <Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
+                <tr {...rowAttrs}>
+                    {#each headerRow.cells as cell (cell.id)}
+                        <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
+                            <th {...attrs} on:click={props.sort.toggle}>
+                                <Render of={cell.render()} />
+                                {#if props.sort.order === 'asc'}
+                                    ⬇️
+                                {:else if props.sort.order === 'desc'}
+                                    ⬆️
+                                {/if}
+                            </th>
+                        </Subscribe>
+                    {/each}
+                </tr>
             </Subscribe>
-          {/each}
-        </tr>
-      </Subscribe>
-    {/each}
-  </thead>
-  <tbody {...$tableBodyAttrs}>
-    {#each $rows as row (row.id)}
-      <Subscribe rowAttrs={row.attrs()} let:rowAttrs>
-        <tr>
-          {#each row.cells as cell (cell.id)}
-            <Subscribe attrs={cell.attrs()} let:attrs>
-              <td {...attrs}>
-                <Render of={cell.render()} />
-              </td>
+        {/each}
+    </thead>
+    <tbody {...$tableBodyAttrs}>
+        {#each $rows as row (row.id)}
+            <Subscribe rowAttrs={row.attrs()} let:rowAttrs>
+                <tr>
+                    {#each row.cells as cell (cell.id)}
+                        <Subscribe attrs={cell.attrs()} let:attrs>
+                            <td {...attrs}>
+                                <Render of={cell.render()} />
+                            </td>
+                        </Subscribe>
+                    {/each}
+                </tr>
             </Subscribe>
-          {/each}
-        </tr>
-      </Subscribe>
-    {/each}
-  </tbody>
+        {/each}
+    </tbody>
 </table>
 
 <style>
-  table {
-    font-family: sans-serif;
-    border-spacing: 0;
-    border-top: 1px solid black;
-    border-left: 1px solid black;
-  }
+    table {
+        font-family: sans-serif;
+        border-spacing: 0;
+        border-top: 1px solid black;
+        border-left: 1px solid black;
+    }
 
-  th,
-  td {
-    margin: 0;
-    padding: 0.5rem;
-    border-bottom: 1px solid black;
-    border-right: 1px solid black;
-  }
+    th,
+    td {
+        margin: 0;
+        padding: 0.5rem;
+        border-bottom: 1px solid black;
+        border-right: 1px solid black;
+    }
 </style>
 ```

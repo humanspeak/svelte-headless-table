@@ -56,7 +56,7 @@ Renders a simple reactive text node.
 
 ```svelte
 <script>
-  const pageY = writable(0);
+    const pageY = writable(0)
 </script>
 
 <svelte:window bind:scrollY={$pageY} />
@@ -82,10 +82,10 @@ Renders a Svelte component with props. `ComponentRenderConfig` is created with [
 
 ```svelte
 <script>
-  import Profile from './Profile.svelte';
-  const profile = createRender(Profile, {
-    name: 'Alan Turing'
-  });
+    import Profile from './Profile.svelte'
+    const profile = createRender(Profile, {
+        name: 'Alan Turing'
+    })
 </script>
 
 <Render of={profile} />

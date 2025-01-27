@@ -25,7 +25,7 @@ Every Svelte Headless Table starts with `createTable`. It takes a data source an
 
 ```ts
 const table = createTable(data, {
-  sort: addSortBy(),
-  filter: addColumnFilters(),
-});
+    sort: addSortBy(),
+    filter: addColumnFilters()
+})
 ```

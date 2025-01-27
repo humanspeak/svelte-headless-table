@@ -37,10 +37,10 @@ Creates a render configuration with a Svelte component and static props.
 
 ```svelte
 <script>
-  import Profile from './Profile.svelte';
-  const profile = createRender(Profile, {
-    name: 'Alan Turing'
-  });
+    import Profile from './Profile.svelte'
+    const profile = createRender(Profile, {
+        name: 'Alan Turing'
+    })
 </script>
 
 <Render of={profile} />
@@ -61,12 +61,12 @@ Creates a render configuration with a Svelte component and dynamic props.
 
 ```svelte
 <script>
-  import Profile from './Profile.svelte';
-  const name = writable('Grace Hopper');
-  const profile = createRender(
-    Profile,
-    derived(name, n => ({ name: n }))
-  );
+    import Profile from './Profile.svelte'
+    const name = writable('Grace Hopper')
+    const profile = createRender(
+        Profile,
+        derived(name, (n) => ({ name: n }))
+    )
 </script>
 
 <Render of={profile} />
@@ -102,11 +102,11 @@ Creates a render configuration with a Svelte component and dynamic props.
 
 ```svelte
 <script>
-  import Notice from './Notice.svelte';
-  const noticeProps = writable({ count: 0 });
-  const notice = createRender(Notice, noticeProps)
-    .on('click', (() => $noticeProps.count++))
-    .on('click', ev => console.log(ev));
+    import Notice from './Notice.svelte'
+    const noticeProps = writable({ count: 0 })
+    const notice = createRender(Notice, noticeProps)
+        .on('click', () => $noticeProps.count++)
+        .on('click', (ev) => console.log(ev))
 </script>
 
 <Render of={notice} />

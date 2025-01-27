@@ -19,18 +19,15 @@ Subscribe to [`TableViewModel#pageRows`](../api/table-view-model.md#tableviewmod
 
 ```svelte {5,11}
 <script>
-  const {
-    headerRows,
-    pageRows,
-  } = table.createViewModel(columns);
+    const { headerRows, pageRows } = table.createViewModel(columns)
 </script>
 
 <table>
-  <tbody>
-    {#each $pageRows as row (row.id)}
-      ...
-    {/each}
-  </tbody>
+    <tbody>
+        {#each $pageRows as row (row.id)}
+            ...
+        {/each}
+    </tbody>
 </table>
 ```
 
@@ -102,14 +99,16 @@ Subscribe to `.props()` on the respective table components.
 
 ```svelte
 {#each $headerRows as headerRow (headerRow.id)}
-  <Subscribe rowProps={headerRow.props()} let:rowProps>
-    {rowProps.page} <!-- HeaderRow props -->
-    {#each headerRow.cells as cell (cell.id)}
-      <Subscribe props={cell.props()} let:props>
-        {props.page} <!-- HeaderCell props -->
-      </Subscribe>
-    {/each}
-  </Subscribe>
+    <Subscribe rowProps={headerRow.props()} let:rowProps>
+        {rowProps.page}
+        <!-- HeaderRow props -->
+        {#each headerRow.cells as cell (cell.id)}
+            <Subscribe props={cell.props()} let:props>
+                {props.page}
+                <!-- HeaderCell props -->
+            </Subscribe>
+        {/each}
+    </Subscribe>
 {/each}
 ```
 

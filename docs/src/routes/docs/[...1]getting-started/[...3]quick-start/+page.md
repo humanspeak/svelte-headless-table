@@ -23,12 +23,12 @@ To start, define some data in a Svelte store and create your table with `createT
 
 ```ts
 const data = readable([
-  { name: 'Ada Lovelace', age: 21 },
-  { name: 'Barbara Liskov', age: 52 },
-  { name: 'Richard Hamming', age: 38 },
-]);
+    { name: 'Ada Lovelace', age: 21 },
+    { name: 'Barbara Liskov', age: 52 },
+    { name: 'Richard Hamming', age: 38 }
+])
 
-const table = createTable(data);
+const table = createTable(data)
 ```
 
 :::admonition type="info"
@@ -41,15 +41,15 @@ Once we have our table instance, we can create columns to access the values of e
 
 ```ts
 const columns = table.createColumns([
-  table.column({
-    header: 'Name',
-    accessor: 'name',
-  }),
-  table.column({
-    header: 'Age',
-    accessor: 'age',
-  }),
-]);
+    table.column({
+        header: 'Name',
+        accessor: 'name'
+    }),
+    table.column({
+        header: 'Age',
+        accessor: 'age'
+    })
+])
 ```
 
 ## Creating the view model
@@ -72,16 +72,16 @@ HTML tables have a standard structure.
 
 ```html
 <table>
-  <thead>
-    <tr>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td></td>
-    </tr>
-  </tbody>
+    <thead>
+        <tr>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td></td>
+        </tr>
+    </tbody>
 </table>
 ```
 
@@ -89,36 +89,36 @@ We apply our view model over the structure.
 
 ```svelte
 <table {...$tableAttrs}>
-  <thead>
-    {#each $headerRows as headerRow (headerRow.id)}
-      <Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
-        <tr {...rowAttrs}>
-          {#each headerRow.cells as cell (cell.id)}
-            <Subscribe attrs={cell.attrs()} let:attrs>
-              <th {...attrs}>
-                <Render of={cell.render()} />
-              </th>
+    <thead>
+        {#each $headerRows as headerRow (headerRow.id)}
+            <Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
+                <tr {...rowAttrs}>
+                    {#each headerRow.cells as cell (cell.id)}
+                        <Subscribe attrs={cell.attrs()} let:attrs>
+                            <th {...attrs}>
+                                <Render of={cell.render()} />
+                            </th>
+                        </Subscribe>
+                    {/each}
+                </tr>
             </Subscribe>
-          {/each}
-        </tr>
-      </Subscribe>
-    {/each}
-  </thead>
-  <tbody {...$tableBodyAttrs}>
-    {#each $rows as row (row.id)}
-      <Subscribe rowAttrs={row.attrs()} let:rowAttrs>
-        <tr {...rowAttrs}>
-          {#each row.cells as cell (cell.id)}
-            <Subscribe attrs={cell.attrs()} let:attrs>
-              <td {...attrs}>
-                <Render of={cell.render()} />
-              </td>
+        {/each}
+    </thead>
+    <tbody {...$tableBodyAttrs}>
+        {#each $rows as row (row.id)}
+            <Subscribe rowAttrs={row.attrs()} let:rowAttrs>
+                <tr {...rowAttrs}>
+                    {#each row.cells as cell (cell.id)}
+                        <Subscribe attrs={cell.attrs()} let:attrs>
+                            <td {...attrs}>
+                                <Render of={cell.render()} />
+                            </td>
+                        </Subscribe>
+                    {/each}
+                </tr>
             </Subscribe>
-          {/each}
-        </tr>
-      </Subscribe>
-    {/each}
-  </tbody>
+        {/each}
+    </tbody>
 </table>
 ```
 
