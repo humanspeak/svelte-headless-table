@@ -5,12 +5,17 @@
 
 <div align="center">
 
-[![npm version](http://img.shields.io/npm/v/@humanspeak/svelte-headless-table.svg)](https://www.npmjs.com/package/@humanspeak/svelte-headless-table)
-[![npm downloads](https://img.shields.io/npm/dm/@humanspeak/svelte-headless-table.svg)](https://www.npmjs.com/package/svelte-headless-table)
-![license](https://img.shields.io/npm/l/@humanspeak/svelte-headless-table)
-![build](https://img.shields.io/github/actions/workflow/status/humanspeak/svelte-headless-table/npm-publish.yml)
-
-<!--[![coverage](https://coveralls.io/repos/github/humanspeak/svelte-headless-table/badge.svg?branch=main)](https://coveralls.io/github/humanspeak/svelte-headless-table?branch=main)-->
+[![NPM version](https://img.shields.io/npm/v/@humanspeak/svelte-headless-table.svg)](https://www.npmjs.com/package/@humanspeak/svelte-headless-table)
+[![Build Status](https://github.com/humanspeak/svelte-headless-table/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/humanspeak/svelte-headless-table/actions/workflows/npm-publish.yml)
+[![Coverage Status](https://coveralls.io/repos/github/humanspeak/svelte-headless-table/badge.svg?branch=main)](https://coveralls.io/github/humanspeak/svelte-headless-table?branch=main)
+[![License](https://img.shields.io/npm/l/@humanspeak/svelte-headless-table.svg)](https://github.com/humanspeak/svelte-headless-table/blob/main/LICENSE)
+[![Downloads](https://img.shields.io/npm/dm/@humanspeak/svelte-headless-table.svg)](https://www.npmjs.com/package/@humanspeak/svelte-headless-table)
+[![CodeQL](https://github.com/humanspeak/svelte-headless-table/actions/workflows/codeql.yml/badge.svg)](https://github.com/humanspeak/svelte-headless-table/actions/workflows/codeql.yml)
+[![Install size](https://packagephobia.com/badge?p=@humanspeak/svelte-headless-table)](https://packagephobia.com/result?p=@humanspeak/svelte-headless-table)
+[![Code Style: Trunk](https://img.shields.io/badge/code%20style-trunk-blue.svg)](https://trunk.io)
+[![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
+[![Types](https://img.shields.io/npm/types/@humanspeak/svelte-headless-table.svg)](https://www.npmjs.com/package/@humanspeak/svelte-headless-table)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/humanspeak/svelte-headless-table/graphs/commit-activity)
 
 </div>
 
