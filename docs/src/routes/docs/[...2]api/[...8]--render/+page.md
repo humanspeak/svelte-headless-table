@@ -5,7 +5,7 @@ sidebar_title: Render
 ---
 
 <script>
-  import { Render, createRender } from 'svelte-headless-table';
+  import { Render, createRender } from '@humanspeak/svelte-headless-table';
   import { useHljs } from '$lib/utils/useHljs';
   useHljs('ts');
 </script>

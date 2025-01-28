@@ -5,7 +5,7 @@ sidebar_title: createRender
 ---
 
 <script>
-  import { Render, createRender } from 'svelte-headless-table';
+  import { Render, createRender } from '@humanspeak/svelte-headless-table';
   import { useHljs } from '$lib/utils/useHljs';
   useHljs('ts');
 </script>
@@ -17,7 +17,7 @@ sidebar_title: createRender
 It combines a component with props and events to create a `ComponentRenderConfig` that is passed into [`Render#of`](../--render.md) to dynamically render Svelte components.
 
 :::admonition type="note"
-`createRender` is based on [`svelte-render`](https://github.com/bryanmylee/svelte-render).
+`createRender` is based on [`svelte-render`](https://github.com/humanspeak/svelte-render).
 :::
 
 `createRender` accepts a Svelte component and either:

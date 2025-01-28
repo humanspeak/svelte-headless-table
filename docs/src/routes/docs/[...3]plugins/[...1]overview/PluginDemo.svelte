@@ -1,7 +1,7 @@
 <script>
     import { readable } from 'svelte/store'
-    import { createTable, Subscribe, Render } from 'svelte-headless-table'
-    import { addSortBy, addColumnOrder } from 'svelte-headless-table/plugins'
+    import { createTable, Subscribe, Render } from '@humanspeak/svelte-headless-table'
+    import { addSortBy, addColumnOrder } from '@humanspeak/svelte-headless-table/plugins'
 
     const data = readable([
         { name: 'Ada Lovelace', age: 21 },

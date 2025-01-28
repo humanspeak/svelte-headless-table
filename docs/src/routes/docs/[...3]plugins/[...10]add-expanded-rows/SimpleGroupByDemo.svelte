@@ -1,7 +1,11 @@
 <script lang="ts">
     import { derived, readable } from 'svelte/store'
-    import { createTable, Subscribe, Render, createRender } from 'svelte-headless-table'
-    import { addGroupBy, addExpandedRows, addColumnOrder } from 'svelte-headless-table/plugins'
+    import { createTable, Subscribe, Render, createRender } from '@humanspeak/svelte-headless-table'
+    import {
+        addGroupBy,
+        addExpandedRows,
+        addColumnOrder
+    } from '@humanspeak/svelte-headless-table/plugins'
     import { createSamples } from '$lib/utils/createSamples'
     import ExpandIndicator from './ExpandIndicator.svelte'
     import { getDistinct } from '../[...3]add-column-filters/SelectFilter.svelte'

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { DataColumn, BodyRow } from 'svelte-headless-table'
+    import type { DataColumn, BodyRow } from '@humanspeak/svelte-headless-table'
 
     export let row: BodyRow<any>
     export let column: DataColumn<any>

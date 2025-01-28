@@ -1,3 +1,8 @@
+<script>
+  import SvelteHeadlessTableIcon from '$img/svelte-headless-table.svg?raw';
+  import { Button as Button2 } from '@svelteness/kit-docs';
+</script>
+
 <svelte:head>
 
   <title>Svelte Headless Table | Bryan Lee</title>
@@ -17,10 +22,10 @@ Build and design powerful datagrid experiences while retaining 100% control over
 Svelte Headless Table is designed to work **seamlessly** with Svelte. If you love Svelte, you will love Svelte Headless Table.
 
 <div class="flex justify-center gap-4">
-  <Button size="lg" href="/docs">Get started</Button>
-  <Button size="lg" variant="unfilled" href="https://github.com/bryanmylee/svelte-headless-table">
+  <Button2 size="lg" href="/docs">Get started</Button2>
+  <Button2 size="lg" variant="unfilled" href="https://github.com/humanspeak/svelte-headless-table">
     GitHub
-  </Button>
+  </Button2>
 </div>
 
 <div class="absolute left-full top-0 wh-1/2 opacity-20">
@@ -28,10 +33,6 @@ Svelte Headless Table is designed to work **seamlessly** with Svelte. If you lov
 </div>
 
 </header>
-
-<script>
-  import SvelteHeadlessTableIcon from '$img/svelte-headless-table.svg?raw';
-</script>
 
 ## Headless
 

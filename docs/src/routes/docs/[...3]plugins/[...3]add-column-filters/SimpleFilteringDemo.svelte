@@ -23,9 +23,9 @@
 
 <script lang="ts">
     import { readable } from 'svelte/store'
-    import { createRender, createTable, Render, Subscribe } from 'svelte-headless-table'
-    import { addColumnFilters } from 'svelte-headless-table/plugins'
-    import type { ColumnFilterFn } from 'svelte-headless-table/plugins'
+    import { createRender, createTable, Render, Subscribe } from '@humanspeak/svelte-headless-table'
+    import { addColumnFilters } from '@humanspeak/svelte-headless-table/plugins'
+    import type { ColumnFilterFn } from '@humanspeak/svelte-headless-table/plugins'
     import TextFilter from './TextFilter.svelte'
     import SelectFilter from './SelectFilter.svelte'
     import NumberRangeFilter from './NumberRangeFilter.svelte'

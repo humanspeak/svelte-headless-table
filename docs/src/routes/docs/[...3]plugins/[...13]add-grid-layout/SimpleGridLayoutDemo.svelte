@@ -1,7 +1,7 @@
 <script>
     import { derived, readable } from 'svelte/store'
-    import { createTable, Subscribe, Render } from 'svelte-headless-table'
-    import { addGridLayout } from 'svelte-headless-table/plugins'
+    import { createTable, Subscribe, Render } from '@humanspeak/svelte-headless-table'
+    import { addGridLayout } from '@humanspeak/svelte-headless-table/plugins'
     import { createSamples } from '$lib/utils/createSamples'
 
     const data = readable(createSamples(10, 5, 3))
