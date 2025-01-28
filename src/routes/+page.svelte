@@ -286,7 +286,7 @@
     const { exportedData: exportedCsv } = pluginStates.exportCsv
 </script>
 
-<h1>svelte-headless-table</h1>
+<h1>@humanspeak/svelte-headless-table</h1>
 
 <button on:click={() => ($columnIdOrder = getShuffled($columnIdOrder))}>Shuffle columns</button>
 <div>

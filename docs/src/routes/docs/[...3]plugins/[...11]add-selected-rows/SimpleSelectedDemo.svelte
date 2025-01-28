@@ -1,7 +1,11 @@
 <script>
     import { derived, readable } from 'svelte/store'
-    import { createTable, Subscribe, Render, createRender } from 'svelte-headless-table'
-    import { addSubRows, addExpandedRows, addSelectedRows } from 'svelte-headless-table/plugins'
+    import { createTable, Subscribe, Render, createRender } from '@humanspeak/svelte-headless-table'
+    import {
+        addSubRows,
+        addExpandedRows,
+        addSelectedRows
+    } from '@humanspeak/svelte-headless-table/plugins'
     import { createSamples } from '$lib/utils/createSamples'
     import ExpandIndicator from '../[...10]add-expanded-rows/ExpandIndicator.svelte'
     import SelectIndicator from './SelectIndicator.svelte'

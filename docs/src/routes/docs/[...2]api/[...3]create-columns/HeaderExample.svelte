@@ -1,8 +1,8 @@
 <script>
     import { readable, derived } from 'svelte/store'
-    import { createTable, Render, createRender, Subscribe } from 'svelte-headless-table'
+    import { createTable, Render, createRender, Subscribe } from '@humanspeak/svelte-headless-table'
     import Italic from './Italic.svelte'
-    import { addSortBy } from 'svelte-headless-table/plugins'
+    import { addSortBy } from '@humanspeak/svelte-headless-table/plugins'
     import SortHeaderCell from './SortHeaderCell.svelte'
 
     const data = readable([

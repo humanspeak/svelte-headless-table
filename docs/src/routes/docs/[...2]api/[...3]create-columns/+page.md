@@ -83,7 +83,7 @@ const columns = table.createColumns([
 
 :::admonition type="warning"
 
-The `id` will be parsed with [`svelte-keyed`](https://github.com/bryanmylee/svelte-keyed), so make sure to format it without dot notation (`object.prop`) or array notation (`object[0]`).
+The `id` will be parsed with [`svelte-keyed`](https://github.com/humanspeak/svelte-keyed), so make sure to format it without dot notation (`object.prop`) or array notation (`object[0]`).
 
 :::
 

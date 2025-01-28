@@ -6,7 +6,7 @@
         createTable,
         createRender,
         type DataLabel
-    } from 'svelte-headless-table'
+    } from '@humanspeak/svelte-headless-table'
 
     import { createSamples, type Sample } from '$lib/utils/createSamples'
     import EditableCell from './EditableCell.svelte'

@@ -1,5 +1,3 @@
-import path from 'path'
-
 export async function GET() {
     const filePaths = Object.keys(await import.meta.glob('../**/*.{svelte,md}'))
 
@@ -7,7 +5,7 @@ export async function GET() {
         .map((filePath) =>
             filePath
                 .slice(3)
-                .replace(path.extname(filePath), '')
+                .replace(/\.(svelte|md)$/, '')
                 .replace(/\+page$/, '')
                 // remove last slash
                 .replace(/\/$/, '')
@@ -18,7 +16,7 @@ export async function GET() {
         .map(
             (url) => `
 			<url>
-				<loc>https://svelte-headless-table.bryanmylee.com/${url}</loc>
+				<loc>https://table.svelte.page/${url}</loc>
 				<changefreq>daily</changefreq>
 				<priority>0.7</priority>
 			</url>

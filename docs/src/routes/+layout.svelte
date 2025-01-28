@@ -61,7 +61,7 @@
         </div>
 
         <div class="socials" slot="navbar-right-alt">
-            <SocialLink type="gitHub" href="https://github.com/bryanmylee/svelte-headless-table" />
+            <SocialLink type="gitHub" href="https://github.com/humanspeak/svelte-headless-table" />
         </div>
 
         <slot />

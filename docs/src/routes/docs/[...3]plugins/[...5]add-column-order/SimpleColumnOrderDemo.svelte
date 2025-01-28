@@ -12,8 +12,8 @@
 
 <script lang="ts">
     import { readable } from 'svelte/store'
-    import { createTable, Subscribe, Render } from 'svelte-headless-table'
-    import { addColumnOrder } from 'svelte-headless-table/plugins'
+    import { createTable, Subscribe, Render } from '@humanspeak/svelte-headless-table'
+    import { addColumnOrder } from '@humanspeak/svelte-headless-table/plugins'
     import { createSamples } from '$lib/utils/createSamples'
 
     const data = readable(createSamples(30))

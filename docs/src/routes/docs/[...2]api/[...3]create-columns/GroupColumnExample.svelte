@@ -1,6 +1,6 @@
 <script>
     import { readable } from 'svelte/store'
-    import { createTable, Render, Subscribe } from 'svelte-headless-table'
+    import { createTable, Render, Subscribe } from '@humanspeak/svelte-headless-table'
     const data = readable([
         { firstName: 'Ada', lastName: 'Lovelace', info: { age: 21 } },
         { firstName: 'Barbara', lastName: 'Liskov', info: { age: 52 } },

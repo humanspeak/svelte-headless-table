@@ -23,7 +23,7 @@
 
 > Build and design powerful datagrid experiences while retaining 100% control over styles and markup.
 
-Visit the [documentation](https://svelte-headless-table.bryanmylee.com/) for code examples and API reference, and get started with the [quick start guide](https://svelte-headless-table.bryanmylee.com/docs/getting-started/quick-start)!
+Visit the [documentation](https://table.svelte.page/) for code examples and API reference, and get started with the [quick start guide](https://table.svelte.page/docs/getting-started/quick-start)!
 
 ## Why Svelte Headless Table?
 
@@ -45,18 +45,18 @@ Easily extend Svelte Headless Table with complex **sorting**, **filtering**, **g
 
 ### Plugin roadmap
 
-- [x] [addSortBy](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-sort-by)
-- [x] [addColumnFilters](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-column-filters)
-- [x] [addTableFilter](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-table-filter)
-- [x] [addColumnOrder](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-column-order)
-- [x] [addHiddenColumns](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-hidden-columns)
-- [x] [addPagination](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-pagination)
-- [x] [addSubRows](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-sub-rows)
-- [x] [addGroupBy](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-group-by)
-- [x] [addExpandedRows](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-expanded-rows)
-- [x] [addSelectedRows](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-selected-rows)
-- [x] [addResizedColumns](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-resized-columns)
-- [x] [addGridLayout](https://svelte-headless-table.bryanmylee.com/docs/plugins/add-grid-layout)
+- [x] [addSortBy](https://table.svelte.page/docs/plugins/add-sort-by)
+- [x] [addColumnFilters](https://table.svelte.page/docs/plugins/add-column-filters)
+- [x] [addTableFilter](https://table.svelte.page/docs/plugins/add-table-filter)
+- [x] [addColumnOrder](https://table.svelte.page/docs/plugins/add-column-order)
+- [x] [addHiddenColumns](https://table.svelte.page/docs/plugins/add-hidden-columns)
+- [x] [addPagination](https://table.svelte.page/docs/plugins/add-pagination)
+- [x] [addSubRows](https://table.svelte.page/docs/plugins/add-sub-rows)
+- [x] [addGroupBy](https://table.svelte.page/docs/plugins/add-group-by)
+- [x] [addExpandedRows](https://table.svelte.page/docs/plugins/add-expanded-rows)
+- [x] [addSelectedRows](https://table.svelte.page/docs/plugins/add-selected-rows)
+- [x] [addResizedColumns](https://table.svelte.page/docs/plugins/add-resized-columns)
+- [x] [addGridLayout](https://table.svelte.page/docs/plugins/add-grid-layout)
 
 ## Examples
 
@@ -124,4 +124,4 @@ Easily extend Svelte Headless Table with complex **sorting**, **filtering**, **g
 </table>
 ```
 
-For more complex examples with advanced features, visit the [documentation site](https://svelte-headless-table.bryanmylee.com/docs/plugins/overview).
+For more complex examples with advanced features, visit the [documentation site](https://table.svelte.page/docs/plugins/overview).

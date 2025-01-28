@@ -9,7 +9,7 @@ sidebar_title: Subscribe
 `<Subscribe/>` lets you subscribe to non top-level stores in the Svelte template.
 
 :::admonition type="note"
-`<Subscribe/>` is based on [`svelte-subscribe`](https://github.com/bryanmylee/svelte-subscribe).
+`<Subscribe/>` is based on [`svelte-subscribe`](https://github.com/humanspeak/svelte-subscribe).
 :::
 
 ## Granular stores

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { derived, readable } from 'svelte/store'
-    import { Render, Subscribe, createTable, createRender } from 'svelte-headless-table'
+    import { Render, Subscribe, createTable, createRender } from '@humanspeak/svelte-headless-table'
     import {
         addColumnFilters,
         addColumnOrder,
@@ -16,7 +16,7 @@
         addGroupBy,
         addSelectedRows,
         addResizedColumns
-    } from 'svelte-headless-table/plugins'
+    } from '@humanspeak/svelte-headless-table/plugins'
 
     import { mean, sum } from '$lib/utils/math'
     import { getShuffled } from '$lib/utils/getShuffled'

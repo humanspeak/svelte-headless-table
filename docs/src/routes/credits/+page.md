@@ -7,12 +7,12 @@ description: Contributors to Svelte Headless Table
 
 <script lang="ts">
   import { readable } from 'svelte/store';
-  import { createTable, createRender, Render, Subscribe } from 'svelte-headless-table';
-  import { addSortBy } from 'svelte-headless-table/plugins';
+  import { createTable, createRender, Render, Subscribe } from '@humanspeak/svelte-headless-table';
+  import { addSortBy } from '@humanspeak/svelte-headless-table/plugins';
   import CreditsAnchor from './CreditsAnchor.svelte';
   import CreditsHtml from './CreditsHtml.svelte';
   import CaretDownIcon from '~icons/ic/round-keyboard-arrow-down';
-  
+
   const data = readable([
     {
       name: 'React Table',

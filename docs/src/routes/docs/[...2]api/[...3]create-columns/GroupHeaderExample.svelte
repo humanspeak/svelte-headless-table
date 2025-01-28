@@ -1,6 +1,6 @@
 <script>
     import { derived, readable } from 'svelte/store'
-    import { createTable, Render, Subscribe, createRender } from 'svelte-headless-table'
+    import { createTable, Render, Subscribe, createRender } from '@humanspeak/svelte-headless-table'
     import Italic from './Italic.svelte'
 
     const data = readable([
