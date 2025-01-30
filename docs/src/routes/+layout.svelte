@@ -18,6 +18,7 @@
         type NavbarConfig,
         type LoadKitDocsResult
     } from '@svelteness/kit-docs'
+    import Footer from '../components/Footer.svelte'
 
     export let data: LoadKitDocsResult
     let { meta, sidebar } = data
@@ -65,6 +66,8 @@
         </div>
 
         <slot />
+
+        <Footer />
     </KitDocsLayout>
 </KitDocs>
 

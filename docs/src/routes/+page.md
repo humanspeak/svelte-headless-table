@@ -94,5 +94,3 @@ Want to learn more? Visit the [Plugin System](./docs/plugins/overview.md) to fin
 </section>
 
 </article>
-
-<div class="mt-40" />
