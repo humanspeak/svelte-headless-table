@@ -63,6 +63,12 @@
 
         <div class="socials" slot="navbar-right-alt">
             <SocialLink type="gitHub" href="https://github.com/humanspeak/svelte-headless-table" />
+            <a
+                class="relative flex transform-gpu items-center rounded-md border-0 p-2 transition-transform hover:scale-[1.1]"
+                href="https://www.npmjs.com/package/@humanspeak/svelte-headless-table"
+            >
+                <i class="fa-brands fa-npm text-2xl"></i>
+            </a>
         </div>
 
         <slot />
