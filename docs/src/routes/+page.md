@@ -26,6 +26,9 @@ Svelte Headless Table is designed to work **seamlessly** with Svelte. If you lov
   <Button2 size="lg" variant="unfilled" href="https://github.com/humanspeak/svelte-headless-table">
     GitHub
   </Button2>
+    <Button2 size="lg" variant="unfilled" href="https://www.npmjs.com/package/@humanspeak/svelte-headless-table">
+    NPM
+  </Button2>
 </div>
 
 <div class="absolute left-full top-0 wh-1/2 opacity-20">
