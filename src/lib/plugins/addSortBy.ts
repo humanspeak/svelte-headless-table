@@ -1,9 +1,9 @@
+import { derived, writable, type Readable, type Writable } from 'svelte/store'
 import type { DataBodyCell } from '../bodyCells.js'
 import type { BodyRow } from '../bodyRows.js'
-import type { TablePlugin, NewTablePropSet, DeriveRowsFn } from '../types/TablePlugin.js'
+import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { compare } from '../utils/compare.js'
 import { isShiftClick } from '../utils/event.js'
-import { derived, writable, type Readable, type Writable } from 'svelte/store'
 
 export interface SortByConfig {
     initialSortKeys?: SortKey[]

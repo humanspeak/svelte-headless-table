@@ -7,7 +7,7 @@ cli:
 plugins:
     sources:
         - id: trunk
-          ref: v1.6.6
+          ref: v1.6.7
           uri: https://github.com/trunk-io/plugins
 # Many linters and tools depend on runtimes - configure them here. (https://docs.trunk.io/runtimes)
 runtimes:
@@ -37,10 +37,11 @@ lint:
               - svelte
               - javascript
     enabled:
+        - taplo@0.9.3
         - svgo@3.3.2
         - sort-package-json@2.14.0
         - actionlint@1.7.7
-        - checkov@3.2.357
+        - checkov@3.2.358
         - eslint@9.18.0:
               config: eslint.config.mjs
               packages:
@@ -58,7 +59,7 @@ lint:
                   - prettier-plugin-svelte
                   - prettier-plugin-organize-imports
                   - prettier-plugin-tailwindcss
-        - trufflehog@3.88.2
+        - trufflehog@3.88.3
         - yamllint@1.35.1
 actions:
     enabled:

@@ -51,7 +51,7 @@
         table.createViewModel(columns)
     const { hiddenColumnIds } = pluginStates.hideCols
     const ids = flatColumns.map((c) => c.id)
-    let hideForId = Object.fromEntries(ids.map((id) => [id, false]))
+    const hideForId = Object.fromEntries(ids.map((id) => [id, false]))
     $: $hiddenColumnIds = Object.entries(hideForId)
         .filter(([, hide]) => hide)
         .map(([id]) => id)

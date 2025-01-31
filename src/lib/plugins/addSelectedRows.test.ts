@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { createTable } from '../createTable.js'
-import type { Sample } from '../../routes/_createSamples.js'
 import { derived, get, readable } from 'svelte/store'
+import type { Sample } from '../../routes/_createSamples.js'
+import { createTable } from '../createTable.js'
+import { addPagination } from './addPagination.js'
 import { addSelectedRows } from './addSelectedRows.js'
 import { addSubRows } from './addSubRows.js'
-import { addPagination } from './addPagination.js'
 
 const data = readable<Sample[]>([
     {

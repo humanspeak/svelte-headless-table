@@ -26,7 +26,7 @@
 <style lang="postcss">
     .disclosure {
         & :global(.root) {
-            @apply px-4 py-2 border rounded-lg;
+            @apply rounded-lg border px-4 py-2;
             @apply border-gray-200 bg-gray-100/50;
             :global(.dark) & {
                 @apply border-gray-600 bg-gray-800/50;
@@ -45,7 +45,7 @@
         }
 
         & :global(.panel) {
-            @apply py-2 border-t border-gray-200;
+            @apply border-t border-gray-200 py-2;
             :global(.dark) & {
                 @apply border-gray-600;
             }

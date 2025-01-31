@@ -1,6 +1,6 @@
+import { derived, writable, type Readable, type Updater, type Writable } from 'svelte/store'
 import type { BodyRow } from '../bodyRows.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
-import { derived, writable, type Readable, type Updater, type Writable } from 'svelte/store'
 
 export type PaginationConfig = {
     initialPageIndex?: number

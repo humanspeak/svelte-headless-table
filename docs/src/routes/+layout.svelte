@@ -6,6 +6,7 @@
     import '$lib/styles/kit-docs.css'
 
     import SvelteHeadlessTableIcon from '$img/svelte-headless-table.svg?raw'
+    import Footer from '$lib/components/Footer.svelte'
 
     import { page } from '$app/stores'
 
@@ -18,7 +19,6 @@
         type NavbarConfig,
         type LoadKitDocsResult
     } from '@svelteness/kit-docs'
-    import Footer from '../components/Footer.svelte'
 
     export let data: LoadKitDocsResult
     let { meta, sidebar } = data
@@ -34,7 +34,7 @@
     const { activeCategory } = createSidebarContext(sidebar)
 
     $: category = $activeCategory ? `${$activeCategory}: ` : ''
-    $: title = meta ? `${category}${meta.title} | Svelte Headless Table | Bryan Lee` : null
+    $: title = meta ? `${category}${meta.title} | Svelte Headless Table | Humanspeak, Inc` : null
     $: description = meta?.description
 </script>
 

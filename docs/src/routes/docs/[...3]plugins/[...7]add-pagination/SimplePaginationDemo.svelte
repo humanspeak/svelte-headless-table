@@ -63,7 +63,7 @@
         2
     )}</pre>
 
-<div class="mb-4 flex gap-4 items-baseline">
+<div class="mb-4 flex items-baseline gap-4">
     <button on:click={() => $pageIndex--} disabled={!$hasPreviousPage} class="demo"
         >Previous page</button
     >

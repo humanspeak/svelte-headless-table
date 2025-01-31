@@ -1,10 +1,10 @@
 import { keyed } from '@humanspeak/svelte-keyed'
 import type { RenderConfig } from '@humanspeak/svelte-render'
-import type { BodyRow } from '../bodyRows.js'
-import type { TablePlugin, NewTablePropSet, DeriveRowsFn } from '../types/TablePlugin.js'
 import { derived, writable, type Readable, type Writable } from 'svelte/store'
-import type { PluginInitTableState } from '../createViewModel.js'
 import type { DataBodyCell } from '../bodyCells.js'
+import type { BodyRow } from '../bodyRows.js'
+import type { PluginInitTableState } from '../createViewModel.js'
+import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 
 export interface ColumnFiltersConfig {
     serverSide?: boolean

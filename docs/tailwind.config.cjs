@@ -76,7 +76,7 @@ function kitDocsTypography(theme) {
                     letterSpacing: '-0.025em'
                 },
                 h2: {
-                    marginTop: `1.75em`,
+                    marginTop: '1.75em',
                     marginBottom: `${16 / 24}em`
                 },
                 h3: {
@@ -128,7 +128,7 @@ function kitDocsTypography(theme) {
                 a: {
                     fontWeight: theme('fontWeight.normal'),
                     textDecoration: 'none',
-                    borderBottom: `1px solid rgb(var(--kd-color-brand))`
+                    borderBottom: '1px solid rgb(var(--kd-color-brand))'
                 },
                 'a:hover': {
                     borderBottomWidth: '2px'

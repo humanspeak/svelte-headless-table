@@ -2,6 +2,6 @@
     export let count = 0
 </script>
 
-<button on:click class="py-2 px-4 bg-primary text-white rounded-lg">
+<button on:click class="bg-primary rounded-lg px-4 py-2 text-white">
     I've been clicked {count} times
 </button>

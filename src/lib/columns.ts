@@ -1,7 +1,6 @@
 import type { DisplayBodyCell } from './bodyCells.js'
 import type { TableState } from './createViewModel.js'
-import type { DisplayLabel, HeaderLabel } from './types/Label.js'
-import type { DataLabel } from './types/Label.js'
+import type { DataLabel, DisplayLabel, HeaderLabel } from './types/Label.js'
 import type { AnyPlugins, PluginColumnConfigs } from './types/TablePlugin.js'
 
 export interface ColumnInit<Item, Plugins extends AnyPlugins = AnyPlugins> {

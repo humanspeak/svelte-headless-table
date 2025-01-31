@@ -70,7 +70,7 @@
 
 <div
     class={clsx(
-        'code-fence overflow-y-auto relative my-8 rounded-md shadow-lg mx-auto',
+        'code-fence relative mx-auto my-8 overflow-y-auto rounded-md shadow-lg',
         'border border-gray-100 dark:border-gray-800',
         lang && `lang-${lang}`,
         ext && `ext-${ext}`
@@ -78,7 +78,7 @@
 >
     {#if showTopBar}
         <div
-            class="sticky top-0 left-0 z-10 flex items-center pt-2 pb-1 rounded-md backdrop-blur supports-backdrop-blur:bg-white/60"
+            class="sticky left-0 top-0 z-10 flex items-center rounded-md pb-1 pt-2 backdrop-blur supports-backdrop-blur:bg-white/60"
             style="background-color: var(--kd-code-fence-top-bar-bg);"
         >
             {#if hasTopbarTitle}
@@ -90,12 +90,12 @@
             {#if showCopyCode}
                 <button
                     type="button"
-                    class="px-2 py-1 mr-2 hover:opacity-70 active:opacity-50"
+                    class="mr-2 px-2 py-1 hover:opacity-70 active:opacity-50"
                     on:click={copyCodeToClipboard}
                 >
                     <div
                         class={clsx(
-                            'text-white absolute top-2.5 right-4 transition-opacity z-10 duration-300 px-2 py-1 rounded-md ease-out text-sm font-mono',
+                            'absolute right-4 top-2.5 z-10 rounded-md px-2 py-1 font-mono text-sm text-white transition-opacity duration-300 ease-out',
                             showCopiedCodePrompt ? 'opacity-100' : 'hidden opacity-0'
                         )}
                         aria-hidden="true"
@@ -110,7 +110,7 @@
                         class={clsx(
                             showCopiedCodePrompt
                                 ? 'opacity-0'
-                                : 'opacity-100 transition-opacity duration-600 ease-in'
+                                : 'duration-600 opacity-100 transition-opacity ease-in'
                         )}
                     />
                     <span class="sr-only">{$i18n?.code.copy}</span>
@@ -119,11 +119,11 @@
         </div>
     {/if}
 
-    <div class="relative z-0 overflow-hidden code">
+    <div class="code relative z-0 overflow-hidden">
         <div
             class={clsx(
                 showLineNumbers && 'pl-10',
-                'bg-white dark:bg-gray-900 [&>pre]:bg-transparent [&>pre]:brightness-[0.6] [&>pre]:dark:brightness-100 [&>pre]:saturate-[2.5] [&>pre]:dark:saturate-100 [&>pre]:hue-rotate-[10deg] [&>pre]:dark:hue-rotate-0'
+                'bg-white dark:bg-gray-900 [&>pre]:bg-transparent [&>pre]:brightness-[0.6] [&>pre]:hue-rotate-[10deg] [&>pre]:saturate-[2.5] [&>pre]:dark:brightness-100 [&>pre]:dark:hue-rotate-0 [&>pre]:dark:saturate-100'
             )}
         >
             {@html code}
@@ -131,10 +131,10 @@
 
         {#if showLineNumbers}
             <pre
-                class="absolute top-3.5 left-0 m-0 flex flex-col text-sm leading-[27px]"
+                class="absolute left-0 top-3.5 m-0 flex flex-col text-sm leading-[27px]"
                 style="background-color: transparent; border-radius: 0; padding-top: 0;">
         <div
-                    class="flex-none hidden text-right select-none text-slate-600 992:block"
+                    class="hidden flex-none select-none text-right text-slate-600 992:block"
                     aria-hidden="true">{lines.join('\n')}</div>
       </pre>
         {/if}

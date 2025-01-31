@@ -1,5 +1,5 @@
-import type { DeriveFlatColumnsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { derived, writable, type Writable } from 'svelte/store'
+import type { DeriveFlatColumnsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 
 export interface ColumnOrderConfig {
     initialColumnIdOrder?: string[]

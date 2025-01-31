@@ -5,7 +5,7 @@
 
 <svelte:head>
 
-  <title>Svelte Headless Table | Bryan Lee</title>
+  <title>Svelte Headless Table | Humanspeak, Inc</title>
   <meta name="description" content="Unopinionated and extensible data tables for Svelte" />
 </svelte:head>
 
