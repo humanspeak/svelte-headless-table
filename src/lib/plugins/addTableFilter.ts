@@ -1,7 +1,7 @@
-import type { BodyRow } from '../bodyRows.js'
-import type { TablePlugin, NewTablePropSet, DeriveRowsFn } from '../types/TablePlugin.js'
-import { recordSetStore } from '../utils/store.js'
 import { derived, writable, type Readable, type Writable } from 'svelte/store'
+import type { BodyRow } from '../bodyRows.js'
+import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
+import { recordSetStore } from '../utils/store.js'
 import { textPrefixFilter } from './addColumnFilters.js'
 
 export interface TableFilterConfig {

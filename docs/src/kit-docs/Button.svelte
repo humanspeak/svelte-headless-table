@@ -27,10 +27,10 @@
     .button {
         @apply rounded-xl shadow;
         @apply transition-colors;
-        @apply focus-visible:ring-2 ring-brand ring-offset-2;
+        @apply ring-brand ring-offset-2 focus-visible:ring-2;
 
         /* reset anchor tag */
-        @apply no-underline border-b-0 font-normal cursor-pointer;
+        @apply cursor-pointer border-b-0 font-normal no-underline;
 
         &.lg {
             @apply px-6 py-3;
@@ -47,11 +47,11 @@
         }
 
         &.filled {
-            @apply bg-brand text-white font-bold;
+            @apply bg-brand font-bold text-white;
         }
 
         &.unfilled {
-            @apply text-brand font-bold;
+            @apply font-bold text-brand;
             :global(.dark) & {
                 @apply text-white;
             }

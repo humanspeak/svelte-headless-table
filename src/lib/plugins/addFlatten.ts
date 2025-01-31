@@ -1,6 +1,6 @@
+import { derived, writable, type Readable, type Writable } from 'svelte/store'
 import type { BodyRow } from '../bodyRows.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
-import { derived, writable, type Readable, type Writable } from 'svelte/store'
 
 export interface FlattenConfig {
     initialDepth?: number

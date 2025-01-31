@@ -1,6 +1,6 @@
+import { derived } from 'svelte/store'
 import { DataBodyRow, getSubRows } from '../bodyRows.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
-import { derived } from 'svelte/store'
 
 export type ValidChildrenKey<Item> = {
     [Key in keyof Item]: Item[Key] extends Item[] ? Key : never

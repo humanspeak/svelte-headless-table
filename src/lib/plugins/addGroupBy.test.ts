@@ -1,6 +1,6 @@
-import { createTable } from '../createTable.js'
-import type { Sample } from '../../routes/_createSamples.js'
 import { get, readable } from 'svelte/store'
+import type { Sample } from '../../routes/_createSamples.js'
+import { createTable } from '../createTable.js'
 import { addGroupBy } from './addGroupBy.js'
 import { addSubRows } from './addSubRows.js'
 

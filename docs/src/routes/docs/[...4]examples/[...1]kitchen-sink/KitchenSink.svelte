@@ -245,7 +245,7 @@
     const { columnIdOrder } = pluginStates.orderColumns
     $columnIdOrder = ids
     const { hiddenColumnIds } = pluginStates.hideColumns
-    let hideForId = Object.fromEntries(ids.map((id) => [id, false]))
+    const hideForId = Object.fromEntries(ids.map((id) => [id, false]))
     $: $hiddenColumnIds = Object.entries(hideForId)
         .filter(([, hide]) => hide)
         .map(([id]) => id)

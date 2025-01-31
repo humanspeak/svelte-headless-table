@@ -1,3 +1,4 @@
+import { derived, writable, type Readable } from 'svelte/store'
 import { DataBodyCell } from '../bodyCells.js'
 import { BodyRow, DisplayBodyRow } from '../bodyRows.js'
 import type { DataColumn } from '../columns.js'
@@ -6,7 +7,6 @@ import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TableP
 import { isShiftClick } from '../utils/event.js'
 import { nonUndefined } from '../utils/filter.js'
 import { arraySetStore, type ArraySetStore } from '../utils/store.js'
-import { derived, writable, type Readable } from 'svelte/store'
 
 export interface GroupByConfig {
     initialGroupByIds?: string[]

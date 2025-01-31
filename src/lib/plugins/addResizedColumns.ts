@@ -1,8 +1,8 @@
+import { keyed } from '@humanspeak/svelte-keyed'
+import { derived, writable, type Writable } from 'svelte/store'
 import type { HeaderCell } from '../headerCells.js'
 import type { NewTableAttributeSet, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { sum } from '../utils/math.js'
-import { keyed } from '@humanspeak/svelte-keyed'
-import { derived, writable, type Writable } from 'svelte/store'
 
 export interface AddResizedColumnsConfig {
     onResizeEnd?: (ev: Event) => void

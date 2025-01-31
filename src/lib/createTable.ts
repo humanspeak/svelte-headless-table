@@ -12,14 +12,14 @@ import {
     type DisplayColumnInit,
     type GroupColumnInit
 } from './columns.js'
-import type { AnyPlugins } from './types/TablePlugin.js'
-import type { ReadOrWritable } from './utils/store.js'
-import { getDuplicates } from './utils/array.js'
 import {
     createViewModel,
     type CreateViewModelOptions,
     type TableViewModel
 } from './createViewModel.js'
+import type { AnyPlugins } from './types/TablePlugin.js'
+import { getDuplicates } from './utils/array.js'
+import type { ReadOrWritable } from './utils/store.js'
 
 export class Table<Item, Plugins extends AnyPlugins = AnyPlugins> {
     data: ReadOrWritable<Item[]>

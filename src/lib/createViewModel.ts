@@ -6,8 +6,8 @@ import { getHeaderRows, HeaderRow } from './headerRows.js'
 import type {
     AnyPlugins,
     DeriveFlatColumnsFn,
-    DeriveRowsFn,
     DeriveFn,
+    DeriveRowsFn,
     PluginStates
 } from './types/TablePlugin.js'
 import { finalizeAttributes } from './utils/attributes.js'

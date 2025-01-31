@@ -19,13 +19,13 @@
 
 <style lang="postcss">
     section {
-        @apply flex flex-col gap-4 items-center mx-auto;
+        @apply mx-auto flex flex-col items-center gap-4;
     }
     div {
-        @apply m-0 relative wh-32 min-wh-32;
+        @apply relative m-0 wh-32 min-wh-32;
     }
     img {
-        @apply m-0 wh-32 min-wh-32 rounded-full bg-gray-400;
+        @apply m-0 rounded-full bg-gray-400 wh-32 min-wh-32;
         @apply absolute;
     }
     p {

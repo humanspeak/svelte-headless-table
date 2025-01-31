@@ -13,6 +13,7 @@ export default defineConfig({
             exclude: [
                 'src/**/*.test.ts',
                 'docs/**',
+                'docs-new/**',
                 '.trunk/**',
                 '.svelte-kit/**',
                 'tests/**',

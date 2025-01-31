@@ -1,8 +1,5 @@
-<script lang="ts">
-</script>
-
 <footer>
-    <p class="w-full text-center p-4">
+    <p class="w-full p-4 text-center">
         Made with <i class="fa-duotone fa-heart"></i> by
         <a class="humanspeak logo" target="_blank" href="https://humanspeak.com">Humanspeak</a>
     </p>
