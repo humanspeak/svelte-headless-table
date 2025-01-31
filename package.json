@@ -88,7 +88,7 @@
         "@sveltejs/adapter-auto": "^3.0.0",
         "@sveltejs/kit": "^2.0.0",
         "@sveltejs/package": "^2.0.0",
-        "@sveltejs/vite-plugin-svelte": "^3.0.0",
+        "@sveltejs/vite-plugin-svelte": "^5.0.3",
         "@testing-library/jest-dom": "^6.1.6",
         "@testing-library/svelte": "^4.0.5",
         "@types/eslint": "8.56.0",
