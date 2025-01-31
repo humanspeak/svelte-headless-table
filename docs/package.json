@@ -16,10 +16,6 @@
         "prepare": "svelte-kit sync",
         "preview": "vite preview"
     },
-    "dependencies": {
-        "@sentry/cloudflare": "^8.50.0",
-        "@sentry/sveltekit": "^8.50.0"
-    },
     "devDependencies": {
         "@cloudflare/workers-types": "^4.20250121.0",
         "@humanspeak/svelte-headless-table": "file:../",
