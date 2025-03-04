@@ -1,4 +1,4 @@
-import type { RenderConfig } from '@humanspeak/svelte-subscribe'
+import type { RenderConfig } from '@humanspeak/svelte-render'
 import { derived } from 'svelte/store'
 import { NBSP } from './constants.js'
 import { TableComponent } from './tableComponent.js'
@@ -81,13 +81,11 @@ export abstract class HeaderCell<
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export type FlatHeaderCellInit<Item, Plugins extends AnyPlugins = AnyPlugins> = Omit<
     HeaderCellInit<Item, Plugins>,
     'colspan'
 >
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export type FlatHeaderCellAttributes<
     Item,
     Plugins extends AnyPlugins = AnyPlugins

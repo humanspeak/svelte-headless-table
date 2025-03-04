@@ -27,7 +27,7 @@
         "customizable",
         "accessible"
     ],
-    "homepage": "https://github.com/humanspeak/svelte-headless-table#readme",
+    "homepage": "https://table.svelte.page",
     "bugs": {
         "url": "https://github.com/humanspeak/svelte-headless-table/issues"
     },

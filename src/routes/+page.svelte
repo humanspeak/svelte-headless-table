@@ -38,7 +38,7 @@
         createSamples({ seed: isNaN(Number(seed)) ? undefined : Number(seed) }, 2, 2)
     )
 
-    let serverSide = false
+    const serverSide = false
 
     const table = createTable(data, {
         subRows: addSubRows({
@@ -177,7 +177,11 @@
                         filter: {
                             fn: textPrefixFilter,
                             render: ({ filterValue, values }) =>
-                                createRender(TextFilter, { filterValue, values })
+                                createRender(TextFilter, {
+                                    filterValue,
+                                    values,
+                                    testId: 'first-name-filter'
+                                })
                         }
                     }
                 }),
@@ -287,8 +291,6 @@
 </script>
 
 <h1>@humanspeak/svelte-headless-table</h1>
-
-<button on:click={() => ($columnIdOrder = getShuffled($columnIdOrder))}>Shuffle columns</button>
 <div>
     <button on:click={() => $pageIndex--} disabled={!$hasPreviousPage}>Previous page</button>
     {$pageIndex + 1} of {$pageCount}
@@ -297,9 +299,15 @@
     <input id="page-size" type="number" min={1} bind:value={$pageSize} />
 </div>
 
-<button on:click={() => console.log(get(exportedData))}>Export as object</button>
-<button on:click={() => console.log(get(exportedJson))}>Export as JSON</button>
-<button on:click={() => console.log(get(exportedCsv))}>Export as CSV</button>
+<button data-testid="export-as-object-button" on:click={() => console.log(get(exportedData))}>
+    Export as object
+</button>
+<button data-testid="export-as-json-button" on:click={() => console.log(get(exportedJson))}>
+    Export as JSON
+</button>
+<button data-testid="export-as-csv-button" on:click={() => console.log(get(exportedCsv))}>
+    Export as CSV
+</button>
 
 <table {...$tableAttrs}>
     <thead>
@@ -338,10 +346,12 @@
                                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div
                                         class="resizer"
+                                        role="button"
+                                        tabindex="0"
                                         on:click|stopPropagation
                                         use:props.resize.drag
                                         use:props.resize.reset
-                                    />
+                                    ></div>
                                 {/if}
                             </th>
                         </Subscribe>
