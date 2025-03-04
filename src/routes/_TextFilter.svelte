@@ -3,6 +3,7 @@
 
     export let filterValue: Writable<string>
     export let values: Readable<string[]>
+    export let testId: string
 </script>
 
 <input
@@ -10,4 +11,5 @@
     bind:value={$filterValue}
     on:click|stopPropagation
     placeholder="Search {$values.length} records..."
+    data-testid={testId}
 />

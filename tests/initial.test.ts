@@ -21,4 +21,18 @@ test.describe('initial', () => {
         const pageSizeInput = page.getByLabel('Page size')
         await expect(pageSizeInput).toHaveValue('20')
     })
+
+    test('filtering functionality works', async ({ page }: { page: Page }) => {
+        // Test search input
+        const searchInput = page.getByTestId('first-name-filter')
+        await searchInput.fill('Toby')
+
+        // Verify filtered results
+        await expect(page.getByText('Toby Deckow')).toBeVisible()
+        await expect(page.getByText('Mike Hansen')).not.toBeVisible()
+
+        // Clear search
+        await searchInput.fill('')
+        await expect(page.getByText('Mike Hansen')).toBeVisible()
+    })
 })

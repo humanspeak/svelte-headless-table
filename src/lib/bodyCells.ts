@@ -1,4 +1,4 @@
-import type { RenderConfig } from '@humanspeak/svelte-subscribe'
+import type { RenderConfig } from '@humanspeak/svelte-render'
 import { derived, type Readable } from 'svelte/store'
 import type { BodyRow } from './bodyRows.js'
 import type { DataColumn, DisplayColumn, FlatColumn } from './columns.js'
