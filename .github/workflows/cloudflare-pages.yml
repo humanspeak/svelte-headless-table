@@ -11,6 +11,7 @@ on:
             - .github/workflows/cloudflare-pages.yml
         branches:
             - main
+    workflow_dispatch:
 
 jobs:
     deploy:
