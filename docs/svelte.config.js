@@ -1,44 +1,20 @@
-import adapter from '@sveltejs/adapter-cloudflare'
-import { vitePreprocess } from '@sveltejs/kit/vite'
+import adapter from '@sveltejs/adapter-cloudflare';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import { mdsvex } from 'mdsvex';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-    extensions: ['.svelte', '.md'],
+	extensions: ['.svelte', '.md', '.svx'],
+	preprocess: [
+		vitePreprocess({}),
+		mdsvex({
+			extensions: ['.md', '.svx']
+		})
+	],
 
-    kit: {
-        adapter: adapter(),
-        prerender: {
-            handleMissingId: 'warn'
-        },
-        csp: {
-            mode: 'hash',
-            directives: {
-                'default-src': ['self'],
-                'script-src': [
-                    'self',
-                    'https://kit.fontawesome.com',
-                    'https://*.ingest.us.sentry.io',
-                    'unsafe-inline'
-                ],
-                'style-src': ['self', 'unsafe-inline', 'https://kit.fontawesome.com'],
-                'img-src': ['self', 'data:', 'https:'],
-                'font-src': [
-                    'self',
-                    'data:',
-                    'https://kit.fontawesome.com',
-                    'https://ka-p.fontawesome.com'
-                ],
-                'worker-src': ['self', 'blob:'],
-                'connect-src': ['self', 'https:'],
-                'frame-ancestors': ['none'],
-                'form-action': ['self'],
-                'base-uri': ['self'],
-                'upgrade-insecure-requests': true
-            }
-        }
-    },
+	kit: {
+		adapter: adapter()
+	}
+};
 
-    preprocess: [vitePreprocess({})]
-}
-
-export default config
+export default config;
