@@ -1,16 +1,8 @@
-import { error } from '@sveltejs/kit';
-import type { PageLoad } from './$types.js';
-import type { DocFile } from '$lib/types/docs.js';
+import { redirect } from '@sveltejs/kit'
 
-export const load: PageLoad = async () => {
-    // @ts-expect-error import doesn't recognize *.md modules _yet_
-    const doc: DocFile = await import('../../content/index.md');
+export const prerender = true
 
-    if (!doc || !doc.metadata) {
-        error(404);
-    }
-    return {
-        doc: doc.default,
-        metadata: doc.metadata,
-    };
-};
+/** @type {import('@sveltejs/kit').PageLoad} */
+export async function load() {
+    throw redirect(307, '/docs/getting-started/overview')
+}

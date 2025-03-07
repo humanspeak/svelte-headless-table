@@ -39,9 +39,9 @@ lint:
     enabled:
         - taplo@0.9.3
         - svgo@3.3.2
-        - sort-package-json@2.15.1
+        - sort-package-json@3.0.0
         - actionlint@1.7.7
-        - checkov@3.2.379
+        - checkov@3.2.382
         - eslint@9.21.0:
               config: eslint.config.mjs
               packages:
@@ -49,7 +49,10 @@ lint:
                   - '@typescript-eslint/parser'
                   - svelte-eslint-parser
                   - '@eslint/js'
+                  - '@eslint/compat'
+                  - typescript-eslint
                   - eslint-plugin-svelte
+                  - eslint-plugin-import
         - git-diff-check
         - markdownlint@0.44.0
         - osv-scanner@1.9.2
@@ -59,7 +62,7 @@ lint:
                   - prettier-plugin-svelte
                   - prettier-plugin-organize-imports
                   - prettier-plugin-tailwindcss
-        - trufflehog@3.88.14
+        - trufflehog@3.88.15
         - yamllint@1.35.1
 actions:
     enabled:
