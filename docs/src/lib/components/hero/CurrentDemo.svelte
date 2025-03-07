@@ -1,7 +1,7 @@
 <script lang="ts">
     import { page } from '$app/stores'
     import { getDistinct } from '$lib/utils/array.js'
-    import { Button } from '$lib/shadcn/components/ui/Button/index.js'
+    import { Button } from '$lib/shadcn/components/ui/button/index.js'
     import { mean, sum } from '$lib/utils/math.js'
     import { Render, Subscribe, createTable } from '@humanspeak/svelte-headless-table'
     import {
