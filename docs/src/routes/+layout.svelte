@@ -1,97 +1,78 @@
 <script lang="ts">
-    import '../app.postcss'
-    import '@svelteness/kit-docs/client/polyfills/index.js'
-    import '@svelteness/kit-docs/client/styles/normalize.css'
-    import '@svelteness/kit-docs/client/styles/theme.css'
-    import '$lib/styles/kit-docs.css'
+    import '../app.css'
+    import { ModeWatcher } from 'mode-watcher'
+    import { page } from '$app/state'
 
-    import SvelteHeadlessTableIcon from '$img/svelte-headless-table.svg?raw'
-    import Footer from '$lib/components/Footer.svelte'
-
-    import { page } from '$app/stores'
-
-    import {
-        KitDocs,
-        KitDocsLayout,
-        Button,
-        SocialLink,
-        createSidebarContext,
-        type NavbarConfig,
-        type LoadKitDocsResult
-    } from '@svelteness/kit-docs'
-
-    export let data: LoadKitDocsResult
-    let { meta, sidebar } = data
-    $: ({ meta, sidebar } = data)
-
-    const navbar: NavbarConfig = {
-        links: [
-            { title: 'Documentation', slug: '/docs', match: /\/docs/ },
-            { title: 'Credits', slug: '/credits', match: /\/credits/ }
-        ]
-    }
-
-    const { activeCategory } = createSidebarContext(sidebar)
-
-    $: category = $activeCategory ? `${$activeCategory}: ` : ''
-    $: title = meta ? `${category}${meta.title} | Svelte Headless Table | Humanspeak, Inc` : null
-    $: description = meta?.description
+    const { children } = $props()
+    const imageLocation = `${page.url.origin}/`
 </script>
 
 <svelte:head>
-    {#key $page.url.pathname}
-        {#if title}
-            <title>{title}</title>
-        {/if}
-        {#if description}
-            <meta name="description" content={description} />
-        {/if}
-    {/key}
+    <title>Svelte Table - Headless Table Component</title>
+    <meta
+        name="description"
+        content="Build better documentation and content-rich applications with this headless table component for Svelte 5"
+    />
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:title" content="Svelte Table - Headless Table Component" />
+    <meta
+        property="og:description"
+        content="Build better documentation and content-rich applications with this headless table component for Svelte 5"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://table.svelte.page" />
+    <meta property="og:image" content="{imageLocation}svelte-table-opengraph.png" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Svelte Table - Headless Table Component" />
+    <meta
+        name="twitter:description"
+        content="Build better documentation and content-rich applications with this headless table component for Svelte 5"
+    />
+    <meta name="twitter:image" content="{imageLocation}svelte-table-twitter.png" />
+
+    <!-- Keywords -->
+    <meta
+        name="keywords"
+        content="svelte, markdown, parser, typescript, svelte5, documentation, html, converter, marked, github-slugger, component, sveltekit, formatting, content management"
+    />
+
+    <!-- Additional Meta -->
+    <meta name="author" content="Humanspeak, Inc." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://table.svelte.page" />
+
+    <!-- JSON-LD structured data -->
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Svelte Headless Table",
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": "Any",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            },
+            "author": {
+                "@type": "Organization",
+                "name": "Humanspeak, Inc.",
+                "url": "https://humanspeak.com"
+            },
+            "programmingLanguage": ["Svelte", "TypeScript"],
+            "description": "A powerful headless table component for Svelte 5 that transforms markdown into customizable Svelte components with TypeScript support and extensive testing coverage.",
+            "license": "MIT",
+            "url": "https://table.svelte.page",
+            "downloadUrl": "https://www.npmjs.com/package/@humanspeak/svelte-table",
+            "requirements": "Svelte 5.0 or higher",
+            "releaseNotes": "https://github.com/humanspeak/svelte-table/releases",
+            "keywords": "svelte, table, headless, typescript, documentation"
+        }
+    </script>
 </svelte:head>
+<ModeWatcher />
 
-<KitDocs {meta}>
-    <KitDocsLayout {navbar} {sidebar}>
-        <div slot="navbar-left">
-            <div class="logo p-2">
-                <Button href="/">
-                    <div class="flex items-center gap-2 text-xl tracking-tight">
-                        {@html SvelteHeadlessTableIcon} Svelte Headless Table
-                    </div>
-                </Button>
-            </div>
-        </div>
-
-        <div class="socials" slot="navbar-right-alt">
-            <SocialLink type="gitHub" href="https://github.com/humanspeak/svelte-headless-table" />
-            <a
-                class="relative flex transform-gpu items-center rounded-md border-0 p-2 transition-transform hover:scale-[1.1]"
-                href="https://www.npmjs.com/package/@humanspeak/svelte-headless-table"
-            >
-                <i class="fa-brands fa-npm text-2xl"></i>
-            </a>
-        </div>
-
-        <slot />
-
-        <Footer />
-    </KitDocsLayout>
-</KitDocs>
-
-<style>
-    .logo :global(a) {
-        color: rgb(var(--kd-color-inverse));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .logo :global(svg) {
-        height: 28px;
-        overflow: hidden;
-    }
-
-    .socials {
-        display: flex;
-        margin-left: -0.25rem;
-    }
-</style>
+{@render children?.()}
