@@ -14,6 +14,7 @@ export default defineConfig({
                 'src/**/*.test.ts',
                 'docs/**',
                 'docs-new/**',
+                'docs-old/**',
                 '.trunk/**',
                 '.svelte-kit/**',
                 'tests/**',

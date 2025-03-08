@@ -37,7 +37,6 @@ const getObjectsFromRows = <Item>(
                     return [id, cell.value]
                 }
                 if (cell.isDisplay() && cell.column.data !== undefined) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     let data = cell.column.data(cell, row.state)
                     if (isReadable(data)) {
                         data = get(data)
@@ -62,7 +61,6 @@ const getCsvFromRows = <Item>(rows: BodyRow<Item>[], ids: string[]): string => {
                 return cell.value
             }
             if (cell.isDisplay() && cell.column.data !== undefined) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 let data = cell.column.data(cell, row.state)
                 if (isReadable(data)) {
                     data = get(data)
