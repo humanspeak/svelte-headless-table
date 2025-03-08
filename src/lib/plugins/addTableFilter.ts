@@ -24,10 +24,8 @@ export interface TableFilterColumnOptions<Item> {
     getFilterValue?: (value: any) => string
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type TableFilterFn = (props: TableFilterFnProps) => boolean
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type TableFilterFnProps = {
     filterValue: string
     value: string

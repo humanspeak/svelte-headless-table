@@ -1,6 +1,7 @@
 <script lang="ts">
-    import { derived, readable, get } from 'svelte/store'
+    import { page } from '$app/stores'
     import { createRender } from '@humanspeak/svelte-render'
+    import { derived, get, readable } from 'svelte/store'
     import { Render, Subscribe, createTable } from '../lib/index.js'
     import {
         addColumnFilters,
@@ -19,19 +20,17 @@
         numberRangeFilter,
         textPrefixFilter
     } from '../lib/plugins/index.js'
-    import { mean, sum } from '../lib/utils/math.js'
-    import { getShuffled } from './_getShuffled.js'
-    import { createSamples } from './_createSamples.js'
-    import { page } from '$app/stores'
-    import Italic from './_Italic.svelte'
-    import Profile from './_Profile.svelte'
-    import Tick from './_Tick.svelte'
-    import TextFilter from './_TextFilter.svelte'
-    import NumberRangeFilter from './_NumberRangeFilter.svelte'
-    import SelectFilter from './_SelectFilter.svelte'
-    import ExpandIndicator from './_ExpandIndicator.svelte'
     import { getDistinct } from '../lib/utils/array.js'
+    import { mean, sum } from '../lib/utils/math.js'
+    import { createSamples } from './_createSamples.js'
+    import ExpandIndicator from './_ExpandIndicator.svelte'
+    import Italic from './_Italic.svelte'
+    import NumberRangeFilter from './_NumberRangeFilter.svelte'
+    import Profile from './_Profile.svelte'
+    import SelectFilter from './_SelectFilter.svelte'
     import SelectIndicator from './_SelectIndicator.svelte'
+    import TextFilter from './_TextFilter.svelte'
+    import Tick from './_Tick.svelte'
 
     const seed = $page.url.searchParams.get('seed')
     const data = readable(

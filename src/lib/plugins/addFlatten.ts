@@ -10,8 +10,8 @@ export interface FlattenState {
     depth: Writable<number>
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-interface
-export interface FlattenColumnOptions<Item> {}
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export interface FlattenColumnOptions<Item> extends Record<string, never> {}
 
 export type FlattenPropSet = NewTablePropSet<{
     'tbody.tr.td': {

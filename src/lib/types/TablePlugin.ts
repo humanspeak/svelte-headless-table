@@ -24,7 +24,7 @@ export type TablePlugin<
 export type TablePluginInit<Item, ColumnOptions> = {
     pluginName: string
     tableState: PluginInitTableState<Item>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     columnOptions: Record<string, ColumnOptions>
 }
 

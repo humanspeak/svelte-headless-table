@@ -74,7 +74,6 @@ const deepenIdAndDepth = <Row extends BodyRow<any, any>>(row: Row, parentId: str
     row.subRows?.forEach((subRow) => deepenIdAndDepth(subRow, parentId))
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getGroupedRows = <
     Item,
     Row extends BodyRow<Item>,
