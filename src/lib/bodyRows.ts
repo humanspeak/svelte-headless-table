@@ -13,7 +13,7 @@ export type BodyRowInit<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     parentRow?: BodyRow<Item, Plugins>
 }
 
-/* trunk-ignore(eslint/no-unused-vars) */
+/* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
 export type BodyRowAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     role: 'row'
 }
@@ -188,6 +188,7 @@ export class DisplayBodyRow<Item, Plugins extends AnyPlugins = AnyPlugins> exten
 }
 
 export interface BodyRowsOptions<Item> {
+    /* trunk-ignore(eslint/no-unused-vars) */
     rowDataId?: (item: Item, index: number) => string
 }
 
@@ -256,10 +257,10 @@ export const getBodyRows = <Item, Plugins extends AnyPlugins = AnyPlugins>(
  * @returns A new array of `BodyRow`s with corrected row references.
  */
 export const getColumnedBodyRows = <Item, Plugins extends AnyPlugins = AnyPlugins>(
-    rows: BodyRow<Item, Plugins>[],
+    rows: DataBodyRow<Item, Plugins>[],
     columnIdOrder: string[]
-): BodyRow<Item, Plugins>[] => {
-    const columnedRows: BodyRow<Item, Plugins>[] = rows.map((row) => {
+): DataBodyRow<Item, Plugins>[] => {
+    const columnedRows: DataBodyRow<Item, Plugins>[] = rows.map((row) => {
         const clonedRow = row.clone()
         clonedRow.cells = []
         clonedRow.cellForId = {}

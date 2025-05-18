@@ -19,6 +19,7 @@ export interface ColumnFiltersState<Item> {
 export interface ColumnFiltersColumnOptions<Item, FilterValue = any> {
     fn: ColumnFilterFn<FilterValue>
     initialFilterValue?: FilterValue
+    /* trunk-ignore(eslint/no-unused-vars) */
     render?: (props: ColumnRenderConfigPropArgs<Item, FilterValue>) => RenderConfig
 }
 
@@ -34,6 +35,7 @@ interface ColumnRenderConfigPropArgs<Item, FilterValue = any, Value = any>
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ColumnFilterFn<FilterValue = any, Value = any> = (
+    /* trunk-ignore(eslint/no-unused-vars) */
     props: ColumnFilterFnProps<FilterValue, Value>
 ) => boolean
 
