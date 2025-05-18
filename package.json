@@ -59,6 +59,7 @@
     ],
     "scripts": {
         "build": "vite build && npm run package",
+        "changeset": "npx @changesets/cli",
         "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
         "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
         "dev": "vite dev",
