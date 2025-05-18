@@ -13,7 +13,7 @@ export type BodyRowInit<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     parentRow?: BodyRow<Item, Plugins>
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+/* trunk-ignore(eslint/no-unused-vars) */
 export type BodyRowAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     role: 'row'
 }
@@ -50,6 +50,7 @@ export abstract class BodyRow<Item, Plugins extends AnyPlugins = AnyPlugins> ext
         })
     }
 
+    /* trunk-ignore(eslint/no-unused-vars) */
     abstract clone(props?: BodyRowCloneProps): BodyRow<Item, Plugins>
 
     // TODO Workaround for https://github.com/vitejs/vite/issues/9528
@@ -203,8 +204,8 @@ export const getBodyRows = <Item, Plugins extends AnyPlugins = AnyPlugins>(
      */
     flatColumns: FlatColumn<Item, Plugins>[],
     { rowDataId }: BodyRowsOptions<Item> = {}
-): BodyRow<Item, Plugins>[] => {
-    const rows: BodyRow<Item, Plugins>[] = data.map((item, idx) => {
+): DataBodyRow<Item, Plugins>[] => {
+    const rows: DataBodyRow<Item, Plugins>[] = data.map((item, idx) => {
         const id = idx.toString()
         return new DataBodyRow({
             id,
