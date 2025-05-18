@@ -2,7 +2,6 @@
 '@humanspeak/svelte-headless-table': major
 ---
 
-Preparing for breaking changes:
+Require Svelte >= 5.30.x for the latest Svelte features
+Changed pageRows type from `BodyRow<Item, Plugins>[]` to `DataBodyRow<Item, Plugins>[]`
 
-- Requiring to later svelte `5.30.x` for latest svelte features
-- pageRows now proper returns `DataPageRow` vs `PageRow`
