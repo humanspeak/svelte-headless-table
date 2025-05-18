@@ -5,5 +5,11 @@
         "source.fixAll": "explicit",
         "source.fixAll.eslint": "explicit"
     },
-    "editor.formatOnPaste": true
+    "editor.formatOnPaste": true,
+    "[json]": {
+        "editor.defaultFormatter": "trunk.io"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "trunk.io"
+    }
 }

@@ -13,7 +13,7 @@ export type BodyRowInit<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     parentRow?: BodyRow<Item, Plugins>
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+/* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
 export type BodyRowAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     role: 'row'
 }
@@ -50,6 +50,7 @@ export abstract class BodyRow<Item, Plugins extends AnyPlugins = AnyPlugins> ext
         })
     }
 
+    /* trunk-ignore(eslint/no-unused-vars) */
     abstract clone(props?: BodyRowCloneProps): BodyRow<Item, Plugins>
 
     // TODO Workaround for https://github.com/vitejs/vite/issues/9528
@@ -187,6 +188,7 @@ export class DisplayBodyRow<Item, Plugins extends AnyPlugins = AnyPlugins> exten
 }
 
 export interface BodyRowsOptions<Item> {
+    /* trunk-ignore(eslint/no-unused-vars) */
     rowDataId?: (item: Item, index: number) => string
 }
 
@@ -203,8 +205,8 @@ export const getBodyRows = <Item, Plugins extends AnyPlugins = AnyPlugins>(
      */
     flatColumns: FlatColumn<Item, Plugins>[],
     { rowDataId }: BodyRowsOptions<Item> = {}
-): BodyRow<Item, Plugins>[] => {
-    const rows: BodyRow<Item, Plugins>[] = data.map((item, idx) => {
+): DataBodyRow<Item, Plugins>[] => {
+    const rows: DataBodyRow<Item, Plugins>[] = data.map((item, idx) => {
         const id = idx.toString()
         return new DataBodyRow({
             id,
@@ -255,10 +257,10 @@ export const getBodyRows = <Item, Plugins extends AnyPlugins = AnyPlugins>(
  * @returns A new array of `BodyRow`s with corrected row references.
  */
 export const getColumnedBodyRows = <Item, Plugins extends AnyPlugins = AnyPlugins>(
-    rows: BodyRow<Item, Plugins>[],
+    rows: DataBodyRow<Item, Plugins>[],
     columnIdOrder: string[]
-): BodyRow<Item, Plugins>[] => {
-    const columnedRows: BodyRow<Item, Plugins>[] = rows.map((row) => {
+): DataBodyRow<Item, Plugins>[] => {
+    const columnedRows: DataBodyRow<Item, Plugins>[] = rows.map((row) => {
         const clonedRow = row.clone()
         clonedRow.cells = []
         clonedRow.cellForId = {}

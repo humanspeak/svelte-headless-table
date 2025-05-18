@@ -40,14 +40,17 @@ export class Table<Item, Plugins extends AnyPlugins = AnyPlugins> {
 
     // `accessorKey` only
     column<Id extends Exclude<keyof Item, symbol>>(
+        /* trunk-ignore(eslint/no-unused-vars) */
         def: DataColumnInitBase<Item, Plugins, Item[Id]> & DataColumnInitKey<Item, Id>
     ): DataColumn<Item, Plugins, `${Id}`, Item[Id]>
     // `accessorKey` and `id`
     column<Id extends string, Key extends keyof Item>(
+        /* trunk-ignore(eslint/no-unused-vars) */
         def: DataColumnInitBase<Item, Plugins, Item[Key]> & DataColumnInitIdAndKey<Item, Id, Key>
     ): DataColumn<Item, Plugins, Id, Item[Key]>
     // `accessorFn` and `id`
     column<Id extends string, Value>(
+        /* trunk-ignore(eslint/no-unused-vars) */
         def: DataColumnInitBase<Item, Plugins, Value> & DataColumnInitFnAndId<Item, Id, Value>
     ): DataColumn<Item, Plugins, Id, Value>
     column<Id extends string, Value>(def: DataColumnInit<Item, Plugins, Id, Value>) {

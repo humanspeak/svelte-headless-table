@@ -22,7 +22,7 @@
     } from '../lib/plugins/index.js'
     import { getDistinct } from '../lib/utils/array.js'
     import { mean, sum } from '../lib/utils/math.js'
-    import { createSamples } from './_createSamples.js'
+    import { createSamples, type Sample } from './_createSamples.js'
     import ExpandIndicator from './_ExpandIndicator.svelte'
     import Italic from './_Italic.svelte'
     import NumberRangeFilter from './_NumberRangeFilter.svelte'
@@ -68,7 +68,8 @@
         page: addPagination({
             initialPageSize: 20,
             serverSide: serverSide,
-            serverItemCount: readable(40) as any
+            /* trunk-ignore(eslint/@typescript-eslint/no-explicit-any) */
+            serverItemCount: serverSide ? readable(40) : (undefined as any)
         }),
         resize: addResizedColumns(),
         export: addDataExport(),
@@ -377,6 +378,7 @@
                                 class:group={props.group.grouped}
                                 class:aggregate={props.group.aggregated}
                                 class:repeat={props.group.repeated}
+                                data-value={row.original[cell.id as keyof Sample]}
                             >
                                 {#if !props.group.repeated}
                                     <Render of={cell.render()} />

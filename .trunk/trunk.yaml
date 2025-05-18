@@ -2,20 +2,29 @@
 # To learn more about the format of this file, see https://docs.trunk.io/reference/trunk-yaml
 version: 0.1
 cli:
-    version: 1.22.10
+    version: 1.22.15
+
 # Trunk provides extensibility via plugins. (https://docs.trunk.io/plugins)
 plugins:
     sources:
         - id: trunk
-          ref: v1.6.7
+          ref: v1.6.8
           uri: https://github.com/trunk-io/plugins
+
 # Many linters and tools depend on runtimes - configure them here. (https://docs.trunk.io/runtimes)
 runtimes:
     enabled:
         - node@18.20.5
         - python@3.10.8
+
 # This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
 lint:
+    # Ignore specific paths from linting
+    ignore:
+        - linters: [ALL]
+          paths:
+              - .changeset/*.md
+
     definitions:
         - name: prettier
           files:
@@ -41,8 +50,8 @@ lint:
         - svgo@3.3.2
         - sort-package-json@3.0.0
         - actionlint@1.7.7
-        - checkov@3.2.382
-        - eslint@9.21.0:
+        - checkov@3.2.424
+        - eslint@9.26.0:
               config: eslint.config.mjs
               packages:
                   - '@typescript-eslint/eslint-plugin'
@@ -55,15 +64,15 @@ lint:
                   - eslint-plugin-import
         - git-diff-check
         - markdownlint@0.44.0
-        - osv-scanner@1.9.2
-        - oxipng@9.1.4
+        - osv-scanner@2.0.2
+        - oxipng@9.1.5
         - prettier@3.5.3:
               packages:
                   - prettier-plugin-svelte
                   - prettier-plugin-organize-imports
                   - prettier-plugin-tailwindcss
-        - trufflehog@3.88.15
-        - yamllint@1.35.1
+        - trufflehog@3.88.29
+        - yamllint@1.37.1
 actions:
     enabled:
         - trunk-announce

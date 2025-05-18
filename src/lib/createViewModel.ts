@@ -1,5 +1,5 @@
 import { derived, readable, writable, type Readable, type Writable } from 'svelte/store'
-import { BodyRow, getBodyRows, getColumnedBodyRows } from './bodyRows.js'
+import { BodyRow, DataBodyRow, getBodyRows, getColumnedBodyRows } from './bodyRows.js'
 import { FlatColumn, getFlatColumns, type Column } from './columns.js'
 import type { Table } from './createTable.js'
 import { getHeaderRows, HeaderRow } from './headerRows.js'
@@ -13,7 +13,7 @@ import type {
 import { finalizeAttributes } from './utils/attributes.js'
 import { nonUndefined } from './utils/filter.js'
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+/* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
 export type TableAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = Record<
     string,
     unknown
@@ -21,13 +21,13 @@ export type TableAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = Rec
     role: 'table'
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+/* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
 export type TableHeadAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = Record<
     string,
     unknown
 >
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+/* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
 export type TableBodyAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = Record<
     string,
     unknown
@@ -43,8 +43,8 @@ export interface TableViewModel<Item, Plugins extends AnyPlugins = AnyPlugins> {
     visibleColumns: Readable<FlatColumn<Item, Plugins>[]>
     headerRows: Readable<HeaderRow<Item, Plugins>[]>
     originalRows: Readable<BodyRow<Item, Plugins>[]>
-    rows: Readable<BodyRow<Item, Plugins>[]>
-    pageRows: Readable<BodyRow<Item, Plugins>[]>
+    rows: Readable<DataBodyRow<Item, Plugins>[]>
+    pageRows: Readable<DataBodyRow<Item, Plugins>[]>
     pluginStates: PluginStates<Plugins>
 }
 
@@ -62,6 +62,7 @@ export interface TableState<Item, Plugins extends AnyPlugins = AnyPlugins>
 }
 
 export interface CreateViewModelOptions<Item> {
+    /* trunk-ignore(eslint/no-unused-vars) */
     rowDataId?: (item: Item, index: number) => string
 }
 
@@ -82,8 +83,8 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     // _stores need to be defined first to pass into plugins for initialization.
     const _visibleColumns = writable<FlatColumn<Item, Plugins>[]>([])
     const _headerRows = writable<HeaderRow<Item, Plugins>[]>()
-    const _rows = writable<BodyRow<Item, Plugins>[]>([])
-    const _pageRows = writable<BodyRow<Item, Plugins>[]>([])
+    const _rows = writable<DataBodyRow<Item, Plugins>[]>([])
+    const _pageRows = writable<DataBodyRow<Item, Plugins>[]>([])
     const _tableAttrs = writable<TableAttributes<Item>>({
         role: 'table' as const
     })
