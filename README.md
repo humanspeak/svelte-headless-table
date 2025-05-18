@@ -1,9 +1,12 @@
-<p align="center">
-  <img src="https://user-images.githubusercontent.com/42545742/169733428-295e2678-e509-4175-aeb3-cb3a9c9894e1.svg" alt="svelte-headless-table" width="400px"/>
-</p>
-<h1 align="center">Svelte Headless Table</h1>
-
+<!-- trunk-ignore-all(markdownlint/MD033) -->
+<!-- trunk-ignore(markdownlint/MD041) -->
 <div align="center">
+
+<img src="https://user-images.githubusercontent.com/42545742/169733428-295e2678-e509-4175-aeb3-cb3a9c9894e1.svg" alt="svelte-headless-table" width="400" />
+
+# Svelte Headless Table
+
+</div>
 
 [![NPM version](https://img.shields.io/npm/v/@humanspeak/svelte-headless-table.svg)](https://www.npmjs.com/package/@humanspeak/svelte-headless-table)
 [![Build Status](https://github.com/humanspeak/svelte-headless-table/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/humanspeak/svelte-headless-table/actions/workflows/npm-publish.yml)
