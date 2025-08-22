@@ -1,9 +1,9 @@
+import { NBSP } from '$lib/constants.js'
+import { TableComponent } from '$lib/tableComponent.js'
+import type { HeaderLabel } from '$lib/types/Label.js'
+import type { AnyPlugins } from '$lib/types/TablePlugin.js'
 import type { RenderConfig } from '@humanspeak/svelte-render'
 import { derived } from 'svelte/store'
-import { NBSP } from './constants.js'
-import { TableComponent } from './tableComponent.js'
-import type { HeaderLabel } from './types/Label.js'
-import type { AnyPlugins } from './types/TablePlugin.js'
 
 export type HeaderCellInit<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     id: string
@@ -12,7 +12,8 @@ export type HeaderCellInit<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     colstart: number
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+/* trunk-ignore(eslint/@typescript-eslint/no-unused-vars) */
+/* trunk-ignore(eslint/no-unused-vars) */
 export type HeaderCellAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     role: 'columnheader'
     colspan: number
@@ -116,6 +117,7 @@ export type DataHeaderCellInit<Item, Plugins extends AnyPlugins = AnyPlugins> = 
     Plugins
 > & {
     accessorKey?: keyof Item
+    /* trunk-ignore(eslint/no-unused-vars) */
     accessorFn?: (item: Item) => unknown
 }
 
@@ -127,6 +129,7 @@ export class DataHeaderCell<Item, Plugins extends AnyPlugins = AnyPlugins> exten
     __data = true
 
     accessorKey?: keyof Item
+    /* trunk-ignore(eslint/no-unused-vars) */
     accessorFn?: (item: Item) => unknown
     constructor({
         id,

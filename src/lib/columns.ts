@@ -1,7 +1,7 @@
-import type { DisplayBodyCell } from './bodyCells.js'
-import type { TableState } from './createViewModel.js'
-import type { DataLabel, DisplayLabel, HeaderLabel } from './types/Label.js'
-import type { AnyPlugins, PluginColumnConfigs } from './types/TablePlugin.js'
+import type { DisplayBodyCell } from '$lib/bodyCells.js'
+import type { TableState } from '$lib/createViewModel.js'
+import type { DataLabel, DisplayLabel, HeaderLabel } from '$lib/types/Label.js'
+import type { AnyPlugins, PluginColumnConfigs } from '$lib/types/TablePlugin.js'
 
 export interface ColumnInit<Item, Plugins extends AnyPlugins = AnyPlugins> {
     header: HeaderLabel<Item, Plugins>
@@ -99,6 +99,7 @@ export type DataColumnInitIdAndKey<Item, Id extends string, Key extends keyof It
 }
 
 export type DataColumnInitFnAndId<Item, Id extends string, Value> = {
+    /* trunk-ignore(eslint/no-unused-vars) */
     accessor: keyof Item | ((item: Item) => Value)
     id?: Id
 }
@@ -116,6 +117,7 @@ export class DataColumn<
 
     cell?: DataLabel<Item, Plugins, Value>
     accessorKey?: keyof Item
+    /* trunk-ignore(eslint/no-unused-vars) */
     accessorFn?: (item: Item) => Value
     constructor({
         header,
@@ -139,7 +141,7 @@ export class DataColumn<
         this.id = (id ?? accessorKeyId ?? String(header)) as Id
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    /* trunk-ignore(eslint/@typescript-eslint/no-explicit-any) */
     getValue(item: Item): any {
         if (this.accessorFn !== undefined) {
             return this.accessorFn(item)
@@ -152,7 +154,9 @@ export class DataColumn<
 }
 
 export type DisplayColumnDataGetter<Item, Plugins extends AnyPlugins = AnyPlugins> = (
+    /* trunk-ignore(eslint/no-unused-vars) */
     cell: DisplayBodyCell<Item>,
+    /* trunk-ignore(eslint/no-unused-vars) */
     state?: TableState<Item, Plugins>
 ) => unknown
 

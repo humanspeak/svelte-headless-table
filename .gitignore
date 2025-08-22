@@ -18,3 +18,5 @@ junit-playwright.xml
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+.notes

@@ -2,13 +2,13 @@
 export * from '@humanspeak/svelte-render'
 export { Subscribe } from '@humanspeak/svelte-subscribe'
 // table core
-export { createTable } from './createTable.js'
+export { createTable } from '$lib/createTable.js'
 // models
-export * from './bodyCells.js'
-export * from './bodyRows.js'
-export * from './columns.js'
-export { Table } from './createTable.js'
-export type * from './createViewModel.js'
+export * from '$lib/bodyCells.js'
+export * from '$lib/bodyRows.js'
+export * from '$lib/columns.js'
+export { Table } from '$lib/createTable.js'
+export type * from '$lib/createViewModel.js'
 export {
     DataHeaderCell,
     FlatDisplayHeaderCell,
@@ -16,6 +16,6 @@ export {
     GroupDisplayHeaderCell,
     GroupHeaderCell,
     HeaderCell
-} from './headerCells.js'
-export { HeaderRow } from './headerRows.js'
-export type * from './types/Label.js'
+} from '$lib/headerCells.js'
+export { HeaderRow } from '$lib/headerRows.js'
+export type * from '$lib/types/Label.js'

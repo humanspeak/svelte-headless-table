@@ -1,9 +1,9 @@
+import { BodyCell, DataBodyCell, DisplayBodyCell } from '$lib/bodyCells.js'
+import type { DataColumn, DisplayColumn, FlatColumn } from '$lib/columns.js'
+import { TableComponent } from '$lib/tableComponent.js'
+import type { AnyPlugins } from '$lib/types/TablePlugin.js'
+import { nonUndefined } from '$lib/utils/filter.js'
 import { derived, type Readable } from 'svelte/store'
-import { BodyCell, DataBodyCell, DisplayBodyCell } from './bodyCells.js'
-import type { DataColumn, DisplayColumn, FlatColumn } from './columns.js'
-import { TableComponent } from './tableComponent.js'
-import type { AnyPlugins } from './types/TablePlugin.js'
-import { nonUndefined } from './utils/filter.js'
 
 export type BodyRowInit<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     id: string
