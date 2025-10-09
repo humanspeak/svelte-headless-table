@@ -331,6 +331,7 @@ jobs:
                   node-version: 22
                   registry-url: https://registry.npmjs.org
                   scope: '@humanspeak'
+                  cache: '' # zizmor: ignore[cache-poisoning]
 
             - name: Install
               run: pnpm install --prefer-offline --frozen-lockfile --ignore-scripts
