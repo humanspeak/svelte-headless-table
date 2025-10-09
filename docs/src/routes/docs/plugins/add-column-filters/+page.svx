@@ -96,4 +96,8 @@ Rows before filtering.
 ### `filterValues: Writable<Record<Id, FilterValue>>`
 Active filter values by column id.
 
+## Examples
+
+<SimpleFilteringDemo />
+
 

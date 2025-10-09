@@ -79,4 +79,13 @@ Returns state for a given `BodyRow` with:
 - `canExpand: Readable<boolean>`
 - `isAllSubRowsExpanded: Readable<boolean>`
 
+## Examples
+
+### Simple row expanding
+
+<SimpleExpandingDemo />
+
+### Simple grouping by column
+
+<SimpleGroupByDemo />
 

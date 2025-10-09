@@ -1,0 +1,16 @@
+---
+title: Editable Table
+description: An example with editable cells.
+---
+
+# Editable Table
+
+A table with editable cells that updates the data source.
+
+<script>
+  import Editable from './Editable.svelte';
+</script>
+
+<Editable />
+
+

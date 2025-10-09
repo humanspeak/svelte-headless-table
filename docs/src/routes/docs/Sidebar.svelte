@@ -74,12 +74,6 @@
                 { title: 'Kitchen Sink', href: '/docs/examples/kitchen-sink', icon: 'fa-solid fa-cubes' }
             ]
         },
-        {
-            title: 'About',
-            items: [
-                { title: 'Credits', href: '/docs/credits', icon: 'fa-solid fa-heart' }
-            ]
-        },
         ...(otherProjects.length > 0
             ? [
                   {

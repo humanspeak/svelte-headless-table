@@ -90,4 +90,8 @@ const { ... } = pluginStates.filter;
 ### `preFilteredRows: Readable<BodyRow<Item>[]>`
 ### `filterValue: Writable<string>`
 
+## Examples
+
+<SimpleTableFilteringDemo />
+
 

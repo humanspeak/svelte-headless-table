@@ -71,6 +71,10 @@ const columns = table.createColumns([
 ]);
 ```
 
+## Examples
+
+<SimpleSortingDemo />
+
 
 
 
