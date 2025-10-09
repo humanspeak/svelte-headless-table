@@ -5,9 +5,10 @@ sidebar_title: addSelectedRows
 ---
 
 <script>
-  import { useHljs } from '$lib/utils/useHljs';
+  import { useHljs } from '$lib/utils/useHljs'
   import Callout from '$lib/components/Callout.svelte'
-  useHljs('ts');
+  import SimpleSelectedDemo from './SimpleSelectedDemo.svelte'
+  useHljs('ts')
 </script>
 
 # addSelectedRows
@@ -88,8 +89,6 @@ const { ... } = pluginStates.select;
 
 <SimpleSelectedDemo />
 
-<script>
-  import SimpleSelectedDemo from './SimpleSelectedDemo.svelte'
-</script>
+
 
 

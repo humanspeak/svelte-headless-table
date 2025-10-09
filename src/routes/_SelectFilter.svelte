@@ -8,7 +8,7 @@
     $: uniqueValues = getDistinct($preFilteredValues)
 </script>
 
-<select bind:value={$filterValue} on:click|stopPropagation>
+<select bind:value={$filterValue} onclick={(e) => e.stopPropagation()}>
     <option value={undefined}>All</option>
     {#each uniqueValues as value}
         <option {value}>{value}</option>

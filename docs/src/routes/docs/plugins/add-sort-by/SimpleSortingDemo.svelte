@@ -55,7 +55,7 @@
                                 props={cell.props()}
                                 let:props
                             >
-                                <th {...attrs} on:click={props.sort.toggle}>
+                                <th {...attrs} onclick={props.sort.toggle}>
                                     <Render of={cell.render()} />
                                     {#if props.sort.order === 'asc'}
                                         ⬇️

@@ -292,20 +292,20 @@
 
 <h1>@humanspeak/svelte-headless-table</h1>
 <div>
-    <button on:click={() => $pageIndex--} disabled={!$hasPreviousPage}>Previous page</button>
+    <button onclick={() => $pageIndex--} disabled={!$hasPreviousPage}>Previous page</button>
     {$pageIndex + 1} of {$pageCount}
-    <button on:click={() => $pageIndex++} disabled={!$hasNextPage}>Next page</button>
+    <button onclick={() => $pageIndex++} disabled={!$hasNextPage}>Next page</button>
     <label for="page-size">Page size</label>
     <input id="page-size" type="number" min={1} bind:value={$pageSize} />
 </div>
 
-<button data-testid="export-as-object-button" on:click={() => console.log(get(exportedData))}>
+<button data-testid="export-as-object-button" onclick={() => console.log(get(exportedData))}>
     Export as object
 </button>
-<button data-testid="export-as-json-button" on:click={() => console.log(get(exportedJson))}>
+<button data-testid="export-as-json-button" onclick={() => console.log(get(exportedJson))}>
     Export as JSON
 </button>
-<button data-testid="export-as-csv-button" on:click={() => console.log(get(exportedCsv))}>
+<button data-testid="export-as-csv-button" onclick={() => console.log(get(exportedCsv))}>
     Export as CSV
 </button>
 
@@ -318,7 +318,7 @@
                         <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
                             <th
                                 {...attrs}
-                                on:click={props.sort.toggle}
+                                onclick={props.sort.toggle}
                                 class:sorted={props.sort.order !== undefined}
                                 use:props.resize
                             >
@@ -331,7 +331,12 @@
                                     {/if}
                                 </div>
                                 {#if !props.group.disabled}
-                                    <button on:click|stopPropagation={props.group.toggle}>
+                                    <button
+                                        onclick={(e) => {
+                                            e.stopPropagation()
+                                            props.group.toggle()
+                                        }}
+                                    >
                                         {#if props.group.grouped}
                                             ungroup
                                         {:else}
@@ -348,7 +353,7 @@
                                         class="resizer"
                                         role="button"
                                         tabindex="0"
-                                        on:click|stopPropagation
+                                        onclick={(e) => e.stopPropagation()}
                                         use:props.resize.drag
                                         use:props.resize.reset
                                     ></div>

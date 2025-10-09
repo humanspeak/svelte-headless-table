@@ -120,7 +120,7 @@
                                 <th {...attrs}>
                                     <Render of={cell.render()} />
                                     {#if !props.group.disabled}
-                                        <button on:click={props.group.toggle} class="demo">
+                                        <button onclick={props.group.toggle} class="demo">
                                             {#if props.group.grouped}
                                                 ungroup
                                             {:else}

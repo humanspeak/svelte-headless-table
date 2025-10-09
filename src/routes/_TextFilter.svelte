@@ -9,7 +9,7 @@
 <input
     type="text"
     bind:value={$filterValue}
-    on:click|stopPropagation
+    onclick={(e) => e.stopPropagation()}
     placeholder="Search {$values.length} records..."
     data-testid={testId}
 />

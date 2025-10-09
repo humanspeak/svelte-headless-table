@@ -8,7 +8,7 @@
 </script>
 
 {#if $canExpand}
-    <span on:click={() => ($isExpanded = !$isExpanded)} style:--depth={depth}>
+    <span onclick={() => ($isExpanded = !$isExpanded)} style:--depth={depth}>
         {#if $isExpanded}
             {#if $isAllSubRowsExpanded}
                 ⬇️
