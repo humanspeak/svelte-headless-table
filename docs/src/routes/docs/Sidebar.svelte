@@ -26,24 +26,60 @@
         {
             title: 'Get Started',
             items: [
-                { title: 'Overview', href: '/docs/getting-started/overview', icon: 'fa-solid fa-circle-info' },
-                { title: 'Quick Start', href: '/docs/getting-started/quick-start', icon: 'fa-solid fa-rocket' }
+                {
+                    title: 'Overview',
+                    href: '/docs/getting-started/overview',
+                    icon: 'fa-solid fa-circle-info'
+                },
+                {
+                    title: 'Quick Start',
+                    href: '/docs/getting-started/quick-start',
+                    icon: 'fa-solid fa-rocket'
+                }
             ]
         },
         {
             title: 'API',
             items: [
                 { title: 'createTable', href: '/docs/api/create-table', icon: 'fa-solid fa-table' },
-                { title: 'createColumns', href: '/docs/api/create-columns', icon: 'fa-solid fa-columns' },
-                { title: 'createViewModel', href: '/docs/api/create-view-model', icon: 'fa-solid fa-diagram-project' },
+                {
+                    title: 'createColumns',
+                    href: '/docs/api/create-columns',
+                    icon: 'fa-solid fa-columns'
+                },
+                {
+                    title: 'createViewModel',
+                    href: '/docs/api/create-view-model',
+                    icon: 'fa-solid fa-diagram-project'
+                },
                 { title: 'Table', href: '/docs/api/table', icon: 'fa-solid fa-list' },
-                { title: 'TableViewModel', href: '/docs/api/table-view-model', icon: 'fa-solid fa-diagram-predecessor' },
-                { title: 'TableState', href: '/docs/api/table-state', icon: 'fa-solid fa-database' },
+                {
+                    title: 'TableViewModel',
+                    href: '/docs/api/table-view-model',
+                    icon: 'fa-solid fa-diagram-predecessor'
+                },
+                {
+                    title: 'TableState',
+                    href: '/docs/api/table-state',
+                    icon: 'fa-solid fa-database'
+                },
                 { title: 'Render', href: '/docs/api/render', icon: 'fa-solid fa-shapes' },
-                { title: 'createRender', href: '/docs/api/create-render', icon: 'fa-solid fa-wand-magic-sparkles' },
+                {
+                    title: 'createRender',
+                    href: '/docs/api/create-render',
+                    icon: 'fa-solid fa-wand-magic-sparkles'
+                },
                 { title: 'Subscribe', href: '/docs/api/subscribe', icon: 'fa-solid fa-bolt' },
-                { title: 'HeaderRow', href: '/docs/api/header-row', icon: 'fa-solid fa-grip-lines' },
-                { title: 'HeaderCell', href: '/docs/api/header-cell', icon: 'fa-solid fa-table-cells-header' },
+                {
+                    title: 'HeaderRow',
+                    href: '/docs/api/header-row',
+                    icon: 'fa-solid fa-grip-lines'
+                },
+                {
+                    title: 'HeaderCell',
+                    href: '/docs/api/header-cell',
+                    icon: 'fa-solid fa-table-cells-header'
+                },
                 { title: 'BodyRow', href: '/docs/api/body-row', icon: 'fa-solid fa-list-ul' },
                 { title: 'BodyCell', href: '/docs/api/body-cell', icon: 'fa-solid fa-table-cells' }
             ]
@@ -51,27 +87,87 @@
         {
             title: 'Plugins',
             items: [
-                { title: 'Overview', href: '/docs/plugins/overview', icon: 'fa-solid fa-puzzle-piece' },
+                {
+                    title: 'Overview',
+                    href: '/docs/plugins/overview',
+                    icon: 'fa-solid fa-puzzle-piece'
+                },
                 { title: 'addSortBy', href: '/docs/plugins/add-sort-by', icon: 'fa-solid fa-sort' },
-                { title: 'addColumnFilters', href: '/docs/plugins/add-column-filters', icon: 'fa-solid fa-filter' },
-                { title: 'addTableFilter', href: '/docs/plugins/add-table-filter', icon: 'fa-solid fa-magnifying-glass' },
-                { title: 'addColumnOrder', href: '/docs/plugins/add-column-order', icon: 'fa-solid fa-arrow-right-arrow-left' },
-                { title: 'addHiddenColumns', href: '/docs/plugins/add-hidden-columns', icon: 'fa-solid fa-eye-slash' },
-                { title: 'addPagination', href: '/docs/plugins/add-pagination', icon: 'fa-solid fa-pager' },
-                { title: 'addSubRows', href: '/docs/plugins/add-sub-rows', icon: 'fa-solid fa-sitemap' },
-                { title: 'addGroupBy', href: '/docs/plugins/add-group-by', icon: 'fa-solid fa-object-group' },
-                { title: 'addExpandedRows', href: '/docs/plugins/add-expanded-rows', icon: 'fa-solid fa-down-left-and-up-right-to-center' },
-                { title: 'addSelectedRows', href: '/docs/plugins/add-selected-rows', icon: 'fa-solid fa-check-square' },
-                { title: 'addResizedColumns', href: '/docs/plugins/add-resized-columns', icon: 'fa-solid fa-up-down-left-right' },
-                { title: 'addGridLayout', href: '/docs/plugins/add-grid-layout', icon: 'fa-solid fa-border-all' },
-                { title: 'addFlatten', href: '/docs/plugins/add-flatten', icon: 'fa-solid fa-layer-group' },
-                { title: 'addDataExport', href: '/docs/plugins/add-data-export', icon: 'fa-solid fa-file-export' }
+                {
+                    title: 'addColumnFilters',
+                    href: '/docs/plugins/add-column-filters',
+                    icon: 'fa-solid fa-filter'
+                },
+                {
+                    title: 'addTableFilter',
+                    href: '/docs/plugins/add-table-filter',
+                    icon: 'fa-solid fa-magnifying-glass'
+                },
+                {
+                    title: 'addColumnOrder',
+                    href: '/docs/plugins/add-column-order',
+                    icon: 'fa-solid fa-arrow-right-arrow-left'
+                },
+                {
+                    title: 'addHiddenColumns',
+                    href: '/docs/plugins/add-hidden-columns',
+                    icon: 'fa-solid fa-eye-slash'
+                },
+                {
+                    title: 'addPagination',
+                    href: '/docs/plugins/add-pagination',
+                    icon: 'fa-solid fa-pager'
+                },
+                {
+                    title: 'addSubRows',
+                    href: '/docs/plugins/add-sub-rows',
+                    icon: 'fa-solid fa-sitemap'
+                },
+                {
+                    title: 'addGroupBy',
+                    href: '/docs/plugins/add-group-by',
+                    icon: 'fa-solid fa-object-group'
+                },
+                {
+                    title: 'addExpandedRows',
+                    href: '/docs/plugins/add-expanded-rows',
+                    icon: 'fa-solid fa-down-left-and-up-right-to-center'
+                },
+                {
+                    title: 'addSelectedRows',
+                    href: '/docs/plugins/add-selected-rows',
+                    icon: 'fa-solid fa-check-square'
+                },
+                {
+                    title: 'addResizedColumns',
+                    href: '/docs/plugins/add-resized-columns',
+                    icon: 'fa-solid fa-up-down-left-right'
+                },
+                {
+                    title: 'addGridLayout',
+                    href: '/docs/plugins/add-grid-layout',
+                    icon: 'fa-solid fa-border-all'
+                },
+                {
+                    title: 'addFlatten',
+                    href: '/docs/plugins/add-flatten',
+                    icon: 'fa-solid fa-layer-group'
+                },
+                {
+                    title: 'addDataExport',
+                    href: '/docs/plugins/add-data-export',
+                    icon: 'fa-solid fa-file-export'
+                }
             ]
         },
         {
             title: 'Examples',
             items: [
-                { title: 'Kitchen Sink', href: '/docs/examples/kitchen-sink', icon: 'fa-solid fa-cubes' }
+                {
+                    title: 'Kitchen Sink',
+                    href: '/docs/examples/kitchen-sink',
+                    icon: 'fa-solid fa-cubes'
+                }
             ]
         },
         ...(otherProjects.length > 0

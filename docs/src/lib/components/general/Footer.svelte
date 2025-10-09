@@ -32,6 +32,5 @@
         >
             Humanspeak
         </a>
-
     </div>
 </footer>

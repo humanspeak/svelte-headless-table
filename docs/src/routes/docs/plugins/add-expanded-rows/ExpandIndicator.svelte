@@ -25,7 +25,7 @@
     span {
         padding-left: calc(var(--depth) * 1rem);
     }
-    span { cursor: pointer; }
+    span {
+        cursor: pointer;
+    }
 </style>
-
-

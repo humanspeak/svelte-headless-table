@@ -56,6 +56,3 @@
         {/each}
     </tbody>
 </table>
-
-
-

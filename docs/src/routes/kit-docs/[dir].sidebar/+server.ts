@@ -4,6 +4,3 @@ import { createSidebarRequestHandler, kebabToTitleCase } from '@svelteness/kit-d
 export const GET = createSidebarRequestHandler({
     formatCategoryName: (dirname) => kebabToTitleCase(dirname).replace('Api', 'API Reference')
 })
-
-
-

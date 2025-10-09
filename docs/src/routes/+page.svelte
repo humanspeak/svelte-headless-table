@@ -15,10 +15,7 @@
     })
 
     // Simple spring-like tap animation using the Web Animations API
-    function springTap(
-        node: HTMLElement,
-        options: { pressedScale?: number } = {}
-    ) {
+    function springTap(node: HTMLElement, options: { pressedScale?: number } = {}) {
         const pressedScale = options.pressedScale ?? 0.96
         let downAnim: Animation | null = null
         let upAnim: Animation | null = null
@@ -27,10 +24,7 @@
             upAnim?.cancel()
             downAnim?.cancel()
             downAnim = node.animate(
-                [
-                    { transform: 'scale(1)' },
-                    { transform: `scale(${pressedScale})` }
-                ],
+                [{ transform: 'scale(1)' }, { transform: `scale(${pressedScale})` }],
                 {
                     duration: 120,
                     easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
@@ -98,8 +92,7 @@
         },
         {
             title: 'Composable Plugins',
-            description:
-                'Sorting, filtering, grouping, pagination, selection, resizing, and more.'
+            description: 'Sorting, filtering, grouping, pagination, selection, resizing, and more.'
         },
         {
             title: 'TypeScript First',
@@ -205,9 +198,9 @@
                         <p
                             class="mt-6 text-base leading-7 text-pretty text-muted-foreground md:text-lg"
                         >
-                            A powerful, headless table library for Svelte. Compose sorting, filtering,
-                            grouping, selection, pagination, and more—while keeping full control over
-                            your markup, styles, and interactions.
+                            A powerful, headless table library for Svelte. Compose sorting,
+                            filtering, grouping, selection, pagination, and more—while keeping full
+                            control over your markup, styles, and interactions.
                         </p>
                         <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
                             <a
@@ -249,12 +242,10 @@
         </section>
 
         <!-- Features Section -->
-        <section class="relative py-10 px-6">
+        <section class="relative px-6 py-10">
             <div class="container mx-auto max-w-7xl">
                 <!-- Section Header -->
-                <div
-                    class="mb-16 text-center"
-                >
+                <div class="mb-16 text-center">
                     <h2
                         class="mb-4 bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-4xl font-bold text-transparent md:text-5xl"
                     >
@@ -265,26 +256,32 @@
                         that stays out of your way.
                     </p>
                 </div>
-                <div
-                    class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
-                >
+                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {#each features as feature}
                         <div
-                            class="group relative overflow-hidden rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:shadow-lg hover:shadow-brand-500/10 hover:-translate-y-1 hover:border-brand-500/50"
+                            class="group relative overflow-hidden rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-brand-500/50 hover:shadow-lg hover:shadow-brand-500/10"
                         >
-                            <div class="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+                            <div
+                                class="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                            ></div>
                             <div class="relative z-10">
-                                <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-600 text-white">
+                                <div
+                                    class="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-600 text-white"
+                                >
                                     <i class="fa-solid fa-table"></i>
                                 </div>
-                                <h3 class="mb-2 text-xl font-semibold transition-colors group-hover:text-brand-600">
+                                <h3
+                                    class="mb-2 text-xl font-semibold transition-colors group-hover:text-brand-600"
+                                >
                                     {feature.title}
                                 </h3>
                                 <p class="text-sm leading-relaxed text-muted-foreground">
                                     {feature.description}
                                 </p>
                             </div>
-                            <div class="absolute top-0 right-0 h-20 w-20 rounded-bl-full bg-gradient-to-bl from-brand-500/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+                            <div
+                                class="absolute top-0 right-0 h-20 w-20 rounded-bl-full bg-gradient-to-bl from-brand-500/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                            ></div>
                         </div>
                     {/each}
                 </div>
@@ -311,22 +308,47 @@
     }
 
     /* Orb animations to replace motion components */
-    .orb-a-bg { animation: orbA 28s ease-in-out infinite; }
-    .orb-b-bg { animation: orbB 24s ease-in-out infinite; animation-delay: 3s; }
+    .orb-a-bg {
+        animation: orbA 28s ease-in-out infinite;
+    }
+    .orb-b-bg {
+        animation: orbB 24s ease-in-out infinite;
+        animation-delay: 3s;
+    }
 
     @keyframes orbA {
-        0% { transform: translate(0, 0); }
-        25% { transform: translate(8vw, -10vh); }
-        50% { transform: translate(-4vw, 6vh); }
-        75% { transform: translate(2vw, -4vh); }
-        100% { transform: translate(0, 0); }
+        0% {
+            transform: translate(0, 0);
+        }
+        25% {
+            transform: translate(8vw, -10vh);
+        }
+        50% {
+            transform: translate(-4vw, 6vh);
+        }
+        75% {
+            transform: translate(2vw, -4vh);
+        }
+        100% {
+            transform: translate(0, 0);
+        }
     }
 
     @keyframes orbB {
-        0% { transform: translate(0, 0); }
-        25% { transform: translate(-6vw, -8vh); }
-        50% { transform: translate(3vw, 4vh); }
-        75% { transform: translate(-2vw, -6vh); }
-        100% { transform: translate(0, 0); }
+        0% {
+            transform: translate(0, 0);
+        }
+        25% {
+            transform: translate(-6vw, -8vh);
+        }
+        50% {
+            transform: translate(3vw, 4vh);
+        }
+        75% {
+            transform: translate(-2vw, -6vh);
+        }
+        100% {
+            transform: translate(0, 0);
+        }
     }
 </style>

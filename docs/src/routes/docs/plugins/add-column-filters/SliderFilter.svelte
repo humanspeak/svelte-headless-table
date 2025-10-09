@@ -13,5 +13,3 @@
 </script>
 
 <input type="range" {min} {max} bind:value={$filterValue} on:click|stopPropagation />
-
-

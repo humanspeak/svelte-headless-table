@@ -13,12 +13,20 @@
             margin: 1rem 0;
             background: var(--card);
         }
-        .callout[data-type='info'] { border-left-color: var(--brand-500); }
-        .callout[data-type='note'] { border-left-color: var(--muted-foreground); }
-        .callout[data-type='warning'] { border-left-color: #f59e0b; }
-        .callout[data-type='error'] { border-left-color: #ef4444; }
-        .callout[data-type='success'] { border-left-color: #22c55e; }
+        .callout[data-type='info'] {
+            border-left-color: var(--brand-500);
+        }
+        .callout[data-type='note'] {
+            border-left-color: var(--muted-foreground);
+        }
+        .callout[data-type='warning'] {
+            border-left-color: #f59e0b;
+        }
+        .callout[data-type='error'] {
+            border-left-color: #ef4444;
+        }
+        .callout[data-type='success'] {
+            border-left-color: #22c55e;
+        }
     </style>
 </div>
-
-

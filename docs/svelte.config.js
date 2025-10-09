@@ -1,6 +1,6 @@
-import { mdsvex } from 'mdsvex';
 import adapter from '@sveltejs/adapter-cloudflare'
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
+import { mdsvex } from 'mdsvex'
 import { createHighlighter } from 'shiki'
 
 // Create highlighter instance
@@ -11,9 +11,13 @@ const highlighter = await createHighlighter({
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	// Consult https://svelte.dev/docs/kit/integrations
-	// for more information about preprocessors
-	preprocess: [vitePreprocess(), mdsvex({ extensions: ['.md', '.svx'],highlight: {
+    // Consult https://svelte.dev/docs/kit/integrations
+    // for more information about preprocessors
+    preprocess: [
+        vitePreprocess(),
+        mdsvex({
+            extensions: ['.md', '.svx'],
+            highlight: {
                 highlighter: async (code, lang = 'text') => {
                     // Generate separate HTML for light and dark themes
                     const lightHtml = highlighter.codeToHtml(code, {
@@ -35,14 +39,16 @@ const config = {
 
                     return `{@html ${JSON.stringify(combinedHtml)}}`
                 }
-            } })],
+            }
+        })
+    ],
 
-	kit: {
-		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
-		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
-		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
-		adapter: adapter(),
-		        csp: {
+    kit: {
+        // adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
+        // If your environment is not supported, or you settled on a specific environment, switch out the adapter.
+        // See https://svelte.dev/docs/kit/adapters for more information about adapters.
+        adapter: adapter(),
+        csp: {
             mode: 'hash',
             directives: {
                 'default-src': ['self'],
@@ -69,10 +75,10 @@ const config = {
                 'base-uri': ['self'],
                 'upgrade-insecure-requests': true
             }
-        },
-	},
+        }
+    },
 
-	extensions: ['.svelte', '.svx']
-};
+    extensions: ['.svelte', '.svx']
+}
 
-export default config;
+export default config

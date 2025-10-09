@@ -129,7 +129,12 @@
                 <Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
                     <tr {...rowAttrs}>
                         {#each headerRow.cells as cell (cell.id)}
-                            <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
+                            <Subscribe
+                                attrs={cell.attrs()}
+                                let:attrs
+                                props={cell.props()}
+                                let:props
+                            >
                                 <th {...attrs}>
                                     <Render of={cell.render()} />
                                     {#if props.filter?.render}
@@ -157,5 +162,3 @@
         </tbody>
     </table>
 </div>
-
-

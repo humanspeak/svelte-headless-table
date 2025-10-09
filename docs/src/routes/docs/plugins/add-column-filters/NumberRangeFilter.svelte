@@ -31,8 +31,11 @@
 </div>
 
 <style>
-    div { display: flex; flex-direction: column; }
-    input { width: 5rem; }
+    div {
+        display: flex;
+        flex-direction: column;
+    }
+    input {
+        width: 5rem;
+    }
 </style>
-
-

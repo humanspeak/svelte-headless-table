@@ -9,6 +9,3 @@ export const useHljs = (lang: string) => {
 export const getHljsLang = () => {
     return getContext(USE_HLJS) as string | undefined
 }
-
-
-

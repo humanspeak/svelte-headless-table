@@ -111,7 +111,12 @@
                 <Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
                     <tr>
                         {#each headerRow.cells as cell (cell.id)}
-                            <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
+                            <Subscribe
+                                attrs={cell.attrs()}
+                                let:attrs
+                                props={cell.props()}
+                                let:props
+                            >
                                 <th {...attrs}>
                                     <Render of={cell.render()} />
                                     {#if !props.group.disabled}
@@ -135,8 +140,18 @@
                 <Subscribe rowAttrs={row.attrs()} let:rowAttrs>
                     <tr>
                         {#each row.cells as cell (cell.id)}
-                            <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
-                                <td {...attrs} class:group={props.group.grouped} class:aggregate={props.group.aggregated} class:repeat={props.group.repeated}>
+                            <Subscribe
+                                attrs={cell.attrs()}
+                                let:attrs
+                                props={cell.props()}
+                                let:props
+                            >
+                                <td
+                                    {...attrs}
+                                    class:group={props.group.grouped}
+                                    class:aggregate={props.group.aggregated}
+                                    class:repeat={props.group.repeated}
+                                >
                                     {#if !props.group.repeated}
                                         <Render of={cell.render()} />
                                     {/if}
@@ -151,9 +166,13 @@
 </div>
 
 <style>
-    .group { background: rgb(144, 191, 148, 0.2); }
-    .aggregate { background: rgb(238, 212, 100, 0.2); }
-    .repeat { background: rgb(255, 139, 139, 0.2); }
+    .group {
+        background: rgb(144, 191, 148, 0.2);
+    }
+    .aggregate {
+        background: rgb(238, 212, 100, 0.2);
+    }
+    .repeat {
+        background: rgb(255, 139, 139, 0.2);
+    }
 </style>
-
-

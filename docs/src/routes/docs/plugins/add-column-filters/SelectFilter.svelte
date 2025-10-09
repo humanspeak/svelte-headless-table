@@ -18,5 +18,3 @@
         <option {value}>{value}</option>
     {/each}
 </select>
-
-

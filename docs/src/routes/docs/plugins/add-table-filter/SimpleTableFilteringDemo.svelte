@@ -119,7 +119,7 @@
     :global(.dark) .matches {
         background: rgba(84, 219, 188, 0.15);
     }
-    .demo { margin: 0; }
+    .demo {
+        margin: 0;
+    }
 </style>
-
-

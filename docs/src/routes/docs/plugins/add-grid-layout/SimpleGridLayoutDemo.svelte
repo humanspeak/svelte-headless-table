@@ -67,5 +67,3 @@
         </tbody>
     </table>
 </div>
-
-
