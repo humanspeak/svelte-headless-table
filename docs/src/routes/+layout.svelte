@@ -57,7 +57,7 @@
                 "name": "Humanspeak, Inc.",
                 "url": "https://humanspeak.com"
             },
-            "description": "A powerful headless table component for Svelte 5 that transforms markdown into customizable Svelte components with TypeScript support and extensive testing coverage.",
+            "description": "A powerful headless table component for Svelte 5 with TypeScript support, sorting, filtering, and pagination capabilities.",
             "downloadUrl": "https://www.npmjs.com/package/@humanspeak/svelte-table",
             "keywords": "svelte, table, headless, typescript, documentation",
             "license": "MIT",
