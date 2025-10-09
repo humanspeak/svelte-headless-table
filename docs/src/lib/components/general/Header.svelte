@@ -95,7 +95,7 @@
             </motion.button>
 
             <a
-                href="https://github.com/humanspeak/svelte-motion"
+                href="https://github.com/humanspeak/svelte-headless-table"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="inline-flex items-center justify-center text-text-muted hover:text-text-secondary"
@@ -110,7 +110,7 @@
                 </motion.div>
             </a>
             <a
-                href="https://www.npmjs.com/package/@humanspeak/svelte-motion"
+                href="https://www.npmjs.com/package/@humanspeak/svelte-headless-table"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="inline-flex items-center justify-center text-text-muted hover:text-text-secondary"
