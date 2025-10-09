@@ -1,0 +1,47 @@
+---
+title: createViewModel
+description: Generate the view model for the table
+sidebar_title: createViewModel
+---
+
+<script>
+  import { useHljs } from '$lib/utils/useHljs';
+  import Admonition from '$lib/components/Admonition.svelte'
+  useHljs('ts');
+</script>
+
+# createViewModel
+
+`Table#createViewModel` derives the view model that is applied onto markup. It is called on the table instance with `Column` instances, and returns a <a href="../table-view-model">TableViewModel</a>.
+
+## Usage
+
+---
+
+### `Table#createViewModel: (columns, options) => TableViewModel`
+
+`columns` is an array of `Column` instances returned from <a href="../create-columns#table-createcolumns-columns-column">`Table#createColumns`</a>.
+
+`options` is an optional configuration object to configure the view model.
+
+```ts {4}
+const table = createTable(data);
+const columns = table.createColumns(...);
+const viewModel = table.createViewModel(columns);
+const {
+  headerRows,
+  rows,
+  tableAttrs,
+  tableBodyAttrs,
+} = viewModel;
+```
+
+#### `options.rowDataId?: (item, index) => string`
+
+Defines a custom <a href="../body-row#dataid-string">`dataId`</a> for each row.
+
+<Admonition type="warning">In the context of sub-rows, the <code>index</code> of the first sub-row is <code>0</code>.</Admonition>
+
+_Defaults to the item index_.
+
+

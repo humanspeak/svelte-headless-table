@@ -1,0 +1,99 @@
+---
+title: addColumnFilters
+description: Filter table rows by column values
+sidebar_title: addColumnFilters
+---
+
+<script>
+  import { useHljs } from '$lib/utils/useHljs';
+  import Callout from '$lib/components/Callout.svelte'
+  useHljs('ts');
+</script>
+
+# addColumnFilters
+
+`addColumnFilters` filters table rows by specific column values.
+
+## Options
+
+<Callout type="info">Options passed into <code>addColumnFilters</code>.</Callout>
+
+```ts {3}
+const table = createTable(data, {
+  colFilter: addColumnFilters({ ... }),
+});
+```
+
+### `serverSide?: boolean`
+
+If `true`, filtering will not change `$rows`. Control filtering by updating <a href="../api/create-table#createtable-data-plugins-table">`$data`</a> and use plugin state to drive your fetch.
+
+_Defaults to `false`_.
+
+## Column Options
+
+<Callout type="info">Options passed into column definitions.</Callout>
+
+```ts {7}
+const columns = table.createColumns([
+  table.column({
+    header: 'Name',
+    accessor: 'name',
+    plugins: {
+      colFilter: { ... },
+    },
+  }),
+]);
+```
+
+### `fn: ({ filterValue, value }) => boolean`
+
+Defines filter behavior for the column. Return `true` to keep the row.
+
+### `render?: (renderProps) => RenderConfig`
+
+Renders a control on `HeaderCell->props.[pluginName].render`. `renderProps` extends <a href="../api/table-state">`TableState`</a> and includes:
+
+- `id: string`
+- `filterValue: Writable<any>`
+- `values: Readable<any[]>`
+- `preFilteredValues: Readable<any[]>`
+- `preFilteredRows: Readable<BodyRow[]>`
+
+### `initialFilterValue?: any`
+
+Initial filter value.
+
+## Prop Set
+
+<Callout type="info">Extensions to the view model. Subscribe to <code>.props()</code> on table components.</Callout>
+
+```svelte
+{#each $headerRows as headerRow (headerRow.id)}
+  <Subscribe rowProps={headerRow.props()} let:rowProps>
+    {rowProps.colFilter}
+    {#each headerRow.cells as cell (cell.id)}
+      <Subscribe props={cell.props()} let:props>
+        {props.colFilter}
+      </Subscribe>
+    {/each}
+  </Subscribe>
+{/each}
+```
+
+## Plugin State
+
+<Callout type="info">State provided by <code>addColumnFilters</code>.</Callout>
+
+```ts {3}
+const { headerRows, rows, pluginStates } = table.createViewModel(columns);
+const { ... } = pluginStates.colFilter;
+```
+
+### `preFilteredRows: Readable<BodyRow<Item>[]>`
+Rows before filtering.
+
+### `filterValues: Writable<Record<Id, FilterValue>>`
+Active filter values by column id.
+
+

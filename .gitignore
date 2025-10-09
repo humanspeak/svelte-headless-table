@@ -20,3 +20,5 @@ junit-playwright.xml
 /playwright/.cache/
 
 .notes
+docs/src/lib/sitemap-manifest.json
+.playwright-mcp/

@@ -2,6 +2,8 @@
     import '../app.css'
     import { ModeWatcher } from 'mode-watcher'
     import { page } from '$app/state'
+    import { MotionConfig } from '@humanspeak/svelte-motion'
+    import BreadcrumbContext from '$lib/components/contexts/Breadcrumb/BreadcrumbContext.svelte'
 
     const { children } = $props()
     const imageLocation = `${page.url.origin}/`
@@ -73,6 +75,11 @@
         }
     </script>
 </svelte:head>
-<ModeWatcher />
 
-{@render children?.()}
+
+<ModeWatcher />
+<BreadcrumbContext>
+    <MotionConfig transition={{ duration: 0.5 }}>
+        {@render children?.()}
+    </MotionConfig>
+</BreadcrumbContext>

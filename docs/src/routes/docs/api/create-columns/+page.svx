@@ -1,0 +1,44 @@
+---
+title: createColumns
+description: Define your table structure and interactions
+sidebar_title: createColumns
+---
+
+<script>
+  import { useHljs } from '$lib/utils/useHljs';
+  import Admonition from '$lib/components/Admonition.svelte'
+  useHljs('ts');
+</script>
+# createColumns
+
+`Table#createColumns` creates and validates a set of columns for the table. It is called on the table instance, and returns an array of `Column`s.
+
+```ts
+const table = createTable(data);
+const column = table.createColumns(...);
+```
+
+## Usage
+
+<Admonition type="warning" title="Breaking change">
+
+**v0.13** - `header: (tableState) => RenderConfig`.
+
+**v0.14** - `header: (headerCell, tableState) => RenderConfig`.
+
+</Admonition>
+
+---
+
+### `Table#createColumns: (columns) => Column[]`
+
+`columns` is an array of columns created by `Table#column`, `Table#group`, or `Table#display`.
+
+```ts
+const columns = table.createColumns([...])
+```
+
+
+
+
+

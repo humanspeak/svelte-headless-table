@@ -1,0 +1,98 @@
+---
+title: Overview
+description: What is Svelte Headless Table?
+---
+
+# Overview
+
+Svelte Headless Table is a headless, composable table library for Svelte. It gives you a powerful table view-model (sorting, filtering, grouping, selection, pagination, etc.) while leaving the DOM and styling entirely up to you.
+
+## Why headless?
+
+- **Control**: You own the markup, accessibility, animations, and design system.
+- **Maintainability**: A focused API without UI baggage stays small and predictable.
+- **Extensibility**: Compose only what you need via plugins and your own components.
+
+## Core concepts
+
+- **createTable(data, plugins)**: Builds a table instance from your data source and plugin config
+- **createColumns([...])**: Declares how to read and present fields from your data items
+- **createViewModel(columns)**: Derives header rows, body rows, and attributes to spread on markup
+
+## Installation
+
+Install with your package manager of choice:
+
+```bash
+npm i -D @humanspeak/svelte-headless-table
+```
+
+```bash
+yarn add -D @humanspeak/svelte-headless-table
+```
+
+```bash
+pnpm add -D @humanspeak/svelte-headless-table
+```
+
+Requires Svelte 5.
+
+## Minimal example
+
+```svelte
+<script lang="ts">
+  import { readable } from 'svelte/store'
+  import { createTable, Render, Subscribe } from '@humanspeak/svelte-headless-table'
+
+  const data = readable([
+    { name: 'Ada Lovelace', age: 21 },
+    { name: 'Barbara Liskov', age: 52 },
+    { name: 'Richard Hamming', age: 38 }
+  ])
+
+  const table = createTable(data)
+  const columns = table.createColumns([
+    table.column({ header: 'Name', accessor: 'name' }),
+    table.column({ header: 'Age', accessor: 'age' })
+  ])
+
+  const { headerRows, rows, tableAttrs, tableBodyAttrs } = table.createViewModel(columns)
+</script>
+
+<table {...$tableAttrs}>
+  <thead>
+    {#each $headerRows as headerRow (headerRow.id)}
+      <tr>
+        {#each headerRow.cells as cell (cell.id)}
+          <Subscribe attrs={cell.attrs()} let:attrs>
+            <th {...attrs}>
+              <Render of={cell.render()} />
+            </th>
+          </Subscribe>
+        {/each}
+      </tr>
+    {/each}
+  </thead>
+  <tbody {...$tableBodyAttrs}>
+    {#each $rows as row (row.id)}
+      <tr>
+        {#each row.cells as cell (cell.id)}
+          <Subscribe attrs={cell.attrs()} let:attrs>
+            <td {...attrs}>
+              <Render of={cell.render()} />
+            </td>
+          </Subscribe>
+        {/each}
+      </tr>
+    {/each}
+  </tbody>
+</table>
+```
+
+## Next steps
+
+- Read the [Quick Start](/docs/getting-started/quick-start)
+- Explore the [API: createTable](/docs/api/create-table) and [createColumns](/docs/api/create-columns)
+- Browse [Plugins Overview](/docs/plugins/overview)
+
+

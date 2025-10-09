@@ -4,11 +4,13 @@
     "printWidth": 100,
     "tabWidth": 4,
     "semi": false,
-    "singleQuote": true,
+    "tailwindStylesheet": "./src/app.css"
+,    "singleQuote": true,
     "plugins": [
         "prettier-plugin-svelte",
         "prettier-plugin-organize-imports",
-        "prettier-plugin-tailwindcss"
+        "prettier-plugin-tailwindcss",
+        "prettier-plugin-sort-json"
     ],
     "overrides": [
         {

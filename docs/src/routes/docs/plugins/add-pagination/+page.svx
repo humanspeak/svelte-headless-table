@@ -1,0 +1,104 @@
+---
+title: addPagination
+description: Paginate table rows
+sidebar_title: addPagination
+---
+
+<script>
+  import { useHljs } from '$lib/utils/useHljs';
+  import Admonition from '$lib/components/Admonition.svelte'
+  import Callout from '$lib/components/Callout.svelte'
+  useHljs('ts');
+</script>
+
+# addPagination
+
+`addPagination` paginates the table by page index.
+
+<Admonition type="note">Subscribe to <a href="../api/table-view-model#tableviewmodel-pagerows-readable-bodyrow"><code>TableViewModel#pageRows</code></a> instead of <code>TableViewModel#rows</code>.</Admonition>
+
+```svelte {5,11}
+<script>
+  const { headerRows, pageRows } = table.createViewModel(columns)
+</script>
+
+<table>
+  <tbody>
+    {#each $pageRows as row (row.id)}
+      ...
+    {/each}
+  </tbody>
+</table>
+```
+
+## Options
+
+<Callout type="info">Options passed into <code>addPagination</code>.</Callout>
+
+```ts {3}
+const table = createTable(data, {
+  page: addPagination({ ... }),
+});
+```
+
+### `initialPageIndex?: number`
+Default `0`.
+
+### `initialPageSize?: number`
+Default `10`.
+
+### `serverSide?: boolean`
+If `true`, use server-side pagination by updating <a href="../api/create-table#createtable-data-plugins-table">`$data`</a>.
+
+### `serverItemCount: Writable<number>`
+Total item count when using server-side pagination. Required if `serverSide = true`.
+
+## Column Options
+
+<Callout type="info">Options passed into column definitions.</Callout>
+
+```ts {7}
+const columns = table.createColumns([
+  table.column({
+    header: 'Name',
+    accessor: 'name',
+    plugins: {
+      page: { ... },
+    },
+  }),
+]);
+```
+
+## Prop Set
+
+<Callout type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Callout>
+
+```svelte
+{#each $headerRows as headerRow (headerRow.id)}
+  <Subscribe rowProps={headerRow.props()} let:rowProps>
+    {rowProps.page}
+    {#each headerRow.cells as cell (cell.id)}
+      <Subscribe props={cell.props()} let:props>
+        {props.page}
+      </Subscribe>
+    {/each}
+  </Subscribe>
+{/each}
+```
+
+## Plugin State
+
+<Callout type="info">State provided by <code>addPagination</code>.</Callout>
+
+```ts {3}
+const { headerRows, pageRows, pluginStates } = table.createViewModel(columns);
+const { ... } = pluginStates.page;
+```
+
+### `pageSize: Writable<number>`
+### `pageIndex: Writable<number>`
+### `hasPreviousPage: Readable<boolean>`
+### `hasNextPage: Readable<boolean>`
+### `pageCount: Readable<number>`
+
+
