@@ -12,4 +12,4 @@
     $: max = $preFilteredValues.length === 0 ? 0 : Math.max(...$preFilteredValues.filter(isNumber))
 </script>
 
-<input type="range" {min} {max} bind:value={$filterValue} onclick|stopPropagation />
+<input type="range" {min} {max} bind:value={$filterValue} onclick={(e) => e.stopPropagation()} />
