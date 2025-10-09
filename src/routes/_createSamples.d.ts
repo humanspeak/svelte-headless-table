@@ -11,7 +11,7 @@ type CreateSamplesOptions = {
     seed?: number
 }
 export declare const createSamples: (
-    _options?: CreateSamplesOptions,
-    ..._lengths: number[]
+    options?: CreateSamplesOptions,
+    ...lengths: number[]
 ) => Sample[]
 export {}

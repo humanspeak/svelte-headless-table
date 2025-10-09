@@ -64,11 +64,11 @@
     )}</pre>
 
 <div class="mb-4 flex items-baseline gap-4">
-    <button on:click={() => $pageIndex--} disabled={!$hasPreviousPage} class="demo"
+    <button onclick={() => $pageIndex--} disabled={!$hasPreviousPage} class="demo"
         >Previous page</button
     >
     {$pageIndex + 1} out of {$pageCount}
-    <button on:click={() => $pageIndex++} disabled={!$hasNextPage} class="demo">Next page</button>
+    <button onclick={() => $pageIndex++} disabled={!$hasNextPage} class="demo">Next page</button>
 </div>
 <label for="page-size">Page size</label>
 <input id="page-size" type="number" min={1} bind:value={$pageSize} class="demo mb-4" />

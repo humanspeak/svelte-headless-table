@@ -21,14 +21,14 @@
     import { mean, sum } from '$lib/utils/math'
     import { getShuffled } from '$lib/utils/getShuffled'
     import { createSamples } from '$lib/utils/createSamples'
-    import Italic from '../../..//examples/Italic.svelte'
-    import Profile from '../../..//examples/Profile.svelte'
-    import TextFilter from '../../..//examples/TextFilter.svelte'
-    import NumberRangeFilter from '../../..//examples/NumberRangeFilter.svelte'
-    import SelectFilter from '../../..//examples/SelectFilter.svelte'
-    import ExpandIndicator from '../../..//examples/ExpandIndicator.svelte'
+    import Italic from '../Italic.svelte'
+    import Profile from '../Profile.svelte'
+    import TextFilter from '../TextFilter.svelte'
+    import NumberRangeFilter from '../NumberRangeFilter.svelte'
+    import SelectFilter from '../SelectFilter.svelte'
+    import ExpandIndicator from '../ExpandIndicator.svelte'
     import { getDistinct } from '$lib/utils/array'
-    import SelectIndicator from '../../..//examples/SelectIndicator.svelte'
+    import SelectIndicator from '../SelectIndicator.svelte'
 
     const data = readable(createSamples(1000))
 
@@ -266,11 +266,11 @@
 <h3>Pagination</h3>
 
 <div>
-    <button on:click={() => $pageIndex--} disabled={!$hasPreviousPage} class="demo"
+    <button onclick={() => $pageIndex--} disabled={!$hasPreviousPage} class="demo"
         >Previous page</button
     >
     {$pageIndex + 1} of {$pageCount}
-    <button on:click={() => $pageIndex++} disabled={!$hasNextPage} class="demo">Next page</button>
+    <button onclick={() => $pageIndex++} disabled={!$hasNextPage} class="demo">Next page</button>
 </div>
 <div style:margin-top="1rem">
     <label for="page-size">Page size</label>
@@ -279,7 +279,7 @@
 
 <h3>Column order</h3>
 
-<button on:click={() => ($columnIdOrder = getShuffled($columnIdOrder))} class="demo"
+<button onclick={() => ($columnIdOrder = getShuffled($columnIdOrder))} class="demo"
     >Shuffle columns</button
 >
 
@@ -298,7 +298,7 @@
                             >
                                 <th
                                     {...attrs}
-                                    on:click={props.sort.toggle}
+                                    onclick={props.sort.toggle}
                                     class:sorted={props.sort.order !== undefined}
                                     use:props.resize
                                 >
@@ -312,7 +312,10 @@
                                     </div>
                                     {#if !props.group.disabled}
                                         <button
-                                            on:click|stopPropagation={props.group.toggle}
+                                            onclick={(e) => {
+                                                e.stopPropagation()
+                                                props.group.toggle()
+                                            }}
                                             class="demo"
                                         >
                                             {#if props.group.grouped}
@@ -328,7 +331,7 @@
                                     {#if !props.resize.disabled}
                                         <div
                                             class="resizer"
-                                            on:click|stopPropagation
+                                            onclick={(e) => e.stopPropagation()}
                                             use:props.resize.drag
                                         />
                                     {/if}

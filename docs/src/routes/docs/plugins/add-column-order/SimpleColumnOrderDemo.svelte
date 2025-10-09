@@ -67,7 +67,7 @@
 
 <pre>$columnIdOrder = {JSON.stringify($columnIdOrder, null, 2)}</pre>
 
-<button on:click={() => ($columnIdOrder = getShuffled($columnIdOrder))} class="demo"
+<button onclick={() => ($columnIdOrder = getShuffled($columnIdOrder))} class="demo"
     >Shuffle columns</button
 >
 
