@@ -1,0 +1,19 @@
+---
+title: Kitchen Sink
+description: A comprehensive example showcasing multiple features together
+---
+
+# Kitchen Sink
+
+This example demonstrates a table configured with several plugins and custom renderers.
+
+<script>
+  import KitchenSink from './KitchenSink.svelte';
+</script>
+
+<KitchenSink />
+
+
+
+
+

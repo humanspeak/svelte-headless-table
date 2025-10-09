@@ -1,17 +1,17 @@
-import { derived, readable, writable, type Readable, type Writable } from 'svelte/store'
-import { BodyRow, DataBodyRow, getBodyRows, getColumnedBodyRows } from './bodyRows.js'
-import { FlatColumn, getFlatColumns, type Column } from './columns.js'
-import type { Table } from './createTable.js'
-import { getHeaderRows, HeaderRow } from './headerRows.js'
+import { BodyRow, DataBodyRow, getBodyRows, getColumnedBodyRows } from '$lib/bodyRows.js'
+import { FlatColumn, getFlatColumns, type Column } from '$lib/columns.js'
+import type { Table } from '$lib/createTable.js'
+import { getHeaderRows, HeaderRow } from '$lib/headerRows.js'
 import type {
     AnyPlugins,
     DeriveFlatColumnsFn,
     DeriveFn,
     DeriveRowsFn,
     PluginStates
-} from './types/TablePlugin.js'
-import { finalizeAttributes } from './utils/attributes.js'
-import { nonUndefined } from './utils/filter.js'
+} from '$lib/types/TablePlugin.js'
+import { finalizeAttributes } from '$lib/utils/attributes.js'
+import { nonUndefined } from '$lib/utils/filter.js'
+import { derived, readable, writable, type Readable, type Writable } from 'svelte/store'
 
 /* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
 export type TableAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = Record<

@@ -1,0 +1,22 @@
+---
+title: addGridLayout
+description: Use CSS Grid to layout the table
+sidebar_title: addGridLayout
+---
+
+<script>
+  import { useHljs } from '$lib/utils/useHljs';
+  useHljs('ts');
+</script>
+
+# addGridLayout
+
+`addGridLayout` configures the table to use CSS Grid Layout for layout instead of the native table layout.
+
+## Examples
+
+### CSS Grid layout
+
+<!-- Port demo from docs-old if needed -->
+
+

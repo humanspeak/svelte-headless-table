@@ -1,0 +1,105 @@
+---
+title: addGroupBy
+description: Group rows together based on column values
+sidebar_title: addGroupBy
+---
+
+<script>
+  import { useHljs } from '$lib/utils/useHljs';
+  import Callout from '$lib/components/Callout.svelte'
+  useHljs('ts');
+</script>
+
+# addGroupBy
+
+`addGroupBy` groups rows together based on column values and provides aggregated values for groups of rows. Grouped rows are modeled as sub-rows of a grouping row.
+
+The id of a sub-row is in the format `{parentId}>{id}`.
+
+## Options
+
+<Callout type="info">Options passed into <code>addGroupBy</code>.</Callout>
+
+```ts {3}
+const table = createTable(data, {
+  group: addGroupBy({ ... }),
+});
+```
+
+### `initialGroupByIds?: string[]`
+Default `[]`.
+
+### `disableMultiGroup?: boolean`
+Default `false`.
+
+### `isMultiGroupEvent?: (event: Event) => boolean`
+Override multi-group gesture. Default: shift-click.
+
+## Column Options
+
+<Callout type="info">Options passed into column definitions.</Callout>
+
+```ts {7}
+const columns = table.createColumns([
+  table.column({
+    header: 'Name',
+    accessor: 'name',
+    plugins: {
+      group: { ... },
+    },
+  }),
+]);
+```
+
+### `disable?: boolean`
+Disable grouping on the column. Default `false`.
+
+### `getAggregateValue?: (values) => any`
+Return aggregated value for the column.
+
+### `getGroupOn?: (value) => string | number`
+Return the grouping key and displayed value on the grouping row.
+
+#### `cell?: ({ column, row, value }, state) => RenderConfig`
+Custom body cell for grouped rows; receives the row, column, value, and <a href="../api/table-state">`TableState`</a>.
+
+## Prop Set
+
+<Callout type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Callout>
+
+```svelte
+{#each $headerRows as headerRow (headerRow.id)}
+  <Subscribe rowProps={headerRow.props()} let:rowProps>
+    {rowProps.group}
+    {#each headerRow.cells as cell (cell.id)}
+      <Subscribe props={cell.props()} let:props>
+        {props.group}
+      </Subscribe>
+    {/each}
+  </Subscribe>
+{/each}
+```
+
+### HeaderCell props
+- `grouped: boolean`
+- `disabled: boolean`
+- `toggle: (event: Event) => void`
+- `clear: () => void`
+
+### BodyCell props
+- `repeated: boolean`
+- `aggregated: boolean`
+- `grouped: boolean`
+
+## Plugin State
+
+<Callout type="info">State provided by <code>addGroupBy</code>.</Callout>
+
+```ts {3}
+const { headerRows, rows, pluginStates } = table.createViewModel(columns);
+const { ... } = pluginStates.group;
+```
+
+### `groupByIds: ArraySetStore<string>`
+Active grouping keys.
+

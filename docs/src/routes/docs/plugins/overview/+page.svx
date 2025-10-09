@@ -1,0 +1,49 @@
+---
+title: The Plugin System
+description: Extending the functionality of Svelte Headless Table with powerful plugins
+---
+
+# The Plugin System
+
+Svelte Headless Table is designed with extensibility in mind. Its complex features are powered by an extensive suite of plugins.
+
+<script>
+  import Admonition from '$lib/components/Admonition.svelte'
+</script>
+
+<ul class="grid text-sm md:text-base grid-cols-2 gap-2 p-0 lg:grid-cols-3">
+  {#each [
+    'addSortBy', 'addColumnFilters', 'addTableFilter',
+    'addColumnOrder', 'addHiddenColumns', 'addPagination',
+    'addSubRows', 'addGroupBy', 'addExpandedRows',
+    'addSelectedRows', 'addResizedColumns', 'addGridLayout'
+  ] as pluginName}
+    <li class="flex gap-2 items-center m-0 list-none">
+      <i class="fa-solid fa-circle-check text-brand m-0"></i> <code class="m-0">{pluginName}</code>
+    </li>
+  {/each}
+</ul>
+
+## Defining plugins
+
+Svelte Headless Table treats each plugin as an extension to its core. Every plugin optionally defines transformations on the rows and columns of the table, and extends the functionality of column definitions, rows, and cells.
+
+For this example, we extend a basic table with `addSortBy` and `addColumnOrder`.
+
+```ts {3-4}
+const table = createTable(data, {
+    sort: addSortBy({ disableMultiSort: true }),
+    colOrder: addColumnOrder()
+})
+```
+
+Plugins are configurable via function arguments.
+
+<Admonition type="info">`sort` and `colOrder` are just names to identify the plugins – they can be any name you prefer as long as they remain consistent. This lets you add multiple plugins to a table without any naming conflicts.</Admonition>
+
+The order in which you define plugins matters – [the order of object keys is predictable](https://www.stefanjudis.com/today-i-learned/property-order-is-predictable-in-javascript-objects-since-es2015/) and plugins are evaluated from first to last.
+
+
+
+
+

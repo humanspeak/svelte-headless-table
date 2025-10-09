@@ -7,16 +7,11 @@ export interface Sample {
     status: string
     children?: Sample[]
 }
-
 type CreateSamplesOptions = {
     seed?: number
 }
-
 export declare const createSamples: (
-    /* trunk-ignore(eslint/no-unused-vars) */
-    options?: CreateSamplesOptions,
-    /* trunk-ignore(eslint/no-unused-vars) */
-    ...lengths: number[]
+    _options?: CreateSamplesOptions,
+    ..._lengths: number[]
 ) => Sample[]
-
 export {}

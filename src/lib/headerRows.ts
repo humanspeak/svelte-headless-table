@@ -1,19 +1,20 @@
-import { derived } from 'svelte/store'
-import type { Column } from './columns.js'
+import type { Column } from '$lib/columns.js'
 import {
     DataHeaderCell,
     FlatDisplayHeaderCell,
     GroupDisplayHeaderCell,
     GroupHeaderCell,
     type HeaderCell
-} from './headerCells.js'
-import { TableComponent } from './tableComponent.js'
-import type { Matrix } from './types/Matrix.js'
-import type { AnyPlugins } from './types/TablePlugin.js'
-import { sum } from './utils/math.js'
-import { getNullMatrix, getTransposed } from './utils/matrix.js'
+} from '$lib/headerCells.js'
+import { TableComponent } from '$lib/tableComponent.js'
+import type { Matrix } from '$lib/types/Matrix.js'
+import type { AnyPlugins } from '$lib/types/TablePlugin.js'
+import { sum } from '$lib/utils/math.js'
+import { getNullMatrix, getTransposed } from '$lib/utils/matrix.js'
+import { derived } from 'svelte/store'
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+/* trunk-ignore(eslint/@typescript-eslint/no-unused-vars) */
+/* trunk-ignore(eslint/no-unused-vars) */
 export type HeaderRowAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     role: 'row'
 }

@@ -1,0 +1,119 @@
+---
+title: HeaderCell
+description: The model for a header cell
+sidebar_title: HeaderCell
+---
+
+<script>
+  import { useHljs } from '$lib/utils/useHljs';
+  import Admonition from '$lib/components/Admonition.svelte'
+  useHljs('ts');
+</script>
+
+# HeaderCell
+
+`HeaderCell` represents the model of a `<th>` element in `<tr>`.
+
+## Usage
+
+### `id: string`
+
+A constant `id` that uniquely identifies the header cell in the row.
+
+### `attrs: () => Readable<HeaderCellAttributes>`
+
+A `Readable` store with attributes to apply onto the `<th>` element.
+
+### `props: () => Readable<HeaderCellProps>`
+
+A `Readable` store with additional properties derived from plugin view model extensions.
+
+<Admonition type="tip">See also <a href="../../plugins/overview#connecting-plugins-to-markup">Plugin View Model Extensions</a>.</Admonition>
+
+### `render: () => RenderConfig`
+
+Returns the <a href="../render#renderconfig">render configuration</a> of the header cell. Pass into `Render#of`.
+
+```svelte
+<tr>
+    {#each headerRow.cells as cell (cell.id)}
+        <Subscribe attrs={cell.attrs()} let:attrs>
+            <th {...attrs}>
+                <Render of={cell.render()} />
+            </th>
+        </Subscribe>
+    {/each}
+</tr>
+```
+
+### `isFlat: () => boolean`
+
+Returns `true` if the header cell is an instance of `FlatHeaderCell`.
+
+### `isData: () => boolean`
+
+Returns `true` if the header cell is an instance of `DataHeaderCell`.
+
+### `isFlatDisplay: () => boolean`
+
+Returns `true` if the header cell is an instance of `FlatDisplayHeaderCell`.
+
+### `isGroup: () => boolean`
+
+Returns `true` if the header cell is an instance of `GroupHeaderCell`.
+
+### `isGroupDisplay: () => boolean`
+
+Returns `true` if the header cell is an instance of `GroupDisplayHeaderCell`.
+
+# Variants
+
+## FlatHeaderCell
+
+`FlatHeaderCell`s represent header cells on the last header row in the table header.
+
+## DataHeaderCell
+
+`DataHeaderCell` is a `FlatHeaderCell` that is backed by a specific data attribute.
+
+`DataHeaderCell`s are usually created with <a href="../create-columns#table-column-columndef-datacolumn">`Table#column`</a>.
+
+### `accessorKey?: string`
+
+The attribute key of the data item.
+
+### `accessorFn?: (item) => unknown`
+
+The function to derive the data attribute.
+
+## FlatDisplayHeaderCell
+
+`FlatDisplayHeaderCell` is a `FlatHeaderCell` that is not backed by any data attribute.
+
+`FlatDisplayHeaderCell`s are usually created with <a href="../create-columns#table-display-displaydef-displaycolumn">`Table#display`</a>.
+
+## GroupHeaderCell
+
+`GroupHeaderCell`s represent header cells that span over other header cells.
+
+### `ids: string[]`
+
+A list of ids of the cells that this group cell currently spans over.
+
+`ids` is affected by column re-ordering and hiding.
+
+### `allIds: string[]`
+
+A list of ids of the cells grouped by this group cell.
+
+`allIds` is not affected by column re-ordering and hiding.
+
+### `allId: string`
+
+A comma-joined string for `allIds`. `allId` should not be used as a unique identifier because there can be multiple groups with the same `allId`.
+
+## GroupDisplayHeaderCell
+
+`GroupDisplayHeaderCell` is a `GroupHeaderCell` that is not backed by any data attribute.
+
+

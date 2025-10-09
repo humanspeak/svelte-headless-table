@@ -1,14 +1,14 @@
-import { derivedKeys } from '@humanspeak/svelte-subscribe'
-import { derived, type Readable } from 'svelte/store'
-import type { TableState } from './createViewModel.js'
+import type { TableState } from '$lib/createViewModel.js'
 import type {
     AnyPlugins,
     ComponentKeys,
     ElementHook,
     PluginTablePropSet
-} from './types/TablePlugin.js'
-import { finalizeAttributes, mergeAttributes } from './utils/attributes.js'
-import type { Clonable } from './utils/clone.js'
+} from '$lib/types/TablePlugin.js'
+import { finalizeAttributes, mergeAttributes } from '$lib/utils/attributes.js'
+import type { Clonable } from '$lib/utils/clone.js'
+import { derivedKeys } from '@humanspeak/svelte-subscribe'
+import { derived, type Readable } from 'svelte/store'
 
 export interface TableComponentInit {
     id: string

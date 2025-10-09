@@ -1,0 +1,91 @@
+---
+title: addExpandedRows
+description: Expand or collapse sub-rows of rows
+sidebar_title: addExpandedRows
+---
+
+<script>
+  import { useHljs } from '$lib/utils/useHljs';
+  import Callout from '$lib/components/Callout.svelte'
+  useHljs('ts');
+</script>
+
+# addExpandedRows
+
+`addExpandedRows` expands and collapses sub-rows of rows. Sub-rows are defined by plugins such as <a href="./add-sub-rows">`addSubRows`</a> or <a href="./add-group-by">`addGroupBy`</a>.
+
+## Options
+
+<Callout type="info">Options passed into <code>addExpandedRows</code>.</Callout>
+
+```ts {3}
+const table = createTable(data, {
+  expand: addExpandedRows({ ... }),
+});
+```
+
+### `initialExpandedIds?: Record<string, boolean>`
+Initial expanded row ids as an object mapping rowId => boolean. Nested sub-rows use `{parentId}>{id}`.
+
+## Column Options
+
+<Callout type="info">Options passed into column definitions.</Callout>
+
+```ts {7}
+const columns = table.createColumns([
+  table.column({
+    header: 'Name',
+    accessor: 'name',
+    plugins: {
+      expand: { ... },
+    },
+  }),
+]);
+```
+
+## Prop Set
+
+<Callout type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Callout>
+
+```svelte
+{#each $headerRows as headerRow (headerRow.id)}
+  <Subscribe rowProps={headerRow.props()} let:rowProps>
+    {rowProps.expand}
+    {#each headerRow.cells as cell (cell.id)}
+      <Subscribe props={cell.props()} let:props>
+        {props.expand}
+      </Subscribe>
+    {/each}
+  </Subscribe>
+{/each}
+```
+
+## Plugin State
+
+<Callout type="info">State provided by <code>addExpandedRows</code>.</Callout>
+
+```ts {3}
+const { headerRows, rows, pluginStates } = table.createViewModel(columns);
+const { ... } = pluginStates.expand;
+```
+
+### `expandedIds: Writable<Record<string, boolean>>`
+Active expanded rows mapping.
+
+### `getRowState: (row) => ExpandedRowsRowState`
+Returns state for a given `BodyRow` with:
+
+- `isExpanded: Writable<boolean>`
+- `canExpand: Readable<boolean>`
+- `isAllSubRowsExpanded: Readable<boolean>`
+
+## Examples
+
+### Simple row expanding
+
+<SimpleExpandingDemo />
+
+### Simple grouping by column
+
+<SimpleGroupByDemo />
+

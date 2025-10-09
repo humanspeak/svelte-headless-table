@@ -2,6 +2,8 @@
     import '../app.css'
     import { ModeWatcher } from 'mode-watcher'
     import { page } from '$app/state'
+    import { MotionConfig } from '@humanspeak/svelte-motion'
+    import BreadcrumbContext from '$lib/components/contexts/Breadcrumb/BreadcrumbContext.svelte'
 
     const { children } = $props()
     const imageLocation = `${page.url.origin}/`
@@ -49,30 +51,34 @@
         {
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            "name": "Svelte Headless Table",
             "applicationCategory": "DeveloperApplication",
-            "operatingSystem": "Any",
-            "offers": {
-                "@type": "Offer",
-                "price": "0",
-                "priceCurrency": "USD"
-            },
             "author": {
                 "@type": "Organization",
                 "name": "Humanspeak, Inc.",
                 "url": "https://humanspeak.com"
             },
-            "programmingLanguage": ["Svelte", "TypeScript"],
-            "description": "A powerful headless table component for Svelte 5 that transforms markdown into customizable Svelte components with TypeScript support and extensive testing coverage.",
-            "license": "MIT",
-            "url": "https://table.svelte.page",
+            "description": "A powerful headless table component for Svelte 5 with TypeScript support, sorting, filtering, and pagination capabilities.",
             "downloadUrl": "https://www.npmjs.com/package/@humanspeak/svelte-table",
-            "requirements": "Svelte 5.0 or higher",
+            "keywords": "svelte, table, headless, typescript, documentation",
+            "license": "MIT",
+            "name": "Svelte Headless Table",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            },
+            "operatingSystem": "Any",
+            "programmingLanguage": ["Svelte", "TypeScript"],
             "releaseNotes": "https://github.com/humanspeak/svelte-table/releases",
-            "keywords": "svelte, table, headless, typescript, documentation"
+            "requirements": "Svelte 5.0 or higher",
+            "url": "https://table.svelte.page"
         }
     </script>
 </svelte:head>
-<ModeWatcher />
 
-{@render children?.()}
+<ModeWatcher />
+<BreadcrumbContext>
+    <MotionConfig transition={{ duration: 0.5 }}>
+        {@render children?.()}
+    </MotionConfig>
+</BreadcrumbContext>

@@ -1,0 +1,89 @@
+---
+title: addResizedColumns
+description: Dynamically resize columns
+sidebar_title: addResizedColumns
+---
+
+<script>
+  import { useHljs } from '$lib/utils/useHljs';
+  import Callout from '$lib/components/Callout.svelte'
+  useHljs('ts');
+</script>
+
+# addResizedColumns
+
+`addResizedColumns` allows columns to be resized programatically and dynamically.
+
+## Options
+
+<Callout type="info">Options passed into <code>addResizedColumns</code>.</Callout>
+
+```ts {3}
+const table = createTable(data, {
+  resize: addResizedColumns({ ... }),
+});
+```
+
+## Column Options
+
+<Callout type="info">Options passed into column definitions.</Callout>
+
+```ts {7}
+const columns = table.createColumns([
+  table.column({
+    header: 'Name',
+    accessor: 'name',
+    plugins: {
+      resize: { ... },
+    },
+  }),
+]);
+```
+
+### `initialWidth?: number`
+Initial width in px.
+
+### `minWidth?: number`
+Minimum width in px.
+
+### `maxWidth?: number`
+Maximum width in px.
+
+### `disable?: boolean`
+Disable resizing for the column. If all child columns of a group are disabled, the group is disabled.
+
+## Prop Set
+
+<Callout type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Callout>
+
+```svelte
+{#each $headerRows as headerRow (headerRow.id)}
+  <Subscribe rowProps={headerRow.props()} let:rowProps>
+    {rowProps.resize}
+    {#each headerRow.cells as cell (cell.id)}
+      <Subscribe props={cell.props()} let:props>
+        {props.resize}
+      </Subscribe>
+    {/each}
+  </Subscribe>
+{/each}
+```
+
+### HeaderCell action
+Use `use:props.resize` on the `<th>` to initialize the plugin.
+
+```svelte {7}
+{#each headerRow.cells as cell (cell.id)}
+  <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
+    <th {...attrs} use:props.resize> ... </th>
+  </Subscribe>
+{/each}
+```
+
+#### `drag: Action`
+Drag-to-resize handle: `<div class="resizer" use:props.resize.drag />`
+
+#### `reset: Action`
+Reset width handle: `<div class="resizer" use:props.resize.reset />`
+
+

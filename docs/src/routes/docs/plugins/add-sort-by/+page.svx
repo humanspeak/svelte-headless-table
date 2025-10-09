@@ -1,0 +1,81 @@
+---
+title: addSortBy
+description: Sort table rows by column values
+sidebar_title: addSortBy
+---
+
+<script>
+  import { useHljs } from '$lib/utils/useHljs';
+  import Callout from '$lib/components/Callout.svelte'
+  useHljs('ts');
+</script>
+# addSortBy
+
+`addSortBy` sorts table rows by column values.
+
+## Options
+
+<Callout type="info">Options passed into <code>addSortBy</code>.</Callout>
+
+```ts {3}
+const table = createTable(data, {
+  sort: addSortBy({ ... }),
+});
+```
+
+### `initialSortKeys?: SortKey[]`
+
+Sets the initial sort keys.
+
+_Defaults to `[]`_.
+
+### `disableMultiSort?: boolean`
+
+Disables multi-sorting for the table.
+
+_Defaults to `false`_.
+
+### `isMultiSortEvent?: (event: Event) => boolean`
+
+Allows overriding the default multi-sort behavior.
+
+Takes an [Event](https://developer.mozilla.org/en-US/docs/Web/API/Event) and returns whether the action triggers a multi-sort.
+
+_Defaults to multi-sort on shift-click_.
+
+### `toggleOrder?: ()[]`
+
+Allows customization of the toggling order. This cannot contain duplicate values. Set this to `['asc', 'desc']` to disable toggling to an unsorted column.
+
+_Defaults to `['asc', 'desc', undefined]`_.
+
+### `serverSide?: boolean`
+
+If `true`, the sort plugin will have no effect on the rows of the table. Instead, you can control sorting by updating [`$data`](../api/create-table#createtable-data-plugins-table). The plugin's state can be used as variables in your data-fetching query to get sorted data from the server directly.
+
+_Defaults to `false`_.
+
+## Column Options
+
+<Callout type="info">Options passed into column definitions.</Callout>
+
+```ts {7}
+const columns = table.createColumns([
+  table.column({
+    header: 'Name',
+    accessor: 'name',
+    plugins: {
+      sort: { ... },
+    },
+  }),
+]);
+```
+
+## Examples
+
+<SimpleSortingDemo />
+
+
+
+
+

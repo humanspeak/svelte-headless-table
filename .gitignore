@@ -18,3 +18,7 @@ junit-playwright.xml
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+.notes
+docs/src/lib/sitemap-manifest.json
+.playwright-mcp/

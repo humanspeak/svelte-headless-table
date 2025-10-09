@@ -1,17 +1,17 @@
+import type { BodyRow } from '$lib/bodyRows.js'
+import type { DataColumn, DisplayColumn, FlatColumn } from '$lib/columns.js'
+import { TableComponent } from '$lib/tableComponent.js'
+import type { DataLabel, DisplayLabel } from '$lib/types/Label.js'
+import type { AnyPlugins } from '$lib/types/TablePlugin.js'
 import type { RenderConfig } from '@humanspeak/svelte-render'
 import { derived, type Readable } from 'svelte/store'
-import type { BodyRow } from './bodyRows.js'
-import type { DataColumn, DisplayColumn, FlatColumn } from './columns.js'
-import { TableComponent } from './tableComponent.js'
-import type { DataLabel, DisplayLabel } from './types/Label.js'
-import type { AnyPlugins } from './types/TablePlugin.js'
 
 export type BodyCellInit<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     id: string
     row: BodyRow<Item, Plugins>
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+/* trunk-ignore(eslint/@typescript-eslint/no-unused-vars,eslint/no-unused-vars) */
 export type BodyCellAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     role: 'cell'
 }

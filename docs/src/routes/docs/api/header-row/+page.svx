@@ -1,0 +1,39 @@
+---
+title: HeaderRow
+description: The model for a header row
+sidebar_title: HeaderRow
+---
+
+<script>
+  import { useHljs } from '$lib/utils/useHljs';
+  import Admonition from '$lib/components/Admonition.svelte'
+  useHljs('ts');
+</script>
+
+# HeaderRow
+
+`HeaderRow` represents the model of a `<tr>` element in `<thead>`.
+
+## Usage
+
+### `id: string`
+
+A constant `id` that uniquely identifies the header row.
+
+### `attrs: () => Readable<HeaderRowAttributes>`
+
+A `Readable` store with attributes to apply onto the `<tr>` element.
+
+### `props: () => Readable<HeaderRowProps>`
+
+A `Readable` store with additional properties derived from plugin view model extensions.
+
+<Admonition type="tip">See also <a href="../../plugins/overview#connecting-plugins-to-markup">Plugin View Model Extensions</a>.</Admonition>
+
+### `cells: HeaderCell[]`
+
+An array of <a href="./header-cell">`HeaderCell`</a>s to iterate over and apply onto `<th>` elements.
+
+`cells` only includes the cells of <strong>visible columns</strong>.
+
+

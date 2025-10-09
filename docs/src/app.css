@@ -1,75 +1,328 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 20 14.3% 4.1%;
-    --muted: 60 4.8% 95.9%;
-    --muted-foreground: 25 5.3% 44.7%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 20 14.3% 4.1%;
-    --card: 0 0% 100%;
-    --card-foreground: 20 14.3% 4.1%;
-    --border: 20 5.9% 90%;
-    --input: 20 5.9% 90%;
-    --primary: 24 9.8% 10%;
-    --primary-foreground: 60 9.1% 97.8%;
-    --secondary: 60 4.8% 95.9%;
-    --secondary-foreground: 24 9.8% 10%;
-    --accent: 60 4.8% 95.9%;
-    --accent-foreground: 24 9.8% 10%;
-    --destructive: 0 72.2% 50.6%;
-    --destructive-foreground: 60 9.1% 97.8%;
-    --ring: 20 14.3% 4.1%;
-    --radius: 0.5rem;
-	--sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
+:root {
+    /* Brand colors - Humanspeak teal green */
+    --color-brand-50: #f0fdfb;
+    --color-brand-100: #ccf7ed;
+    --color-brand-200: #99eedb;
+    --color-brand-300: #66e5c9;
+    --color-brand-400: #54dbbc;
+    --color-brand-500: #3dbba0;
+    --color-brand-600: #2d9984;
+    --color-brand-700: #247768;
+    --color-brand-800: #1b5a4e;
+    --color-brand-900: #134038;
 
-  .dark {
-    --background: 20 14.3% 4.1%;
-    --foreground: 60 9.1% 97.8%;
-    --muted: 12 6.5% 15.1%;
-    --muted-foreground: 24 5.4% 63.9%;
-    --popover: 20 14.3% 4.1%;
-    --popover-foreground: 60 9.1% 97.8%;
-    --card: 20 14.3% 4.1%;
-    --card-foreground: 60 9.1% 97.8%;
-    --border: 12 6.5% 15.1%;
-    --input: 12 6.5% 15.1%;
-    --primary: 60 9.1% 97.8%;
-    --primary-foreground: 24 9.8% 10%;
-    --secondary: 12 6.5% 15.1%;
-    --secondary-foreground: 60 9.1% 97.8%;
-    --accent: 12 6.5% 15.1%;
-    --accent-foreground: 60 9.1% 97.8%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 60 9.1% 97.8%;
-    --ring: 24 5.7% 82.9%;
-	--sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
+    /* Light mode colors */
+    --color-background: #ffffff;
+    --color-foreground: #0f172a;
+    --color-muted: #f8fafc;
+    --color-muted-foreground: #64748b;
+
+    /* Card colors */
+    --color-card: #ffffff;
+    --color-card-foreground: #0f172a;
+
+    /* Border colors */
+    --color-border: #e2e8f0;
+    --color-border-muted: #f1f5f9;
+    --color-border-mid: #e2e8f0;
+
+    /* Primary colors (using brand) */
+    --color-primary: var(--color-brand-500);
+    --color-primary-foreground: #ffffff;
+
+    /* Secondary colors */
+    --color-secondary: #f1f5f9;
+    --color-secondary-foreground: #0f172a;
+
+    /* Accent colors (blue for links/active states) */
+    --color-accent: #3b82f6;
+    --color-accent-foreground: #ffffff;
+    --color-accent-muted: #dbeafe;
+
+    /* Text colors for different states */
+    --color-text-primary: #0f172a;
+    --color-text-secondary: #475569;
+    --color-text-muted: #64748b;
+    --color-text-inverse: #ffffff;
+
+    /* Sidebar specific colors */
+    --color-sidebar-background: #ffffff;
+    --color-sidebar-foreground: #0f172a;
+    --color-sidebar-border: #e2e8f0;
+    --color-sidebar-active: #dbeafe;
+    --color-sidebar-active-foreground: #1d4ed8;
+
+    /* Code colors (light mode: lighter bg, dark text) */
+    --color-code-background: #f8f9f9; /* inline code bg */
+    --color-code-foreground: #111827; /* near-black text */
+    --color-code-block-background: #f5f6f8; /* very light grey block bg */
+    --color-code-block-foreground: #111827; /* black/muted text */
 }
 
+.dark {
+    /* Dark mode colors */
+    --color-background: #0b1011;
+    --color-foreground: #f8fafc;
+    --color-muted: #1e293b;
+    --color-muted-foreground: #a3b2c4; /* slightly brighter for contrast */
+
+    /* Card colors */
+    --color-card: #1e293b;
+    --color-card-foreground: #f8fafc;
+
+    /* Border colors */
+    --color-border: #334155;
+    --color-border-muted: rgba(255, 255, 255, 0.1);
+    --color-border-mid: rgba(255, 255, 255, 0.15);
+
+    /* Primary colors (using brand) */
+    --color-primary: var(--color-brand-500);
+    --color-primary-foreground: #ffffff;
+
+    /* Secondary colors */
+    --color-secondary: #1e293b;
+    --color-secondary-foreground: #f8fafc;
+
+    /* Accent colors */
+    --color-accent: #3b82f6;
+    --color-accent-foreground: #ffffff;
+    --color-accent-muted: #1e3a8a;
+
+    /* Text colors for different states */
+    --color-text-primary: #f8fafc;
+    --color-text-secondary: #e2e8f0; /* brighter secondary for readability */
+    --color-text-muted: #cbd5e1; /* raise contrast of muted */
+    --color-text-inverse: #0f172a;
+
+    /* Sidebar specific colors */
+    --color-sidebar-background: #0b1011;
+    --color-sidebar-foreground: #f8fafc;
+    --color-sidebar-border: #334155;
+    --color-sidebar-active: rgba(59, 130, 246, 0.1);
+    --color-sidebar-active-foreground: #60a5fa;
+
+    /* Code block colors */
+    --color-code-background: #1e293b;
+    --color-code-foreground: #f8fafc;
+    --color-code-block-background: #0f172a;
+    --color-code-block-foreground: #f1f5f9;
+}
+
+@theme {
+    /* Map CSS variables to Tailwind colors */
+    --color-background: var(--color-background);
+    --color-foreground: var(--color-foreground);
+    --color-muted: var(--color-muted);
+    --color-muted-foreground: var(--color-muted-foreground);
+
+    --color-card: var(--color-card);
+    --color-card-foreground: var(--color-card-foreground);
+
+    --color-border: var(--color-border);
+    --color-border-muted: var(--color-border-muted);
+    --color-border-mid: var(--color-border-mid);
+
+    --color-primary: var(--color-primary);
+    --color-primary-foreground: var(--color-primary-foreground);
+
+    --color-secondary: var(--color-secondary);
+    --color-secondary-foreground: var(--color-secondary-foreground);
+
+    --color-accent: var(--color-accent);
+    --color-accent-foreground: var(--color-accent-foreground);
+    --color-accent-muted: var(--color-accent-muted);
+
+    /* Text colors */
+    --color-text-primary: var(--color-text-primary);
+    --color-text-secondary: var(--color-text-secondary);
+    --color-text-muted: var(--color-text-muted);
+    --color-text-inverse: var(--color-text-inverse);
+
+    /* Sidebar colors */
+    --color-sidebar-background: var(--color-sidebar-background);
+    --color-sidebar-foreground: var(--color-sidebar-foreground);
+    --color-sidebar-border: var(--color-sidebar-border);
+    --color-sidebar-active: var(--color-sidebar-active);
+    --color-sidebar-active-foreground: var(--color-sidebar-active-foreground);
+
+    /* Code colors */
+    --color-code-background: var(--color-code-background);
+    --color-code-foreground: var(--color-code-foreground);
+    --color-code-block-background: var(--color-code-block-background);
+    --color-code-block-foreground: var(--color-code-block-foreground);
+
+    /* Brand colors */
+    --color-brand-50: var(--color-brand-50);
+    --color-brand-100: var(--color-brand-100);
+    --color-brand-200: var(--color-brand-200);
+    --color-brand-300: var(--color-brand-300);
+    --color-brand-400: var(--color-brand-400);
+    --color-brand-500: var(--color-brand-500);
+    --color-brand-600: var(--color-brand-600);
+    --color-brand-700: var(--color-brand-700);
+    --color-brand-800: var(--color-brand-800);
+    --color-brand-900: var(--color-brand-900);
+}
+
+/* Global base styles */
 @layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+    * {
+        @apply border-border;
+    }
+
+    html {
+        @apply scroll-smooth;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+        font-feature-settings:
+            'rlig' 1,
+            'calt' 1;
+    }
+
+    /* Prose styles for markdown content */
+    .prose {
+        @apply text-text-primary;
+    }
+
+    /* Ensure headings override typography plugin defaults in light mode */
+    .prose :where(h1, h2, h3, h4, h5, h6) {
+        @apply font-bold !text-text-primary;
+    }
+
+    /* Ensure heading links inherit heading color/contrast */
+    .prose h1 a,
+    .prose h2 a,
+    .prose h3 a,
+    .prose h4 a,
+    .prose h5 a,
+    .prose h6 a {
+        @apply text-text-primary no-underline hover:text-text-primary;
+    }
+
+    .prose p {
+        @apply text-text-secondary;
+    }
+
+    /* Strong emphasis readability in dark mode */
+    .prose strong,
+    .prose b {
+        @apply font-bold text-text-primary!;
+    }
+
+    /* ensure link color inside paragraphs and lists has adequate contrast */
+    .prose p a,
+    .prose li a {
+        @apply text-accent! underline-offset-2 hover:text-accent/80!;
+    }
+
+    .prose code {
+        @apply rounded bg-code-background! px-1.5 py-0.5 font-mono text-sm text-code-foreground!;
+    }
+
+    .prose pre {
+        @apply rounded-lg border border-border bg-code-background! text-code-block-foreground!;
+    }
+
+    .prose pre code {
+        @apply bg-transparent p-0 text-code-block-foreground;
+    }
+
+    /* Shiki syntax highlighting support */
+    .prose .shiki-container {
+        @apply overflow-hidden rounded-lg border border-border;
+    }
+
+    .prose .shiki-container pre {
+        @apply m-0 rounded-none border-0;
+    }
+
+    .prose .shiki-container pre.shiki {
+        @apply bg-transparent! p-4 text-inherit!;
+    }
+
+    .prose .shiki-container pre.shiki code {
+        @apply bg-transparent! p-0 text-inherit!;
+    }
+
+    /* Theme switching for Shiki */
+    html:not(.dark) .prose .shiki-dark {
+        display: none;
+    }
+
+    html.dark .prose .shiki-light {
+        display: none;
+    }
+
+    /* Ensure proper display */
+    .prose .shiki-light,
+    .prose .shiki-dark {
+        width: 100%;
+    }
+
+    .prose a {
+        @apply text-accent no-underline hover:text-accent/80;
+    }
+
+    /* Maintain paragraph/list contrast in dark mode */
+    .dark .prose p,
+    .dark .prose li {
+        @apply text-text-secondary;
+    }
+
+    .prose blockquote {
+        @apply border-l-4 border-border pl-4 text-text-muted italic;
+    }
+
+    /* Improve list readability and marker contrast (light/dark) */
+    .prose ul,
+    .prose ol {
+        @apply text-text-secondary;
+    }
+
+    .prose ul > li::marker,
+    .prose ol > li::marker {
+        color: var(--color-accent);
+    }
+
+    .prose code::before,
+    .prose code::after {
+        content: '' !important;
+    }
+}
+
+/* Orb backgrounds using the brand color */
+.orb-a-bg {
+    background: radial-gradient(
+        circle at 30% 30%,
+        color-mix(in oklab, var(--color-brand-100) 40%, transparent),
+        color-mix(in oklab, var(--color-brand-100) 10%, transparent)
+    );
+}
+
+.orb-b-bg {
+    background: radial-gradient(
+        circle at 70% 50%,
+        color-mix(in oklab, var(--color-brand-500) 30%, transparent),
+        color-mix(in oklab, var(--color-brand-500) 8%, transparent)
+    );
+}
+
+@keyframes sheen {
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+.sheen-gradient {
+    background-size: 200% 100%;
+    animation: sheen 6s ease-in-out infinite;
 }

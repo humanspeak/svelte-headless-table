@@ -1,0 +1,22 @@
+---
+title: Table
+description: The main Table instance to control the table
+sidebar_title: Table
+---
+
+<script>
+  import { useHljs } from '$lib/utils/useHljs';
+  useHljs('ts');
+</script>
+
+# Table
+
+`Table` is the main instance returned by <a href="../create-table">`createTable`</a>.
+
+## Usage
+
+### <a href="../create-columns">`createColumns: (columns) => Column[]`</a>
+
+### <a href="../create-view-model">`createViewModel: (columns) => TableViewModel`</a>
+
+

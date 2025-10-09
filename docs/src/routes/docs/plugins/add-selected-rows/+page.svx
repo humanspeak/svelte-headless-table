@@ -1,0 +1,95 @@
+---
+title: addSelectedRows
+description: Select rows in the table
+sidebar_title: addSelectedRows
+---
+
+<script>
+  import { useHljs } from '$lib/utils/useHljs';
+  import Callout from '$lib/components/Callout.svelte'
+  useHljs('ts');
+</script>
+
+# addSelectedRows
+
+`addSelectedRows` keeps track of selected items in the table. Works with sub-rows.
+
+## Options
+
+<Callout type="info">Options passed into <code>addSelectedRows</code>.</Callout>
+
+```ts {3}
+const table = createTable(data, {
+  select: addSelectedRows({ ... }),
+});
+```
+
+### `initialSelectedDataIds?: Record<string, boolean>`
+Initial selected row data ids (by `row.dataId`). Default `{}`.
+
+### `linkDataSubRows?: boolean`
+Link parent/sub-row selection when updating. Default `true`.
+
+## Column Options
+
+<Callout type="info">Options passed into column definitions.</Callout>
+
+```ts {7}
+const columns = table.createColumns([
+  table.column({
+    header: 'Name',
+    accessor: 'name',
+    plugins: {
+      select: { ... },
+    },
+  }),
+]);
+```
+
+## Prop Set
+
+<Callout type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Callout>
+
+```svelte
+{#each $headerRows as headerRow (headerRow.id)}
+  <Subscribe rowProps={headerRow.props()} let:rowProps>
+    {rowProps.select}
+    {#each headerRow.cells as cell (cell.id)}
+      <Subscribe props={cell.props()} let:props>
+        {props.select}
+      </Subscribe>
+    {/each}
+  </Subscribe>
+{/each}
+```
+
+### BodyRow props
+- `selected: boolean`
+- `someSubRowsSelected: boolean`
+- `allSubRowsSelected: boolean`
+
+## Plugin State
+
+<Callout type="info">State provided by <code>addSelectedRows</code>.</Callout>
+
+```ts {3}
+const { headerRows, rows, pluginStates } = table.createViewModel(columns);
+const { ... } = pluginStates.select;
+```
+
+### `selectedDataIds: Writable<Record<string, boolean>>`
+### `allRowsSelected: Writable<boolean>`
+### `someRowsSelected: Readable<boolean>`
+### `allPageRowsSelected: Writable<boolean>`
+### `somePageRowsSelected: Readable<boolean>`
+### `getRowState: (row) => SelectedRowsRowState`
+
+## Examples
+
+<SimpleSelectedDemo />
+
+<script>
+  import SimpleSelectedDemo from './SimpleSelectedDemo.svelte'
+</script>
+
+

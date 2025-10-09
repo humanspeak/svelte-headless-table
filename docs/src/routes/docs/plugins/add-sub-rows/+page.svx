@@ -1,0 +1,73 @@
+---
+title: addSubRows
+description: Define sub-rows of rows
+sidebar_title: addSubRows
+---
+
+<script>
+  import { useHljs } from '$lib/utils/useHljs';
+  import Callout from '$lib/components/Callout.svelte'
+  useHljs('ts');
+</script>
+
+# addSubRows
+
+`addSubRows` defines the data for deriving the sub-rows of a row. Often used with `addExpandedRows` to visualize sub-rows.
+
+The id of a sub-row is in the format `{parentId}>{id}`. Nested sub-rows concatenate parent ids to the top-level row id.
+
+## Options
+
+<Callout type="info">Options passed into <code>addSubRows</code>.</Callout>
+
+```ts {3}
+const table = createTable(data, {
+  sub: addSubRows({ ... }),
+});
+```
+
+### `children: string | (item) => Item[]`
+Define child items: either a string property on each data item or a function returning an array of child items.
+
+If `children` is missing or returns `[]`, no sub-rows are generated for that row.
+
+## Column Options
+
+<Callout type="info">Options passed into column definitions.</Callout>
+
+```ts {7}
+const columns = table.createColumns([
+  table.column({
+    header: 'Name',
+    accessor: 'name',
+    plugins: {
+      sub: { ... },
+    },
+  }),
+]);
+```
+
+## Prop Set
+
+<Callout type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Callout>
+
+```svelte
+{#each $headerRows as headerRow (headerRow.id)}
+  <Subscribe rowProps={headerRow.props()} let:rowProps>
+    {rowProps.sub}
+    {#each headerRow.cells as cell (cell.id)}
+      <Subscribe props={cell.props()} let:props>
+        {props.sub}
+      </Subscribe>
+    {/each}
+  </Subscribe>
+{/each}
+```
+
+## Plugin interactions
+
+- addSortBy: before => all sub-rows sorted within groups; after => only top-level sorted.
+- addColumnFilters: before => sub-rows are searched; after => only top-level rows searched.
+- addTableFilter: similarly affects whether sub-rows are searched.
+
+

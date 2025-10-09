@@ -1,0 +1,97 @@
+---
+title: addTableFilter
+description: Filter table rows by searching all cell values
+sidebar_title: addTableFilter
+---
+
+<script>
+  import { useHljs } from '$lib/utils/useHljs';
+  import Callout from '$lib/components/Callout.svelte'
+  useHljs('ts');
+</script>
+
+# addTableFilter
+
+`addTableFilter` filters table rows on data that may be in any column.
+
+## Options
+
+<Callout type="info">Options passed into <code>addTableFilter</code>.</Callout>
+
+```ts {3}
+const table = createTable(data, {
+  filter: addTableFilter({ ... }),
+});
+```
+
+### `fn?: ({ filterValue, value }) => boolean`
+Custom filter. `filterValue` is a string; `value` is serialized to string by default.
+
+### `initialFilterValue?: string`
+Default `''`.
+
+### `includeHiddenColumns?: boolean`
+Whether hidden columns are included. Default `false`.
+
+### `serverSide?: boolean`
+If `true`, use server-side filtering by updating <a href="../api/create-table#createtable-data-plugins-table">`$data`</a>.
+
+## Column Options
+
+<Callout type="info">Options passed into column definitions.</Callout>
+
+```ts {7}
+const columns = table.createColumns([
+  table.column({
+    header: 'Name',
+    accessor: 'name',
+    plugins: {
+      filter: { ... },
+    },
+  }),
+]);
+```
+
+### `exclude?: boolean`
+Exclude the column from search. Default `false`.
+
+### `getFilterValue?: (value) => string`
+Map a cell value to a filterable string. Default serializes value.
+
+## Prop Set
+
+<Callout type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Callout>
+
+```svelte
+{#each $headerRows as headerRow (headerRow.id)}
+  <Subscribe rowProps={headerRow.props()} let:rowProps>
+    {rowProps.filter}
+    {#each headerRow.cells as cell (cell.id)}
+      <Subscribe props={cell.props()} let:props>
+        {props.filter}
+      </Subscribe>
+    {/each}
+  </Subscribe>
+{/each}
+```
+
+### BodyCell
+`matches: boolean` — whether the cell matches the current filter value.
+
+## Plugin State
+
+<Callout type="info">State provided by <code>addTableFilter</code>.</Callout>
+
+```ts {3}
+const { headerRows, rows, pluginStates } = table.createViewModel(columns);
+const { ... } = pluginStates.filter;
+```
+
+### `preFilteredRows: Readable<BodyRow<Item>[]>`
+### `filterValue: Writable<string>`
+
+## Examples
+
+<SimpleTableFilteringDemo />
+
+
