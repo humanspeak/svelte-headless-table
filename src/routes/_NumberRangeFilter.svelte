@@ -13,14 +13,14 @@
     <input
         type="number"
         bind:value={$filterValue[0]}
-        onclick|stopPropagation
+        onclick={(e) => e.stopPropagation()}
         placeholder="Min ({min})"
     />
     to
     <input
         type="number"
         bind:value={$filterValue[1]}
-        onclick|stopPropagation
+        onclick={(e) => e.stopPropagation()}
         placeholder="Max ({max})"
     />
 </div>

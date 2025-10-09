@@ -16,7 +16,7 @@
     <input
         type="number"
         bind:value={$filterValue[0]}
-        onclick|stopPropagation
+        onclick={(e) => e.stopPropagation()}
         class="demo"
         placeholder={`Min (${min})`}
     />
@@ -24,7 +24,7 @@
     <input
         type="number"
         bind:value={$filterValue[1]}
-        onclick|stopPropagation
+        onclick={(e) => e.stopPropagation()}
         class="demo"
         placeholder={`Max (${max})`}
     />
