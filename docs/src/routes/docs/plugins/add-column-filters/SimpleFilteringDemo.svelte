@@ -31,7 +31,6 @@
     import NumberRangeFilter from './NumberRangeFilter.svelte'
     import SliderFilter from './SliderFilter.svelte'
     import { createSamples } from '$lib/utils/createSamples'
-    import Bold from '../../api/create-columns/Bold.svelte'
 
     const data = readable(createSamples(30))
 

@@ -1,11 +1,12 @@
 <script lang="ts">
-    export let filterValue
-    export let preFilteredValues
+    import type { Readable, Writable } from 'svelte/store'
+    export let filterValue: Writable<string | number | undefined | null>
+    export let preFilteredValues: Readable<Array<string | number>>
 </script>
 
-<select class="demo" bind:value={filterValue}>
+<select class="demo" bind:value={$filterValue}>
     <option value="">All</option>
-    {#each preFilteredValues as v}
+    {#each $preFilteredValues as v}
         <option value={v}>{v}</option>
     {/each}
 </select>

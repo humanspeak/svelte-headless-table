@@ -1,6 +1,7 @@
 <script lang="ts">
     import { motion } from '@humanspeak/svelte-motion'
-    import { cn } from '$lib/shadcn/utils'
+    const cn = (...classes: Array<string | false | null | undefined>) =>
+        classes.filter(Boolean).join(' ')
     import type { Snippet } from 'svelte'
 
     type ExampleProps = {

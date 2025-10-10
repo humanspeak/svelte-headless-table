@@ -23,7 +23,7 @@
     },
     "dependencies": {
         "@humanspeak/svelte-headless-table": "workspace:*",
-        "@humanspeak/svelte-motion": "^0.1.8",
+        "@humanspeak/svelte-motion": "^0.1.12",
         "github-slugger": "^2.0.0"
     },
     "devDependencies": {
@@ -40,6 +40,7 @@
         "@tailwindcss/postcss": "^4.1.14",
         "@tailwindcss/typography": "^0.5.19",
         "@tailwindcss/vite": "^4.1.14",
+        "@tanstack/table-core": "^8.20.5",
         "@typescript-eslint/eslint-plugin": "^8.46.0",
         "@typescript-eslint/parser": "^8.46.0",
         "autoprefixer": "^10.4.21",
@@ -63,6 +64,7 @@
         "prettier-plugin-sort-json": "^4.1.1",
         "prettier-plugin-svelte": "^3.4.0",
         "prettier-plugin-tailwindcss": "^0.6.14",
+        "puppeteer": "^24.23.0",
         "shiki": "^3.13.0",
         "svelte": "^5.39.11",
         "svelte-check": "^4.3.3",

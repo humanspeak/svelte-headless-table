@@ -7,6 +7,7 @@ sidebar_title: addTableFilter
 <script>
   import { useHljs } from '$lib/utils/useHljs';
   import Callout from '$lib/components/Callout.svelte'
+  import SimpleTableFilteringDemo from './SimpleTableFilteringDemo.svelte'
   useHljs('ts');
 </script>
 

@@ -1,4 +1,5 @@
 import { NBSP } from '$lib/constants.js'
+import type { TableState } from '$lib/createViewModel.js'
 import { TableComponent } from '$lib/tableComponent.js'
 import type { HeaderLabel } from '$lib/types/Label.js'
 import type { AnyPlugins } from '$lib/types/TablePlugin.js'
@@ -38,8 +39,10 @@ export abstract class HeaderCell<
             if (this.state === undefined) {
                 throw new Error('Missing `state` reference')
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return this.label(this as HeaderCell<Item, AnyPlugins>, this.state as any)
+            return this.label(
+                this as HeaderCell<Item, Plugins>,
+                this.state as TableState<Item, Plugins>
+            )
         }
         return this.label
     }

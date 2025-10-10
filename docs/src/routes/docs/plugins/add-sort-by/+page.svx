@@ -5,9 +5,10 @@ sidebar_title: addSortBy
 ---
 
 <script>
-  import { useHljs } from '$lib/utils/useHljs';
+  import { useHljs } from '$lib/utils/useHljs'
   import Callout from '$lib/components/Callout.svelte'
-  useHljs('ts');
+  import SimpleSortingDemo from './SimpleSortingDemo.svelte'
+  useHljs('ts')
 </script>
 # addSortBy
 

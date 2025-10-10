@@ -170,6 +170,10 @@
                 }
             ]
         },
+        {
+            title: 'Love and Respect',
+            items: [{ title: 'Beye.ai', href: 'https://beye.ai', icon: 'fa-solid fa-heart' }]
+        },
         ...(otherProjects.length > 0
             ? [
                   {
@@ -208,7 +212,22 @@
      * @returns {boolean}
      */
     function isActive(href: string) {
-        return currentPath === href || (href !== '/docs' && currentPath.startsWith(href))
+        const basePath = currentPath.split(/[?#]/)[0]
+        if (href === '/docs') {
+            // Only mark the root Docs link active for the exact page or when query/hash is present
+            return (
+                basePath === href ||
+                currentPath.startsWith(`${href}?`) ||
+                currentPath.startsWith(`${href}#`)
+            )
+        }
+        // Exact match, same page with query/hash, or a true nested path ("href/...")
+        return (
+            basePath === href ||
+            currentPath.startsWith(`${href}?`) ||
+            currentPath.startsWith(`${href}#`) ||
+            basePath.startsWith(`${href}/`)
+        )
     }
 </script>
 
