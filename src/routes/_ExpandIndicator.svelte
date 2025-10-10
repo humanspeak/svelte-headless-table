@@ -8,7 +8,7 @@
 </script>
 
 {#if $canExpand}
-    <span onclick={() => ($isExpanded = !$isExpanded)} style:--depth={depth}>
+    <button type="button" onclick={() => ($isExpanded = !$isExpanded)} style:--depth={depth}>
         {#if $isExpanded}
             {#if $isAllSubRowsExpanded}
                 ⬇️
@@ -18,11 +18,11 @@
         {:else}
             ➡️
         {/if}
-    </span>
+    </button>
 {/if}
 
 <style>
-    span {
+    button {
         padding-left: calc(var(--depth) * 1rem);
     }
 </style>

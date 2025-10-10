@@ -4,7 +4,7 @@ import puppeteer from 'puppeteer'
 
 async function captureImage(url: string, outputPath: string) {
     const browser = await puppeteer.launch({
-        headless: 'new'
+        headless: true
     })
     const page = await browser.newPage()
 
@@ -27,8 +27,11 @@ async function captureImage(url: string, outputPath: string) {
         throw new Error('Social card element not found')
     }
 
+    const filePath = (
+        outputPath.endsWith('.png') ? outputPath : `${outputPath}.png`
+    ) as `${string}.png`
     await element.screenshot({
-        path: outputPath,
+        path: filePath,
         omitBackground: true
     })
 
@@ -50,10 +53,7 @@ async function main() {
         )
 
         console.log('Generating OpenGraph card...')
-        await captureImage(
-            `${baseUrl}?type=og`,
-            path.join(outputDir, 'svelte-table-opengraph.png')
-        )
+        await captureImage(`${baseUrl}?type=og`, path.join(outputDir, 'svelte-table-opengraph.png'))
 
         console.log('Social images generated successfully!')
     } catch (error) {

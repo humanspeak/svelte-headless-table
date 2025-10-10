@@ -5,9 +5,10 @@ sidebar_title: addColumnFilters
 ---
 
 <script>
-  import { useHljs } from '$lib/utils/useHljs';
+  import { useHljs } from '$lib/utils/useHljs'
   import Callout from '$lib/components/Callout.svelte'
-  useHljs('ts');
+  import SimpleFilteringDemo from './SimpleFilteringDemo.svelte'
+  useHljs('ts')
 </script>
 
 # addColumnFilters

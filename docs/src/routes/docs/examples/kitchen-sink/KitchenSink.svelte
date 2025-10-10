@@ -314,7 +314,7 @@
                                         <button
                                             onclick={(e) => {
                                                 e.stopPropagation()
-                                                props.group.toggle()
+                                                props.group.toggle(e)
                                             }}
                                             class="demo"
                                         >
@@ -325,7 +325,7 @@
                                             {/if}
                                         </button>
                                     {/if}
-                                    {#if props.filter !== undefined}
+                                    {#if props.filter?.render !== undefined}
                                         <Render of={props.filter.render} />
                                     {/if}
                                     {#if !props.resize.disabled}
@@ -333,7 +333,7 @@
                                             class="resizer"
                                             onclick={(e) => e.stopPropagation()}
                                             use:props.resize.drag
-                                        />
+                                        ></div>
                                     {/if}
                                 </th>
                             </Subscribe>

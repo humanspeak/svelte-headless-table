@@ -334,7 +334,7 @@
                                     <button
                                         onclick={(e) => {
                                             e.stopPropagation()
-                                            props.group.toggle()
+                                            props.group.toggle(e)
                                         }}
                                     >
                                         {#if props.group.grouped}

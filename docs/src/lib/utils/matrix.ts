@@ -1,4 +1,4 @@
-import type { Matrix } from '../types/Matrix.js'
+type Matrix<T> = T[][]
 
 export const getNullMatrix = (width: number, height: number): Matrix<null> => {
     const result: Matrix<null> = []

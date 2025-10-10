@@ -8,7 +8,7 @@
     } from '@humanspeak/svelte-headless-table/plugins'
     import { createSamples } from '$lib/utils/createSamples'
     import ExpandIndicator from './ExpandIndicator.svelte'
-    import { getDistinct } from '../add-column-filters/SelectFilter.svelte'
+    import { getDistinct } from '$lib/utils/array'
     import { mean, sum } from '$lib/utils/math'
 
     const data = readable(createSamples(30))

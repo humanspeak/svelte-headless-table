@@ -2,7 +2,9 @@
     import { motion } from '@humanspeak/svelte-motion'
     import favicon from '$lib/assets/logo.svg'
     import { resolve } from '$app/paths'
-    import { cn } from '$lib/shadcn/utils'
+    // Local minimal cn helper to combine class names
+    const cn = (...classes: Array<string | false | null | undefined>) =>
+        classes.filter(Boolean).join(' ')
     import { type BreadcrumbContext } from '$lib/components/contexts/Breadcrumb/type'
     import { getBreadcrumbContext } from '$lib/components/contexts/Breadcrumb/Breadcrumb.context'
     import { mode, setMode } from 'mode-watcher'

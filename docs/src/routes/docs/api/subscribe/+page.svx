@@ -12,7 +12,7 @@ sidebar_title: Subscribe
   import Admonition from '$lib/components/Admonition.svelte'
 </script>
 
-<Admonition type="note">`<Subscribe/>` is based on <a href="https://github.com/humanspeak/svelte-subscribe">svelte-subscribe</a>.</Admonition>
+<Admonition type="note">`&lt;Subscribe/&gt;` is based on <a href="https://github.com/humanspeak/svelte-subscribe">svelte-subscribe</a>.</Admonition>
 
 ## Granular stores
 

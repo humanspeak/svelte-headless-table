@@ -5,9 +5,11 @@ sidebar_title: addExpandedRows
 ---
 
 <script>
-  import { useHljs } from '$lib/utils/useHljs';
+  import { useHljs } from '$lib/utils/useHljs'
   import Callout from '$lib/components/Callout.svelte'
-  useHljs('ts');
+  import SimpleExpandingDemo from './SimpleExpandingDemo.svelte'
+  import SimpleGroupByDemo from './SimpleGroupByDemo.svelte'
+  useHljs('ts')
 </script>
 
 # addExpandedRows
