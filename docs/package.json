@@ -52,7 +52,7 @@
         "eslint-config-prettier": "10.1.8",
         "eslint-plugin-import": "2.32.0",
         "eslint-plugin-svelte": "3.12.4",
-        "eslint-plugin-unused-imports": "4.2.0",
+        "eslint-plugin-unused-imports": "4.3.0",
         "formsnap": "^2.0.1",
         "globals": "^16.4.0",
         "lucide-svelte": "^0.545.0",
