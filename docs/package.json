@@ -80,7 +80,7 @@
         "vaul-svelte": "^1.0.0-next.6",
         "vite": "^7.1.9",
         "vitest": "^3.2.4",
-        "wrangler": "^4.42.2",
+        "wrangler": "^4.45.0",
         "zod": "^4.1.12"
     },
     "volta": {
