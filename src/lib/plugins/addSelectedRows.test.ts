@@ -461,3 +461,44 @@ test('updating all page rows selected store', () => {
 
     expect(get(selectedDataIds)).toEqual({ 4: true })
 })
+
+test('getRowState returns new store instances on each call (pre-memoization baseline)', () => {
+    const table = createTable(data, {
+        sub: addSubRows({
+            children: 'children'
+        }),
+        select: addSelectedRows()
+    })
+    const columns = table.createColumns([
+        table.column({
+            header: 'First Name',
+            accessor: 'firstName'
+        })
+    ])
+    const vm = table.createViewModel(columns)
+    const rows = get(vm.rows)
+    const row0 = rows[0].isData() ? rows[0] : undefined
+    expect(row0).not.toBeUndefined()
+
+    const { getRowState } = vm.pluginStates.select
+
+    // Call getRowState twice for the same row
+    const state1 = getRowState(row0!)
+    const state2 = getRowState(row0!)
+
+    // Document current behavior: new store instances are created each call
+    // After memoization, these should be the same instance (toBe instead of not.toBe)
+    expect(state1.isSelected).not.toBe(state2.isSelected)
+    expect(state1.isSomeSubRowsSelected).not.toBe(state2.isSomeSubRowsSelected)
+    expect(state1.isAllSubRowsSelected).not.toBe(state2.isAllSubRowsSelected)
+
+    // But values should be consistent between instances
+    expect(get(state1.isSelected)).toBe(get(state2.isSelected))
+    expect(get(state1.isSomeSubRowsSelected)).toBe(get(state2.isSomeSubRowsSelected))
+    expect(get(state1.isAllSubRowsSelected)).toBe(get(state2.isAllSubRowsSelected))
+
+    // Verify updates propagate correctly through both instances
+    state1.isSelected.set(true)
+    expect(get(state1.isSelected)).toBe(true)
+    expect(get(state2.isSelected)).toBe(true) // Both should reflect the change
+})
