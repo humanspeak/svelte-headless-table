@@ -141,7 +141,15 @@ export const addSelectedRows =
     ({ tableState }) => {
         const selectedDataIds = recordSetStore(initialSelectedDataIds)
 
+        // Cache for memoized row state to avoid creating new store instances on each call
+        const rowStateCache = new Map<string, SelectedRowsRowState>()
+
         const getRowState = (row: BodyRow<Item>): SelectedRowsRowState => {
+            const cached = rowStateCache.get(row.id)
+            if (cached !== undefined) {
+                return cached
+            }
+
             const isSelected = getRowIsSelectedStore(row, selectedDataIds, linkDataSubRows)
             const isSomeSubRowsSelected = derived(
                 [isSelected, selectedDataIds],
@@ -153,11 +161,13 @@ export const addSelectedRows =
             const isAllSubRowsSelected = derived(selectedDataIds, ($selectedDataIds) => {
                 return isAllSubRowsSelectedForRow(row, $selectedDataIds, linkDataSubRows)
             })
-            return {
+            const state: SelectedRowsRowState = {
                 isSelected,
                 isSomeSubRowsSelected,
                 isAllSubRowsSelected
             }
+            rowStateCache.set(row.id, state)
+            return state
         }
 
         // all rows

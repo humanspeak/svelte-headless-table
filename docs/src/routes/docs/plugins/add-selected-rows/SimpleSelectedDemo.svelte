@@ -64,8 +64,6 @@
     const { selectedDataIds } = pluginStates.select
 </script>
 
-<pre>{JSON.stringify({ $selectedDataIds }, null, 2)}</pre>
-
 <div class="overflow-x-auto">
     <table class="demo my-0" {...$tableAttrs}>
         <thead>
@@ -105,6 +103,8 @@
         </tbody>
     </table>
 </div>
+
+<pre>{JSON.stringify({ $selectedDataIds }, null, 2)}</pre>
 
 <style>
     .selected {

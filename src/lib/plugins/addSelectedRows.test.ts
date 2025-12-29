@@ -462,7 +462,7 @@ test('updating all page rows selected store', () => {
     expect(get(selectedDataIds)).toEqual({ 4: true })
 })
 
-test('getRowState returns new store instances on each call (pre-memoization baseline)', () => {
+test('getRowState returns memoized store instances', () => {
     const table = createTable(data, {
         sub: addSubRows({
             children: 'children'
@@ -486,19 +486,18 @@ test('getRowState returns new store instances on each call (pre-memoization base
     const state1 = getRowState(row0!)
     const state2 = getRowState(row0!)
 
-    // Document current behavior: new store instances are created each call
-    // After memoization, these should be the same instance (toBe instead of not.toBe)
-    expect(state1.isSelected).not.toBe(state2.isSelected)
-    expect(state1.isSomeSubRowsSelected).not.toBe(state2.isSomeSubRowsSelected)
-    expect(state1.isAllSubRowsSelected).not.toBe(state2.isAllSubRowsSelected)
+    // With memoization, these should be the exact same store instances
+    expect(state1.isSelected).toBe(state2.isSelected)
+    expect(state1.isSomeSubRowsSelected).toBe(state2.isSomeSubRowsSelected)
+    expect(state1.isAllSubRowsSelected).toBe(state2.isAllSubRowsSelected)
 
-    // But values should be consistent between instances
+    // Values should be consistent
     expect(get(state1.isSelected)).toBe(get(state2.isSelected))
     expect(get(state1.isSomeSubRowsSelected)).toBe(get(state2.isSomeSubRowsSelected))
     expect(get(state1.isAllSubRowsSelected)).toBe(get(state2.isAllSubRowsSelected))
 
-    // Verify updates propagate correctly through both instances
+    // Verify updates propagate correctly (same instance, so this is trivially true)
     state1.isSelected.set(true)
     expect(get(state1.isSelected)).toBe(true)
-    expect(get(state2.isSelected)).toBe(true) // Both should reflect the change
+    expect(get(state2.isSelected)).toBe(true)
 })

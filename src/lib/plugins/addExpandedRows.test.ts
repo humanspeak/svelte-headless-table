@@ -196,7 +196,7 @@ test('getRowState isAllSubRowsExpanded tracks nested expansion', () => {
     expect(get(state.isAllSubRowsExpanded)).toBe(true)
 })
 
-test('getRowState returns new store instances on each call (pre-memoization baseline)', () => {
+test('getRowState returns memoized store instances', () => {
     const table = createTable(data, {
         sub: addSubRows({
             children: 'children'
@@ -219,19 +219,18 @@ test('getRowState returns new store instances on each call (pre-memoization base
     const state1 = getRowState(row0)
     const state2 = getRowState(row0)
 
-    // Document current behavior: canExpand uses readable() which creates new instances
-    // isExpanded uses keyed() which may or may not return same instance
-    // After memoization, all should be the same instance (toBe instead of not.toBe)
-    expect(state1.canExpand).not.toBe(state2.canExpand)
-    expect(state1.isAllSubRowsExpanded).not.toBe(state2.isAllSubRowsExpanded)
+    // With memoization, these should be the exact same store instances
+    expect(state1.isExpanded).toBe(state2.isExpanded)
+    expect(state1.canExpand).toBe(state2.canExpand)
+    expect(state1.isAllSubRowsExpanded).toBe(state2.isAllSubRowsExpanded)
 
-    // But values should be consistent between instances
+    // Values should be consistent
     expect(get(state1.isExpanded)).toBe(get(state2.isExpanded))
     expect(get(state1.canExpand)).toBe(get(state2.canExpand))
     expect(get(state1.isAllSubRowsExpanded)).toBe(get(state2.isAllSubRowsExpanded))
 
-    // Verify updates propagate correctly
+    // Verify updates propagate correctly (same instance, so this is trivially true)
     state1.isExpanded.set(true)
     expect(get(state1.isExpanded)).toBe(true)
-    expect(get(state2.isExpanded)).toBe(true) // Both should reflect the change
+    expect(get(state2.isExpanded)).toBe(true)
 })

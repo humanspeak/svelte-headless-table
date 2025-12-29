@@ -45,7 +45,16 @@ export const addExpandedRows =
     > =>
     () => {
         const expandedIds = recordSetStore(initialExpandedIds)
+
+        // Cache for memoized row state to avoid creating new store instances on each call
+        const rowStateCache = new Map<string, ExpandedRowsRowState>()
+
         const getRowState = (row: BodyRow<Item>): ExpandedRowsRowState => {
+            const cached = rowStateCache.get(row.id)
+            if (cached !== undefined) {
+                return cached
+            }
+
             const isExpanded = keyed(expandedIds, row.id) as Writable<boolean>
             const canExpand = readable((row.subRows?.length ?? 0) > 0)
             const subRowExpandedIds = derived(expandedIds, ($expandedIds) => {
@@ -66,11 +75,13 @@ export const addExpandedRows =
                 )
                 return $subRowExpandedIds.length === expandableSubRows.length
             })
-            return {
+            const state: ExpandedRowsRowState = {
                 isExpanded,
                 canExpand,
                 isAllSubRowsExpanded
             }
+            rowStateCache.set(row.id, state)
+            return state
         }
         const pluginState = { expandedIds, getRowState }
 
