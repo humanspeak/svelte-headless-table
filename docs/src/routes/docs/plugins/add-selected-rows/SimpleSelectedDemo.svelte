@@ -10,7 +10,7 @@
     import ExpandIndicator from '../add-expanded-rows/ExpandIndicator.svelte'
     import SelectIndicator from './SelectIndicator.svelte'
 
-    const data = readable(createSamples(10, 5, 3))
+    const data = readable(createSamples(3, 2, 2))
 
     const table = createTable(data, {
         sub: addSubRows({ children: 'children' }),
@@ -42,7 +42,7 @@
             }
         }),
         table.group({
-            header: (_, { rows }) => derived([rows], ([_rows]) => `Name (${_rows.length} users)`),
+            header: (_, { rows }) => derived(rows, (_rows) => `Name (${_rows.length} users)`),
             columns: [
                 table.column({ header: 'First Name', accessor: 'firstName' }),
                 table.column({ header: 'Last Name', accessor: 'lastName' })
@@ -71,7 +71,7 @@
         <thead>
             {#each $headerRows as headerRow (headerRow.id)}
                 <Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
-                    <tr>
+                    <tr {...rowAttrs}>
                         {#each headerRow.cells as cell (cell.id)}
                             <Subscribe
                                 attrs={cell.attrs()}
