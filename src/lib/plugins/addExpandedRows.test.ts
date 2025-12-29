@@ -234,3 +234,86 @@ test('getRowState returns memoized store instances', () => {
     expect(get(state1.isExpanded)).toBe(true)
     expect(get(state2.isExpanded)).toBe(true)
 })
+
+test('getRowState returns distinct store instances for different rows', () => {
+    const table = createTable(data, {
+        sub: addSubRows({
+            children: 'children'
+        }),
+        expand: addExpandedRows()
+    })
+    const columns = table.createColumns([
+        table.column({
+            header: 'First Name',
+            accessor: 'firstName'
+        })
+    ])
+    const vm = table.createViewModel(columns)
+    const rows = get(vm.rows)
+
+    // Get two different rows
+    const row0 = rows[0] // Adam
+    const row1 = rows[1] // Bryan
+
+    const { getRowState } = vm.pluginStates.expand
+
+    // Get state for each row
+    const state0 = getRowState(row0)
+    const state1 = getRowState(row1)
+
+    // Store instances should NOT be the same between different rows
+    expect(state0.isExpanded).not.toBe(state1.isExpanded)
+    expect(state0.canExpand).not.toBe(state1.canExpand)
+    expect(state0.isAllSubRowsExpanded).not.toBe(state1.isAllSubRowsExpanded)
+})
+
+test('getRowState state is isolated between different rows', () => {
+    const table = createTable(data, {
+        sub: addSubRows({
+            children: 'children'
+        }),
+        expand: addExpandedRows()
+    })
+    const columns = table.createColumns([
+        table.column({
+            header: 'First Name',
+            accessor: 'firstName'
+        })
+    ])
+    const vm = table.createViewModel(columns)
+    const rows = get(vm.rows)
+
+    // Get two different rows that both have children
+    const row0 = rows[0] // Adam (has children)
+    const row1 = rows[1] // Bryan (has children)
+
+    const { getRowState } = vm.pluginStates.expand
+
+    const state0 = getRowState(row0)
+    const state1 = getRowState(row1)
+
+    // Verify both rows are initially not expanded
+    expect(get(state0.isExpanded)).toBeFalsy()
+    expect(get(state1.isExpanded)).toBeFalsy()
+
+    // Expand only row0
+    state0.isExpanded.set(true)
+
+    // Row0 should be expanded
+    expect(get(state0.isExpanded)).toBe(true)
+
+    // Row1 should remain unexpanded (state is isolated)
+    expect(get(state1.isExpanded)).toBeFalsy()
+
+    // Now expand row1 as well
+    state1.isExpanded.set(true)
+
+    // Both should now be expanded
+    expect(get(state0.isExpanded)).toBe(true)
+    expect(get(state1.isExpanded)).toBe(true)
+
+    // Collapse row0, row1 should remain expanded
+    state0.isExpanded.set(false)
+    expect(get(state0.isExpanded)).toBeFalsy() // keyed store returns undefined for collapsed
+    expect(get(state1.isExpanded)).toBe(true)
+})
