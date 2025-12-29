@@ -1,3 +1,4 @@
+import { MemoryCache } from '@humanspeak/memory-cache'
 import { derived, get, type Readable, type Updater, type Writable } from 'svelte/store'
 import type { BodyRow } from '../bodyRows.js'
 import type { NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
@@ -141,8 +142,12 @@ export const addSelectedRows =
     ({ tableState }) => {
         const selectedDataIds = recordSetStore(initialSelectedDataIds)
 
-        // Cache for memoized row state to avoid creating new store instances on each call
-        const rowStateCache = new Map<string, SelectedRowsRowState>()
+        // LRU cache for memoized row state with automatic eviction.
+        // Prevents unbounded memory growth when row identities change.
+        const rowStateCache = new MemoryCache<SelectedRowsRowState>({
+            maxSize: 1000,
+            ttl: 5 * 60 * 1000 // 5 minutes
+        })
 
         const getRowState = (row: BodyRow<Item>): SelectedRowsRowState => {
             const cached = rowStateCache.get(row.id)
@@ -169,6 +174,13 @@ export const addSelectedRows =
             rowStateCache.set(row.id, state)
             return state
         }
+
+        // Clear cache when selectedDataIds store is cleared (data reset scenario)
+        selectedDataIds.subscribe(($selectedDataIds) => {
+            if (Object.keys($selectedDataIds).length === 0) {
+                rowStateCache.clear()
+            }
+        })
 
         // all rows
         const _allRowsSelected = derived(

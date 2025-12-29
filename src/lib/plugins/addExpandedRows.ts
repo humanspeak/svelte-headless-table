@@ -1,3 +1,4 @@
+import { MemoryCache } from '@humanspeak/memory-cache'
 import { keyed } from '@humanspeak/svelte-keyed'
 import { derived, readable, type Readable, type Writable } from 'svelte/store'
 import type { BodyRow } from '../bodyRows.js'
@@ -46,8 +47,12 @@ export const addExpandedRows =
     () => {
         const expandedIds = recordSetStore(initialExpandedIds)
 
-        // Cache for memoized row state to avoid creating new store instances on each call
-        const rowStateCache = new Map<string, ExpandedRowsRowState>()
+        // LRU cache for memoized row state with automatic eviction.
+        // Prevents unbounded memory growth when row identities change.
+        const rowStateCache = new MemoryCache<ExpandedRowsRowState>({
+            maxSize: 1000,
+            ttl: 5 * 60 * 1000 // 5 minutes
+        })
 
         const getRowState = (row: BodyRow<Item>): ExpandedRowsRowState => {
             const cached = rowStateCache.get(row.id)
@@ -83,6 +88,13 @@ export const addExpandedRows =
             rowStateCache.set(row.id, state)
             return state
         }
+
+        // Clear cache when expandedIds store is cleared (data reset scenario)
+        expandedIds.subscribe(($expandedIds) => {
+            if (Object.keys($expandedIds).length === 0) {
+                rowStateCache.clear()
+            }
+        })
         const pluginState = { expandedIds, getRowState }
 
         const deriveRows: DeriveRowsFn<Item> = (rows) => {

@@ -501,3 +501,179 @@ test('getRowState returns memoized store instances', () => {
     expect(get(state1.isSelected)).toBe(true)
     expect(get(state2.isSelected)).toBe(true)
 })
+
+test('getRowState returns distinct store instances for different rows', () => {
+    const table = createTable(data, {
+        sub: addSubRows({
+            children: 'children'
+        }),
+        select: addSelectedRows()
+    })
+    const columns = table.createColumns([
+        table.column({
+            header: 'First Name',
+            accessor: 'firstName'
+        })
+    ])
+    const vm = table.createViewModel(columns)
+    const rows = get(vm.rows)
+
+    // Get two different data rows
+    const rowA = rows[0] // Adam
+    const rowB = rows[1] // Bryan
+
+    const { getRowState } = vm.pluginStates.select
+
+    // Get state for each row
+    const stateA = getRowState(rowA)
+    const stateB = getRowState(rowB)
+
+    // Store instances should NOT be the same between different rows
+    expect(stateA.isSelected).not.toBe(stateB.isSelected)
+    expect(stateA.isSomeSubRowsSelected).not.toBe(stateB.isSomeSubRowsSelected)
+    expect(stateA.isAllSubRowsSelected).not.toBe(stateB.isAllSubRowsSelected)
+})
+
+test('getRowState state mutations are isolated between different rows', () => {
+    const table = createTable(data, {
+        sub: addSubRows({
+            children: 'children'
+        }),
+        select: addSelectedRows()
+    })
+    const columns = table.createColumns([
+        table.column({
+            header: 'First Name',
+            accessor: 'firstName'
+        })
+    ])
+    const vm = table.createViewModel(columns)
+    const rows = get(vm.rows)
+
+    const rowA = rows[0] // Adam
+    const rowB = rows[1] // Bryan
+
+    const { getRowState, selectedDataIds } = vm.pluginStates.select
+
+    const stateA = getRowState(rowA)
+    const stateB = getRowState(rowB)
+
+    // Both rows should initially be unselected
+    expect(get(stateA.isSelected)).toBe(false)
+    expect(get(stateB.isSelected)).toBe(false)
+
+    // Select only rowA
+    stateA.isSelected.set(true)
+
+    // rowA should be selected
+    expect(get(stateA.isSelected)).toBe(true)
+
+    // rowB should remain unselected (state is isolated)
+    expect(get(stateB.isSelected)).toBe(false)
+
+    // Select rowB as well
+    stateB.isSelected.set(true)
+
+    // Both should now be selected
+    expect(get(stateA.isSelected)).toBe(true)
+    expect(get(stateB.isSelected)).toBe(true)
+
+    // Deselect rowA, rowB should remain selected
+    stateA.isSelected.set(false)
+    expect(get(stateA.isSelected)).toBe(false)
+    expect(get(stateB.isSelected)).toBe(true)
+
+    // Clean up
+    selectedDataIds.clear()
+})
+
+test('getRowState cache isolation - repeated calls return same per-row instance but distinct across rows', () => {
+    const table = createTable(data, {
+        sub: addSubRows({
+            children: 'children'
+        }),
+        select: addSelectedRows()
+    })
+    const columns = table.createColumns([
+        table.column({
+            header: 'First Name',
+            accessor: 'firstName'
+        })
+    ])
+    const vm = table.createViewModel(columns)
+    const rows = get(vm.rows)
+
+    const rowA = rows[0]
+    const rowB = rows[1]
+    const rowC = rows[2]
+
+    const { getRowState } = vm.pluginStates.select
+
+    // First call for each row
+    const stateA1 = getRowState(rowA)
+    const stateB1 = getRowState(rowB)
+    const stateC1 = getRowState(rowC)
+
+    // Second call for each row
+    const stateA2 = getRowState(rowA)
+    const stateB2 = getRowState(rowB)
+    const stateC2 = getRowState(rowC)
+
+    // Same row should return same instance (memoized)
+    expect(stateA1.isSelected).toBe(stateA2.isSelected)
+    expect(stateB1.isSelected).toBe(stateB2.isSelected)
+    expect(stateC1.isSelected).toBe(stateC2.isSelected)
+
+    // Different rows should have different instances
+    expect(stateA1.isSelected).not.toBe(stateB1.isSelected)
+    expect(stateB1.isSelected).not.toBe(stateC1.isSelected)
+    expect(stateA1.isSelected).not.toBe(stateC1.isSelected)
+
+    // Verify values are independent
+    stateA1.isSelected.set(true)
+    expect(get(stateA1.isSelected)).toBe(true)
+    expect(get(stateA2.isSelected)).toBe(true) // Same instance
+    expect(get(stateB1.isSelected)).toBe(false) // Different row
+    expect(get(stateC1.isSelected)).toBe(false) // Different row
+})
+
+test('getRowState cache is cleared when selectedDataIds is cleared', () => {
+    const table = createTable(data, {
+        sub: addSubRows({
+            children: 'children'
+        }),
+        select: addSelectedRows()
+    })
+    const columns = table.createColumns([
+        table.column({
+            header: 'First Name',
+            accessor: 'firstName'
+        })
+    ])
+    const vm = table.createViewModel(columns)
+    const rows = get(vm.rows)
+    const row0 = rows[0]
+
+    const { getRowState, selectedDataIds } = vm.pluginStates.select
+
+    // Get initial state
+    const stateBefore = getRowState(row0)
+    stateBefore.isSelected.set(true)
+    expect(get(stateBefore.isSelected)).toBe(true)
+
+    // Clear selected IDs - this should clear the cache
+    selectedDataIds.clear()
+
+    // After clearing, the row should be unselected
+    expect(get(stateBefore.isSelected)).toBe(false)
+
+    // Get state again - should get a fresh instance due to cache clear
+    const stateAfter = getRowState(row0)
+
+    // The new state should also show unselected
+    expect(get(stateAfter.isSelected)).toBe(false)
+
+    // Verify the state still works correctly after cache clear
+    stateAfter.isSelected.set(true)
+    expect(get(stateAfter.isSelected)).toBe(true)
+})
