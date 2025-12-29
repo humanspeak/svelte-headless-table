@@ -1,8 +1,10 @@
+import { MemoryCache } from '@humanspeak/memory-cache'
 import { keyed } from '@humanspeak/svelte-keyed'
 import { derived, readable, type Readable, type Writable } from 'svelte/store'
 import type { BodyRow } from '../bodyRows.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { recordSetStore, type RecordSetStore } from '../utils/store.js'
+import { DEFAULT_ROW_STATE_CACHE_CONFIG } from './cacheConfig.js'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface ExpandedRowsConfig<Item> {
@@ -12,6 +14,8 @@ export interface ExpandedRowsConfig<Item> {
 export interface ExpandedRowsState<Item> {
     expandedIds: RecordSetStore<string>
     getRowState: (row: BodyRow<Item>) => ExpandedRowsRowState
+    /** Cleans up internal subscriptions and clears the row state cache. Call when destroying the table. */
+    invalidate: () => void
 }
 
 export interface ExpandedRowsRowState {
@@ -45,7 +49,17 @@ export const addExpandedRows =
     > =>
     () => {
         const expandedIds = recordSetStore(initialExpandedIds)
+
+        // LRU cache for memoized row state with automatic eviction.
+        // Prevents unbounded memory growth when row identities change.
+        const rowStateCache = new MemoryCache<ExpandedRowsRowState>(DEFAULT_ROW_STATE_CACHE_CONFIG)
+
         const getRowState = (row: BodyRow<Item>): ExpandedRowsRowState => {
+            const cached = rowStateCache.get(row.id)
+            if (cached !== undefined) {
+                return cached
+            }
+
             const isExpanded = keyed(expandedIds, row.id) as Writable<boolean>
             const canExpand = readable((row.subRows?.length ?? 0) > 0)
             const subRowExpandedIds = derived(expandedIds, ($expandedIds) => {
@@ -66,13 +80,29 @@ export const addExpandedRows =
                 )
                 return $subRowExpandedIds.length === expandableSubRows.length
             })
-            return {
+            const state: ExpandedRowsRowState = {
                 isExpanded,
                 canExpand,
                 isAllSubRowsExpanded
             }
+            rowStateCache.set(row.id, state)
+            return state
         }
-        const pluginState = { expandedIds, getRowState }
+
+        // Clear cache when expandedIds store is cleared (data reset scenario)
+        const unsubscribeExpandedIds = expandedIds.subscribe(($expandedIds) => {
+            if (Object.keys($expandedIds).length === 0) {
+                rowStateCache.clear()
+            }
+        })
+
+        // Cleanup function to prevent subscription leaks when table is destroyed
+        const invalidate = () => {
+            unsubscribeExpandedIds()
+            rowStateCache.clear()
+        }
+
+        const pluginState = { expandedIds, getRowState, invalidate }
 
         const deriveRows: DeriveRowsFn<Item> = (rows) => {
             return derived([rows, expandedIds], ([$rows, $expandedIds]) => {

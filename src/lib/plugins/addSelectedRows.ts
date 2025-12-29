@@ -1,8 +1,10 @@
+import { MemoryCache } from '@humanspeak/memory-cache'
 import { derived, get, type Readable, type Updater, type Writable } from 'svelte/store'
 import type { BodyRow } from '../bodyRows.js'
 import type { NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { nonNull } from '../utils/filter.js'
 import { recordSetStore, type RecordSetStore } from '../utils/store.js'
+import { DEFAULT_ROW_STATE_CACHE_CONFIG } from './cacheConfig.js'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface SelectedRowsConfig<Item> {
@@ -17,6 +19,8 @@ export interface SelectedRowsState<Item> {
     allPageRowsSelected: Writable<boolean>
     somePageRowsSelected: Readable<boolean>
     getRowState: (row: BodyRow<Item>) => SelectedRowsRowState
+    /** Cleans up internal subscriptions and clears the row state cache. Call when destroying the table. */
+    invalidate: () => void
 }
 
 export interface SelectedRowsRowState {
@@ -141,7 +145,16 @@ export const addSelectedRows =
     ({ tableState }) => {
         const selectedDataIds = recordSetStore(initialSelectedDataIds)
 
+        // LRU cache for memoized row state with automatic eviction.
+        // Prevents unbounded memory growth when row identities change.
+        const rowStateCache = new MemoryCache<SelectedRowsRowState>(DEFAULT_ROW_STATE_CACHE_CONFIG)
+
         const getRowState = (row: BodyRow<Item>): SelectedRowsRowState => {
+            const cached = rowStateCache.get(row.id)
+            if (cached !== undefined) {
+                return cached
+            }
+
             const isSelected = getRowIsSelectedStore(row, selectedDataIds, linkDataSubRows)
             const isSomeSubRowsSelected = derived(
                 [isSelected, selectedDataIds],
@@ -153,11 +166,26 @@ export const addSelectedRows =
             const isAllSubRowsSelected = derived(selectedDataIds, ($selectedDataIds) => {
                 return isAllSubRowsSelectedForRow(row, $selectedDataIds, linkDataSubRows)
             })
-            return {
+            const state: SelectedRowsRowState = {
                 isSelected,
                 isSomeSubRowsSelected,
                 isAllSubRowsSelected
             }
+            rowStateCache.set(row.id, state)
+            return state
+        }
+
+        // Clear cache when selectedDataIds store is cleared (data reset scenario)
+        const unsubscribeSelectedDataIds = selectedDataIds.subscribe(($selectedDataIds) => {
+            if (Object.keys($selectedDataIds).length === 0) {
+                rowStateCache.clear()
+            }
+        })
+
+        // Cleanup function to prevent subscription leaks when table is destroyed
+        const invalidate = () => {
+            unsubscribeSelectedDataIds()
+            rowStateCache.clear()
         }
 
         // all rows
@@ -254,7 +282,8 @@ export const addSelectedRows =
             allRowsSelected,
             someRowsSelected,
             allPageRowsSelected,
-            somePageRowsSelected
+            somePageRowsSelected,
+            invalidate
         }
 
         return {

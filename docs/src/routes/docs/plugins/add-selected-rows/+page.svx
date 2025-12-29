@@ -87,8 +87,8 @@ const { ... } = pluginStates.select;
 
 ## Examples
 
+
+
+
 <SimpleSelectedDemo />
-
-
-
 
