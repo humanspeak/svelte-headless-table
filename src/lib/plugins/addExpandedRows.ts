@@ -4,6 +4,7 @@ import { derived, readable, type Readable, type Writable } from 'svelte/store'
 import type { BodyRow } from '../bodyRows.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { recordSetStore, type RecordSetStore } from '../utils/store.js'
+import { DEFAULT_ROW_STATE_CACHE_CONFIG } from './cacheConfig.js'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface ExpandedRowsConfig<Item> {
@@ -51,10 +52,7 @@ export const addExpandedRows =
 
         // LRU cache for memoized row state with automatic eviction.
         // Prevents unbounded memory growth when row identities change.
-        const rowStateCache = new MemoryCache<ExpandedRowsRowState>({
-            maxSize: 1000,
-            ttl: 5 * 60 * 1000 // 5 minutes
-        })
+        const rowStateCache = new MemoryCache<ExpandedRowsRowState>(DEFAULT_ROW_STATE_CACHE_CONFIG)
 
         const getRowState = (row: BodyRow<Item>): ExpandedRowsRowState => {
             const cached = rowStateCache.get(row.id)

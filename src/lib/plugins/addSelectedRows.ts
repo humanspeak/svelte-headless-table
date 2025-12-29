@@ -4,6 +4,7 @@ import type { BodyRow } from '../bodyRows.js'
 import type { NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { nonNull } from '../utils/filter.js'
 import { recordSetStore, type RecordSetStore } from '../utils/store.js'
+import { DEFAULT_ROW_STATE_CACHE_CONFIG } from './cacheConfig.js'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface SelectedRowsConfig<Item> {
@@ -146,10 +147,7 @@ export const addSelectedRows =
 
         // LRU cache for memoized row state with automatic eviction.
         // Prevents unbounded memory growth when row identities change.
-        const rowStateCache = new MemoryCache<SelectedRowsRowState>({
-            maxSize: 1000,
-            ttl: 5 * 60 * 1000 // 5 minutes
-        })
+        const rowStateCache = new MemoryCache<SelectedRowsRowState>(DEFAULT_ROW_STATE_CACHE_CONFIG)
 
         const getRowState = (row: BodyRow<Item>): SelectedRowsRowState => {
             const cached = rowStateCache.get(row.id)
