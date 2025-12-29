@@ -18,6 +18,8 @@ export interface SelectedRowsState<Item> {
     allPageRowsSelected: Writable<boolean>
     somePageRowsSelected: Readable<boolean>
     getRowState: (row: BodyRow<Item>) => SelectedRowsRowState
+    /** Cleans up internal subscriptions and clears the row state cache. Call when destroying the table. */
+    invalidate: () => void
 }
 
 export interface SelectedRowsRowState {
@@ -176,11 +178,17 @@ export const addSelectedRows =
         }
 
         // Clear cache when selectedDataIds store is cleared (data reset scenario)
-        selectedDataIds.subscribe(($selectedDataIds) => {
+        const unsubscribeSelectedDataIds = selectedDataIds.subscribe(($selectedDataIds) => {
             if (Object.keys($selectedDataIds).length === 0) {
                 rowStateCache.clear()
             }
         })
+
+        // Cleanup function to prevent subscription leaks when table is destroyed
+        const invalidate = () => {
+            unsubscribeSelectedDataIds()
+            rowStateCache.clear()
+        }
 
         // all rows
         const _allRowsSelected = derived(
@@ -276,7 +284,8 @@ export const addSelectedRows =
             allRowsSelected,
             someRowsSelected,
             allPageRowsSelected,
-            somePageRowsSelected
+            somePageRowsSelected,
+            invalidate
         }
 
         return {

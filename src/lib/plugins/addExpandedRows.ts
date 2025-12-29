@@ -13,6 +13,8 @@ export interface ExpandedRowsConfig<Item> {
 export interface ExpandedRowsState<Item> {
     expandedIds: RecordSetStore<string>
     getRowState: (row: BodyRow<Item>) => ExpandedRowsRowState
+    /** Cleans up internal subscriptions and clears the row state cache. Call when destroying the table. */
+    invalidate: () => void
 }
 
 export interface ExpandedRowsRowState {
@@ -90,12 +92,19 @@ export const addExpandedRows =
         }
 
         // Clear cache when expandedIds store is cleared (data reset scenario)
-        expandedIds.subscribe(($expandedIds) => {
+        const unsubscribeExpandedIds = expandedIds.subscribe(($expandedIds) => {
             if (Object.keys($expandedIds).length === 0) {
                 rowStateCache.clear()
             }
         })
-        const pluginState = { expandedIds, getRowState }
+
+        // Cleanup function to prevent subscription leaks when table is destroyed
+        const invalidate = () => {
+            unsubscribeExpandedIds()
+            rowStateCache.clear()
+        }
+
+        const pluginState = { expandedIds, getRowState, invalidate }
 
         const deriveRows: DeriveRowsFn<Item> = (rows) => {
             return derived([rows, expandedIds], ([$rows, $expandedIds]) => {
