@@ -64,8 +64,8 @@ The sub rows of the current row if it exists. `undefined` if this row has no sub
 
 By default, the following plugins can define sub-rows:
 
-- <a href="../../plugins/add-sub-rows">addSubRows</a>
-- <a href="../../plugins/add-group-by">addGroupBy</a>
+- <a href="/docs/plugins/add-sub-rows">addSubRows</a>
+- <a href="/docs/plugins/add-group-by">addGroupBy</a>
 
 ### `isData: () => boolean`
 
@@ -79,7 +79,7 @@ Returns `true` if the body row is an instance of `DisplayBodyRow`.
 
 ## DisplayBodyRow
 
-`DisplayBodyRow`s represent rows which are <strong>not backed by any data item</strong>. These rows are usually the result of row aggregation with <a href="../../plugins/add-group-by">`addGroupBy`</a>.
+`DisplayBodyRow`s represent rows which are <strong>not backed by any data item</strong>. These rows are usually the result of row aggregation with <a href="/docs/plugins/add-group-by">`addGroupBy`</a>.
 
 ## DataBodyRow
 
