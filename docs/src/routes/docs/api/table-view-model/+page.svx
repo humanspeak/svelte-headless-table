@@ -111,6 +111,6 @@ Flat columns usually represent the last row of columns in your header, which inc
 
 An object of plugin states exposed by each plugin used.
 
-<Admonition type="tip">See also <a href="../../plugins/overview#controlling-plugin-state">Plugin State</a>.</Admonition>
+<Admonition type="tip">See also <a href="/docs/plugins/overview#controlling-plugin-state">Plugin State</a>.</Admonition>
 
 
