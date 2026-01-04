@@ -13,7 +13,7 @@ sidebar_title: createRender
 
 `createRender` lets you define complex Svelte component behaviors within the script.
 
-It combines a component with props and events to create a `ComponentRenderConfig` that is passed into <a href="../render">`Render#of`</a> to dynamically render Svelte components.
+It combines a component with props and events to create a `ComponentRenderConfig` that is passed into <a href="/docs/api/render">`Render#of`</a> to dynamically render Svelte components.
 
 <Admonition type="note">`createRender` is based on <a href="https://github.com/humanspeak/svelte-render">svelte-render</a>.</Admonition>
 

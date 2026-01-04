@@ -32,7 +32,7 @@ A `Readable` store with additional properties derived from plugin view model ext
 
 ### `render: () => RenderConfig`
 
-Returns the <a href="../render#renderconfig">render configuration</a> of the header cell. Pass into `Render#of`.
+Returns the <a href="/docs/api/render#renderconfig">render configuration</a> of the header cell. Pass into `Render#of`.
 
 ```svelte
 <tr>

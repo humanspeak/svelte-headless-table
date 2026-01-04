@@ -45,7 +45,7 @@ A `Readable` store with attributes to apply onto the `<tbody>` element.
 
 #### `TableViewModel#headerRows: Readable<HeaderRow[]>`
 
-A `Readable` store with an array of <a href="../header-row">`HeaderRow`</a>s that represent `<tr>` elements in `<thead>`.
+A `Readable` store with an array of <a href="/docs/api/header-row">`HeaderRow`</a>s that represent `<tr>` elements in `<thead>`.
 
 ```svelte
 <thead>
@@ -59,7 +59,7 @@ A `Readable` store with an array of <a href="../header-row">`HeaderRow`</a>s tha
 
 #### `TableViewModel#rows: Readable<BodyRow[]>`
 
-A `Readable` store with an array of <a href="../body-row">`BodyRow`</a>s that represent `<tr>` elements in `<tbody>`.
+A `Readable` store with an array of <a href="/docs/api/body-row">`BodyRow`</a>s that represent `<tr>` elements in `<tbody>`.
 
 ```svelte
 <tbody>

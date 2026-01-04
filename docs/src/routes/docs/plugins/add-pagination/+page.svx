@@ -15,7 +15,7 @@ sidebar_title: addPagination
 
 `addPagination` paginates the table by page index.
 
-<Admonition type="note">Subscribe to <a href="../api/table-view-model#tableviewmodel-pagerows-readable-bodyrow"><code>TableViewModel#pageRows</code></a> instead of <code>TableViewModel#rows</code>.</Admonition>
+<Admonition type="note">Subscribe to <a href="/docs/api/table-view-model#tableviewmodel-pagerows-readable-bodyrow"><code>TableViewModel#pageRows</code></a> instead of <code>TableViewModel#rows</code>.</Admonition>
 
 ```svelte {5,11}
 <script>
@@ -48,7 +48,7 @@ Default `0`.
 Default `10`.
 
 ### `serverSide?: boolean`
-If `true`, use server-side pagination by updating <a href="../api/create-table#createtable-data-plugins-table">`$data`</a>.
+If `true`, use server-side pagination by updating <a href="/docs/api/create-table#createtable-data-plugins-table">`$data`</a>.
 
 ### `serverItemCount: Writable<number>`
 Total item count when using server-side pagination. Required if `serverSide = true`.
