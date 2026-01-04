@@ -15,7 +15,7 @@ sidebar_title: Table
 
 ## Usage
 
-### <a href="../create-columns">`createColumns: (columns) => Column[]`</a>
+### <a href="/docs/api/create-columns">`createColumns: (columns) => Column[]`</a>
 
 ### <a href="../create-view-model">`createViewModel: (columns) => TableViewModel`</a>
 
