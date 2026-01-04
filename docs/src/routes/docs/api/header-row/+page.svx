@@ -28,7 +28,7 @@ A `Readable` store with attributes to apply onto the `<tr>` element.
 
 A `Readable` store with additional properties derived from plugin view model extensions.
 
-<Admonition type="tip">See also <a href="/docs/plugins/overview#connecting-plugins-to-markup">Plugin View Model Extensions</a>.</Admonition>
+<Admonition type="tip">See also <a href="/docs/plugins/overview">Plugin View Model Extensions</a>.</Admonition>
 
 ### `cells: HeaderCell[]`
 

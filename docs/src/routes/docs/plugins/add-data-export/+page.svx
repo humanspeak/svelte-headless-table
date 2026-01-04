@@ -17,7 +17,7 @@ sidebar_title: addDataExport
 
 This is useful if you need to export data from the table with all plugin transformations applied.
 
-<Admonition type="warning">Display columns do not contain any data by default and will show up as <code>null</code> in the data export. If you need to add data to a display column, use the <a href="/docs/api/create-columns#displaydef-data-displaycell-state-readable-unknown-unknown"><code>data</code> property</a> when defining the display column.</Admonition>
+<Admonition type="warning">Display columns do not contain any data by default and will show up as <code>null</code> in the data export. If you need to add data to a display column, use the <a href="/docs/api/create-columns"><code>data</code> property</a> when defining the display column.</Admonition>
 
 ## Options
 
