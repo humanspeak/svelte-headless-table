@@ -27,7 +27,7 @@ const table = createTable(data, {
 
 ### `serverSide?: boolean`
 
-If `true`, filtering will not change `$rows`. Control filtering by updating <a href="../api/create-table#createtable-data-plugins-table">`$data`</a> and use plugin state to drive your fetch.
+If `true`, filtering will not change `$rows`. Control filtering by updating <a href="/docs/api/create-table#createtable-data-plugins-table">`$data`</a> and use plugin state to drive your fetch.
 
 _Defaults to `false`_.
 
@@ -53,7 +53,7 @@ Defines filter behavior for the column. Return `true` to keep the row.
 
 ### `render?: (renderProps) => RenderConfig`
 
-Renders a control on `HeaderCell->props.[pluginName].render`. `renderProps` extends <a href="../api/table-state">`TableState`</a> and includes:
+Renders a control on `HeaderCell->props.[pluginName].render`. `renderProps` extends <a href="/docs/api/table-state">`TableState`</a> and includes:
 
 - `id: string`
 - `filterValue: Writable<any>`

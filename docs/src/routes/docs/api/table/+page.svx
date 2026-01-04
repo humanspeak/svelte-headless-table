@@ -11,12 +11,12 @@ sidebar_title: Table
 
 # Table
 
-`Table` is the main instance returned by <a href="../create-table">`createTable`</a>.
+`Table` is the main instance returned by <a href="/docs/api/create-table">`createTable`</a>.
 
 ## Usage
 
-### <a href="../create-columns">`createColumns: (columns) => Column[]`</a>
+### <a href="/docs/api/create-columns">`createColumns: (columns) => Column[]`</a>
 
-### <a href="../create-view-model">`createViewModel: (columns) => TableViewModel`</a>
+### <a href="/docs/api/create-view-model">`createViewModel: (columns) => TableViewModel`</a>
 
 

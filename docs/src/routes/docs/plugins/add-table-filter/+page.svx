@@ -35,7 +35,7 @@ Default `''`.
 Whether hidden columns are included. Default `false`.
 
 ### `serverSide?: boolean`
-If `true`, use server-side filtering by updating <a href="../api/create-table#createtable-data-plugins-table">`$data`</a>.
+If `true`, use server-side filtering by updating <a href="/docs/api/create-table#createtable-data-plugins-table">`$data`</a>.
 
 ## Column Options
 

@@ -28,11 +28,11 @@ A `Readable` store with attributes to apply onto the `<td>` element.
 
 A `Readable` store with additional properties derived from plugin view model extensions.
 
-<Admonition type="tip">See also <a href="../../plugins/overview#connecting-plugins-to-markup">Plugin View Model Extensions</a>.</Admonition>
+<Admonition type="tip">See also <a href="/docs/plugins/overview">Plugin View Model Extensions</a>.</Admonition>
 
 ### `render: () => RenderConfig`
 
-Returns the <a href="../render#renderconfig">render configuration</a> of the body cell. Pass into `Render#of`.
+Returns the <a href="/docs/api/render#renderconfig">render configuration</a> of the body cell. Pass into `Render#of`.
 
 ```svelte
 <tr>
@@ -48,7 +48,7 @@ Returns the <a href="../render#renderconfig">render configuration</a> of the bod
 
 ### `row: BodyRow`
 
-A reference to the <a href="../body-row">`BodyRow`</a> that contains this cell.
+A reference to the <a href="/docs/api/body-row">`BodyRow`</a> that contains this cell.
 
 ### `column: Column`
 

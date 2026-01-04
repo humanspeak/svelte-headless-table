@@ -122,7 +122,7 @@ We apply our view model over the structure.
 </table>
 ```
 
-<Admonition type="info">`Subscribe` and `Render` are provided by Svelte Headless Table to overcome certain limitations of Svelte. Read more about <a href="../../api/subscribe">Subscribe</a> and <a href="../../api/render">Render</a>.</Admonition>
+<Admonition type="info">`Subscribe` and `Render` are provided by Svelte Headless Table to overcome certain limitations of Svelte. Read more about <a href="/docs/api/subscribe">Subscribe</a> and <a href="/docs/api/render">Render</a>.</Admonition>
 
 ## Final result
 

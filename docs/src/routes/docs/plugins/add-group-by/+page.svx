@@ -61,7 +61,7 @@ Return aggregated value for the column.
 Return the grouping key and displayed value on the grouping row.
 
 #### `cell?: ({ column, row, value }, state) => RenderConfig`
-Custom body cell for grouped rows; receives the row, column, value, and <a href="../api/table-state">`TableState`</a>.
+Custom body cell for grouped rows; receives the row, column, value, and <a href="/docs/api/table-state">`TableState`</a>.
 
 ## Prop Set
 
