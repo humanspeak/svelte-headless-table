@@ -27,7 +27,7 @@
         "github-slugger": "^2.0.0"
     },
     "devDependencies": {
-        "@cloudflare/workers-types": "^4.20251229.0",
+        "@cloudflare/workers-types": "^4.20260103.0",
         "@eslint/compat": "^2.0.0",
         "@eslint/js": "^9.39.2",
         "@faker-js/faker": "^10.1.0",
@@ -44,7 +44,7 @@
         "@typescript-eslint/eslint-plugin": "^8.51.0",
         "@typescript-eslint/parser": "^8.51.0",
         "autoprefixer": "^10.4.23",
-        "bits-ui": "^2.14.4",
+        "bits-ui": "^2.15.2",
         "chokidar-cli": "^3.0.0",
         "clsx": "^2.1.1",
         "embla-carousel-svelte": "^8.6.0",
@@ -54,7 +54,7 @@
         "eslint-plugin-svelte": "3.13.1",
         "eslint-plugin-unused-imports": "4.3.0",
         "formsnap": "^2.0.1",
-        "globals": "^16.5.0",
+        "globals": "^17.0.0",
         "lucide-svelte": "^0.562.0",
         "mdsvex": "^0.12.6",
         "mode-watcher": "^1.1.0",
@@ -81,7 +81,7 @@
         "vite": "^7.3.0",
         "vitest": "^4.0.16",
         "wrangler": "^4.54.0",
-        "zod": "^4.2.1"
+        "zod": "^4.3.5"
     },
     "volta": {
         "node": "22.21.1"
