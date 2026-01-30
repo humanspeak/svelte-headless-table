@@ -23,8 +23,10 @@
         content="Build better documentation and content-rich applications with this headless table component for Svelte 5"
     />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://table.svelte.page" />
+    <meta property="og:url" content="https://table.svelte.page{page.url.pathname}" />
     <meta property="og:image" content="{imageLocation}svelte-table-opengraph.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -44,7 +46,7 @@
     <!-- Additional Meta -->
     <meta name="author" content="Humanspeak, Inc." />
     <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://table.svelte.page" />
+    <link rel="canonical" href="https://table.svelte.page{page.url.pathname}" />
 
     <!-- JSON-LD structured data -->
     <script type="application/ld+json">

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://table.svelte.page/sitemap.xml
