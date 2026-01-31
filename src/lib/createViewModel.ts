@@ -13,6 +13,12 @@ import { finalizeAttributes } from '$lib/utils/attributes.js'
 import { nonUndefined } from '$lib/utils/filter.js'
 import { derived, readable, writable, type Readable, type Writable } from 'svelte/store'
 
+/**
+ * HTML attributes for the table element.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 /* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
 export type TableAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = Record<
     string,
@@ -21,12 +27,24 @@ export type TableAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = Rec
     role: 'table'
 }
 
+/**
+ * HTML attributes for the table head element.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 /* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
 export type TableHeadAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = Record<
     string,
     unknown
 >
 
+/**
+ * HTML attributes for the table body element.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 /* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
 export type TableBodyAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = Record<
     string,
@@ -35,6 +53,10 @@ export type TableBodyAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> =
     role: 'rowgroup'
 }
 
+/**
+ * Debug information for performance analysis of the table view model.
+ * Provides metrics about derivation chains and call counts.
+ */
 export interface ViewModelDebug {
     /** Number of plugins active */
     pluginCount: number
@@ -68,6 +90,13 @@ export interface ViewModelDebug {
     getTotalCalls: () => number
 }
 
+/**
+ * The view model for a table, containing all reactive stores and state.
+ * Created by `createViewModel` and used to render the table.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 export interface TableViewModel<Item, Plugins extends AnyPlugins = AnyPlugins> {
     flatColumns: FlatColumn<Item, Plugins>[]
     tableAttrs: Readable<TableAttributes<Item, Plugins>>
@@ -83,28 +112,69 @@ export interface TableViewModel<Item, Plugins extends AnyPlugins = AnyPlugins> {
     _debug: ViewModelDebug
 }
 
+/**
+ * A type that can be either Readable or Writable.
+ *
+ * @template T - The type of the store value.
+ */
 export type ReadOrWritable<T> = Readable<T> | Writable<T>
+
+/**
+ * The table state passed to plugins during initialization.
+ * Contains references to all table stores before plugin states are available.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 export interface PluginInitTableState<Item, Plugins extends AnyPlugins = AnyPlugins> extends Omit<
     TableViewModel<Item, Plugins>,
     'pluginStates' | '_debug'
 > {
+    /** The data source for the table. */
     data: ReadOrWritable<Item[]>
+    /** The column definitions. */
     columns: Column<Item, Plugins>[]
 }
 
+/**
+ * The complete table state including plugin states.
+ * Available to plugins and components after initialization.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 export interface TableState<Item, Plugins extends AnyPlugins = AnyPlugins> extends Omit<
     TableViewModel<Item, Plugins>,
     '_debug'
 > {
+    /** The data source for the table. */
     data: ReadOrWritable<Item[]>
+    /** The column definitions. */
     columns: Column<Item, Plugins>[]
 }
 
+/**
+ * Options for creating a table view model.
+ *
+ * @template Item - The type of data items in the table.
+ */
 export interface CreateViewModelOptions<Item> {
+    /** Optional function to generate a unique ID for each data item. */
     /* trunk-ignore(eslint/no-unused-vars) */
     rowDataId?: (item: Item, index: number) => string
 }
 
+/**
+ * Creates a view model for rendering a table.
+ * The view model contains all reactive stores for the table, headers, and rows.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ * @param table - The table instance created by `createTable`.
+ * @param columns - The column definitions.
+ * @param options - Optional configuration options.
+ * @returns A TableViewModel containing all reactive stores for rendering.
+ */
 export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     table: Table<Item, Plugins>,
     columns: Column<Item, Plugins>[],

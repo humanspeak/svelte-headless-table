@@ -13,28 +13,59 @@ import { sum } from '$lib/utils/math.js'
 import { getNullMatrix, getTransposed } from '$lib/utils/matrix.js'
 import { derived } from 'svelte/store'
 
+/**
+ * HTML attributes for a header row element.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 /* trunk-ignore(eslint/@typescript-eslint/no-unused-vars) */
 /* trunk-ignore(eslint/no-unused-vars) */
 export type HeaderRowAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     role: 'row'
 }
 
+/**
+ * Initialization options for creating a HeaderRow.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 export interface HeaderRowInit<Item, Plugins extends AnyPlugins = AnyPlugins> {
     id: string
     cells: HeaderCell<Item, Plugins>[]
 }
 
+/**
+ * Represents a row in the table header.
+ * Contains header cells for column labels and group headers.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 export class HeaderRow<Item, Plugins extends AnyPlugins = AnyPlugins> extends TableComponent<
     Item,
     Plugins,
     'thead.tr'
 > {
+    /** The header cells in this row. */
     cells: HeaderCell<Item, Plugins>[]
+
+    /**
+     * Creates a new HeaderRow.
+     *
+     * @param init - Initialization options.
+     */
     constructor({ id, cells }: HeaderRowInit<Item, Plugins>) {
         super({ id })
         this.cells = cells
     }
 
+    /**
+     * Gets the HTML attributes for this header row.
+     *
+     * @returns A readable store of row attributes.
+     */
     attrs() {
         return derived(super.attrs(), ($baseAttrs) => {
             return {
@@ -44,6 +75,11 @@ export class HeaderRow<Item, Plugins extends AnyPlugins = AnyPlugins> extends Ta
         })
     }
 
+    /**
+     * Creates a copy of this header row.
+     *
+     * @returns A cloned HeaderRow.
+     */
     clone(): HeaderRow<Item, Plugins> {
         return new HeaderRow({
             id: this.id,
@@ -52,6 +88,16 @@ export class HeaderRow<Item, Plugins extends AnyPlugins = AnyPlugins> extends Ta
     }
 }
 
+/**
+ * Converts an array of columns into header rows for rendering.
+ * Handles nested column groups by creating multiple header rows.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ * @param columns - The column definitions.
+ * @param flatColumnIds - Optional array of column IDs for ordering.
+ * @returns An array of HeaderRow objects.
+ */
 export const getHeaderRows = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     columns: Column<Item, Plugins>[],
     flatColumnIds: string[] = []
@@ -66,6 +112,16 @@ export const getHeaderRows = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     return headerRowsForRowMatrix(getTransposed(columnMatrix))
 }
 
+/**
+ * Creates a matrix of header cells from column definitions.
+ * Each row in the matrix represents a header row, with cells positioned
+ * according to their column spans.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ * @param columns - The column definitions.
+ * @returns A matrix of HeaderCell objects.
+ */
 export const getHeaderRowMatrix = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     columns: Column<Item, Plugins>[]
 ): Matrix<HeaderCell<Item, Plugins>> => {
@@ -138,6 +194,15 @@ const loadHeaderRowMatrix = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     }
 }
 
+/**
+ * Reorders a column matrix according to the specified column ID order.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ * @param columnMatrix - The original column matrix.
+ * @param flatColumnIds - The desired order of column IDs.
+ * @returns A reordered column matrix.
+ */
 export const getOrderedColumnMatrix = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     columnMatrix: Matrix<HeaderCell<Item, Plugins>>,
     flatColumnIds: string[]
@@ -183,6 +248,14 @@ const populateGroupHeaderCellIds = <Item>(columnMatrix: Matrix<HeaderCell<Item>>
     })
 }
 
+/**
+ * Converts a row matrix into an array of HeaderRow objects.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ * @param rowMatrix - The matrix of header cells organized by rows.
+ * @returns An array of HeaderRow objects.
+ */
 export const headerRowsForRowMatrix = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     rowMatrix: Matrix<HeaderCell<Item, Plugins>>
 ): HeaderRow<Item, Plugins>[] => {

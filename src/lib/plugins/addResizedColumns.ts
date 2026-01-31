@@ -4,30 +4,55 @@ import type { HeaderCell } from '../headerCells.js'
 import type { NewTableAttributeSet, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { sum } from '../utils/math.js'
 
+/**
+ * Configuration options for the addResizedColumns plugin.
+ */
 export interface AddResizedColumnsConfig {
+    /** Callback fired when a resize operation ends. */
     onResizeEnd?: (_ev: Event) => void
 }
 
+/**
+ * State exposed by the addResizedColumns plugin.
+ */
 export type ResizedColumnsState = {
+    /** Writable store mapping column IDs to their current widths in pixels. */
     columnWidths: Writable<Record<string, number>>
 }
 
+/**
+ * Per-column configuration options for resizing.
+ */
 export type ResizedColumnsColumnOptions = {
+    /** Initial width in pixels. */
     initialWidth?: number
+    /** Minimum width in pixels. */
     minWidth?: number
+    /** Maximum width in pixels. */
     maxWidth?: number
+    /** If true, resizing is disabled for this column. */
     disable?: boolean
 }
 
+/**
+ * Props added to table elements by the resized columns plugin.
+ */
 export type ResizedColumnsPropSet = NewTablePropSet<{
     'thead.tr.th': {
+        /** Action to register the header cell element. */
         (_node: Element): void
+        /** Action to enable drag-to-resize on an element. */
         drag: (_node: Element) => void
+        /** Action to enable double-click-to-reset on an element. */
         reset: (_node: Element) => void
+        /** Whether resizing is disabled for this column. */
         disabled: boolean
     }
 }>
 
+/**
+ * Attributes added to table elements by the resized columns plugin.
+ */
 export type ResizedColumnsAttributeSet = NewTableAttributeSet<{
     'thead.tr.th': {
         style?: {
@@ -47,6 +72,10 @@ export type ResizedColumnsAttributeSet = NewTableAttributeSet<{
     }
 }>
 
+/**
+ * Gets the X position from a mouse or touch event.
+ * @internal
+ */
 const getDragXPos = (event: Event): number => {
     if (event instanceof MouseEvent) return event.clientX
     if (event instanceof TouchEvent) return event.targetTouches[0].pageX
@@ -62,11 +91,44 @@ const isCellDisabled = (cell: HeaderCell<any>, disabledIds: string[]) => {
     return false
 }
 
+/**
+ * Internal state for tracking column widths during resize operations.
+ * @internal
+ */
 type ColumnsWidthState = {
     current: Record<string, number>
     start: Record<string, number>
 }
 
+/**
+ * Creates a resized columns plugin that enables drag-to-resize column widths.
+ * Supports both mouse and touch interactions.
+ *
+ * @template Item - The type of data items in the table.
+ * @param config - Configuration options.
+ * @returns A TablePlugin that provides column resizing functionality.
+ * @example
+ * ```typescript
+ * const table = createTable(data, {
+ *   resize: addResizedColumns({
+ *     onResizeEnd: (event) => console.log('Resize ended')
+ *   })
+ * })
+ *
+ * // Configure per-column options
+ * table.column({
+ *   accessor: 'name',
+ *   header: 'Name',
+ *   plugins: {
+ *     resize: {
+ *       initialWidth: 200,
+ *       minWidth: 100,
+ *       maxWidth: 400
+ *     }
+ *   }
+ * })
+ * ```
+ */
 export const addResizedColumns =
     <Item>({ onResizeEnd }: AddResizedColumnsConfig = {}): TablePlugin<
         Item,

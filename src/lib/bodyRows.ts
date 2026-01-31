@@ -5,6 +5,12 @@ import type { AnyPlugins } from '$lib/types/TablePlugin.js'
 import { nonUndefined } from '$lib/utils/filter.js'
 import { derived, type Readable } from 'svelte/store'
 
+/**
+ * Initialization options for creating a BodyRow.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 export type BodyRowInit<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     id: string
     cells: BodyCell<Item, Plugins>[]
@@ -13,11 +19,24 @@ export type BodyRowInit<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     parentRow?: BodyRow<Item, Plugins>
 }
 
+/**
+ * HTML attributes for a body row element.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 /* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
 export type BodyRowAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     role: 'row'
 }
 
+/**
+ * Abstract base class representing a row in the table body.
+ * Extended by DataBodyRow for data rows and DisplayBodyRow for display-only rows.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 export abstract class BodyRow<Item, Plugins extends AnyPlugins = AnyPlugins> extends TableComponent<
     Item,
     Plugins,
@@ -53,30 +72,60 @@ export abstract class BodyRow<Item, Plugins extends AnyPlugins = AnyPlugins> ext
     /* trunk-ignore(eslint/no-unused-vars) */
     abstract clone(props?: BodyRowCloneProps): BodyRow<Item, Plugins>
 
+    /**
+     * Type guard to check if this row is a data row.
+     *
+     * @returns True if this is a DataBodyRow.
+     */
     // TODO Workaround for https://github.com/vitejs/vite/issues/9528
     isData(): this is DataBodyRow<Item, Plugins> {
         return '__data' in this
     }
 
+    /**
+     * Type guard to check if this row is a display row.
+     *
+     * @returns True if this is a DisplayBodyRow.
+     */
     // TODO Workaround for https://github.com/vitejs/vite/issues/9528
     isDisplay(): this is DisplayBodyRow<Item, Plugins> {
         return '__display' in this
     }
 }
 
+/**
+ * Options for cloning a BodyRow.
+ */
 type BodyRowCloneProps = {
+    /** Whether to clone the cells as well. */
     includeCells?: boolean
+    /** Whether to recursively clone sub-rows. */
     includeSubRows?: boolean
 }
 
+/**
+ * Initialization options for creating a DataBodyRow.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 export type DataBodyRowInit<Item, Plugins extends AnyPlugins = AnyPlugins> = BodyRowInit<
     Item,
     Plugins
 > & {
+    /** Unique identifier for the data item. */
     dataId: string
+    /** The original data item. */
     original: Item
 }
 
+/**
+ * A body row that contains actual data from the data source.
+ * Provides access to the original data item and a unique data ID.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 export class DataBodyRow<Item, Plugins extends AnyPlugins = AnyPlugins> extends BodyRow<
     Item,
     Plugins
@@ -84,8 +133,16 @@ export class DataBodyRow<Item, Plugins extends AnyPlugins = AnyPlugins> extends 
     // TODO Workaround for https://github.com/vitejs/vite/issues/9528
     __data = true
 
+    /** Unique identifier for the data item. */
     dataId: string
+    /** The original data item from the data source. */
     original: Item
+
+    /**
+     * Creates a new DataBodyRow.
+     *
+     * @param init - Initialization options.
+     */
     constructor({
         id,
         dataId,
@@ -100,6 +157,12 @@ export class DataBodyRow<Item, Plugins extends AnyPlugins = AnyPlugins> extends 
         this.original = original
     }
 
+    /**
+     * Creates a copy of this row with optional deep cloning of cells and sub-rows.
+     *
+     * @param props - Cloning options.
+     * @returns A cloned DataBodyRow.
+     */
     clone({ includeCells = false, includeSubRows = false }: BodyRowCloneProps = {}): DataBodyRow<
         Item,
         Plugins
@@ -136,11 +199,24 @@ export class DataBodyRow<Item, Plugins extends AnyPlugins = AnyPlugins> extends 
     }
 }
 
+/**
+ * Initialization options for creating a DisplayBodyRow.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 export type DisplayBodyRowInit<Item, Plugins extends AnyPlugins = AnyPlugins> = BodyRowInit<
     Item,
     Plugins
 >
 
+/**
+ * A body row used for display purposes only (e.g., grouped rows, aggregate rows).
+ * Does not contain direct data from the data source.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 export class DisplayBodyRow<Item, Plugins extends AnyPlugins = AnyPlugins> extends BodyRow<
     Item,
     Plugins
@@ -148,10 +224,21 @@ export class DisplayBodyRow<Item, Plugins extends AnyPlugins = AnyPlugins> exten
     // TODO Workaround for https://github.com/vitejs/vite/issues/9528
     __display = true
 
+    /**
+     * Creates a new DisplayBodyRow.
+     *
+     * @param init - Initialization options.
+     */
     constructor({ id, cells, cellForId, depth = 0, parentRow }: DisplayBodyRowInit<Item, Plugins>) {
         super({ id, cells, cellForId, depth, parentRow })
     }
 
+    /**
+     * Creates a copy of this row with optional deep cloning of cells and sub-rows.
+     *
+     * @param props - Cloning options.
+     * @returns A cloned DisplayBodyRow.
+     */
     clone({ includeCells = false, includeSubRows = false }: BodyRowCloneProps = {}): DisplayBodyRow<
         Item,
         Plugins
@@ -187,7 +274,13 @@ export class DisplayBodyRow<Item, Plugins extends AnyPlugins = AnyPlugins> exten
     }
 }
 
+/**
+ * Options for creating body rows from data.
+ *
+ * @template Item - The type of data items.
+ */
 export interface BodyRowsOptions<Item> {
+    /** Optional function to generate a unique ID for each data item. */
     /* trunk-ignore(eslint/no-unused-vars) */
     rowDataId?: (item: Item, index: number) => string
 }

@@ -6,6 +6,19 @@ import type {
 } from '../createViewModel.js'
 import type { DeriveFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 
+/**
+ * Creates a grid layout plugin that renders the table using CSS Grid.
+ * This allows for more flexible layouts and better handling of complex headers.
+ *
+ * @template Item - The type of data items in the table.
+ * @returns A TablePlugin that applies CSS Grid layout to the table.
+ * @example
+ * ```typescript
+ * const table = createTable(data, {
+ *   grid: addGridLayout()
+ * })
+ * ```
+ */
 export const addGridLayout =
     <Item>(): TablePlugin<
         Item,

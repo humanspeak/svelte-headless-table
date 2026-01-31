@@ -3,27 +3,62 @@ import type { BodyRow } from '../bodyRows.js'
 import type { TablePlugin } from '../types/TablePlugin.js'
 import { isReadable } from '../utils/store.js'
 
+/**
+ * Supported export formats for the data export plugin.
+ */
 export type DataExportFormat = 'object' | 'json' | 'csv'
+
+/**
+ * Maps export formats to their output types.
+ * @internal
+ */
 type ExportForFormat = {
     object: Record<string, unknown>[]
     json: string
     csv: string
 }
+
+/**
+ * The export output type based on the format.
+ *
+ * @template F - The export format.
+ */
 export type DataExport<F extends DataExportFormat> = ExportForFormat[F]
 
+/**
+ * Configuration options for the addDataExport plugin.
+ *
+ * @template F - The export format type.
+ */
 export interface DataExportConfig<F extends DataExportFormat> {
+    /** Key used for nested children in hierarchical exports. Defaults to 'children'. */
     childrenKey?: string
+    /** Export format: 'object', 'json', or 'csv'. Defaults to 'object'. */
     format?: F
 }
 
+/**
+ * State exposed by the addDataExport plugin.
+ *
+ * @template F - The export format type.
+ */
 export interface DataExportState<F extends DataExportFormat> {
+    /** Readable store containing the exported data in the specified format. */
     exportedData: Readable<DataExport<F>>
 }
 
+/**
+ * Per-column configuration options for data export.
+ */
 export interface DataExportColumnOptions {
+    /** If true, this column is excluded from exports. */
     exclude?: boolean
 }
 
+/**
+ * Converts rows to an array of plain objects.
+ * @internal
+ */
 const getObjectsFromRows = <Item>(
     rows: BodyRow<Item>[],
     ids: string[],
@@ -53,6 +88,10 @@ const getObjectsFromRows = <Item>(
     })
 }
 
+/**
+ * Converts rows to CSV format.
+ * @internal
+ */
 const getCsvFromRows = <Item>(rows: BodyRow<Item>[], ids: string[]): string => {
     const dataLines = rows.map((row) => {
         const line = ids.map((id) => {
@@ -75,6 +114,28 @@ const getCsvFromRows = <Item>(rows: BodyRow<Item>[], ids: string[]): string => {
     return headerLine + '\n' + dataLines.join('\n')
 }
 
+/**
+ * Creates a data export plugin that provides reactive exports of table data.
+ * Supports exporting to objects, JSON, or CSV formats.
+ *
+ * @template Item - The type of data items in the table.
+ * @template F - The export format type.
+ * @param config - Configuration options.
+ * @returns A TablePlugin that provides data export functionality.
+ * @example
+ * ```typescript
+ * const table = createTable(data, {
+ *   export: addDataExport({
+ *     format: 'csv',
+ *     childrenKey: 'subItems'
+ *   })
+ * })
+ *
+ * // Access exported data
+ * const { exportedData } = table.pluginStates.export
+ * $: csvData = $exportedData
+ * ```
+ */
 export const addDataExport =
     <Item, F extends DataExportFormat = 'object'>({
         format = 'object' as F,
