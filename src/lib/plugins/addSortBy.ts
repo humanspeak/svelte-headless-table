@@ -111,17 +111,23 @@ const getSortedRows = <Item, Row extends BodyRow<Item>>(
     sortKeys: SortKey[],
     columnOptions: Record<string, SortByColumnOptions>
 ): Row[] => {
+    // Pre-compute sort config for each key to avoid repeated lookups during comparison
+    const sortConfig = sortKeys.map((key) => ({
+        id: key.id,
+        order: key.order,
+        invert: columnOptions[key.id]?.invert ?? false,
+        compareFn: columnOptions[key.id]?.compareFn,
+        getSortValue: columnOptions[key.id]?.getSortValue,
+        orderFactor: (key.order === 'desc' ? -1 : 1) * (columnOptions[key.id]?.invert ? -1 : 1)
+    }))
+
     // Shallow clone to prevent sort affecting `preSortedRows`.
     const $sortedRows = [...rows] as typeof rows
     $sortedRows.sort((a, b) => {
-        for (const key of sortKeys) {
-            const invert = columnOptions[key.id]?.invert ?? false
+        for (const config of sortConfig) {
             // TODO check why cellForId returns `undefined`.
-            const cellA = a.cellForId[key.id]
-            const cellB = b.cellForId[key.id]
-            let order = 0
-            const compareFn = columnOptions[key.id]?.compareFn
-            const getSortValue = columnOptions[key.id]?.getSortValue
+            const cellA = a.cellForId[config.id]
+            const cellB = b.cellForId[config.id]
             // Only need to check properties of `cellA` as both should have the same
             // properties.
             if (!cellA.isData()) {
@@ -129,11 +135,12 @@ const getSortedRows = <Item, Row extends BodyRow<Item>>(
             }
             const valueA = cellA.value
             const valueB = (cellB as DataBodyCell<Item>).value
-            if (compareFn !== undefined) {
-                order = compareFn(valueA, valueB)
-            } else if (getSortValue !== undefined) {
-                const sortValueA = getSortValue(valueA)
-                const sortValueB = getSortValue(valueB)
+            let order = 0
+            if (config.compareFn !== undefined) {
+                order = config.compareFn(valueA, valueB)
+            } else if (config.getSortValue !== undefined) {
+                const sortValueA = config.getSortValue(valueA)
+                const sortValueB = config.getSortValue(valueB)
                 order = compare(sortValueA, sortValueB)
             } else if (typeof valueA === 'string' || typeof valueA === 'number') {
                 // typeof `cellB.value` is logically equal to `cellA.value`.
@@ -144,17 +151,7 @@ const getSortedRows = <Item, Row extends BodyRow<Item>>(
                 order = compare(sortValueA, sortValueB)
             }
             if (order !== 0) {
-                let orderFactor = 1
-                // If the current key order is `'desc'`, reverse the order.
-                if (key.order === 'desc') {
-                    orderFactor *= -1
-                }
-                // If `invert` is `true`, we want to invert the sort without
-                // affecting the view model's indication.
-                if (invert) {
-                    orderFactor *= -1
-                }
-                return order * orderFactor
+                return order * config.orderFactor
             }
         }
         return 0
@@ -196,7 +193,8 @@ export const addSortBy =
         const deriveRows: DeriveRowsFn<Item> = (rows) => {
             return derived([rows, sortKeys], ([$rows, $sortKeys]) => {
                 preSortedRows.set($rows)
-                if (serverSide) {
+                // Early return if no sorting needed
+                if (serverSide || $sortKeys.length === 0) {
                     return $rows
                 }
                 return getSortedRows<Item, (typeof $rows)[number]>($rows, $sortKeys, columnOptions)
