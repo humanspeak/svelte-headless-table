@@ -14,9 +14,11 @@ export interface TableComponentInit {
     id: string
 }
 
-export abstract class TableComponent<Item, Plugins extends AnyPlugins, Key extends ComponentKeys>
-    implements Clonable<TableComponent<Item, Plugins, Key>>
-{
+export abstract class TableComponent<
+    Item,
+    Plugins extends AnyPlugins,
+    Key extends ComponentKeys
+> implements Clonable<TableComponent<Item, Plugins, Key>> {
     id: string
     constructor({ id }: TableComponentInit) {
         this.id = id

@@ -24,8 +24,11 @@ export interface ColumnFiltersColumnOptions<Item, FilterValue = any> {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-interface ColumnRenderConfigPropArgs<Item, FilterValue = any, Value = any>
-    extends PluginInitTableState<Item> {
+interface ColumnRenderConfigPropArgs<
+    Item,
+    FilterValue = any,
+    Value = any
+> extends PluginInitTableState<Item> {
     id: string
     filterValue: Writable<FilterValue>
     values: Readable<Value[]>
