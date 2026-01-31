@@ -10,7 +10,7 @@
     import ExpandIndicator from '../add-expanded-rows/ExpandIndicator.svelte'
     import SelectIndicator from './SelectIndicator.svelte'
 
-    const data = readable(createSamples(3, 2, 2))
+    const data = readable(createSamples(3, 2, 2, { seed: 8 }))
 
     const table = createTable(data, {
         sub: addSubRows({ children: 'children' }),

@@ -4,7 +4,7 @@
     import { addHiddenColumns } from '@humanspeak/svelte-headless-table/plugins'
     import { createSamples } from '$lib/utils/createSamples'
 
-    const data = readable(createSamples(30))
+    const data = readable(createSamples(30, 1, 0, { seed: 4 }))
 
     const table = createTable(data, {
         hideCols: addHiddenColumns()
@@ -51,10 +51,18 @@
         table.createViewModel(columns)
     const { hiddenColumnIds } = pluginStates.hideCols
     const ids = flatColumns.map((c) => c.id)
-    const hideForId = Object.fromEntries(ids.map((id) => [id, false]))
-    $: $hiddenColumnIds = Object.entries(hideForId)
-        .filter(([, hide]) => hide)
-        .map(([id]) => id)
+
+    // Use $state for reactive checkbox bindings
+    let hideForId: Record<string, boolean> = $state(
+        Object.fromEntries(ids.map((id) => [id, false]))
+    )
+
+    // Update hidden columns when checkboxes change
+    $effect(() => {
+        $hiddenColumnIds = Object.entries(hideForId)
+            .filter(([, hide]) => hide)
+            .map(([id]) => id)
+    })
 </script>
 
 <pre>$hiddenColumnIds = {JSON.stringify($hiddenColumnIds, null, 2)}</pre>

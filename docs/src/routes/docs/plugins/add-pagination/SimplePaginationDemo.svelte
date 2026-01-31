@@ -4,7 +4,7 @@
     import { addPagination } from '@humanspeak/svelte-headless-table/plugins'
     import { createSamples } from '$lib/utils/createSamples'
 
-    const data = readable(createSamples(100))
+    const data = readable(createSamples(100, 1, 0, { seed: 10 }))
 
     const table = createTable(data, {
         page: addPagination()

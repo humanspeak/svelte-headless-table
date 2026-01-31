@@ -15,11 +15,12 @@ on:
             - '!dependabot/**'
         paths:
             - src/**
+            - '!docs/**'
             - '!tests/**'
             - '!src/lib/test/**'
             - '!src/routes/**'
             - package.json
-            - package-lock.json
+            - pnpm-lock.yaml
             - .github/workflows/npm-publish.yml
     workflow_dispatch:
         inputs:
@@ -61,7 +62,7 @@ jobs:
         runs-on: blacksmith-2vcpu-ubuntu-2404 # trunk-ignore(actionlint/runner-label)
         steps:
             - name: Checkout
-              uses: actions/checkout@v4 # zizmor: ignore[unpinned-uses]
+              uses: actions/checkout@v6 # zizmor: ignore[unpinned-uses]
               with:
                   persist-credentials: false
                   token: ${{ secrets.ACTIONS_KEY }}
@@ -128,12 +129,12 @@ jobs:
                         fi
                       done < <(find src/lib -type f -name "*.svelte" ! -path "*/test/*")
 
-                      # Check TypeScript files
+                      # Check TypeScript files (excluding log.ts which intentionally uses console.log)
                       while IFS= read -r file; do
                         if ! check_file "$file"; then
                           has_errors=1
                         fi
-                      done < <(find src/lib -type f -name "*.ts" ! -name "*.test.ts" ! -path "*/test/*")
+                      done < <(find src/lib -type f -name "*.ts" ! -name "*.test.ts" ! -path "*/test/*" ! -path "src/lib/utils/log.ts")
 
                       exit $has_errors
                     } | tee >(cat >&5)
@@ -199,13 +200,13 @@ jobs:
         runs-on: blacksmith-2vcpu-ubuntu-2404 # trunk-ignore(actionlint/runner-label)
         strategy:
             matrix:
-                node-version: [20, 22]
+                node-version: [20, 22, 24]
         permissions:
             contents: read
             packages: write
         steps:
             - name: Checkout
-              uses: actions/checkout@v4 # zizmor: ignore[unpinned-uses]
+              uses: actions/checkout@v6 # zizmor: ignore[unpinned-uses]
               with:
                   persist-credentials: false
                   token: ${{ secrets.ACTIONS_KEY }}
@@ -215,7 +216,7 @@ jobs:
                   version: 10
 
             - name: Use Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v4 # zizmor: ignore[unpinned-uses]
+              uses: actions/setup-node@v6 # zizmor: ignore[unpinned-uses]
               with:
                   node-version: ${{ matrix.node-version }}
 
@@ -250,9 +251,9 @@ jobs:
         needs: [check-if-merged, debug-check]
         if: needs.check-if-merged.outputs.should_run == 'true'
         timeout-minutes: 60
-        runs-on: blacksmith-2vcpu-ubuntu-2404 # trunk-ignore(actionlint/runner-label)
+        runs-on: blacksmith-4vcpu-ubuntu-2404 # trunk-ignore(actionlint/runner-label)
         steps:
-            - uses: actions/checkout@v4 # zizmor: ignore[unpinned-uses]
+            - uses: actions/checkout@v6 # zizmor: ignore[unpinned-uses]
               with:
                   persist-credentials: false
                   token: ${{ secrets.ACTIONS_KEY }}
@@ -261,9 +262,9 @@ jobs:
               with:
                   version: 10
 
-            - uses: actions/setup-node@v4 # zizmor: ignore[unpinned-uses]
+            - uses: actions/setup-node@v6 # zizmor: ignore[unpinned-uses]
               with:
-                  node-version: 22
+                  node-version: 24
 
             - name: Install dependencies
               run: pnpm install --prefer-offline --frozen-lockfile --ignore-scripts
@@ -278,15 +279,15 @@ jobs:
               if: always()
               uses: trunk-io/analytics-uploader@main # zizmor: ignore[unpinned-uses]
               with:
-                  junit-paths: junit-playwright.xml
+                  junit-paths: test-results/junit-playwright.xml
                   org-slug: ${{ secrets.TRUNK_ORG_SLUG }}
                   token: ${{ secrets.TRUNK_TOKEN }}
 
             - uses: actions/upload-artifact@v4 # zizmor: ignore[unpinned-uses]
               if: always()
               with:
-                  name: junit-playwright.xml
-                  path: junit-playwright.xml
+                  name: playwright-results
+                  path: test-results/
                   retention-days: 10
 
     # 4. Coverage reporting (depends on tests)
@@ -315,7 +316,7 @@ jobs:
 
         steps:
             - name: Checkout
-              uses: actions/checkout@v4 # zizmor: ignore[unpinned-uses]
+              uses: actions/checkout@v6 # zizmor: ignore[unpinned-uses]
               with:
                   persist-credentials: false
                   token: ${{ secrets.GITHUB_TOKEN }}
@@ -325,13 +326,10 @@ jobs:
               with:
                   version: 10
 
-            - name: Use Node.js - 22
-              uses: actions/setup-node@v4 # zizmor: ignore[unpinned-uses]
+            - name: Use Node.js - 24
+              uses: actions/setup-node@v6 # zizmor: ignore[unpinned-uses,cache-poisoning]
               with:
-                  node-version: 22
-                  registry-url: https://registry.npmjs.org
-                  scope: '@humanspeak'
-                  cache: '' # zizmor: ignore[cache-poisoning]
+                  node-version: 24
 
             - name: Install
               run: pnpm install --prefer-offline --frozen-lockfile --ignore-scripts
@@ -508,12 +506,12 @@ jobs:
             - name: Publish
               if: steps.publish-check.outputs.should_publish == 'true'
               run: |
-                  # Ensure we're publishing to the correct scope
-                  rm -f ./.npmrc
+                  # Clean up any existing npmrc files that might interfere with OIDC
+                  rm -f ./.npmrc ~/.npmrc
+                  # Configure registry for scoped package
                   pnpm config set @humanspeak:registry https://registry.npmjs.org/
+                  # Publish using pnpm with OIDC (trusted publishing)
                   pnpm publish --provenance --access public --no-git-checks
-              env:
-                  NODE_AUTH_TOKEN: ${{ secrets.NPM_GITHUB_TOKEN }}
 
             - name: Cleanup on failure
               if: failure() && steps.create_release.outcome == 'success'

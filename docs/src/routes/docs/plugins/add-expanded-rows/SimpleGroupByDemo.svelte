@@ -11,7 +11,7 @@
     import { getDistinct } from '$lib/utils/array'
     import { mean, sum } from '$lib/utils/math'
 
-    const data = readable(createSamples(30))
+    const data = readable(createSamples(30, 1, 0, { seed: 7 }))
 
     const table = createTable(data, {
         group: addGroupBy(),
