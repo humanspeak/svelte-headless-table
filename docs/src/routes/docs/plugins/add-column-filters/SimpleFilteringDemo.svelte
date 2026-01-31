@@ -32,7 +32,7 @@
     import SliderFilter from './SliderFilter.svelte'
     import { createSamples } from '$lib/utils/createSamples'
 
-    const data = readable(createSamples(30))
+    const data = readable(createSamples(30, 1, 0, { seed: 5 }))
 
     const table = createTable(data, {
         filter: addColumnFilters()

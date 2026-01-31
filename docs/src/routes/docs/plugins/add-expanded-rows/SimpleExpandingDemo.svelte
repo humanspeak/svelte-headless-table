@@ -6,7 +6,7 @@
     import { createSamples } from '$lib/utils/createSamples'
     import ExpandIndicator from './ExpandIndicator.svelte'
 
-    const data = readable(createSamples(10, 2, 3))
+    const data = readable(createSamples(10, 2, 3, { seed: 6 }))
 
     const table = createTable(data, {
         sub: addSubRows({ children: 'children' }),

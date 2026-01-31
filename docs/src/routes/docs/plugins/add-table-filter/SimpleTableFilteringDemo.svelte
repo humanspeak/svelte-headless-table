@@ -4,7 +4,7 @@
     import { addTableFilter } from '@humanspeak/svelte-headless-table/plugins'
     import { createSamples } from '$lib/utils/createSamples'
 
-    const data = readable(createSamples(30))
+    const data = readable(createSamples(30, 1, 0, { seed: 3 }))
 
     const table = createTable(data, {
         tableFilter: addTableFilter()

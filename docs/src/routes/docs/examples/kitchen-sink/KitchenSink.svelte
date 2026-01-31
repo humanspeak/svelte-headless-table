@@ -30,7 +30,7 @@
     import { getDistinct } from '$lib/utils/array'
     import SelectIndicator from '../SelectIndicator.svelte'
 
-    const data = readable(createSamples(1000))
+    const data = readable(createSamples(1000, 1, 0, { seed: 42 }))
 
     const table = createTable(data, {
         subRows: addSubRows({
@@ -243,13 +243,20 @@
     const { pageIndex, pageCount, pageSize, hasPreviousPage, hasNextPage } = pluginStates.page
     const { expandedIds } = pluginStates.expand
     const { columnIdOrder } = pluginStates.orderColumns
-    $columnIdOrder = ids
     const { hiddenColumnIds } = pluginStates.hideColumns
-    const hideForId = Object.fromEntries(ids.map((id) => [id, false]))
-    $: $hiddenColumnIds = Object.entries(hideForId)
-        .filter(([, hide]) => hide)
-        .map(([id]) => id)
     const { columnWidths } = pluginStates.resize
+
+    // Use $state for reactive checkbox bindings
+    let hideForId: Record<string, boolean> = $state(
+        Object.fromEntries(ids.map((id) => [id, false]))
+    )
+
+    // Update hidden columns when checkboxes change
+    $effect(() => {
+        $hiddenColumnIds = Object.entries(hideForId)
+            .filter(([, hide]) => hide)
+            .map(([id]) => id)
+    })
 </script>
 
 <h3>Hidden columns</h3>

@@ -4,7 +4,7 @@
     import { addGridLayout } from '@humanspeak/svelte-headless-table/plugins'
     import { createSamples } from '$lib/utils/createSamples'
 
-    const data = readable(createSamples(10, 5, 3))
+    const data = readable(createSamples(10, 5, 3, { seed: 1 }))
 
     const table = createTable(data, {
         grid: addGridLayout()

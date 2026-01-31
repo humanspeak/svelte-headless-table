@@ -12,11 +12,12 @@
 
 <script lang="ts">
     import { readable } from 'svelte/store'
+    import { onMount } from 'svelte'
     import { createTable, Subscribe, Render } from '@humanspeak/svelte-headless-table'
     import { addColumnOrder } from '@humanspeak/svelte-headless-table/plugins'
     import { createSamples } from '$lib/utils/createSamples'
 
-    const data = readable(createSamples(30))
+    const data = readable(createSamples(30, 1, 0, { seed: 9 }))
 
     const table = createTable(data, {
         colOrder: addColumnOrder()
@@ -62,7 +63,11 @@
     const { visibleColumns, headerRows, rows, tableAttrs, tableBodyAttrs, pluginStates } =
         table.createViewModel(columns)
     const { columnIdOrder } = pluginStates.colOrder
-    $columnIdOrder = $visibleColumns.map((c) => c.id)
+
+    // Initialize column order on mount
+    onMount(() => {
+        $columnIdOrder = $visibleColumns.map((c) => c.id)
+    })
 </script>
 
 <pre>$columnIdOrder = {JSON.stringify($columnIdOrder, null, 2)}</pre>

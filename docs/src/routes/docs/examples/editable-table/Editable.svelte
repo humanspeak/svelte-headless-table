@@ -11,7 +11,7 @@
     import { createSamples, type Sample } from '$lib/utils/createSamples'
     import EditableCell from './EditableCell.svelte'
 
-    const data = writable(createSamples(100))
+    const data = writable(createSamples(100, 1, 0, { seed: 11 }))
     const updateData = (rowDataId: string, columnId: string, newValue: any) => {
         if (['age', 'visits', 'progress'].includes(columnId)) {
             newValue = parseInt(newValue)
