@@ -22,7 +22,7 @@
 
 </div>
 
-**Unopinionated and extensible data tables for Svelte**
+## Unopinionated and extensible data tables for Svelte
 
 > Build and design powerful datagrid experiences while retaining 100% control over styles and markup.
 
@@ -40,7 +40,7 @@ Svelte Headless Table is designed to work **seamlessly** with Svelte. If you lov
 - Highly performant
 - Feature-rich
 
-## All the features you could ever need!
+## All the features you could ever need
 
 Svelte Headless Table comes with an extensive suite of plugins.
 

@@ -8,7 +8,7 @@ import { isShiftClick } from '../utils/event.js'
 export interface SortByConfig {
     initialSortKeys?: SortKey[]
     disableMultiSort?: boolean
-    isMultiSortEvent?: (event: Event) => boolean
+    isMultiSortEvent?: (_event: Event) => boolean
     toggleOrder?: ('asc' | 'desc' | undefined)[]
     serverSide?: boolean
 }
@@ -23,16 +23,16 @@ export interface SortByState<Item> {
 export interface SortByColumnOptions {
     disable?: boolean
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getSortValue?: (value: any) => string | number | (string | number)[]
+    getSortValue?: (_value: any) => string | number | (string | number)[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    compareFn?: (left: any, right: any) => number
+    compareFn?: (_left: any, _right: any) => number
     invert?: boolean
 }
 
 export type SortByPropSet = NewTablePropSet<{
     'thead.tr.th': {
         order: 'asc' | 'desc' | undefined
-        toggle: (event: Event) => void
+        toggle: (_event: Event) => void
         clear: () => void
         disabled: boolean
     }
@@ -102,8 +102,8 @@ interface ToggleOptions {
 }
 
 export type WritableSortKeys = Writable<SortKey[]> & {
-    toggleId: (id: string, options: ToggleOptions) => void
-    clearId: (id: string) => void
+    toggleId: (_id: string, _options: ToggleOptions) => void
+    clearId: (_id: string) => void
 }
 
 const getSortedRows = <Item, Row extends BodyRow<Item>>(

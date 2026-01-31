@@ -32,13 +32,13 @@ export interface ToggleOptions {
 }
 
 export interface ArraySetStoreOptions<T> {
-    isEqual?: (a: T, b: T) => boolean
+    isEqual?: (_a: T, _b: T) => boolean
 }
 
 export interface ArraySetStore<T> extends Writable<T[]> {
-    toggle: (item: T, options?: ToggleOptions) => void
-    add: (item: T) => void
-    remove: (item: T) => void
+    toggle: (_item: T, _options?: ToggleOptions) => void
+    add: (_item: T) => void
+    remove: (_item: T) => void
     clear: () => void
 }
 
@@ -95,11 +95,11 @@ export const arraySetStore = <T>(
 }
 
 export interface RecordSetStore<T extends string | number> extends Writable<Record<T, boolean>> {
-    toggle: (item: T) => void
-    add: (item: T) => void
-    addAll: (items: T[]) => void
-    remove: (item: T) => void
-    removeAll: (items: T[]) => void
+    toggle: (_item: T) => void
+    add: (_item: T) => void
+    addAll: (_items: T[]) => void
+    remove: (_item: T) => void
+    removeAll: (_items: T[]) => void
     clear: () => void
 }
 

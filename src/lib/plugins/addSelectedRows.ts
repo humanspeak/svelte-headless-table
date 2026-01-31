@@ -6,8 +6,8 @@ import { nonNull } from '../utils/filter.js'
 import { recordSetStore, type RecordSetStore } from '../utils/store.js'
 import { DEFAULT_ROW_STATE_CACHE_CONFIG } from './cacheConfig.js'
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export interface SelectedRowsConfig<Item> {
+/* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
+export interface SelectedRowsConfig<_Item> {
     initialSelectedDataIds?: Record<string, boolean>
     linkDataSubRows?: boolean
 }
@@ -18,7 +18,7 @@ export interface SelectedRowsState<Item> {
     someRowsSelected: Readable<boolean>
     allPageRowsSelected: Writable<boolean>
     somePageRowsSelected: Readable<boolean>
-    getRowState: (row: BodyRow<Item>) => SelectedRowsRowState
+    getRowState: (_row: BodyRow<Item>) => SelectedRowsRowState
     /** Cleans up internal subscriptions and clears the row state cache. Call when destroying the table. */
     invalidate: () => void
 }

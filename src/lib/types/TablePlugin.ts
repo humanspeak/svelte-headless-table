@@ -18,7 +18,7 @@ export type TablePlugin<
     TablePropSet extends AnyTablePropSet = AnyTablePropSet,
     TableAttributeSet extends AnyTableAttributeSet = AnyTableAttributeSet
 > = (
-    init: TablePluginInit<Item, ColumnOptions>
+    _init: TablePluginInit<Item, ColumnOptions>
 ) => TablePluginInstance<Item, PluginState, ColumnOptions, TablePropSet, TableAttributeSet>
 
 export type TablePluginInit<Item, ColumnOptions> = {
@@ -61,17 +61,17 @@ export type AnyPluginInstances = Record<
     TablePluginInstance<any, any, any, any, any>
 >
 
-export type TransformFlatColumnsFn<Item> = (flatColumns: DataColumn<Item>[]) => DataColumn<Item>[]
+export type TransformFlatColumnsFn<Item> = (_flatColumns: DataColumn<Item>[]) => DataColumn<Item>[]
 
 export type DeriveFlatColumnsFn<Item> = <Col extends FlatColumn<Item>>(
-    flatColumns: Readable<Col[]>
+    _flatColumns: Readable<Col[]>
 ) => Readable<Col[]>
 
 export type DeriveRowsFn<Item> = <Row extends BodyRow<Item>>(
-    rows: Readable<Row[]>
+    _rows: Readable<Row[]>
 ) => Readable<Row[]>
 
-export type DeriveFn<T> = (obj: Readable<T>) => Readable<T>
+export type DeriveFn<T> = (_obj: Readable<T>) => Readable<T>
 
 export type Components<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     'thead.tr': HeaderRow<Item, Plugins>
@@ -91,7 +91,8 @@ export type ComponentKeys = keyof Components<unknown>
 
 type TablePropSet<
     PropSet extends {
-        [K in ComponentKeys]?: unknown
+        /* trunk-ignore(eslint/no-unused-vars) */
+        [_K in ComponentKeys]?: unknown
     }
 > = {
     [K in ComponentKeys]: PropSet[K]
@@ -99,7 +100,8 @@ type TablePropSet<
 
 export type NewTablePropSet<
     PropSet extends {
-        [K in ComponentKeys]?: unknown
+        /* trunk-ignore(eslint/no-unused-vars) */
+        [_K in ComponentKeys]?: unknown
     }
 > = {
     [K in ComponentKeys]: unknown extends PropSet[K] ? never : PropSet[K]
@@ -110,7 +112,8 @@ export type AnyTablePropSet = TablePropSet<any>
 
 type TableAttributeSet<
     AttributeSet extends {
-        [K in ComponentKeys]?: unknown
+        /* trunk-ignore(eslint/no-unused-vars) */
+        [_K in ComponentKeys]?: unknown
     }
 > = {
     [K in ComponentKeys]: AttributeSet[K]
@@ -118,7 +121,8 @@ type TableAttributeSet<
 
 export type NewTableAttributeSet<
     AttributeSet extends {
-        [K in ComponentKeys]?: unknown
+        /* trunk-ignore(eslint/no-unused-vars) */
+        [_K in ComponentKeys]?: unknown
     }
 > = {
     [K in ComponentKeys]: unknown extends AttributeSet[K] ? never : AttributeSet[K]
@@ -133,7 +137,7 @@ export type TableHooks<
     AttributeSet extends AnyTableAttributeSet = AnyTableAttributeSet
 > = {
     [ComponentKey in keyof Components<Item>]?: (
-        component: Components<Item>[ComponentKey]
+        _component: Components<Item>[ComponentKey]
     ) => ElementHook<PropSet[ComponentKey], AttributeSet[ComponentKey]>
 }
 

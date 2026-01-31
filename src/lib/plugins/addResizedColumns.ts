@@ -5,7 +5,7 @@ import type { NewTableAttributeSet, NewTablePropSet, TablePlugin } from '../type
 import { sum } from '../utils/math.js'
 
 export interface AddResizedColumnsConfig {
-    onResizeEnd?: (ev: Event) => void
+    onResizeEnd?: (_ev: Event) => void
 }
 
 export type ResizedColumnsState = {
@@ -21,9 +21,9 @@ export type ResizedColumnsColumnOptions = {
 
 export type ResizedColumnsPropSet = NewTablePropSet<{
     'thead.tr.th': {
-        (node: Element): void
-        drag: (node: Element) => void
-        reset: (node: Element) => void
+        (_node: Element): void
+        drag: (_node: Element) => void
+        reset: (_node: Element) => void
         disabled: boolean
     }
 }>

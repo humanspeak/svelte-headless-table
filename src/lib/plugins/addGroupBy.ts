@@ -11,7 +11,7 @@ import { arraySetStore, type ArraySetStore } from '../utils/store.js'
 export interface GroupByConfig {
     initialGroupByIds?: string[]
     disableMultiGroup?: boolean
-    isMultiGroupEvent?: (event: Event) => boolean
+    isMultiGroupEvent?: (_event: Event) => boolean
 }
 
 export interface GroupByState {
@@ -28,15 +28,15 @@ export interface GroupByColumnOptions<
     Aggregate = any
 > {
     disable?: boolean
-    getAggregateValue?: (values: GroupOn[]) => Aggregate
-    getGroupOn?: (value: Value) => GroupOn
+    getAggregateValue?: (_values: GroupOn[]) => Aggregate
+    getGroupOn?: (_value: Value) => GroupOn
     cell?: DataLabel<Item>
 }
 
 export type GroupByPropSet = NewTablePropSet<{
     'thead.tr.th': {
         grouped: boolean
-        toggle: (event: Event) => void
+        toggle: (_event: Event) => void
         clear: () => void
         disabled: boolean
     }
@@ -60,11 +60,6 @@ const getIdPrefix = (id: string): string => {
         return ''
     }
     return `${prefixTokens.join('>')}>`
-}
-
-const getIdLeaf = (id: string): string => {
-    const tokens = id.split('>')
-    return tokens[tokens.length - 1] ?? ''
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

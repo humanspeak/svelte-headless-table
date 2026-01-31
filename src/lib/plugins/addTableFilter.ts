@@ -17,14 +17,14 @@ export interface TableFilterState<Item> {
 }
 
 // Item generic needed to infer type on `getFilteredRows`
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export interface TableFilterColumnOptions<Item> {
+/* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
+export interface TableFilterColumnOptions<_Item> {
     exclude?: boolean
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getFilterValue?: (value: any) => string
+    getFilterValue?: (_value: any) => string
 }
 
-export type TableFilterFn = (props: TableFilterFnProps) => boolean
+export type TableFilterFn = (_props: TableFilterFnProps) => boolean
 
 export type TableFilterFnProps = {
     filterValue: string

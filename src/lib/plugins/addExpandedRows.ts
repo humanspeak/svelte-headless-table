@@ -6,14 +6,14 @@ import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TableP
 import { recordSetStore, type RecordSetStore } from '../utils/store.js'
 import { DEFAULT_ROW_STATE_CACHE_CONFIG } from './cacheConfig.js'
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export interface ExpandedRowsConfig<Item> {
+/* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
+export interface ExpandedRowsConfig<_Item> {
     initialExpandedIds?: Record<string, boolean>
 }
 
 export interface ExpandedRowsState<Item> {
     expandedIds: RecordSetStore<string>
-    getRowState: (row: BodyRow<Item>) => ExpandedRowsRowState
+    getRowState: (_row: BodyRow<Item>) => ExpandedRowsRowState
     /** Cleans up internal subscriptions and clears the row state cache. Call when destroying the table. */
     invalidate: () => void
 }
