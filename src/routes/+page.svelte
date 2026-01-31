@@ -1,7 +1,7 @@
 <script lang="ts">
     import { page } from '$app/stores'
     import { createRender } from '@humanspeak/svelte-render'
-    import { derived, get, readable } from 'svelte/store'
+    import { derived, get, readable, writable } from 'svelte/store'
     import { Render, Subscribe, createTable } from '../lib/index.js'
     import {
         addColumnFilters,
@@ -33,9 +33,27 @@
     import Tick from './_Tick.svelte'
 
     const seed = $page.url.searchParams.get('seed')
-    const data = readable(
-        createSamples({ seed: isNaN(Number(seed)) ? undefined : Number(seed) }, 2, 2)
-    )
+    const rowCountParam = $page.url.searchParams.get('rows')
+    const subRowsParam = $page.url.searchParams.get('subrows')
+    const initialRowCount = rowCountParam ? Number(rowCountParam) : 100
+    const initialSubRows = subRowsParam !== 'false' // default true unless explicitly false
+
+    // Stress test controls
+    let rowCount = $state(initialRowCount)
+    let includeSubRows = $state(initialSubRows)
+    let lastOperationTime = $state<string | null>(null)
+
+    function generateData(count: number, withSubRows: boolean): Sample[] {
+        const start = performance.now()
+        const result = withSubRows
+            ? createSamples({ seed: isNaN(Number(seed)) ? undefined : Number(seed) }, count, 2)
+            : createSamples({ seed: isNaN(Number(seed)) ? undefined : Number(seed) }, count)
+        const elapsed = performance.now() - start
+        lastOperationTime = `Generated ${count} rows in ${elapsed.toFixed(2)}ms`
+        return result
+    }
+
+    const data = writable(generateData(initialRowCount, initialSubRows))
 
     const serverSide = false
 
@@ -270,8 +288,39 @@
         })
     ])
 
-    const { headerRows, pageRows, tableAttrs, tableBodyAttrs, visibleColumns, pluginStates } =
-        table.createViewModel(columns)
+    const viewModel = table.createViewModel(columns)
+    const {
+        headerRows,
+        pageRows,
+        tableAttrs,
+        tableBodyAttrs,
+        visibleColumns,
+        pluginStates,
+        _debug
+    } = viewModel
+
+    // Debug state for reactive updates - refresh whenever stores change
+    let debugSnapshot = $state({ ...(_debug.derivationCalls as Record<string, number>) })
+    let totalCalls = $state(_debug.getTotalCalls())
+
+    // Auto-update debug snapshot when any of the main stores change
+    $effect(() => {
+        // Subscribe to reactive stores to trigger updates
+        $pageRows
+        $headerRows
+        $tableAttrs
+        $tableBodyAttrs
+        $visibleColumns
+        // Update snapshot after stores have processed
+        debugSnapshot = { ...(_debug.derivationCalls as Record<string, number>) }
+        totalCalls = _debug.getTotalCalls()
+    })
+
+    function resetCounters() {
+        _debug.resetCounters()
+        debugSnapshot = { ...(_debug.derivationCalls as Record<string, number>) }
+        totalCalls = _debug.getTotalCalls()
+    }
 
     const { groupByIds } = pluginStates.group
     const { sortKeys } = pluginStates.sort
@@ -291,6 +340,54 @@
 </script>
 
 <h1>@humanspeak/svelte-headless-table</h1>
+
+<div class="stress-test-panel">
+    <h3>Stress Test Controls</h3>
+    <div class="stress-controls">
+        <label>
+            Row count:
+            <select bind:value={rowCount}>
+                <option value={100}>100 rows</option>
+                <option value={500}>500 rows</option>
+                <option value={1000}>1,000 rows</option>
+                <option value={5000}>5,000 rows</option>
+                <option value={10000}>10,000 rows</option>
+                <option value={25000}>25,000 rows</option>
+                <option value={50000}>50,000 rows</option>
+            </select>
+        </label>
+        <label>
+            <input type="checkbox" bind:checked={includeSubRows} />
+            Include sub-rows (2 per row)
+        </label>
+        <button
+            onclick={() => {
+                _debug.resetCounters()
+                const start = performance.now()
+                data.set(generateData(rowCount, includeSubRows))
+                const elapsed = performance.now() - start
+                lastOperationTime = `Data set in ${elapsed.toFixed(2)}ms (${rowCount} rows${includeSubRows ? ' + sub-rows' : ''})`
+            }}
+        >
+            Regenerate Data
+        </button>
+        <button
+            onclick={() => {
+                _debug.resetCounters()
+                const start = performance.now()
+                data.update((d) => [...d])
+                const elapsed = performance.now() - start
+                lastOperationTime = `Shallow update in ${elapsed.toFixed(2)}ms`
+            }}
+        >
+            Trigger Update (no change)
+        </button>
+    </div>
+    {#if lastOperationTime}
+        <p class="timing"><strong>Last operation:</strong> {lastOperationTime}</p>
+    {/if}
+</div>
+
 <div>
     <button onclick={() => $pageIndex--} disabled={!$hasPreviousPage}>Previous page</button>
     {$pageIndex + 1} of {$pageCount}
@@ -383,7 +480,7 @@
                                 class:group={props.group.grouped}
                                 class:aggregate={props.group.aggregated}
                                 class:repeat={props.group.repeated}
-                                data-value={row.original[cell.id as keyof Sample]}
+                                data-value={row.original?.[cell.id as keyof Sample]}
                             >
                                 {#if !props.group.repeated}
                                     <Render of={cell.render()} />
@@ -413,6 +510,40 @@
         2
     )}
 serverSide: {serverSide}</pre>
+
+<div class="debug-panel">
+    <h2>Debug: Store Derivation Metrics</h2>
+    <div class="debug-info">
+        <div class="debug-section">
+            <h3>Plugin Info</h3>
+            <p><strong>Count:</strong> {_debug.pluginCount}</p>
+            <p><strong>Names:</strong> {_debug.pluginNames.join(', ')}</p>
+        </div>
+        <div class="debug-section">
+            <h3>Derived Store Chain Depths</h3>
+            <ul>
+                <li>tableAttrs: {_debug.derivedStoreCount.tableAttrs}</li>
+                <li>tableHeadAttrs: {_debug.derivedStoreCount.tableHeadAttrs}</li>
+                <li>tableBodyAttrs: {_debug.derivedStoreCount.tableBodyAttrs}</li>
+                <li>visibleColumns: {_debug.derivedStoreCount.visibleColumns}</li>
+                <li>rows: {_debug.derivedStoreCount.rows}</li>
+                <li>pageRows: {_debug.derivedStoreCount.pageRows}</li>
+            </ul>
+        </div>
+        <div class="debug-section">
+            <h3>Derivation Calls</h3>
+            <div class="debug-controls">
+                <button onclick={resetCounters}>Reset Counters</button>
+            </div>
+            <ul>
+                {#each Object.entries(debugSnapshot) as [name, count]}
+                    <li class:has-calls={count > 0}>{name}: <strong>{count}</strong></li>
+                {/each}
+            </ul>
+            <p class="total"><strong>TOTAL: {totalCalls}</strong></p>
+        </div>
+    </div>
+</div>
 
 <style>
     * {
@@ -471,5 +602,112 @@ serverSide: {serverSide}</pre>
 
     .selected {
         background: rgb(148, 205, 255);
+    }
+
+    .stress-test-panel {
+        margin: 1rem 0;
+        padding: 1rem;
+        border: 2px solid #0066cc;
+        border-radius: 8px;
+        background: #e6f2ff;
+    }
+
+    .stress-test-panel h3 {
+        margin-top: 0;
+        color: #0066cc;
+    }
+
+    .stress-controls {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .stress-controls label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .stress-controls button {
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        background: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 4px;
+    }
+
+    .stress-controls button:hover {
+        background: #0052a3;
+    }
+
+    .timing {
+        margin-top: 0.5rem;
+        font-family: monospace;
+        color: #333;
+    }
+
+    .debug-panel {
+        margin-top: 2rem;
+        padding: 1rem;
+        border: 2px solid #333;
+        border-radius: 8px;
+        background: #f9f9f9;
+    }
+
+    .debug-panel h2 {
+        margin-top: 0;
+        border-bottom: 1px solid #333;
+        padding-bottom: 0.5rem;
+    }
+
+    .debug-info {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .debug-section {
+        min-width: 200px;
+    }
+
+    .debug-section h3 {
+        margin-bottom: 0.5rem;
+        color: #555;
+    }
+
+    .debug-section ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .debug-section li {
+        padding: 0.2rem 0;
+        font-family: monospace;
+    }
+
+    .debug-section li.has-calls {
+        background: #ffe066;
+        padding: 0.2rem 0.5rem;
+        border-radius: 3px;
+    }
+
+    .debug-controls {
+        margin-bottom: 0.5rem;
+    }
+
+    .debug-controls button {
+        margin-right: 0.5rem;
+        padding: 0.3rem 0.8rem;
+        cursor: pointer;
+    }
+
+    .total {
+        margin-top: 0.5rem;
+        font-size: 1.1rem;
+        font-family: monospace;
     }
 </style>
