@@ -111,7 +111,7 @@ Now create the table component:
   import { createPaymentTable } from "./columns";
   import type { Payment } from "./schema";
 
-  export let data: Payment[];
+  let { data }: { data: Payment[] } = $props();
 
   const store = readable(data);
   const { table, columns } = createPaymentTable(store);
