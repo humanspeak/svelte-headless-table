@@ -23,10 +23,11 @@ export interface ColumnFiltersColumnOptions<Item, FilterValue = any> {
     render?: (props: ColumnRenderConfigPropArgs<Item, FilterValue>) => RenderConfig
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface ColumnRenderConfigPropArgs<
     Item,
+    /* trunk-ignore(eslint/@typescript-eslint/no-explicit-any) */
     FilterValue = any,
+    /* trunk-ignore(eslint/@typescript-eslint/no-explicit-any) */
     Value = any
 > extends PluginInitTableState<Item> {
     id: string
