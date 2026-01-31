@@ -149,7 +149,7 @@ describe('Store derivation chain performance', () => {
 
         // Assertions to catch regressions
         expect(vm._debug.getTotalCalls()).toBeGreaterThan(0)
-        // Performance threshold - filter update should complete quickly
-        expect(elapsed).toBeLessThan(1000)
+        // Performance threshold - typically ~10ms, allow 100ms for CI variability
+        expect(elapsed).toBeLessThan(100)
     })
 })
