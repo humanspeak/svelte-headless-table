@@ -305,12 +305,12 @@
 
     // Auto-update debug snapshot when any of the main stores change
     $effect(() => {
-        // Subscribe to reactive stores to trigger updates
-        $pageRows
-        $headerRows
-        $tableAttrs
-        $tableBodyAttrs
-        $visibleColumns
+        // Subscribe to reactive stores to trigger updates (void to satisfy linter)
+        void $pageRows
+        void $headerRows
+        void $tableAttrs
+        void $tableBodyAttrs
+        void $visibleColumns
         // Update snapshot after stores have processed
         debugSnapshot = { ...(_debug.derivationCalls as Record<string, number>) }
         totalCalls = _debug.getTotalCalls()
@@ -536,7 +536,7 @@ serverSide: {serverSide}</pre>
                 <button onclick={resetCounters}>Reset Counters</button>
             </div>
             <ul>
-                {#each Object.entries(debugSnapshot) as [name, count]}
+                {#each Object.entries(debugSnapshot) as [name, count] (name)}
                     <li class:has-calls={count > 0}>{name}: <strong>{count}</strong></li>
                 {/each}
             </ul>
