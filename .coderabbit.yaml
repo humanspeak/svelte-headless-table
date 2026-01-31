@@ -1,50 +1,30 @@
 language: en-US
-tone_instructions: Be concise and technical. Focus on performance, type safety, animation correctness, and accessibility. Prioritize security issues, ReDoS vulnerabilities, and proper error handling.
+tone_instructions: Be concise and direct. Focus on bugs, security issues, and breaking changes. Skip nitpicks about style, formatting, or minor improvements. Only flag issues that actually matter.
 early_access: false
 enable_free_tier: true
 reviews:
     profile: assertive
     request_changes_workflow: false
-    high_level_summary: true
+    high_level_summary: false
     high_level_summary_placeholder: '@coderabbitai summary'
     high_level_summary_in_walkthrough: false
     auto_title_placeholder: '@coderabbitai'
-    auto_title_instructions: Generate clear, descriptive PR titles that include the component/area affected and the type of change (fix, feat, refactor, docs, test, perf)
-    review_status: true
-    commit_status: true
+    auto_title_instructions: ''
+    review_status: false
+    commit_status: false
     fail_commit_status: false
-    collapse_walkthrough: false
-    changed_files_summary: true
-    sequence_diagrams: true
-    assess_linked_issues: true
-    related_issues: true
-    related_prs: true
-    suggested_labels: true
+    collapse_walkthrough: true
+    changed_files_summary: false
+    sequence_diagrams: false
+    assess_linked_issues: false
+    related_issues: false
+    related_prs: false
+    suggested_labels: false
     auto_apply_labels: false
-    suggested_reviewers: true
+    suggested_reviewers: false
     auto_assign_reviewers: false
-    poem: true
-    labeling_instructions:
-        - label: bug
-          instructions: Apply to any code that fixes incorrect behavior or errors
-        - label: enhancement
-          instructions: Apply to new features or improvements to existing features
-        - label: docs
-          instructions: Apply to documentation updates or improvements
-        - label: test
-          instructions: Apply to test additions or improvements
-        - label: refactor
-          instructions: Apply to code restructuring without behavior changes
-        - label: performance
-          instructions: Apply to performance improvements or optimizations
-        - label: security
-          instructions: Apply to security fixes or improvements
-        - label: animation
-          instructions: Apply to changes to animation logic or Motion integration
-        - label: accessibility
-          instructions: Apply to accessibility improvements (a11y, keyboard, screen readers)
-        - label: breaking-change
-          instructions: Apply to changes that break backward compatibility
+    poem: false
+    labeling_instructions: []
     path_filters: []
     path_instructions:
         - path: src/lib/utils/**/*.ts
@@ -76,9 +56,9 @@ reviews:
         base_branches: []
     finishing_touches:
         docstrings:
-            enabled: true
+            enabled: false
         unit_tests:
-            enabled: true
+            enabled: false
     tools:
         ast-grep:
             rule_dirs: []
@@ -90,12 +70,12 @@ reviews:
         ruff:
             enabled: false # Python linter - not needed
         markdownlint:
-            enabled: true
+            enabled: false
         github-checks:
             enabled: true
             timeout_ms: 90000
         languagetool:
-            enabled: true
+            enabled: false
             enabled_rules: []
             disabled_rules: []
             enabled_categories: []
@@ -114,7 +94,7 @@ reviews:
         golangci-lint:
             enabled: false # Go linter - not needed
         yamllint:
-            enabled: true
+            enabled: false
         gitleaks:
             enabled: true # Security - keep enabled
         checkov:
@@ -148,7 +128,7 @@ reviews:
         shopifyThemeCheck:
             enabled: false # Shopify themes - not needed
 chat:
-    auto_reply: true
+    auto_reply: false
     integrations:
         jira:
             usage: auto
@@ -172,15 +152,6 @@ knowledge_base:
         scope: auto
 code_generation:
     docstrings:
-        language: en-US
-        path_instructions:
-            - path: src/lib/utils/**/*.ts
-              instructions: Generate JSDoc-style docstrings with clear descriptions, @param tags with types and descriptions, @returns tag with type and description, and practical @example blocks showing real usage. Focus on explaining the "why" and edge cases, not just restating the code.
-            - path: src/lib/components/**/*.svelte
-              instructions: Document props, events, and slots using TSDoc format. Include usage examples that demonstrate common patterns with Svelte 5 runes. Explain component behavior and any accessibility considerations.
+        enabled: false
     unit_tests:
-        path_instructions:
-            - path: src/lib/utils/**/*.ts
-              instructions: Generate comprehensive Vitest tests covering happy path, edge cases, error handling, and boundary conditions. Use descriptive test names. Mock external dependencies. Aim for >90% branch coverage. Test async behavior with proper awaits.
-            - path: src/lib/components/**/*.svelte
-              instructions: Generate component tests using Vitest and @testing-library/svelte. Test user interactions, prop changes, state updates, and accessibility. Verify cleanup of effects and event listeners.
+        enabled: false
