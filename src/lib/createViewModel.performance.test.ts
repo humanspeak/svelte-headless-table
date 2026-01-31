@@ -146,5 +146,10 @@ describe('Store derivation chain performance', () => {
         console.log(`================================\n`)
 
         unsub()
+
+        // Assertions to catch regressions
+        expect(vm._debug.getTotalCalls()).toBeGreaterThan(0)
+        // Performance threshold - filter update should complete quickly
+        expect(elapsed).toBeLessThan(1000)
     })
 })
