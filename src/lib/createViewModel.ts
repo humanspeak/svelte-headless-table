@@ -13,6 +13,12 @@ import { finalizeAttributes } from '$lib/utils/attributes.js'
 import { nonUndefined } from '$lib/utils/filter.js'
 import { derived, readable, writable, type Readable, type Writable } from 'svelte/store'
 
+/**
+ * HTML attributes for the table element.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 /* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
 export type TableAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = Record<
     string,
@@ -21,12 +27,24 @@ export type TableAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = Rec
     role: 'table'
 }
 
+/**
+ * HTML attributes for the table head element.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 /* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
 export type TableHeadAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = Record<
     string,
     unknown
 >
 
+/**
+ * HTML attributes for the table body element.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 /* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
 export type TableBodyAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = Record<
     string,
@@ -35,6 +53,50 @@ export type TableBodyAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> =
     role: 'rowgroup'
 }
 
+/**
+ * Debug information for performance analysis of the table view model.
+ * Provides metrics about derivation chains and call counts.
+ */
+export interface ViewModelDebug {
+    /** Number of plugins active */
+    pluginCount: number
+    /** Names of active plugins */
+    pluginNames: string[]
+    /** Number of derived stores in each chain */
+    derivedStoreCount: {
+        tableAttrs: number
+        tableHeadAttrs: number
+        tableBodyAttrs: number
+        visibleColumns: number
+        rows: number
+        pageRows: number
+    }
+    /** Counters that increment on each derivation execution */
+    derivationCalls: {
+        tableAttrs: number
+        tableHeadAttrs: number
+        tableBodyAttrs: number
+        visibleColumns: number
+        columnedRows: number
+        rows: number
+        injectedRows: number
+        pageRows: number
+        injectedPageRows: number
+        headerRows: number
+    }
+    /** Reset all derivation call counters to 0 */
+    resetCounters: () => void
+    /** Get total derivation calls since last reset */
+    getTotalCalls: () => number
+}
+
+/**
+ * The view model for a table, containing all reactive stores and state.
+ * Created by `createViewModel` and used to render the table.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
 export interface TableViewModel<Item, Plugins extends AnyPlugins = AnyPlugins> {
     flatColumns: FlatColumn<Item, Plugins>[]
     tableAttrs: Readable<TableAttributes<Item, Plugins>>
@@ -46,32 +108,93 @@ export interface TableViewModel<Item, Plugins extends AnyPlugins = AnyPlugins> {
     rows: Readable<DataBodyRow<Item, Plugins>[]>
     pageRows: Readable<DataBodyRow<Item, Plugins>[]>
     pluginStates: PluginStates<Plugins>
+    /** Debug information for performance analysis (always available) */
+    _debug: ViewModelDebug
 }
 
+/**
+ * A type that can be either Readable or Writable.
+ *
+ * @template T - The type of the store value.
+ */
 export type ReadOrWritable<T> = Readable<T> | Writable<T>
-export interface PluginInitTableState<Item, Plugins extends AnyPlugins = AnyPlugins>
-    extends Omit<TableViewModel<Item, Plugins>, 'pluginStates'> {
+
+/**
+ * The table state passed to plugins during initialization.
+ * Contains references to all table stores before plugin states are available.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
+export interface PluginInitTableState<Item, Plugins extends AnyPlugins = AnyPlugins> extends Omit<
+    TableViewModel<Item, Plugins>,
+    'pluginStates' | '_debug'
+> {
+    /** The data source for the table. */
     data: ReadOrWritable<Item[]>
+    /** The column definitions. */
     columns: Column<Item, Plugins>[]
 }
 
-export interface TableState<Item, Plugins extends AnyPlugins = AnyPlugins>
-    extends TableViewModel<Item, Plugins> {
+/**
+ * The complete table state including plugin states.
+ * Available to plugins and components after initialization.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
+export interface TableState<Item, Plugins extends AnyPlugins = AnyPlugins> extends Omit<
+    TableViewModel<Item, Plugins>,
+    '_debug'
+> {
+    /** The data source for the table. */
     data: ReadOrWritable<Item[]>
+    /** The column definitions. */
     columns: Column<Item, Plugins>[]
 }
 
+/**
+ * Options for creating a table view model.
+ *
+ * @template Item - The type of data items in the table.
+ */
 export interface CreateViewModelOptions<Item> {
+    /** Optional function to generate a unique ID for each data item. */
     /* trunk-ignore(eslint/no-unused-vars) */
     rowDataId?: (item: Item, index: number) => string
 }
 
+/**
+ * Creates a view model for rendering a table.
+ * The view model contains all reactive stores for the table, headers, and rows.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ * @param table - The table instance created by `createTable`.
+ * @param columns - The column definitions.
+ * @param options - Optional configuration options.
+ * @returns A TableViewModel containing all reactive stores for rendering.
+ */
 export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     table: Table<Item, Plugins>,
     columns: Column<Item, Plugins>[],
     { rowDataId }: CreateViewModelOptions<Item> = {}
 ): TableViewModel<Item, Plugins> => {
     const { data, plugins } = table
+
+    // Initialize derivation call counters for debug instrumentation
+    const derivationCalls = {
+        tableAttrs: 0,
+        tableHeadAttrs: 0,
+        tableBodyAttrs: 0,
+        visibleColumns: 0,
+        columnedRows: 0,
+        rows: 0,
+        injectedRows: 0,
+        pageRows: 0,
+        injectedPageRows: 0,
+        headerRows: 0
+    }
 
     const $flatColumns = getFlatColumns(columns)
     const flatColumns = readable($flatColumns)
@@ -159,6 +282,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         tableAttrs = fn(tableAttrs)
     })
     const finalizedTableAttrs = derived(tableAttrs, ($tableAttrs) => {
+        derivationCalls.tableAttrs++
         const $finalizedAttrs = finalizeAttributes($tableAttrs) as TableAttributes<Item>
         _tableAttrs.set($finalizedAttrs)
         return $finalizedAttrs
@@ -174,6 +298,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         tableHeadAttrs = fn(tableHeadAttrs)
     })
     const finalizedTableHeadAttrs = derived(tableHeadAttrs, ($tableHeadAttrs) => {
+        derivationCalls.tableHeadAttrs++
         const $finalizedAttrs = finalizeAttributes($tableHeadAttrs) as TableHeadAttributes<Item>
         _tableHeadAttrs.set($finalizedAttrs)
         return $finalizedAttrs
@@ -191,6 +316,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         tableBodyAttrs = fn(tableBodyAttrs)
     })
     const finalizedTableBodyAttrs = derived(tableBodyAttrs, ($tableBodyAttrs) => {
+        derivationCalls.tableBodyAttrs++
         const $finalizedAttrs = finalizeAttributes($tableBodyAttrs) as TableBodyAttributes<Item>
         _tableBodyAttrs.set($finalizedAttrs)
         return $finalizedAttrs
@@ -208,6 +334,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     })
 
     const injectedColumns = derived(visibleColumns, ($visibleColumns) => {
+        derivationCalls.visibleColumns++
         _visibleColumns.set($visibleColumns)
         return $visibleColumns
     })
@@ -215,6 +342,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     const columnedRows = derived(
         [originalRows, injectedColumns],
         ([$originalRows, $injectedColumns]) => {
+            derivationCalls.columnedRows++
             return getColumnedBodyRows(
                 $originalRows,
                 $injectedColumns.map((c) => c.id)
@@ -233,6 +361,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     })
 
     const injectedRows = derived(rows, ($rows) => {
+        derivationCalls.injectedRows++
         // Inject state.
         $rows.forEach((row) => {
             row.injectState(tableState)
@@ -269,6 +398,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     })
 
     const injectedPageRows = derived(pageRows, ($pageRows) => {
+        derivationCalls.injectedPageRows++
         // Inject state.
         $pageRows.forEach((row) => {
             row.injectState(tableState)
@@ -294,6 +424,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     })
 
     const headerRows = derived(injectedColumns, ($injectedColumns) => {
+        derivationCalls.headerRows++
         const $headerRows = getHeaderRows(
             columns,
             $injectedColumns.map((c) => c.id)
@@ -322,6 +453,28 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         return $headerRows
     })
 
+    const _debug: ViewModelDebug = {
+        pluginCount: Object.keys(plugins).length,
+        pluginNames: Object.keys(plugins),
+        derivedStoreCount: {
+            tableAttrs: deriveTableAttrsFns.length + 1, // +1 for finalized
+            tableHeadAttrs: deriveTableHeadAttrsFns.length + 1,
+            tableBodyAttrs: deriveTableBodyAttrsFns.length + 1,
+            visibleColumns: deriveFlatColumnsFns.length + 1, // +1 for injected
+            rows: deriveRowsFns.length + 2, // +2 for columned + injected
+            pageRows: derivePageRowsFns.length + 1 // +1 for injected
+        },
+        derivationCalls,
+        resetCounters: () => {
+            Object.keys(derivationCalls).forEach((key) => {
+                derivationCalls[key as keyof typeof derivationCalls] = 0
+            })
+        },
+        getTotalCalls: () => {
+            return Object.values(derivationCalls).reduce((sum, count) => sum + count, 0)
+        }
+    }
+
     return {
         tableAttrs: finalizedTableAttrs,
         tableHeadAttrs: finalizedTableHeadAttrs,
@@ -332,6 +485,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         originalRows,
         rows: injectedRows,
         pageRows: injectedPageRows,
-        pluginStates
+        pluginStates,
+        _debug
     }
 }

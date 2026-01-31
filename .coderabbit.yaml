@@ -1,15 +1,18 @@
 language: en-US
-tone_instructions: Be concise and direct. Focus on bugs, security issues, and breaking changes. Skip nitpicks about style, formatting, or minor improvements. Only flag issues that actually matter.
+tone_instructions: Be concise and technical. Focus on critical issues first (bugs, security, accessibility), then suggestions. Prioritize actionable feedback over observations.
 early_access: false
 enable_free_tier: true
 reviews:
     profile: assertive
     request_changes_workflow: false
+    # Disable GitHub PR comments - we use Claude Code locally for reviews
     high_level_summary: false
     high_level_summary_placeholder: '@coderabbitai summary'
     high_level_summary_in_walkthrough: false
+    # Disable auto-title - we craft conventional commits manually
     auto_title_placeholder: '@coderabbitai'
     auto_title_instructions: ''
+    # Disable status checks - we use trunk locally
     review_status: false
     commit_status: false
     fail_commit_status: false
@@ -24,26 +27,40 @@ reviews:
     suggested_reviewers: false
     auto_assign_reviewers: false
     poem: false
-    labeling_instructions: []
+    labeling_instructions:
+        - label: bug
+          instructions: Apply to any code that fixes incorrect behavior or errors
+        - label: enhancement
+          instructions: Apply to new features or improvements to existing features
+        - label: docs
+          instructions: Apply to documentation updates or improvements
+        - label: test
+          instructions: Apply to test additions or improvements
+        - label: refactor
+          instructions: Apply to code restructuring without behavior changes
+        - label: performance
+          instructions: Apply to performance improvements or optimizations
+        - label: security
+          instructions: Apply to security fixes or improvements
+        - label: animation
+          instructions: Apply to changes to animation logic or Motion integration
+        - label: accessibility
+          instructions: Apply to accessibility improvements (a11y, keyboard, screen readers)
+        - label: breaking-change
+          instructions: Apply to changes that break backward compatibility
     path_filters: []
     path_instructions:
         - path: src/lib/utils/**/*.ts
           instructions: Ensure all exported functions use arrow function syntax (const fn = () => {}). All functions must have comprehensive JSDoc comments with @param, @returns, and @example tags. Verify type safety and check for potential ReDoS vulnerabilities in regex patterns.
-        - path: src/lib/components/**/*.svelte
-          instructions: Review Svelte 5 runes usage ($state, $derived, $effect). Ensure proper cleanup in $effect blocks. Check for memory leaks and performance issues. Verify SSR compatibility.
-        - path: src/routes/**/*.svelte
+        - path: src/lib/**/*.svelte
           instructions: Review Svelte 5 runes usage ($state, $derived, $effect). Ensure proper cleanup in $effect blocks. Check for memory leaks and performance issues. Verify SSR compatibility.
         - path: '**/*.spec.ts'
           instructions: Ensure tests are comprehensive with good coverage of edge cases, error paths, and accessibility. Tests should be well-named and describe the expected behavior clearly.
-        - path: '**/*.test.ts'
-          instructions: Ensure tests are comprehensive with good coverage of edge cases, error paths, and accessibility. Tests should be well-named and describe the expected behavior clearly.
         - path: docs/**/*
           instructions: Verify examples are correct, runnable, and match current API. Check for broken links and ensure code examples follow project conventions.
-        - path: docs/src/lib/components/**/*.svelte
-          instructions: Review Svelte 5 runes usage ($state, $derived, $effect). Ensure proper cleanup in $effect blocks. Check for memory leaks and performance issues. Verify SSR compatibility.
-        - path: docs/src/routes/**/*.svelte
-          instructions: Review Svelte 5 runes usage ($state, $derived, $effect). Ensure proper cleanup in $effect blocks. Check for memory leaks and performance issues. Verify SSR compatibility.
-        - path: e2e/**/*.ts
+        - path: tests/**/*.ts
+          instructions: Ensure e2e tests are reliable, avoid flakiness, and test real user scenarios. Verify proper waits and assertions.
+        - path: docs/e2e/**/*.ts
           instructions: Ensure e2e tests are reliable, avoid flakiness, and test real user scenarios. Verify proper waits and assertions.
     abort_on_close: true
     disable_cache: false
@@ -70,18 +87,12 @@ reviews:
         ruff:
             enabled: false # Python linter - not needed
         markdownlint:
-            enabled: false
+            enabled: true
         github-checks:
             enabled: true
             timeout_ms: 90000
         languagetool:
             enabled: false
-            enabled_rules: []
-            disabled_rules: []
-            enabled_categories: []
-            disabled_categories: []
-            enabled_only: false
-            level: default
         biome:
             enabled: true # Good for TypeScript/JavaScript
         hadolint:
@@ -94,7 +105,7 @@ reviews:
         golangci-lint:
             enabled: false # Go linter - not needed
         yamllint:
-            enabled: false
+            enabled: true
         gitleaks:
             enabled: true # Security - keep enabled
         checkov:
@@ -128,28 +139,30 @@ reviews:
         shopifyThemeCheck:
             enabled: false # Shopify themes - not needed
 chat:
+    # Disable auto-reply - we interact via Claude Code, not GitHub comments
     auto_reply: false
     integrations:
         jira:
-            usage: auto
+            usage: disabled
         linear:
-            usage: auto
+            usage: disabled
 knowledge_base:
     opt_out: false
     web_search:
-        enabled: true
+        enabled: false
     learnings:
-        scope: auto
+        scope: local
     issues:
-        scope: auto
+        scope: local
     jira:
-        usage: auto
+        usage: disabled
         project_keys: []
     linear:
-        usage: auto
+        usage: disabled
         team_keys: []
     pull_requests:
-        scope: auto
+        scope: local
+# Code generation disabled - we write docs and tests via Claude Code
 code_generation:
     docstrings:
         enabled: false

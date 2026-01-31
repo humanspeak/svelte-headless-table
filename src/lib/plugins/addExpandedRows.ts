@@ -6,24 +6,47 @@ import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TableP
 import { recordSetStore, type RecordSetStore } from '../utils/store.js'
 import { DEFAULT_ROW_STATE_CACHE_CONFIG } from './cacheConfig.js'
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export interface ExpandedRowsConfig<Item> {
+/**
+ * Configuration options for the addExpandedRows plugin.
+ *
+ * @template _Item - The type of data items (unused but required for type inference).
+ */
+/* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
+export interface ExpandedRowsConfig<_Item> {
+    /** Initial expanded state keyed by row ID. */
     initialExpandedIds?: Record<string, boolean>
 }
 
+/**
+ * State exposed by the addExpandedRows plugin.
+ *
+ * @template Item - The type of data items in the table.
+ */
 export interface ExpandedRowsState<Item> {
+    /** Store containing expanded row IDs. */
     expandedIds: RecordSetStore<string>
-    getRowState: (row: BodyRow<Item>) => ExpandedRowsRowState
+    /** Gets the expansion state stores for a specific row. */
+    getRowState: (_row: BodyRow<Item>) => ExpandedRowsRowState
     /** Cleans up internal subscriptions and clears the row state cache. Call when destroying the table. */
     invalidate: () => void
 }
 
+/**
+ * Expansion state for a single row.
+ */
 export interface ExpandedRowsRowState {
+    /** Writable store for the row's expanded state. */
     isExpanded: Writable<boolean>
+    /** Readable store indicating if this row can be expanded (has sub-rows). */
     canExpand: Readable<boolean>
+    /** Readable store indicating if all expandable sub-rows are expanded. */
     isAllSubRowsExpanded: Readable<boolean>
 }
 
+/**
+ * Recursively expands rows based on the expanded IDs map.
+ * @internal
+ */
 const withExpandedRows = <Item, Row extends BodyRow<Item>>(
     row: Row,
     expandedIds: Record<string, boolean>
@@ -40,6 +63,26 @@ const withExpandedRows = <Item, Row extends BodyRow<Item>>(
     return [row, ...expandedSubRows]
 }
 
+/**
+ * Creates an expanded rows plugin that enables expanding/collapsing rows with sub-rows.
+ * When a row is expanded, its sub-rows are included in the flattened row list.
+ *
+ * @template Item - The type of data items in the table.
+ * @param config - Configuration options.
+ * @returns A TablePlugin that provides row expansion functionality.
+ * @example
+ * ```typescript
+ * const table = createTable(data, {
+ *   expand: addExpandedRows({
+ *     initialExpandedIds: { '0': true } // Row 0 starts expanded
+ *   })
+ * })
+ *
+ * // Toggle expansion
+ * const rowState = table.pluginStates.expand.getRowState(row)
+ * rowState.isExpanded.update(v => !v)
+ * ```
+ */
 export const addExpandedRows =
     <Item>({ initialExpandedIds = {} }: ExpandedRowsConfig<Item> = {}): TablePlugin<
         Item,

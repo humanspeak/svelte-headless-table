@@ -171,6 +171,16 @@
             ]
         },
         {
+            title: 'Guides',
+            items: [
+                {
+                    title: 'shadcn-svelte',
+                    href: '/docs/guides/shadcn-svelte',
+                    icon: 'fa-solid fa-book'
+                }
+            ]
+        },
+        {
             title: 'Love and Respect',
             items: [{ title: 'Beye.ai', href: 'https://beye.ai', icon: 'fa-solid fa-heart' }]
         },
@@ -250,12 +260,13 @@
                             >
                                 {#if item.icon}
                                     <i
-                                        class="{item.icon} mr-3 text-sm {isActive(item.href)
+                                        class="{item.icon} fa-fw mr-3 text-sm {isActive(item.href)
                                             ? 'text-sidebar-active-foreground'
                                             : 'text-text-muted group-hover:text-text-secondary'}"
                                     ></i>
                                 {:else}
-                                    <i class="fa-solid fa-arrow-right mr-3 text-xs text-text-muted"
+                                    <i
+                                        class="fa-solid fa-arrow-right fa-fw mr-3 text-xs text-text-muted"
                                     ></i>
                                 {/if}
                                 {item.title}

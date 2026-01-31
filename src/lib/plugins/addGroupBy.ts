@@ -8,16 +8,34 @@ import { isShiftClick } from '../utils/event.js'
 import { nonUndefined } from '../utils/filter.js'
 import { arraySetStore, type ArraySetStore } from '../utils/store.js'
 
+/**
+ * Configuration options for the addGroupBy plugin.
+ */
 export interface GroupByConfig {
+    /** Initial list of column IDs to group by. */
     initialGroupByIds?: string[]
+    /** If true, prevents grouping by multiple columns. Defaults to false. */
     disableMultiGroup?: boolean
-    isMultiGroupEvent?: (event: Event) => boolean
+    /** Function to detect multi-group events (e.g., shift+click). Defaults to isShiftClick. */
+    isMultiGroupEvent?: (_event: Event) => boolean
 }
 
+/**
+ * State exposed by the addGroupBy plugin.
+ */
 export interface GroupByState {
+    /** Store containing the list of column IDs to group by. */
     groupByIds: ArraySetStore<string>
 }
 
+/**
+ * Per-column configuration options for grouping.
+ *
+ * @template Item - The type of data items.
+ * @template Value - The type of the cell value.
+ * @template GroupOn - The type to group on (must be string or number).
+ * @template Aggregate - The type of the aggregated value.
+ */
 export interface GroupByColumnOptions<
     Item,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -27,26 +45,44 @@ export interface GroupByColumnOptions<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     Aggregate = any
 > {
+    /** If true, grouping is disabled for this column. */
     disable?: boolean
-    getAggregateValue?: (values: GroupOn[]) => Aggregate
-    getGroupOn?: (value: Value) => GroupOn
+    /** Function to compute an aggregate value from grouped values. */
+    getAggregateValue?: (_values: GroupOn[]) => Aggregate
+    /** Function to extract the grouping key from a cell value. */
+    getGroupOn?: (_value: Value) => GroupOn
+    /** Custom cell renderer for grouped rows. */
     cell?: DataLabel<Item>
 }
 
+/**
+ * Props added to table elements by the group by plugin.
+ */
 export type GroupByPropSet = NewTablePropSet<{
     'thead.tr.th': {
+        /** Whether this column is currently grouped. */
         grouped: boolean
-        toggle: (event: Event) => void
+        /** Function to toggle grouping on this column. */
+        toggle: (_event: Event) => void
+        /** Function to clear grouping on this column. */
         clear: () => void
+        /** Whether grouping is disabled for this column. */
         disabled: boolean
     }
     'tbody.tr.td': {
+        /** Whether this cell is a repeated group value (not the first in group). */
         repeated: boolean
+        /** Whether this cell displays an aggregated value. */
         aggregated: boolean
+        /** Whether this cell is the primary grouped column. */
         grouped: boolean
     }
 }>
 
+/**
+ * Internal options for getGroupedRows.
+ * @internal
+ */
 interface GetGroupedRowsProps {
     repeatCellIds: Record<string, boolean>
     aggregateCellIds: Record<string, boolean>
@@ -54,6 +90,10 @@ interface GetGroupedRowsProps {
     allGroupByIds: string[]
 }
 
+/**
+ * Extracts the ID prefix from a row ID.
+ * @internal
+ */
 const getIdPrefix = (id: string): string => {
     const prefixTokens = id.split('>').slice(0, -1)
     if (prefixTokens.length === 0) {
@@ -62,11 +102,10 @@ const getIdPrefix = (id: string): string => {
     return `${prefixTokens.join('>')}>`
 }
 
-const getIdLeaf = (id: string): string => {
-    const tokens = id.split('>')
-    return tokens[tokens.length - 1] ?? ''
-}
-
+/**
+ * Recursively updates row IDs and depths for nested grouped rows.
+ * @internal
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const deepenIdAndDepth = <Row extends BodyRow<any, any>>(row: Row, parentId: string) => {
     row.id = `${parentId}>${row.id}`
@@ -74,6 +113,19 @@ const deepenIdAndDepth = <Row extends BodyRow<any, any>>(row: Row, parentId: str
     row.subRows?.forEach((subRow) => deepenIdAndDepth(subRow, parentId))
 }
 
+/**
+ * Groups rows by the specified column IDs, creating hierarchical grouped rows.
+ * Computes aggregate values for non-grouped columns.
+ *
+ * @template Item - The type of data items.
+ * @template Row - The row type.
+ * @template GroupOn - The grouping key type.
+ * @param rows - The rows to group.
+ * @param groupByIds - Column IDs to group by, in order.
+ * @param columnOptions - Per-column grouping configuration.
+ * @param props - Internal state tracking objects.
+ * @returns The grouped rows array.
+ */
 export const getGroupedRows = <
     Item,
     Row extends BodyRow<Item>,
@@ -188,6 +240,33 @@ export const getGroupedRows = <
     return groupedRows
 }
 
+/**
+ * Creates a group by plugin that enables grouping rows by column values.
+ * Groups are hierarchical - grouping by multiple columns creates nested groups.
+ *
+ * @template Item - The type of data items in the table.
+ * @param config - Configuration options.
+ * @returns A TablePlugin that provides grouping functionality.
+ * @example
+ * ```typescript
+ * const table = createTable(data, {
+ *   group: addGroupBy({
+ *     initialGroupByIds: ['department']
+ *   })
+ * })
+ *
+ * // Configure aggregation for columns
+ * table.column({
+ *   accessor: 'salary',
+ *   header: 'Salary',
+ *   plugins: {
+ *     group: {
+ *       getAggregateValue: (values) => values.reduce((a, b) => a + b, 0)
+ *     }
+ *   }
+ * })
+ * ```
+ */
 export const addGroupBy =
     <Item>({
         initialGroupByIds = [],
