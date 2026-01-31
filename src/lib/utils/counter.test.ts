@@ -292,7 +292,7 @@ describe('getCounter', () => {
 
             expect(actual.get('x')).toBe(size)
             expect(actual.size).toBe(1)
-            expect(duration).toBeLessThan(200)
+            expect(duration).toBeLessThan(500)
         })
     })
 

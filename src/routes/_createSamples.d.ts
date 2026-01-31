@@ -10,5 +10,5 @@ export interface Sample {
 type CreateSamplesOptions = {
     seed?: number;
 };
-export declare const createSamples: (_options?: CreateSamplesOptions, ..._lengths: number[]) => Sample[]
-export {}
+export declare const createSamples: (options?: CreateSamplesOptions, ...lengths: number[]) => Sample[];
+export {};
