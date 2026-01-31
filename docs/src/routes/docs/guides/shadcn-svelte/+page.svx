@@ -1,0 +1,673 @@
+---
+title: shadcn-svelte Integration
+description: Build data tables with shadcn-svelte UI components
+sidebar_title: shadcn-svelte
+---
+
+# shadcn-svelte Data Table Integration
+
+## Introduction
+
+Build powerful data tables by combining **svelte-headless-table** with shadcn-svelte UI components. Unlike pre-built component libraries, this approach gives you full ownership of your table code—you can customize every aspect to fit your needs.
+
+This guide walks you through building a fully-featured data table with:
+- Server-side data fetching
+- Pagination
+- Sorting
+- Filtering
+- Column visibility controls
+- Row selection
+- Row actions with dropdown menus
+
+## Installation
+
+First, add the Table component from shadcn-svelte:
+
+```bash
+npx shadcn-svelte@latest add table
+```
+
+Then install svelte-headless-table:
+
+```bash
+npm install @humanspeak/svelte-headless-table
+```
+
+## Prerequisites
+
+For this guide, we'll use a sample `Payment` type. In a real application, this would come from your database schema or API types.
+
+```ts
+// src/routes/payments/schema.ts
+export type Payment = {
+  id: string;
+  amount: number;
+  status: "pending" | "processing" | "success" | "failed";
+  email: string;
+};
+```
+
+## Project Structure
+
+We recommend organizing your data table files like this:
+
+```
+src/routes/payments/
+├── +page.svelte          # Page component
+├── data-table.svelte     # Table component
+├── columns.ts            # Column definitions
+├── schema.ts             # TypeScript types
+└── data-table-actions.svelte  # Row actions dropdown
+```
+
+This separation keeps your code organized and makes it easy to reuse column definitions.
+
+## Basic Table
+
+Let's start with a basic table that displays payment data.
+
+### Column Definitions
+
+Create your column definitions in a separate file:
+
+```ts
+// src/routes/payments/columns.ts
+import { createTable, createRender } from "@humanspeak/svelte-headless-table";
+import type { Payment } from "./schema";
+import type { Readable } from "svelte/store";
+
+export function createPaymentTable(data: Readable<Payment[]>) {
+  const table = createTable(data);
+
+  const columns = table.createColumns([
+    table.column({
+      header: "Status",
+      accessor: "status",
+    }),
+    table.column({
+      header: "Email",
+      accessor: "email",
+    }),
+    table.column({
+      header: "Amount",
+      accessor: "amount",
+    }),
+  ]);
+
+  return { table, columns };
+}
+```
+
+### Table Component
+
+Now create the table component:
+
+```svelte
+<!-- src/routes/payments/data-table.svelte -->
+<script lang="ts">
+  import { readable } from "svelte/store";
+  import { Render, Subscribe } from "@humanspeak/svelte-headless-table";
+  import * as Table from "$lib/components/ui/table";
+  import { createPaymentTable } from "./columns";
+  import type { Payment } from "./schema";
+
+  export let data: Payment[];
+
+  const store = readable(data);
+  const { table, columns } = createPaymentTable(store);
+  const { headerRows, pageRows, tableAttrs, tableBodyAttrs } =
+    table.createViewModel(columns);
+</script>
+
+<div class="rounded-md border">
+  <Table.Root {...$tableAttrs}>
+    <Table.Header>
+      {#each $headerRows as headerRow}
+        <Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
+          <Table.Row {...rowAttrs}>
+            {#each headerRow.cells as cell (cell.id)}
+              <Subscribe attrs={cell.attrs()} let:attrs>
+                <Table.Head {...attrs}>
+                  <Render of={cell.render()} />
+                </Table.Head>
+              </Subscribe>
+            {/each}
+          </Table.Row>
+        </Subscribe>
+      {/each}
+    </Table.Header>
+    <Table.Body {...$tableBodyAttrs}>
+      {#each $pageRows as row (row.id)}
+        <Subscribe rowAttrs={row.attrs()} let:rowAttrs>
+          <Table.Row {...rowAttrs}>
+            {#each row.cells as cell (cell.id)}
+              <Subscribe attrs={cell.attrs()} let:attrs>
+                <Table.Cell {...attrs}>
+                  <Render of={cell.render()} />
+                </Table.Cell>
+              </Subscribe>
+            {/each}
+          </Table.Row>
+        </Subscribe>
+      {/each}
+    </Table.Body>
+  </Table.Root>
+</div>
+```
+
+### Page Component
+
+Finally, use the table in your page:
+
+```svelte
+<!-- src/routes/payments/+page.svelte -->
+<script lang="ts">
+  import DataTable from "./data-table.svelte";
+  import type { Payment } from "./schema";
+
+  // In a real app, this would come from +page.server.ts
+  const payments: Payment[] = [
+    {
+      id: "728ed52f",
+      amount: 100,
+      status: "pending",
+      email: "m@example.com",
+    },
+    {
+      id: "489e1d42",
+      amount: 125,
+      status: "processing",
+      email: "example@gmail.com",
+    },
+    // ... more data
+  ];
+</script>
+
+<div class="container mx-auto py-10">
+  <DataTable data={payments} />
+</div>
+```
+
+## Cell Formatting
+
+You can format cell values by providing a custom `cell` function:
+
+```ts
+table.column({
+  header: "Amount",
+  accessor: "amount",
+  cell: ({ value }) => {
+    const formatted = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(value);
+    return formatted;
+  },
+}),
+```
+
+For more complex formatting with custom styles, use `createRender`:
+
+```ts
+import StatusBadge from "./status-badge.svelte";
+
+table.column({
+  header: "Status",
+  accessor: "status",
+  cell: ({ value }) => {
+    return createRender(StatusBadge, { status: value });
+  },
+}),
+```
+
+```svelte
+<!-- status-badge.svelte -->
+<script lang="ts">
+  import { Badge } from "$lib/components/ui/badge";
+
+  export let status: string;
+
+  const variants = {
+    pending: "secondary",
+    processing: "outline",
+    success: "default",
+    failed: "destructive",
+  } as const;
+</script>
+
+<Badge variant={variants[status] ?? "default"}>
+  {status}
+</Badge>
+```
+
+## Row Actions
+
+Add a dropdown menu for row actions using `createRender`:
+
+```svelte
+<!-- src/routes/payments/data-table-actions.svelte -->
+<script lang="ts">
+  import Ellipsis from "lucide-svelte/icons/ellipsis";
+  import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+  import { Button } from "$lib/components/ui/button";
+
+  export let id: string;
+</script>
+
+<DropdownMenu.Root>
+  <DropdownMenu.Trigger asChild let:builder>
+    <Button
+      variant="ghost"
+      builders={[builder]}
+      size="icon"
+      class="relative h-8 w-8 p-0"
+    >
+      <span class="sr-only">Open menu</span>
+      <Ellipsis class="h-4 w-4" />
+    </Button>
+  </DropdownMenu.Trigger>
+  <DropdownMenu.Content>
+    <DropdownMenu.Group>
+      <DropdownMenu.Label>Actions</DropdownMenu.Label>
+      <DropdownMenu.Item on:click={() => navigator.clipboard.writeText(id)}>
+        Copy payment ID
+      </DropdownMenu.Item>
+    </DropdownMenu.Group>
+    <DropdownMenu.Separator />
+    <DropdownMenu.Item>View customer</DropdownMenu.Item>
+    <DropdownMenu.Item>View payment details</DropdownMenu.Item>
+  </DropdownMenu.Content>
+</DropdownMenu.Root>
+```
+
+Add the actions column:
+
+```ts
+import DataTableActions from "./data-table-actions.svelte";
+
+table.column({
+  header: "",
+  accessor: ({ id }) => id,
+  cell: ({ value }) => {
+    return createRender(DataTableActions, { id: value });
+  },
+}),
+```
+
+## Pagination
+
+Add pagination using the `addPagination` plugin:
+
+```ts
+import { createTable, createRender } from "@humanspeak/svelte-headless-table";
+import { addPagination } from "@humanspeak/svelte-headless-table/plugins";
+
+const table = createTable(data, {
+  page: addPagination(),
+});
+```
+
+Extract the pagination state from the view model:
+
+```ts
+const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates } =
+  table.createViewModel(columns);
+
+const { hasNextPage, hasPreviousPage, pageIndex } = pluginStates.page;
+```
+
+Add pagination controls to your table component:
+
+```svelte
+<div class="flex items-center justify-end space-x-4 py-4">
+  <Button
+    variant="outline"
+    size="sm"
+    on:click={() => ($pageIndex = $pageIndex - 1)}
+    disabled={!$hasPreviousPage}
+  >
+    Previous
+  </Button>
+  <Button
+    variant="outline"
+    size="sm"
+    on:click={() => ($pageIndex = $pageIndex + 1)}
+    disabled={!$hasNextPage}
+  >
+    Next
+  </Button>
+</div>
+```
+
+## Sorting
+
+Add sorting with the `addSortBy` plugin:
+
+```ts
+import { addPagination, addSortBy } from "@humanspeak/svelte-headless-table/plugins";
+
+const table = createTable(data, {
+  page: addPagination(),
+  sort: addSortBy(),
+});
+```
+
+Create a sortable header component:
+
+```svelte
+<!-- src/routes/payments/data-table-sort-button.svelte -->
+<script lang="ts">
+  import ArrowUpDown from "lucide-svelte/icons/arrow-up-down";
+  import { Button } from "$lib/components/ui/button";
+
+  export let label: string;
+</script>
+
+<Button variant="ghost" on:click>
+  {label}
+  <ArrowUpDown class="ml-2 h-4 w-4" />
+</Button>
+```
+
+Update your column definitions to use sortable headers:
+
+```ts
+import DataTableSortButton from "./data-table-sort-button.svelte";
+
+table.column({
+  header: (cell, { pluginStates }) => {
+    const { sort } = pluginStates;
+    return createRender(DataTableSortButton, { label: "Email" });
+  },
+  accessor: "email",
+}),
+```
+
+Wire up the click handler in the header:
+
+```svelte
+{#each headerRow.cells as cell (cell.id)}
+  <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
+    <Table.Head {...attrs}>
+      {#if cell.id === "email"}
+        <Button variant="ghost" on:click={props.sort.toggle}>
+          <Render of={cell.render()} />
+        </Button>
+      {:else}
+        <Render of={cell.render()} />
+      {/if}
+    </Table.Head>
+  </Subscribe>
+{/each}
+```
+
+## Filtering
+
+Add table-wide filtering with the `addTableFilter` plugin:
+
+```ts
+import {
+  addPagination,
+  addSortBy,
+  addTableFilter,
+} from "@humanspeak/svelte-headless-table/plugins";
+
+const table = createTable(data, {
+  page: addPagination(),
+  sort: addSortBy(),
+  filter: addTableFilter({
+    fn: ({ filterValue, value }) =>
+      value.toLowerCase().includes(filterValue.toLowerCase()),
+  }),
+});
+```
+
+Extract the filter state:
+
+```ts
+const { filterValue } = pluginStates.filter;
+```
+
+Add a filter input:
+
+```svelte
+<div class="flex items-center py-4">
+  <Input
+    class="max-w-sm"
+    placeholder="Filter emails..."
+    type="text"
+    bind:value={$filterValue}
+  />
+</div>
+```
+
+## Column Visibility
+
+Add column visibility controls with the `addHiddenColumns` plugin:
+
+```ts
+import {
+  addPagination,
+  addSortBy,
+  addTableFilter,
+  addHiddenColumns,
+} from "@humanspeak/svelte-headless-table/plugins";
+
+const table = createTable(data, {
+  page: addPagination(),
+  sort: addSortBy(),
+  filter: addTableFilter({
+    fn: ({ filterValue, value }) =>
+      value.toLowerCase().includes(filterValue.toLowerCase()),
+  }),
+  hide: addHiddenColumns(),
+});
+```
+
+Extract the hidden columns state:
+
+```ts
+const { hiddenColumnIds } = pluginStates.hide;
+```
+
+Create a columns visibility dropdown:
+
+```svelte
+<DropdownMenu.Root>
+  <DropdownMenu.Trigger asChild let:builder>
+    <Button variant="outline" class="ml-auto" builders={[builder]}>
+      Columns
+      <ChevronDown class="ml-2 h-4 w-4" />
+    </Button>
+  </DropdownMenu.Trigger>
+  <DropdownMenu.Content>
+    {#each flatColumns as col}
+      {#if col.id !== "actions"}
+        <DropdownMenu.CheckboxItem
+          checked={!$hiddenColumnIds.includes(col.id)}
+          on:click={() => {
+            if ($hiddenColumnIds.includes(col.id)) {
+              $hiddenColumnIds = $hiddenColumnIds.filter((id) => id !== col.id);
+            } else {
+              $hiddenColumnIds = [...$hiddenColumnIds, col.id];
+            }
+          }}
+        >
+          {col.header}
+        </DropdownMenu.CheckboxItem>
+      {/if}
+    {/each}
+  </DropdownMenu.Content>
+</DropdownMenu.Root>
+```
+
+## Row Selection
+
+Add row selection with the `addSelectedRows` plugin:
+
+```ts
+import {
+  addPagination,
+  addSortBy,
+  addTableFilter,
+  addHiddenColumns,
+  addSelectedRows,
+} from "@humanspeak/svelte-headless-table/plugins";
+
+const table = createTable(data, {
+  page: addPagination(),
+  sort: addSortBy(),
+  filter: addTableFilter({
+    fn: ({ filterValue, value }) =>
+      value.toLowerCase().includes(filterValue.toLowerCase()),
+  }),
+  hide: addHiddenColumns(),
+  select: addSelectedRows(),
+});
+```
+
+Create a checkbox component for row selection:
+
+```svelte
+<!-- src/routes/payments/data-table-checkbox.svelte -->
+<script lang="ts">
+  import { Checkbox } from "$lib/components/ui/checkbox";
+
+  export let checked: boolean = false;
+</script>
+
+<Checkbox bind:checked />
+```
+
+Add a select column:
+
+```ts
+import DataTableCheckbox from "./data-table-checkbox.svelte";
+
+table.column({
+  header: (_, { pluginStates }) => {
+    const { allPageRowsSelected } = pluginStates.select;
+    return createRender(DataTableCheckbox, {
+      checked: allPageRowsSelected,
+    });
+  },
+  accessor: "id",
+  cell: ({ row }, { pluginStates }) => {
+    const { getRowState } = pluginStates.select;
+    const { isSelected } = getRowState(row);
+    return createRender(DataTableCheckbox, {
+      checked: isSelected,
+    });
+  },
+}),
+```
+
+Display the selection count:
+
+```svelte
+<div class="flex-1 text-sm text-muted-foreground">
+  {Object.keys($selectedDataIds).length} of {$rows.length} row(s) selected.
+</div>
+```
+
+## Complete Example
+
+Here's a complete example combining all features:
+
+```ts
+// columns.ts
+import { createTable, createRender } from "@humanspeak/svelte-headless-table";
+import {
+  addPagination,
+  addSortBy,
+  addTableFilter,
+  addHiddenColumns,
+  addSelectedRows,
+} from "@humanspeak/svelte-headless-table/plugins";
+import type { Payment } from "./schema";
+import type { Readable } from "svelte/store";
+import DataTableActions from "./data-table-actions.svelte";
+import DataTableCheckbox from "./data-table-checkbox.svelte";
+
+export function createPaymentTable(data: Readable<Payment[]>) {
+  const table = createTable(data, {
+    page: addPagination(),
+    sort: addSortBy({ disableMultiSort: true }),
+    filter: addTableFilter({
+      fn: ({ filterValue, value }) =>
+        value.toLowerCase().includes(filterValue.toLowerCase()),
+    }),
+    hide: addHiddenColumns(),
+    select: addSelectedRows(),
+  });
+
+  const columns = table.createColumns([
+    table.column({
+      header: (_, { pluginStates }) => {
+        const { allPageRowsSelected } = pluginStates.select;
+        return createRender(DataTableCheckbox, {
+          checked: allPageRowsSelected,
+        });
+      },
+      accessor: "id",
+      cell: ({ row }, { pluginStates }) => {
+        const { getRowState } = pluginStates.select;
+        const { isSelected } = getRowState(row);
+        return createRender(DataTableCheckbox, {
+          checked: isSelected,
+        });
+      },
+      plugins: {
+        sort: { disable: true },
+        filter: { exclude: true },
+      },
+    }),
+    table.column({
+      header: "Status",
+      accessor: "status",
+      plugins: {
+        sort: { disable: true },
+        filter: { exclude: true },
+      },
+    }),
+    table.column({
+      header: "Email",
+      accessor: "email",
+    }),
+    table.column({
+      header: "Amount",
+      accessor: "amount",
+      cell: ({ value }) => {
+        const formatted = new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+        }).format(value);
+        return formatted;
+      },
+      plugins: {
+        filter: { exclude: true },
+      },
+    }),
+    table.column({
+      header: "",
+      accessor: ({ id }) => id,
+      cell: ({ value }) => {
+        return createRender(DataTableActions, { id: value });
+      },
+      plugins: {
+        sort: { disable: true },
+        filter: { exclude: true },
+      },
+    }),
+  ]);
+
+  return { table, columns };
+}
+```
+
+## Additional Resources
+
+- [API Reference](/docs/api/create-table)
+- [Plugin Documentation](/docs/plugins/overview)
+- [Quick Start Guide](/docs/getting-started/quick-start)
+- [shadcn-svelte Documentation](https://www.shadcn-svelte.com/)
