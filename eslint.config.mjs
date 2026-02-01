@@ -27,6 +27,7 @@ export default [
             'src/routes/poc',
             '**/dist',
             '**/*.test.ts',
+            '**/*.d.ts',
             'docs-old/**',
             'docs-new/**',
             'docs/**'
