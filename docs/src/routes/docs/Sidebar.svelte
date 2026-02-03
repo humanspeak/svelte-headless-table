@@ -172,6 +172,11 @@
                     title: 'Kitchen Sink',
                     href: '/docs/examples/kitchen-sink',
                     icon: 'fa-solid fa-cubes'
+                },
+                {
+                    title: 'Virtual Scroll',
+                    href: '/docs/examples/virtual-scroll',
+                    icon: 'fa-solid fa-arrows-up-down'
                 }
             ]
         },
