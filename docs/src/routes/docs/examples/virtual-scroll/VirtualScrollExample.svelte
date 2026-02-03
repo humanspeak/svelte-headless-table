@@ -294,7 +294,7 @@
     .controls {
         margin-bottom: 1rem;
         padding: 1rem;
-        background: var(--color-surface-2, #f5f5f5);
+        border: 1px solid rgba(128, 128, 128, 0.3);
         border-radius: 8px;
         display: flex;
         flex-wrap: wrap;
@@ -314,20 +314,23 @@
     .control-row button {
         padding: 0.25rem 0.75rem;
         cursor: pointer;
-        border: 1px solid var(--color-border, #ccc);
+        border: 1px solid rgba(128, 128, 128, 0.4);
         border-radius: 4px;
-        background: var(--color-surface-1, white);
+        background: transparent;
+        color: inherit;
     }
 
     .control-row button:hover {
-        background: var(--color-surface-3, #e0e0e0);
+        background: rgba(128, 128, 128, 0.2);
     }
 
     .control-row input[type='number'] {
         width: 80px;
         padding: 0.25rem;
-        border: 1px solid var(--color-border, #ccc);
+        border: 1px solid rgba(128, 128, 128, 0.4);
         border-radius: 4px;
+        background: transparent;
+        color: inherit;
     }
 
     .stats {
@@ -341,7 +344,7 @@
         display: flex;
         gap: 0.5rem;
         padding: 0.5rem 1rem;
-        background: var(--color-surface-2, #f5f5f5);
+        border: 1px solid rgba(128, 128, 128, 0.3);
         border-radius: 4px;
     }
 
@@ -351,11 +354,11 @@
 
     .stat-value {
         font-family: monospace;
-        color: var(--color-primary, #0066cc);
+        color: rgb(34, 197, 94);
     }
 
     .hint {
-        color: var(--color-text-muted, #666);
+        opacity: 0.7;
         font-style: italic;
         margin-bottom: 0.5rem;
     }
@@ -363,27 +366,42 @@
     .table-container {
         height: 400px;
         overflow-y: auto;
-        border: 1px solid var(--color-border, #ccc);
+        border: 1px solid rgba(128, 128, 128, 0.3);
         border-radius: 4px;
     }
 
     table {
         width: 100%;
         border-collapse: collapse;
+        margin: 0;
     }
 
     thead {
         position: sticky;
         top: 0;
-        background: var(--color-surface-2, #f5f5f5);
         z-index: 1;
+    }
+
+    thead tr {
+        background-color: #f5f5f5;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        thead tr {
+            background-color: #262626;
+        }
+    }
+
+    :global(html.dark) thead tr,
+    :global([data-theme='dark']) thead tr {
+        background-color: #262626;
     }
 
     th,
     td {
         padding: 0.5rem 0.75rem;
         text-align: left;
-        border-bottom: 1px solid var(--color-border, #ddd);
+        border-bottom: 1px solid rgba(128, 128, 128, 0.2);
     }
 
     th {
@@ -393,11 +411,31 @@
     }
 
     th:hover {
-        background: var(--color-surface-3, #e0e0e0);
+        background-color: #e8e8e8;
     }
 
     th.sorted {
-        background: var(--color-primary-light, #e6f2ff);
+        background-color: #d4f5e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        th:hover {
+            background-color: #3a3a3a;
+        }
+
+        th.sorted {
+            background-color: #1a4d2e;
+        }
+    }
+
+    :global(html.dark) th:hover,
+    :global([data-theme='dark']) th:hover {
+        background-color: #3a3a3a;
+    }
+
+    :global(html.dark) th.sorted,
+    :global([data-theme='dark']) th.sorted {
+        background-color: #1a4d2e;
     }
 
     .sort-indicator {
@@ -406,13 +444,13 @@
     }
 
     tbody tr:hover {
-        background: var(--color-surface-1, #fafafa);
+        background: rgba(128, 128, 128, 0.1);
     }
 
     .loading-row td {
         text-align: center;
         padding: 1rem;
-        color: var(--color-text-muted, #666);
+        opacity: 0.7;
         font-style: italic;
     }
 </style>
