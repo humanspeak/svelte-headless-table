@@ -16,7 +16,8 @@ Svelte Headless Table is designed with extensibility in mind. Its complex featur
     'addSortBy', 'addColumnFilters', 'addTableFilter',
     'addColumnOrder', 'addHiddenColumns', 'addPagination',
     'addSubRows', 'addGroupBy', 'addExpandedRows',
-    'addSelectedRows', 'addResizedColumns', 'addGridLayout'
+    'addSelectedRows', 'addResizedColumns', 'addGridLayout',
+    'addVirtualScroll'
   ] as pluginName}
     <li class="flex gap-2 items-center m-0 list-none">
       <i class="fa-solid fa-circle-check text-brand m-0"></i> <code class="m-0">{pluginName}</code>

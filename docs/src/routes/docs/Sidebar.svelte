@@ -157,6 +157,11 @@
                     title: 'addDataExport',
                     href: '/docs/plugins/add-data-export',
                     icon: 'fa-solid fa-file-export'
+                },
+                {
+                    title: 'addVirtualScroll',
+                    href: '/docs/plugins/add-virtual-scroll',
+                    icon: 'fa-solid fa-arrows-up-down'
                 }
             ]
         },
