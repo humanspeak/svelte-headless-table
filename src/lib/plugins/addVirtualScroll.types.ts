@@ -43,7 +43,7 @@ export interface VirtualScrollConfig<Item> {
      * Optional function to get the height of a specific row.
      * If provided, enables variable row heights.
      */
-    getRowHeight?: (item: Item) => number
+    getRowHeight?: (_item: Item) => number
 
     /**
      * Enable debug mode to show virtualization info in console.
@@ -77,6 +77,8 @@ export interface ScrollToIndexOptions {
  *
  * @template Item - The type of data items in the table.
  */
+// trunk-ignore(eslint/@typescript-eslint/no-unused-vars)
+// trunk-ignore(eslint/no-unused-vars)
 export interface VirtualScrollState<Item> {
     /**
      * Current scroll position of the container.
@@ -127,14 +129,14 @@ export interface VirtualScrollState<Item> {
     /**
      * Scroll to a specific row index.
      */
-    scrollToIndex: (index: number, options?: ScrollToIndexOptions) => void
+    scrollToIndex: (_index: number, _options?: ScrollToIndexOptions) => void
 
     /**
      * Notify the plugin that a row has been measured.
      * Called automatically when rows are rendered.
      * @internal
      */
-    measureRow: (rowId: string, height: number) => void
+    measureRow: (_rowId: string, _height: number) => void
 
     /**
      * Svelte action to attach to each table row for automatic height measurement.

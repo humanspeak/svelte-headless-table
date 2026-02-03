@@ -178,7 +178,6 @@
     const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates, visibleColumns } =
         table.createViewModel(columns)
 
-    const { sortKeys } = pluginStates.sort
     const {
         virtualScroll,
         topSpacerHeight,
@@ -215,6 +214,7 @@
 <main>
     <h1>Virtual Scroll Example</h1>
     <p>
+        <!-- trunk-ignore(eslint/svelte/no-navigation-without-resolve) -->
         <a href="/">&larr; Back to examples</a>
     </p>
 

@@ -24,7 +24,8 @@
     <section class="examples">
         <h2>Examples</h2>
         <div class="example-grid">
-            {#each examples as example}
+            {#each examples as example (example.href)}
+                <!-- trunk-ignore(eslint/svelte/no-navigation-without-resolve) -->
                 <a href={example.href} class="example-card">
                     <h3>{example.name}</h3>
                     <p>{example.description}</p>
