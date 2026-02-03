@@ -12,5 +12,6 @@ export * from './addSelectedRows'
 export * from './addSortBy'
 export * from './addSubRows'
 export * from './addTableFilter'
+export * from './addVirtualScroll'
 // plugin helper types
 export * from '../types/TablePlugin'
