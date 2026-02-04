@@ -97,8 +97,7 @@
             bufferSize: 10,
             onLoadMore: loadMoreItems,
             hasMore,
-            loadMoreThreshold: 200,
-            debug: true
+            loadMoreThreshold: 200
         })
     })
 

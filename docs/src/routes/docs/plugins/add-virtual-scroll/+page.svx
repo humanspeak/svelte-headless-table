@@ -157,9 +157,6 @@ Default `200`. Number of pixels from the bottom to trigger `onLoadMore`.
 ### `getRowHeight?: (item: Item) => number`
 Optional function to get the exact height of a specific row. Enables precise variable row heights.
 
-### `debug?: boolean`
-Default `false`. Enable debug mode to show virtualization info in the console.
-
 ## Plugin State
 
 <Callout type="info">State provided by <code>addVirtualScroll</code>.</Callout>
