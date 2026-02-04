@@ -375,21 +375,31 @@
     })
 })
 
+const columns = table.createColumns([...])
+
+const { headerRows, pageRows, pluginStates, visibleColumns } =
+    table.createViewModel(columns)
+
 const {
     virtualScroll,
     topSpacerHeight,
-    bottomSpacerHeight
-} = table.pluginStates.virtualScroll
+    bottomSpacerHeight,
+    measureRowAction
+} = pluginStates.virtualScroll
 
 // In template:
 <div class="table-container" use:virtualScroll>
     <table>
         <tbody>
-            <tr><td style="height: {$topSpacerHeight}px" /></tr>
-            {#each $pageRows as row}
-                <tr>...</tr>
+            {#if $topSpacerHeight > 0}
+                <tr><td colspan={$visibleColumns.length} style="height: {$topSpacerHeight}px" /></tr>
+            {/if}
+            {#each $pageRows as row (row.id)}
+                <tr use:measureRowAction={row.id}>...</tr>
             {/each}
-            <tr><td style="height: {$bottomSpacerHeight}px" /></tr>
+            {#if $bottomSpacerHeight > 0}
+                <tr><td colspan={$visibleColumns.length} style="height: {$bottomSpacerHeight}px" /></tr>
+            {/if}
         </tbody>
     </table>
 </div>`}</code
