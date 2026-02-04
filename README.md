@@ -60,6 +60,7 @@ Easily extend Svelte Headless Table with complex **sorting**, **filtering**, **g
 - [x] [addSelectedRows](https://table.svelte.page/docs/plugins/add-selected-rows)
 - [x] [addResizedColumns](https://table.svelte.page/docs/plugins/add-resized-columns)
 - [x] [addGridLayout](https://table.svelte.page/docs/plugins/add-grid-layout)
+- [x] [addVirtualScroll](https://table.svelte.page/docs/plugins/add-virtual-scroll)
 
 ## Examples
 

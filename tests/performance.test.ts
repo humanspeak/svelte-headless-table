@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test'
 test.describe('performance', () => {
     test.describe('small dataset (100 rows)', () => {
         test.beforeEach(async ({ page }: { page: Page }) => {
-            await page.goto('/?seed=12345&rows=100&subrows=false')
+            await page.goto('/kitchen-sink?seed=12345&rows=100&subrows=false')
         })
 
         test('table renders within acceptable time', async ({ page }: { page: Page }) => {
@@ -52,7 +52,7 @@ test.describe('performance', () => {
 
     test.describe('medium dataset (1000 rows)', () => {
         test.beforeEach(async ({ page }: { page: Page }) => {
-            await page.goto('/?seed=12345&rows=1000&subrows=false')
+            await page.goto('/kitchen-sink?seed=12345&rows=1000&subrows=false')
         })
 
         test('table renders within acceptable time', async ({ page }: { page: Page }) => {
@@ -85,7 +85,7 @@ test.describe('performance', () => {
         test.slow()
 
         test.beforeEach(async ({ page }: { page: Page }) => {
-            await page.goto('/?seed=12345&rows=5000&subrows=false')
+            await page.goto('/kitchen-sink?seed=12345&rows=5000&subrows=false')
         })
 
         test('table renders within acceptable time', async ({ page }: { page: Page }) => {
@@ -112,7 +112,7 @@ test.describe('performance', () => {
 
     test.describe('with sub-rows', () => {
         test('renders rows with sub-rows', async ({ page }: { page: Page }) => {
-            await page.goto('/?seed=12345&rows=100&subrows=true')
+            await page.goto('/kitchen-sink?seed=12345&rows=100&subrows=true')
 
             await expect(page.locator('table')).toBeVisible({ timeout: 10000 })
 
@@ -121,7 +121,7 @@ test.describe('performance', () => {
         })
 
         test('table body has rows', async ({ page }: { page: Page }) => {
-            await page.goto('/?seed=12345&rows=50&subrows=true')
+            await page.goto('/kitchen-sink?seed=12345&rows=50&subrows=true')
 
             await expect(page.locator('table')).toBeVisible({ timeout: 10000 })
 
@@ -133,7 +133,7 @@ test.describe('performance', () => {
 
     test.describe('debug metrics', () => {
         test('debug panel shows correct plugin count', async ({ page }: { page: Page }) => {
-            await page.goto('/?seed=12345&rows=100&subrows=false')
+            await page.goto('/kitchen-sink?seed=12345&rows=100&subrows=false')
 
             await expect(page.locator('table')).toBeVisible()
 
@@ -143,7 +143,7 @@ test.describe('performance', () => {
         })
 
         test('reset counters works', async ({ page }: { page: Page }) => {
-            await page.goto('/?seed=12345&rows=100&subrows=false')
+            await page.goto('/kitchen-sink?seed=12345&rows=100&subrows=false')
 
             await expect(page.locator('table')).toBeVisible()
 
@@ -156,7 +156,7 @@ test.describe('performance', () => {
         })
 
         test('derivation counters increment on sort', async ({ page }: { page: Page }) => {
-            await page.goto('/?seed=12345&rows=100&subrows=false')
+            await page.goto('/kitchen-sink?seed=12345&rows=100&subrows=false')
 
             await expect(page.locator('table')).toBeVisible()
 

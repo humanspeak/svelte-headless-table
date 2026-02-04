@@ -1,0 +1,237 @@
+---
+title: addVirtualScroll
+description: Virtualized table rendering for large datasets
+sidebar_title: addVirtualScroll
+---
+
+<script>
+  import { useHljs } from '$lib/utils/useHljs';
+  import Admonition from '$lib/components/Admonition.svelte'
+  import Callout from '$lib/components/Callout.svelte'
+  useHljs('ts');
+</script>
+
+# addVirtualScroll
+
+`addVirtualScroll` enables virtualized table rendering for large datasets (10,000+ rows). Only visible rows plus a configurable buffer are rendered in the DOM, dramatically improving performance.
+
+<Admonition type="note">Subscribe to <a href="/docs/api/table-view-model#tableviewmodel-pagerows-readable-bodyrow"><code>TableViewModel#pageRows</code></a> instead of <code>TableViewModel#rows</code>.</Admonition>
+
+## Basic Usage
+
+```svelte
+<script>
+  import { writable } from 'svelte/store';
+  import { createTable } from '@humanspeak/svelte-headless-table';
+  import { addVirtualScroll } from '@humanspeak/svelte-headless-table/plugins';
+
+  const data = writable(largeDataset); // 10,000+ rows
+
+  const table = createTable(data, {
+    virtualScroll: addVirtualScroll({
+      estimatedRowHeight: 48,
+      bufferSize: 10
+    })
+  });
+
+  const columns = table.createColumns([
+    table.column({ header: 'Name', accessor: 'name' }),
+    table.column({ header: 'Email', accessor: 'email' }),
+  ]);
+
+  const {
+    headerRows,
+    pageRows,
+    tableAttrs,
+    tableBodyAttrs,
+    pluginStates,
+    visibleColumns
+  } = table.createViewModel(columns);
+
+  const {
+    virtualScroll,
+    topSpacerHeight,
+    bottomSpacerHeight,
+    measureRowAction
+  } = pluginStates.virtualScroll;
+</script>
+
+<div class="table-container" use:virtualScroll>
+  <table {...$tableAttrs}>
+    <thead>
+      <!-- header rows -->
+    </thead>
+    <tbody {...$tableBodyAttrs}>
+      <!-- Top spacer -->
+      {#if $topSpacerHeight > 0}
+        <tr>
+          <td colspan={$visibleColumns.length} style="height: {$topSpacerHeight}px; padding: 0; border: none;"></td>
+        </tr>
+      {/if}
+
+      <!-- Visible rows -->
+      {#each $pageRows as row (row.id)}
+        <Subscribe attrs={row.attrs()} let:attrs>
+          <tr {...attrs} use:measureRowAction={row.id}>
+            {#each row.cells as cell (cell.id)}
+              <Subscribe attrs={cell.attrs()} let:attrs>
+                <td {...attrs}>
+                  <Render of={cell.render()} />
+                </td>
+              </Subscribe>
+            {/each}
+          </tr>
+        </Subscribe>
+      {/each}
+
+      <!-- Bottom spacer -->
+      {#if $bottomSpacerHeight > 0}
+        <tr>
+          <td colspan={$visibleColumns.length} style="height: {$bottomSpacerHeight}px; padding: 0; border: none;"></td>
+        </tr>
+      {/if}
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .table-container {
+    height: 500px;
+    overflow-y: auto;
+  }
+</style>
+```
+
+<Admonition type="important">The scroll container must have a fixed height and <code>overflow-y: auto</code> for virtualization to work.</Admonition>
+
+## Infinite Scroll
+
+`addVirtualScroll` supports infinite scroll with the `onLoadMore` and `hasMore` options:
+
+```ts
+const hasMore = writable(true);
+
+const table = createTable(data, {
+  virtualScroll: addVirtualScroll({
+    estimatedRowHeight: 48,
+    bufferSize: 10,
+    loadMoreThreshold: 200,
+    hasMore,
+    onLoadMore: async () => {
+      const moreData = await fetchMoreItems();
+      data.update(d => [...d, ...moreData]);
+
+      if (noMoreData) {
+        hasMore.set(false);
+      }
+    }
+  })
+});
+```
+
+## Options
+
+<Callout type="info">Options passed into <code>addVirtualScroll</code>.</Callout>
+
+```ts {3}
+const table = createTable(data, {
+  virtualScroll: addVirtualScroll({ ... }),
+});
+```
+
+### `estimatedRowHeight?: number`
+Default `40`. Estimated height of each row in pixels. Used for initial calculations before rows are measured. Actual heights are measured automatically.
+
+### `bufferSize?: number`
+Default `10`. Number of rows to render above and below the visible area. Higher values reduce flicker during fast scrolling but render more DOM nodes.
+
+### `onLoadMore?: () => void | Promise<void>`
+Callback fired when more data should be loaded (infinite scroll). Return a promise to indicate when loading is complete.
+
+### `hasMore?: Writable<boolean> | boolean`
+Whether there is more data available to load. Can be a boolean or a Writable store.
+
+### `loadMoreThreshold?: number`
+Default `200`. Number of pixels from the bottom to trigger `onLoadMore`.
+
+### `getRowHeight?: (item: Item) => number`
+Optional function to get the exact height of a specific row. Enables precise variable row heights.
+
+### `debug?: boolean`
+Default `false`. Enable debug mode to show virtualization info in the console.
+
+## Plugin State
+
+<Callout type="info">State provided by <code>addVirtualScroll</code>.</Callout>
+
+```ts {3}
+const { headerRows, pageRows, pluginStates } = table.createViewModel(columns);
+const { ... } = pluginStates.virtualScroll;
+```
+
+### `virtualScroll: Action<HTMLElement>`
+Svelte action to attach to the scroll container. Handles scroll event listeners and viewport tracking.
+
+### `topSpacerHeight: Readable<number>`
+Height of the top spacer element in pixels.
+
+### `bottomSpacerHeight: Readable<number>`
+Height of the bottom spacer element in pixels.
+
+### `measureRowAction: Action<HTMLElement, string>`
+Svelte action to attach to each row for automatic height measurement. Usage: `<tr use:measureRowAction={row.id}>`.
+
+### `scrollToIndex: (index: number, options?) => void`
+Scroll to a specific row index programmatically.
+
+```ts
+// Scroll options
+scrollToIndex(100, {
+  align: 'start' | 'center' | 'end' | 'auto',
+  behavior: 'auto' | 'smooth'
+});
+```
+
+### `visibleRange: Readable<{ start: number; end: number }>`
+Range of currently visible row indices.
+
+### `totalHeight: Readable<number>`
+Total height of all rows (for scroll container sizing).
+
+### `totalRows: Readable<number>`
+Total number of rows in the dataset.
+
+### `renderedRows: Readable<number>`
+Number of rows currently rendered in the DOM.
+
+### `scrollTop: Readable<number>`
+Current scroll position of the container.
+
+### `viewportHeight: Readable<number>`
+Height of the scroll container viewport.
+
+### `isLoading: Readable<boolean>`
+Whether more data is currently being loaded.
+
+### `hasMore: Readable<boolean>`
+Whether there is more data available to load.
+
+### `measureRow: (rowId: string, height: number) => void`
+Manually notify the plugin that a row has been measured. Usually not needed when using `measureRowAction`.
+
+## How It Works
+
+1. **Spacer Rows**: Instead of CSS transforms, the plugin uses spacer `<tr>` elements to maintain scroll position. This preserves semantic table structure and accessibility.
+
+2. **Height Management**: Row heights are cached as they're measured. The `HeightManager` class tracks measured heights and calculates average heights for unmeasured rows.
+
+3. **Visible Range Calculation**: Based on scroll position, viewport height, and cached row heights, the plugin calculates which rows should be rendered.
+
+4. **Automatic Measurement**: The `measureRowAction` uses ResizeObserver to automatically measure and cache row heights as they render.
+
+## Performance Tips
+
+- Use a reasonable `bufferSize` (10-20) to balance between smooth scrolling and DOM size
+- The `estimatedRowHeight` doesn't need to be exact - actual heights are measured automatically
+- For very large datasets (100,000+ rows), consider server-side pagination combined with virtual scroll
+- Avoid complex components in cells that cause expensive re-renders

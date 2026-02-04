@@ -1,0 +1,14 @@
+---
+title: Virtual Scroll
+description: Virtualized table rendering for large datasets with infinite scroll
+---
+
+# Virtual Scroll
+
+This example demonstrates virtualized table rendering with the `addVirtualScroll` plugin, capable of handling 100,000+ rows with smooth scrolling performance.
+
+<script>
+  import VirtualScrollExample from './VirtualScrollExample.svelte';
+</script>
+
+<VirtualScrollExample />

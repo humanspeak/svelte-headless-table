@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 test.describe('initial', () => {
     test.beforeEach(async ({ page }: { page: Page }) => {
-        await page.goto('/?seed=12345&rows=4&subrows=false')
+        await page.goto('/kitchen-sink?seed=12345&rows=4&subrows=false')
     })
 
     test('loads table with initial data', async ({ page }: { page: Page }) => {
