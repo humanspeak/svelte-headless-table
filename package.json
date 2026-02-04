@@ -1,6 +1,6 @@
 {
     "name": "@humanspeak/svelte-headless-table",
-    "version": "6.0.3",
+    "version": "6.0.4",
     "description": "A powerful, headless table library for Svelte that provides complete control over table UI while handling complex data operations like sorting, filtering, pagination, grouping, and row expansion. Build custom, accessible data tables with zero styling opinions.",
     "keywords": [
         "svelte",
