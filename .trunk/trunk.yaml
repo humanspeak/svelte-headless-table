@@ -44,7 +44,7 @@ lint:
     enabled:
         - sort-package-json@3.6.1
         - actionlint@1.7.10
-        - checkov@3.2.499
+        - checkov@3.2.500
         - eslint@9.39.2:
               packages:
                   - '@typescript-eslint/eslint-plugin'
