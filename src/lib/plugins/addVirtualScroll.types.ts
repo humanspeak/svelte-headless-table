@@ -44,12 +44,6 @@ export interface VirtualScrollConfig<Item> {
      * If provided, enables variable row heights.
      */
     getRowHeight?: (_item: Item) => number
-
-    /**
-     * Enable debug mode to show virtualization info in console.
-     * @default false
-     */
-    debug?: boolean
 }
 
 /**

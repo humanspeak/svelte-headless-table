@@ -172,19 +172,6 @@ export class HeightManager {
             end = rowIds.length
         }
 
-        // DEBUG
-        console.log('[HeightManager] getVisibleRange', {
-            rowCount: rowIds.length,
-            scrollTop,
-            viewportHeight,
-            bufferSize,
-            avgHeight,
-            bottomEdge,
-            start,
-            end,
-            measuredCount: this.measuredCount
-        })
-
         return { start, end }
     }
 

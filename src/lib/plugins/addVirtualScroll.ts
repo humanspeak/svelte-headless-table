@@ -19,8 +19,7 @@ export type { ScrollToIndexOptions, VirtualScrollConfig, VirtualScrollState, Vis
 const DEFAULTS = {
     estimatedRowHeight: 40,
     bufferSize: 10,
-    loadMoreThreshold: 200,
-    debug: false
+    loadMoreThreshold: 200
 } as const
 
 /**
@@ -61,8 +60,7 @@ export const addVirtualScroll =
         loadMoreThreshold = DEFAULTS.loadMoreThreshold,
         estimatedRowHeight = DEFAULTS.estimatedRowHeight,
         bufferSize = DEFAULTS.bufferSize,
-        getRowHeight,
-        debug = DEFAULTS.debug
+        getRowHeight
     }: VirtualScrollConfig<Item> = {}): TablePlugin<
         Item,
         VirtualScrollState<Item>,
@@ -121,14 +119,7 @@ export const addVirtualScroll =
         const topSpacerHeight: Readable<number> = derived(
             [rowIds, visibleRange],
             ([$rowIds, $range]) => {
-                const height = heightManager.getOffsetForIndex($rowIds, $range.start)
-                if (debug) {
-                    console.log('[VirtualScroll] topSpacerHeight', {
-                        rangeStart: $range.start,
-                        height
-                    })
-                }
-                return height
+                return heightManager.getOffsetForIndex($rowIds, $range.start)
             }
         )
 
@@ -136,16 +127,7 @@ export const addVirtualScroll =
             [rowIds, visibleRange, totalHeight],
             ([$rowIds, $range, $total]) => {
                 const endOffset = heightManager.getOffsetForIndex($rowIds, $range.end)
-                const height = Math.max(0, $total - endOffset)
-                if (debug) {
-                    console.log('[VirtualScroll] bottomSpacerHeight', {
-                        rangeEnd: $range.end,
-                        endOffset,
-                        totalHeight: $total,
-                        height
-                    })
-                }
-                return height
+                return Math.max(0, $total - endOffset)
             }
         )
 
@@ -174,13 +156,6 @@ export const addVirtualScroll =
                 loadMorePending = true
                 isLoading.set(true)
 
-                if (debug) {
-                    console.log('[VirtualScroll] Triggering onLoadMore', {
-                        distanceFromBottom,
-                        threshold: loadMoreThreshold
-                    })
-                }
-
                 const result = onLoadMore()
                 if (result instanceof Promise) {
                     result.finally(() => {
@@ -201,14 +176,6 @@ export const addVirtualScroll =
             const target = event.target as HTMLElement
             const newScrollTop = target.scrollTop
 
-            if (debug) {
-                console.log('[VirtualScroll] handleScroll', {
-                    scrollTop: newScrollTop,
-                    scrollHeight: target.scrollHeight,
-                    clientHeight: target.clientHeight
-                })
-            }
-
             scrollTop.set(newScrollTop)
 
             checkLoadMore()
@@ -222,20 +189,11 @@ export const addVirtualScroll =
 
             // Set initial viewport height
             const initialHeight = node.clientHeight
-            if (debug) {
-                console.log('[VirtualScroll] Action attached, initial clientHeight:', initialHeight)
-            }
             viewportHeight.set(initialHeight)
 
             // Create ResizeObserver to track viewport size changes
             const resizeObserver = new ResizeObserver((entries) => {
                 for (const entry of entries) {
-                    if (debug) {
-                        console.log(
-                            '[VirtualScroll] ResizeObserver fired, new height:',
-                            entry.contentRect.height
-                        )
-                    }
                     viewportHeight.set(entry.contentRect.height)
                 }
             })
@@ -261,11 +219,6 @@ export const addVirtualScroll =
          */
         const scrollToIndex = (index: number, options: ScrollToIndexOptions = {}) => {
             if (!scrollContainer) {
-                if (debug) {
-                    console.warn(
-                        '[VirtualScroll] scrollToIndex called but no scroll container attached'
-                    )
-                }
                 return
             }
 
@@ -273,12 +226,6 @@ export const addVirtualScroll =
             const $rowIds = get(rowIds)
 
             if (index < 0 || index >= $rowIds.length) {
-                if (debug) {
-                    console.warn('[VirtualScroll] scrollToIndex: index out of bounds', {
-                        index,
-                        totalRows: $rowIds.length
-                    })
-                }
                 return
             }
 
@@ -322,15 +269,6 @@ export const addVirtualScroll =
                 top: Math.max(0, scrollPosition),
                 behavior
             })
-
-            if (debug) {
-                console.log('[VirtualScroll] scrollToIndex', {
-                    index,
-                    targetOffset,
-                    scrollPosition,
-                    align
-                })
-            }
         }
 
         /**
@@ -353,15 +291,6 @@ export const addVirtualScroll =
                 // Force recalculation of derived stores by updating rowIds
                 // (touching it with the same value)
                 rowIds.update((v) => v)
-
-                if (debug) {
-                    console.log('[VirtualScroll] Row measured', {
-                        rowId,
-                        height,
-                        averageHeight: heightManager.getAverageHeight(),
-                        measuredCount: heightManager.size
-                    })
-                }
             }
         }
 
@@ -447,19 +376,6 @@ export const addVirtualScroll =
 
                     // Return only the visible subset
                     const visibleRows = $rows.slice(range.start, range.end)
-
-                    if (debug) {
-                        console.log('[VirtualScroll] derivePageRows', {
-                            totalRows: $rows.length,
-                            scrollTop: $scrollTop,
-                            viewportHeight: $viewportHeight,
-                            bufferSize,
-                            range,
-                            visibleRowsCount: visibleRows.length,
-                            estimatedRowHeight,
-                            avgHeight: heightManager.getAverageHeight()
-                        })
-                    }
 
                     set(visibleRows)
                 }
