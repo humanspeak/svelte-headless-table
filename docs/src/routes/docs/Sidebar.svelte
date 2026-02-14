@@ -290,9 +290,7 @@
                                         transition={{ type: 'spring', stiffness: 500, damping: 15 }}
                                     >
                                         <i
-                                            class="{item.icon} fa-fw mr-3 text-sm {isActive(
-                                                item.href
-                                            )
+                                            class="{item.icon} fa-fw text-sm {isActive(item.href)
                                                 ? 'text-sidebar-active-foreground'
                                                 : 'text-text-muted group-hover:text-text-secondary'}"
                                         ></i>
