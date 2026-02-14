@@ -7,7 +7,15 @@ sidebar_title: createViewModel
 <script>
   import { useHljs } from '$lib/utils/useHljs';
   import Admonition from '$lib/components/Admonition.svelte'
+  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
   useHljs('ts');
+  const seo = getSeoContext()
+  $effect(() => {
+      if (seo) {
+          seo.title = 'createViewModel API - Svelte Headless Table'
+          seo.description = 'Generate the view model for your table with createViewModel, which derives header rows, body rows, and HTML attributes to spread onto your Svelte markup elements'
+      }
+  })
 </script>
 
 # createViewModel

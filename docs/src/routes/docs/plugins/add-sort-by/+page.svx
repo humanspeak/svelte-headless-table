@@ -8,7 +8,15 @@ sidebar_title: addSortBy
   import { useHljs } from '$lib/utils/useHljs'
   import Callout from '$lib/components/Callout.svelte'
   import SimpleSortingDemo from './SimpleSortingDemo.svelte'
+  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
   useHljs('ts')
+  const seo = getSeoContext()
+  $effect(() => {
+      if (seo) {
+          seo.title = 'addSortBy Plugin - Svelte Headless Table'
+          seo.description = 'Add column sorting to your Svelte Headless Table with configurable sort directions, multi-column sorting, custom comparator functions, and sort state indicators'
+      }
+  })
 </script>
 # addSortBy
 

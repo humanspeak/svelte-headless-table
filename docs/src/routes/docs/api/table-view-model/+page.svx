@@ -7,7 +7,15 @@ sidebar_title: TableViewModel
 <script>
   import { useHljs } from '$lib/utils/useHljs';
   import Admonition from '$lib/components/Admonition.svelte'
+  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
   useHljs('ts');
+  const seo = getSeoContext()
+  $effect(() => {
+      if (seo) {
+          seo.title = 'TableViewModel API - Svelte Headless Table'
+          seo.description = 'Understand the TableViewModel API containing readable stores that describe table structure including header rows, body rows, and attributes to spread on markup'
+      }
+  })
 </script>
 
 # TableViewModel

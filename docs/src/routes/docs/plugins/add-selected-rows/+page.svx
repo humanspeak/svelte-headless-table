@@ -8,7 +8,15 @@ sidebar_title: addSelectedRows
   import { useHljs } from '$lib/utils/useHljs'
   import Callout from '$lib/components/Callout.svelte'
   import SimpleSelectedDemo from './SimpleSelectedDemo.svelte'
+  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
   useHljs('ts')
+  const seo = getSeoContext()
+  $effect(() => {
+      if (seo) {
+          seo.title = 'addSelectedRows Plugin - Svelte Headless Table'
+          seo.description = 'Add row selection to your Svelte Headless Table with addSelectedRows, supporting single and multi-select modes, select-all functionality, and linked selection state'
+      }
+  })
 </script>
 
 # addSelectedRows

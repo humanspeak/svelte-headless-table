@@ -9,7 +9,15 @@ sidebar_title: addExpandedRows
   import Callout from '$lib/components/Callout.svelte'
   import SimpleExpandingDemo from './SimpleExpandingDemo.svelte'
   import SimpleGroupByDemo from './SimpleGroupByDemo.svelte'
+  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
   useHljs('ts')
+  const seo = getSeoContext()
+  $effect(() => {
+      if (seo) {
+          seo.title = 'addExpandedRows Plugin - Svelte Headless Table'
+          seo.description = 'Expand and collapse sub-rows in your table with addExpandedRows, enabling tree views, detail panels, and hierarchical data visualization in Svelte Headless Table'
+      }
+  })
 </script>
 
 # addExpandedRows

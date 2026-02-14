@@ -7,7 +7,15 @@ sidebar_title: createColumns
 <script>
   import { useHljs } from '$lib/utils/useHljs';
   import Admonition from '$lib/components/Admonition.svelte'
+  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
   useHljs('ts');
+  const seo = getSeoContext()
+  $effect(() => {
+      if (seo) {
+          seo.title = 'createColumns API - Svelte Headless Table'
+          seo.description = 'Define your table structure and column interactions with createColumns, including data accessors, custom cell renderers, and header configurations for Svelte Headless Table'
+      }
+  })
 </script>
 # createColumns
 

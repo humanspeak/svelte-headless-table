@@ -7,7 +7,15 @@ sidebar_title: BodyCell
 <script>
   import { useHljs } from '$lib/utils/useHljs';
   import Admonition from '$lib/components/Admonition.svelte'
+  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
   useHljs('ts');
+  const seo = getSeoContext()
+  $effect(() => {
+      if (seo) {
+          seo.title = 'BodyCell API - Svelte Headless Table'
+          seo.description = 'Explore the BodyCell model API representing a table body cell element, including cell rendering, HTML attributes, and plugin-specific cell state and interactions'
+      }
+  })
 </script>
 
 # BodyCell

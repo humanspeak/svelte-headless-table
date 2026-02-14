@@ -3,6 +3,7 @@
     import Footer from '$lib/components/general/Footer.svelte'
     import { type BreadcrumbContext } from '$lib/components/contexts/Breadcrumb/type'
     import { getBreadcrumbContext } from '$lib/components/contexts/Breadcrumb/Breadcrumb.context'
+    import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
 
     // mounted no longer needed for CSS enter
     let headingContainer: HTMLDivElement | null = $state(null)
@@ -11,6 +12,15 @@
     $effect(() => {
         if (breadcrumbContext) {
             breadcrumbContext.breadcrumbs = []
+        }
+    })
+
+    const seoContext = getSeoContext()
+    $effect(() => {
+        if (seoContext) {
+            seoContext.title = 'Svelte Headless Table - Build Custom Data Tables for Svelte 5'
+            seoContext.description =
+                'Build powerful, fully customizable data tables for Svelte 5 with this headless, composable table library featuring sorting, filtering, pagination, grouping, and row selection plugins'
         }
     })
 

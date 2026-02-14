@@ -8,7 +8,15 @@ sidebar_title: addColumnFilters
   import { useHljs } from '$lib/utils/useHljs'
   import Callout from '$lib/components/Callout.svelte'
   import SimpleFilteringDemo from './SimpleFilteringDemo.svelte'
+  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
   useHljs('ts')
+  const seo = getSeoContext()
+  $effect(() => {
+      if (seo) {
+          seo.title = 'addColumnFilters Plugin - Svelte Headless Table'
+          seo.description = 'Filter table rows by individual column values with configurable filter functions, text matching, numeric range filtering, and custom filter UI components in Svelte'
+      }
+  })
 </script>
 
 # addColumnFilters

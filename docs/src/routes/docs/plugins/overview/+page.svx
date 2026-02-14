@@ -9,6 +9,14 @@ Svelte Headless Table is designed with extensibility in mind. Its complex featur
 
 <script>
   import Admonition from '$lib/components/Admonition.svelte'
+  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
+  const seo = getSeoContext()
+  $effect(() => {
+      if (seo) {
+          seo.title = 'Plugin System - Svelte Headless Table'
+          seo.description = 'Learn how to extend Svelte Headless Table with powerful plugins for sorting, filtering, pagination, grouping, row selection, column resizing, and virtual scrolling'
+      }
+  })
 </script>
 
 <ul class="grid text-sm md:text-base grid-cols-2 gap-2 p-0 lg:grid-cols-3">

@@ -6,7 +6,15 @@ sidebar_title: Table
 
 <script>
   import { useHljs } from '$lib/utils/useHljs';
+  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
   useHljs('ts');
+  const seo = getSeoContext()
+  $effect(() => {
+      if (seo) {
+          seo.title = 'Table API - Svelte Headless Table'
+          seo.description = 'Explore the main Table instance API returned by createTable, which provides methods for creating columns, deriving view models, and managing table plugin state'
+      }
+  })
 </script>
 
 # Table
