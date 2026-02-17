@@ -139,8 +139,8 @@ importers:
         specifier: workspace:*
         version: link:..
       '@humanspeak/svelte-motion':
-        specifier: ^0.1.20
-        version: 0.1.20(svelte@5.51.0)
+        specifier: ^0.1.21
+        version: 0.1.21(svelte@5.51.0)
       github-slugger:
         specifier: ^2.0.0
         version: 2.0.0
@@ -808,8 +808,8 @@ packages:
   '@humanspeak/svelte-keyed@5.0.1':
     resolution: {integrity: sha512-jFvANd9Nb5B/u9ELTSw1iUyuckgjF9R15BvK1V7eLLPurt4hxu35bZAoZMkqYxmj8fazcSw9UkmEu66jZ0+0Rg==}
 
-  '@humanspeak/svelte-motion@0.1.20':
-    resolution: {integrity: sha512-V1ouTJ4wvENc7YbaLg1HZt7/M7smYfYcotbH5Q8k2xEkG6VA4L504dj7yag+ly+pjij33Hncl0Tiy9trkcgCaQ==}
+  '@humanspeak/svelte-motion@0.1.21':
+    resolution: {integrity: sha512-/tPkatsdSLrS5+sMTab8zBSFYm8Af6OPnivWvVMKF+HXIFqnmD7dFLll4oBIMqbqSEk1d5sHzLe/XZMF8sguMg==}
     peerDependencies:
       svelte: ^5.0.0
 
@@ -4306,7 +4306,7 @@ snapshots:
 
   '@humanspeak/svelte-keyed@5.0.1': {}
 
-  '@humanspeak/svelte-motion@0.1.20(svelte@5.51.0)':
+  '@humanspeak/svelte-motion@0.1.21(svelte@5.51.0)':
     dependencies:
       motion: 12.34.0
       motion-dom: 12.34.0

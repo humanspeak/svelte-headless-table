@@ -23,7 +23,7 @@
     },
     "dependencies": {
         "@humanspeak/svelte-headless-table": "workspace:*",
-        "@humanspeak/svelte-motion": "^0.1.20",
+        "@humanspeak/svelte-motion": "^0.1.21",
         "github-slugger": "^2.0.0"
     },
     "devDependencies": {
