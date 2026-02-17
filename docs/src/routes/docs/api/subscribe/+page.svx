@@ -10,6 +10,14 @@ sidebar_title: Subscribe
 
 <script>
   import Admonition from '$lib/components/Admonition.svelte'
+  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
+  const seo = getSeoContext()
+  $effect(() => {
+      if (seo) {
+          seo.title = 'Subscribe Component - Svelte Headless Table'
+          seo.description = 'Subscribe to non top-level Svelte stores within your template using the Subscribe component for reactive access to nested store values and plugin state'
+      }
+  })
 </script>
 
 <Admonition type="note">`&lt;Subscribe/&gt;` is based on <a href="https://github.com/humanspeak/svelte-subscribe">svelte-subscribe</a>.</Admonition>

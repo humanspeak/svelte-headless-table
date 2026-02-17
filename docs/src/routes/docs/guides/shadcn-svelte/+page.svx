@@ -4,6 +4,17 @@ description: Build data tables with shadcn-svelte UI components
 sidebar_title: shadcn-svelte
 ---
 
+<script>
+  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
+  const seo = getSeoContext()
+  $effect(() => {
+      if (seo) {
+          seo.title = 'shadcn-svelte Integration - Svelte Headless Table'
+          seo.description = 'Build powerful, fully-featured data tables by combining Svelte Headless Table with shadcn-svelte UI components for sorting, filtering, pagination, and custom styling'
+      }
+  })
+</script>
+
 # shadcn-svelte Data Table Integration
 
 ## Introduction

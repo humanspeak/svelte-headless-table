@@ -6,7 +6,15 @@ sidebar_title: addGridLayout
 
 <script>
   import { useHljs } from '$lib/utils/useHljs';
+  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
   useHljs('ts');
+  const seo = getSeoContext()
+  $effect(() => {
+      if (seo) {
+          seo.title = 'addGridLayout Plugin - Svelte Headless Table'
+          seo.description = 'Switch from native HTML table layout to CSS Grid with addGridLayout, enabling more flexible column sizing and responsive table designs in your Svelte application'
+      }
+  })
 </script>
 
 # addGridLayout

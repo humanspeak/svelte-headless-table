@@ -8,7 +8,15 @@ sidebar_title: addDataExport
   import { useHljs } from '$lib/utils/useHljs';
   import Admonition from '$lib/components/Admonition.svelte'
   import Callout from '$lib/components/Callout.svelte'
+  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
   useHljs('ts');
+  const seo = getSeoContext()
+  $effect(() => {
+      if (seo) {
+          seo.title = 'addDataExport Plugin - Svelte Headless Table'
+          seo.description = 'Export your transformed table data as a new dataset with addDataExport, capturing the current state after sorting, filtering, and grouping for downstream processing'
+      }
+  })
 </script>
 
 # addDataExport

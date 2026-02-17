@@ -6,6 +6,14 @@ description: Build your first table with Svelte Headless Table
 <script>
   import Demo from './Demo.svelte';
   import Admonition from '$lib/components/Admonition.svelte'
+  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
+  const seo = getSeoContext()
+  $effect(() => {
+      if (seo) {
+          seo.title = 'Quick Start - Svelte Headless Table'
+          seo.description = 'Get started with Svelte Headless Table in minutes by building your first data table with createTable, column definitions, and a view model for your Svelte 5 application'
+      }
+  })
 </script>
 # Quick Start
 

@@ -9,6 +9,14 @@ This example demonstrates a table configured with several plugins and custom ren
 
 <script>
   import KitchenSink from './KitchenSink.svelte';
+  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
+  const seo = getSeoContext()
+  $effect(() => {
+      if (seo) {
+          seo.title = 'Kitchen Sink Example - Svelte Headless Table'
+          seo.description = 'A comprehensive example showcasing Svelte Headless Table with multiple plugins configured together including sorting, filtering, grouping, selection, and custom cell renderers'
+      }
+  })
 </script>
 
 <KitchenSink />

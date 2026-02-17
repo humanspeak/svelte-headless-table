@@ -3,6 +3,17 @@ title: Overview
 description: What is Svelte Headless Table?
 ---
 
+<script>
+  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
+  const seo = getSeoContext()
+  $effect(() => {
+      if (seo) {
+          seo.title = 'Overview - Svelte Headless Table'
+          seo.description = 'Learn what Svelte Headless Table is and why a headless, composable approach gives you full control over table markup, styling, accessibility, and design system integration'
+      }
+  })
+</script>
+
 # Overview
 
 Svelte Headless Table is a headless, composable table library for Svelte. It gives you a powerful table view-model (sorting, filtering, grouping, selection, pagination, etc.) while leaving the DOM and styling entirely up to you.

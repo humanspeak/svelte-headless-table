@@ -7,7 +7,15 @@ sidebar_title: addResizedColumns
 <script>
   import { useHljs } from '$lib/utils/useHljs';
   import Callout from '$lib/components/Callout.svelte'
+  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
   useHljs('ts');
+  const seo = getSeoContext()
+  $effect(() => {
+      if (seo) {
+          seo.title = 'addResizedColumns Plugin - Svelte Headless Table'
+          seo.description = 'Dynamically resize table columns with addResizedColumns, enabling both programmatic and user-driven column width adjustments with configurable min and max constraints'
+      }
+  })
 </script>
 
 # addResizedColumns

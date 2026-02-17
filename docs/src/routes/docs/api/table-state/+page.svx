@@ -6,7 +6,15 @@ sidebar_title: TableState
 
 <script>
   import { useHljs } from '$lib/utils/useHljs';
+  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
   useHljs('ts');
+  const seo = getSeoContext()
+  $effect(() => {
+      if (seo) {
+          seo.title = 'TableState API - Svelte Headless Table'
+          seo.description = 'Learn about the TableState API that extends TableViewModel with additional properties for accessing current plugin states and overall table configuration values'
+      }
+  })
 </script>
 
 # TableState
