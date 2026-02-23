@@ -84,7 +84,7 @@
         "test:watch": "vitest"
     },
     "dependencies": {
-        "@humanspeak/memory-cache": "^1.0.4",
+        "@humanspeak/memory-cache": "^1.0.5",
         "@humanspeak/svelte-keyed": "^5.0.1",
         "@humanspeak/svelte-render": "^5.1.1",
         "@humanspeak/svelte-subscribe": "^5.0.0"
