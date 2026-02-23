@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@humanspeak/memory-cache':
-        specifier: ^1.0.4
-        version: 1.0.4
+        specifier: ^1.0.5
+        version: 1.0.5
       '@humanspeak/svelte-keyed':
         specifier: ^5.0.1
         version: 5.0.1
@@ -801,8 +801,8 @@ packages:
     resolution: {integrity: sha512-/zUx+yOsIrG4Y43Eh2peDeKCxlRt/gET6aHfaKpuq267qXdYDFViVHfMaLyygZOnl0kGWxFIgsBy8QFuTLUXEQ==}
     engines: {node: '>=18.18.0'}
 
-  '@humanspeak/memory-cache@1.0.4':
-    resolution: {integrity: sha512-S/63Uqn0HzZuAKW3ieF3G8tDpsdQx5ssKHhtxG8Z/E592xSMayrUB0bzNojJ4SwC1kTEsbl14lr0voyR1HiWbA==}
+  '@humanspeak/memory-cache@1.0.5':
+    resolution: {integrity: sha512-bNo+xAL2KT8Zv9wHjeLloyQrbEv8aea9gjL2eHhNki3/1xapDRYm/W5gGgBQNvpdBJFoYcA6VQJcbm0ZjKML+g==}
     engines: {node: '>=18.0.0'}
 
   '@humanspeak/svelte-keyed@5.0.1':
@@ -4302,7 +4302,7 @@ snapshots:
       '@humanfs/core': 0.19.1
       '@humanwhocodes/retry': 0.4.3
 
-  '@humanspeak/memory-cache@1.0.4': {}
+  '@humanspeak/memory-cache@1.0.5': {}
 
   '@humanspeak/svelte-keyed@5.0.1': {}
 
