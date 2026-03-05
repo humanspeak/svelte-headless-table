@@ -103,7 +103,7 @@ export const addVirtualScroll =
         let currentRange: VisibleRange = { start: 0, end: 0 }
         const visibleRange: Readable<VisibleRange> = derived(
             [rowIds, scrollTop, viewportHeight],
-            ([$rowIds, $scrollTop, $viewportHeight]) => {
+            ([$rowIds, $scrollTop, $viewportHeight], set) => {
                 const range = heightManager.getVisibleRange(
                     $rowIds,
                     $scrollTop,
@@ -111,11 +111,12 @@ export const addVirtualScroll =
                     bufferSize
                 )
                 if (range.start === currentRange.start && range.end === currentRange.end) {
-                    return currentRange
+                    return
                 }
                 currentRange = range
-                return range
-            }
+                set(range)
+            },
+            currentRange
         )
 
         // Total height of all rows
