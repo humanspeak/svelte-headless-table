@@ -10,7 +10,7 @@ export default defineConfig({
         include: ['src/**/*.test.ts'],
         globals: true,
         coverage: {
-            reporter: 'lcov',
+            reporter: ['lcov'],
             provider: 'v8',
             include: ['src/**/*.ts'],
             exclude: [
@@ -18,6 +18,7 @@ export default defineConfig({
                 'docs/**',
                 'docs-new/**',
                 'docs-old/**',
+                'scripts/**',
                 '.trunk/**',
                 '.svelte-kit/**',
                 'tests/**',

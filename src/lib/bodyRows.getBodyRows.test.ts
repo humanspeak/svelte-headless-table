@@ -254,6 +254,31 @@ it('transforms data for data columns with custom rowDataId', () => {
     })
 })
 
+it('transforms single row with single column', () => {
+    const singleData: User[] = [data[0]]
+    const singleCols = [dataColumns[0]]
+    const actual = getBodyRows(singleData, singleCols)
+
+    expect(actual).toHaveLength(1)
+    expect(actual[0]).toBeInstanceOf(DataBodyRow)
+    expect(actual[0].cells).toHaveLength(1)
+    if (actual[0].isData()) {
+        expect(actual[0].original).toStrictEqual(singleData[0])
+    }
+    const cell = actual[0].cells[0]
+    expect(cell).toBeInstanceOf(DataBodyCell)
+    if (cell.isData()) {
+        expect(cell.value).toBe('Adam')
+    }
+})
+
+it('assigns sequential row ids', () => {
+    const actual = getBodyRows(data, dataColumns)
+
+    expect(actual[0].id).toBe('0')
+    expect(actual[1].id).toBe('1')
+})
+
 const checkedLabel = () => 'check'
 const expandedLabel = () => 'expanded'
 const displayColumns = [

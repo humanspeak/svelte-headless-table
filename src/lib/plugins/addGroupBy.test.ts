@@ -63,6 +63,119 @@ test('basic row grouping', () => {
     expect(subRow12Data.firstName).toBe('Danny')
 })
 
+test('all rows same group: 1 group row with all subRows', () => {
+    const data = readable<Sample[]>([
+        { firstName: 'Adam', lastName: 'Lee', age: 30, progress: 30, status: 'single', visits: 5 },
+        { firstName: 'Bryan', lastName: 'Lee', age: 30, progress: 30, status: 'single', visits: 5 },
+        {
+            firstName: 'Charlie',
+            lastName: 'Lee',
+            age: 30,
+            progress: 30,
+            status: 'single',
+            visits: 5
+        },
+        { firstName: 'Danny', lastName: 'Lee', age: 40, progress: 40, status: 'single', visits: 5 },
+        { firstName: 'Elliot', lastName: 'Lee', age: 40, progress: 40, status: 'single', visits: 5 }
+    ])
+    const table = createTable(data, {
+        group: addGroupBy()
+    })
+    const columns = table.createColumns([
+        table.column({ accessor: 'firstName', header: 'First Name' }),
+        table.column({ accessor: 'lastName', header: 'Last Name' })
+    ])
+    const vm = table.createViewModel(columns)
+
+    const { groupByIds } = vm.pluginStates.group
+    groupByIds.toggle('lastName')
+    const rows = get(vm.rows)
+
+    expect(rows).toHaveLength(1)
+    expect(rows[0].subRows).toHaveLength(5)
+})
+
+test('each row unique group: N group rows with 1 subRow each', () => {
+    const data = readable<Sample[]>([
+        { firstName: 'Adam', lastName: 'Lee', age: 30, progress: 30, status: 'single', visits: 5 },
+        {
+            firstName: 'Bryan',
+            lastName: 'Puth',
+            age: 30,
+            progress: 30,
+            status: 'single',
+            visits: 5
+        },
+        {
+            firstName: 'Charlie',
+            lastName: 'Page',
+            age: 30,
+            progress: 30,
+            status: 'single',
+            visits: 5
+        }
+    ])
+    const table = createTable(data, {
+        group: addGroupBy()
+    })
+    const columns = table.createColumns([
+        table.column({ accessor: 'firstName', header: 'First Name' }),
+        table.column({ accessor: 'lastName', header: 'Last Name' })
+    ])
+    const vm = table.createViewModel(columns)
+
+    const { groupByIds } = vm.pluginStates.group
+    groupByIds.toggle('lastName')
+    const rows = get(vm.rows)
+
+    expect(rows).toHaveLength(3)
+    rows.forEach((row) => {
+        expect(row.subRows).toHaveLength(1)
+    })
+})
+
+test('group order: groups appear in first-seen insertion order', () => {
+    const data = readable<Sample[]>([
+        { firstName: 'Adam', lastName: 'Puth', age: 30, progress: 30, status: 'single', visits: 5 },
+        { firstName: 'Bryan', lastName: 'Lee', age: 30, progress: 30, status: 'single', visits: 5 },
+        {
+            firstName: 'Charlie',
+            lastName: 'Page',
+            age: 30,
+            progress: 30,
+            status: 'single',
+            visits: 5
+        },
+        { firstName: 'Danny', lastName: 'Lee', age: 40, progress: 40, status: 'single', visits: 5 }
+    ])
+    const table = createTable(data, {
+        group: addGroupBy()
+    })
+    const columns = table.createColumns([
+        table.column({ accessor: 'firstName', header: 'First Name' }),
+        table.column({ accessor: 'lastName', header: 'Last Name' })
+    ])
+    const vm = table.createViewModel(columns)
+
+    const { groupByIds } = vm.pluginStates.group
+    groupByIds.toggle('lastName')
+    const rows = get(vm.rows)
+
+    expect(rows).toHaveLength(3)
+    // First-seen order: Puth, Lee, Page
+    const subRow0 = rows[0].subRows?.[0]
+    const subRow0Data = (subRow0?.isData() && subRow0.original) as Sample
+    expect(subRow0Data.lastName).toBe('Puth')
+
+    const subRow1 = rows[1].subRows?.[0]
+    const subRow1Data = (subRow1?.isData() && subRow1.original) as Sample
+    expect(subRow1Data.lastName).toBe('Lee')
+
+    const subRow2 = rows[2].subRows?.[0]
+    const subRow2Data = (subRow2?.isData() && subRow2.original) as Sample
+    expect(subRow2Data.lastName).toBe('Page')
+})
+
 it('preserves subrows of a row after grouping', () => {
     const data = readable<Sample[]>([
         {

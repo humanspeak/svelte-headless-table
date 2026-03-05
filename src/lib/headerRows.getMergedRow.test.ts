@@ -178,6 +178,27 @@ it('merges adjacent group cells behind', () => {
     expect(actual).toStrictEqual(expected)
 })
 
+it('returns empty array for empty input', () => {
+    const actual = getMergedRow([])
+
+    expect(actual).toStrictEqual([])
+})
+
+it('returns single cell unchanged', () => {
+    const cells = [
+        new DataHeaderCell<User>({
+            colstart: 0,
+            label: 'First Name',
+            accessorKey: 'firstName',
+            id: 'firstName'
+        })
+    ]
+
+    const actual = getMergedRow(cells)
+
+    expect(actual).toStrictEqual(cells)
+})
+
 it('does not merge disjoint group cells', () => {
     const cells = [
         new GroupHeaderCell<User>({
