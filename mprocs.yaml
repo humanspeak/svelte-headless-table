@@ -5,6 +5,8 @@ procs:
         autorestart: false
     pkg:
         shell: pnpm -w -r --filter @humanspeak/svelte-headless-table run dev:pkg
+    dev:
+        shell: pnpm -w run dev
     docs:
         shell: pnpm --filter docs run dev
     sitemap:

@@ -279,6 +279,15 @@
         </p>
         <div class="table-container" use:virtualScroll>
             <table {...$tableAttrs}>
+                <colgroup>
+                    <col style="width: 8%" />
+                    <col style="width: 14%" />
+                    <col style="width: 22%" />
+                    <col style="width: 12%" />
+                    <col style="width: 14%" />
+                    <col style="width: 10%" />
+                    <col style="width: 12%" />
+                </colgroup>
                 <thead>
                     {#each $headerRows as headerRow (headerRow.id)}
                         <Subscribe attrs={headerRow.attrs()} let:attrs>
@@ -520,6 +529,7 @@ const {
     table {
         width: 100%;
         border-collapse: collapse;
+        table-layout: fixed;
     }
 
     thead {
@@ -534,6 +544,9 @@ const {
         padding: 0.75rem;
         text-align: left;
         border-bottom: 1px solid #ddd;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     th {
