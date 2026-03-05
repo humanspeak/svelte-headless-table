@@ -373,6 +373,7 @@
     table {
         width: 100%;
         border-collapse: collapse;
+        table-layout: fixed;
         margin: 0;
     }
 
@@ -402,6 +403,9 @@
         padding: 0.5rem 0.75rem;
         text-align: left;
         border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     th {

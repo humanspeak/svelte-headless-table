@@ -106,6 +106,9 @@ sidebar_title: addVirtualScroll
     height: 500px;
     overflow-y: auto;
   }
+  table {
+    table-layout: fixed;
+  }
 </style>
 ```
 
@@ -235,6 +238,7 @@ Manually notify the plugin that a row has been measured. Usually not needed when
 
 ## Performance Tips
 
+- **Use `table-layout: fixed`** on your `<table>` element. With virtual scroll, only a subset of rows is rendered at any time. The default `table-layout: auto` recalculates column widths based on visible content, causing header columns to shift as you scroll through rows with varying content lengths. `table-layout: fixed` locks column widths to the header, preventing layout jitter.
 - Use a reasonable `bufferSize` (10-20) to balance between smooth scrolling and DOM size
 - The `estimatedRowHeight` doesn't need to be exact - actual heights are measured automatically
 - For very large datasets (100,000+ rows), consider server-side pagination combined with virtual scroll
