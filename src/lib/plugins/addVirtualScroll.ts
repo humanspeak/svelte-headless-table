@@ -97,16 +97,24 @@ export const addVirtualScroll =
         // Cache for row lookup (set by derivePageRows)
         let allRowsCache: BodyRow<Item>[] = []
 
-        // Visible range calculation
+        // Visible range calculation.
+        // Return the same object reference when the range hasn't changed to avoid
+        // unnecessary downstream store updates (spacer heights, rendered rows).
+        let currentRange: VisibleRange = { start: 0, end: 0 }
         const visibleRange: Readable<VisibleRange> = derived(
             [rowIds, scrollTop, viewportHeight],
             ([$rowIds, $scrollTop, $viewportHeight]) => {
-                return heightManager.getVisibleRange(
+                const range = heightManager.getVisibleRange(
                     $rowIds,
                     $scrollTop,
                     $viewportHeight,
                     bufferSize
                 )
+                if (range.start === currentRange.start && range.end === currentRange.end) {
+                    return currentRange
+                }
+                currentRange = range
+                return range
             }
         )
 
@@ -174,9 +182,7 @@ export const addVirtualScroll =
          */
         const handleScroll = (event: Event) => {
             const target = event.target as HTMLElement
-            const newScrollTop = target.scrollTop
-
-            scrollTop.set(newScrollTop)
+            scrollTop.set(target.scrollTop)
 
             checkLoadMore()
         }
@@ -186,6 +192,12 @@ export const addVirtualScroll =
          */
         const virtualScroll: Action<HTMLElement> = (node) => {
             scrollContainer = node
+
+            // Disable overflow-anchor to prevent the browser from adjusting
+            // scrollTop when spacer heights change. Without this, a feedback
+            // loop occurs: spacer change → browser adjusts scrollTop → scroll
+            // event → new visible range → spacer change → cascades to bottom.
+            node.style.overflowAnchor = 'none'
 
             // Set initial viewport height
             const initialHeight = node.clientHeight
