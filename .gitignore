@@ -22,3 +22,6 @@ junit-playwright.xml
 .notes
 docs/src/lib/sitemap-manifest.json
 .playwright-mcp/
+docs/static/twitter-default.png
+docs/static/og-default.png
+/docs/static/social-cards
