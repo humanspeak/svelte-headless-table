@@ -138,6 +138,31 @@ it('orders the matrix columns', () => {
     expect(actual).toStrictEqual(expected)
 })
 
+it('handles single column matrix', () => {
+    const columnMatrix: Matrix<HeaderCell<User>> = [
+        [
+            new GroupHeaderCell({
+                label: 'Name',
+                colspan: 1,
+                colstart: 0,
+                allIds: ['firstName'],
+                ids: []
+            }),
+            new DataHeaderCell({
+                label: 'First Name',
+                colstart: 0,
+                accessorKey: 'firstName',
+                id: 'firstName'
+            })
+        ]
+    ]
+
+    const actual = getOrderedColumnMatrix(columnMatrix, ['firstName'])
+
+    expect(actual).toHaveLength(1)
+    expect(actual[0][1].id).toBe('firstName')
+})
+
 it('ignores empty ordering', () => {
     const columnMatrix: Matrix<HeaderCell<User>> = [
         [

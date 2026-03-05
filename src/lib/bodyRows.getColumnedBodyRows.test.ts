@@ -79,3 +79,29 @@ it('hides columns', () => {
         expect(actual[rowIdx].cellForId['progress']).not.toBeUndefined()
     })
 })
+
+it('cell .row references the cloned row', () => {
+    const actual = getColumnedBodyRows(bodyRows, ['firstName', 'lastName', 'progress'])
+
+    expect(actual[0].cells[0].row).toBe(actual[0])
+    expect(actual[1].cells[0].row).toBe(actual[1])
+})
+
+it('non-existent column IDs are skipped gracefully', () => {
+    const actual = getColumnedBodyRows(bodyRows, ['firstName', 'nonExistent', 'progress'])
+
+    ;[0, 1].forEach((rowIdx) => {
+        expect(actual[rowIdx].cells.length).toBe(2)
+        expect(actual[rowIdx].cells[0].column.id).toBe('firstName')
+        expect(actual[rowIdx].cells[1].column.id).toBe('progress')
+    })
+})
+
+it('works with a single-column table', () => {
+    const actual = getColumnedBodyRows(bodyRows, ['lastName'])
+
+    ;[0, 1].forEach((rowIdx) => {
+        expect(actual[rowIdx].cells.length).toBe(1)
+        expect(actual[rowIdx].cells[0].column.id).toBe('lastName')
+    })
+})

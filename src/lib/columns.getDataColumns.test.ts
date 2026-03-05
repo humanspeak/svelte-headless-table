@@ -71,3 +71,39 @@ it('flattens data columns', () => {
 
     expect(actual).toStrictEqual(expected)
 })
+
+it('returns flat columns unchanged', () => {
+    const columns = [
+        table.column({ header: 'First Name', accessor: 'firstName' }),
+        table.column({ header: 'Last Name', accessor: 'lastName' })
+    ]
+
+    const actual = getFlatColumns(columns)
+
+    const expected = [
+        table.column({ header: 'First Name', accessor: 'firstName' }),
+        table.column({ header: 'Last Name', accessor: 'lastName' })
+    ]
+
+    expect(actual).toStrictEqual(expected)
+})
+
+it('returns empty array for empty columns', () => {
+    const actual = getFlatColumns([])
+
+    expect(actual).toStrictEqual([])
+})
+
+it('flattens a single column in a group', () => {
+    const columns = table.createColumns([
+        table.group({
+            header: 'Name',
+            columns: [table.column({ header: 'First Name', accessor: 'firstName' })]
+        })
+    ])
+
+    const actual = getFlatColumns(columns)
+
+    expect(actual).toHaveLength(1)
+    expect(actual[0].id).toBe('firstName')
+})

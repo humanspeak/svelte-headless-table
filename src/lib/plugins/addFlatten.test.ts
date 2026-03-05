@@ -121,6 +121,39 @@ test('basic row flattening', () => {
     expect(row0?.subRows).toHaveLength(1)
 })
 
+test('empty data: no rows returned', () => {
+    const emptyData = readable<Sample[]>([])
+    const table = createTable(emptyData, {
+        sub: addSubRows({ children: 'children' }),
+        flatten: addFlatten({ initialDepth: 1 })
+    })
+    const columns = table.createColumns([
+        table.column({ accessor: 'firstName', header: 'First Name' })
+    ])
+    const vm = table.createViewModel(columns)
+    const rows = get(vm.rows)
+    expect(rows).toHaveLength(0)
+})
+
+test('rows without children: depth=0 returns all root rows', () => {
+    const flatData = readable<Sample[]>([
+        { firstName: 'Adam', lastName: 'Lee', age: 30, progress: 30, status: 'single', visits: 5 },
+        { firstName: 'Bryan', lastName: 'Lee', age: 30, progress: 30, status: 'single', visits: 5 }
+    ])
+    const table = createTable(flatData, {
+        sub: addSubRows({ children: 'children' }),
+        flatten: addFlatten({ initialDepth: 0 })
+    })
+    const columns = table.createColumns([
+        table.column({ accessor: 'firstName', header: 'First Name' })
+    ])
+    const vm = table.createViewModel(columns)
+    const rows = get(vm.rows)
+    expect(rows).toHaveLength(2)
+    expect(rows[0].isData() && rows[0].original.firstName).toBe('Adam')
+    expect(rows[1].isData() && rows[1].original.firstName).toBe('Bryan')
+})
+
 test('multi-level row flattening', () => {
     const table = createTable(data, {
         sub: addSubRows({ children: 'children' }),

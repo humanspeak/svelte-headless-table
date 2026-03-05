@@ -62,6 +62,26 @@ it('renders dynamic label with state', () => {
     expect(actual.render()).toBe('adam with 0 columns')
 })
 
+it('renders null value as string "null"', () => {
+    const actual = new DataBodyCell<User>({
+        column,
+        row,
+        value: null
+    })
+
+    expect(actual.render()).toBe('null')
+})
+
+it('renders numeric value as string', () => {
+    const actual = new DataBodyCell<User>({
+        column,
+        row,
+        value: 42
+    })
+
+    expect(actual.render()).toBe('42')
+})
+
 it('throws if rendering dynamically without state', () => {
     const actual = new DataBodyCell<User>({
         column,
