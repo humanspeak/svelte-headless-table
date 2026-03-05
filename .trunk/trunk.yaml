@@ -21,6 +21,9 @@ lint:
         - linters: [osv-scanner]
           paths:
               - '**/pnpm-lock.yaml'
+        - linters: [eslint, prettier]
+          paths:
+              - '**/worker-configuration.d.ts'
     definitions:
         - name: prettier
           files:
