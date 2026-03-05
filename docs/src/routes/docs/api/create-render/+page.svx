@@ -7,14 +7,16 @@ sidebar_title: createRender
 <script>
   import { Render, createRender } from '@humanspeak/svelte-headless-table';
   import Admonition from '$lib/components/Admonition.svelte'
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'createRender API - Svelte Headless Table'
-          seo.description = 'Configure Svelte components with props to create render configs for custom cell and header content rendering in your Svelte Headless Table column definitions'
-      }
-  })
+  if (seo) {
+      seo.title = 'createRender API - Svelte Headless Table'
+      seo.description = 'Configure Svelte components with props to create render configs for custom cell and header content rendering in your Svelte Headless Table column definitions'
+      seo.ogTitle = 'createRender API'
+      seo.ogTagline = 'Configure Svelte components for custom cell rendering.'
+      seo.ogFeatures = ['createRender', 'Custom Cells', 'Component Props', 'Headers']
+      seo.ogSlug = 'api-create-render'
+  }
 </script>
 
 # createRender

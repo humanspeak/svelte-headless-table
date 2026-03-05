@@ -5,18 +5,17 @@ sidebar_title: addDataExport
 ---
 
 <script>
-  import { useHljs } from '$lib/utils/useHljs';
   import Admonition from '$lib/components/Admonition.svelte'
-  import Callout from '$lib/components/Callout.svelte'
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-  useHljs('ts');
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'addDataExport Plugin - Svelte Headless Table'
-          seo.description = 'Export your transformed table data as a new dataset with addDataExport, capturing the current state after sorting, filtering, and grouping for downstream processing'
-      }
-  })
+  if (seo) {
+      seo.title = 'addDataExport Plugin - Svelte Headless Table'
+      seo.description = 'Export your transformed table data as a new dataset with addDataExport, capturing the current state after sorting, filtering, and grouping for downstream processing'
+      seo.ogTitle = 'addDataExport Plugin'
+      seo.ogTagline = 'Export transformed table data as a dataset.'
+      seo.ogFeatures = ['Data Export', 'Current State', 'Post-Transform', 'Processing']
+      seo.ogSlug = 'plugins-add-data-export'
+  }
 </script>
 
 # addDataExport
@@ -29,7 +28,7 @@ This is useful if you need to export data from the table with all plugin transfo
 
 ## Options
 
-<Callout type="info">Options passed into <code>addDataExport</code>.</Callout>
+<Admonition type="info">Options passed into <code>addDataExport</code>.</Admonition>
 
 ```ts {3}
 const table = createTable(data, {
@@ -45,7 +44,7 @@ Property key for sub-rows for `'object'`/`'json'` formats. Default `'children'`.
 
 ## Column Options
 
-<Callout type="info">Options passed into column definitions.</Callout>
+<Admonition type="info">Options passed into column definitions.</Admonition>
 
 ```ts {7}
 const columns = table.createColumns([
@@ -64,7 +63,7 @@ Exclude a column from the export.
 
 ## Prop Set
 
-<Callout type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Callout>
+<Admonition type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Admonition>
 
 ```svelte
 {#each $headerRows as headerRow (headerRow.id)}
@@ -81,7 +80,7 @@ Exclude a column from the export.
 
 ## Plugin State
 
-<Callout type="info">State provided by <code>addDataExport</code>.</Callout>
+<Admonition type="info">State provided by <code>addDataExport</code>.</Admonition>
 
 ```ts {3}
 const { headerRows, rows, pluginStates } = table.createViewModel(columns);

@@ -9,14 +9,16 @@ A table with editable cells that updates the data source.
 
 <script>
   import Editable from './Editable.svelte';
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'Editable Table Example - Svelte Headless Table'
-          seo.description = 'An interactive example demonstrating how to build editable table cells with Svelte Headless Table that update the underlying data source in real time on user input'
-      }
-  })
+  if (seo) {
+      seo.title = 'Editable Table Example - Svelte Headless Table'
+      seo.description = 'An interactive example demonstrating how to build editable table cells with Svelte Headless Table that update the underlying data source in real time on user input'
+      seo.ogTitle = 'Editable Table Example'
+      seo.ogTagline = 'Editable cells that update data in real time.'
+      seo.ogFeatures = ['Editable Cells', 'Real-Time', 'Data Binding', 'Input Handling']
+      seo.ogSlug = 'examples-editable-table'
+  }
 </script>
 
 <Editable />

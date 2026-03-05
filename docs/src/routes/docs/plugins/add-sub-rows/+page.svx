@@ -5,17 +5,17 @@ sidebar_title: addSubRows
 ---
 
 <script>
-  import { useHljs } from '$lib/utils/useHljs';
-  import Callout from '$lib/components/Callout.svelte'
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-  useHljs('ts');
+  import Admonition from '$lib/components/Admonition.svelte'
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'addSubRows Plugin - Svelte Headless Table'
-          seo.description = 'Define hierarchical sub-rows for your table data with addSubRows, enabling nested tree-like data structures commonly used with addExpandedRows for expandable tables'
-      }
-  })
+  if (seo) {
+      seo.title = 'addSubRows Plugin - Svelte Headless Table'
+      seo.description = 'Define hierarchical sub-rows for your table data with addSubRows, enabling nested tree-like data structures commonly used with addExpandedRows for expandable tables'
+      seo.ogTitle = 'addSubRows Plugin'
+      seo.ogTagline = 'Define sub-rows for hierarchical data.'
+      seo.ogFeatures = ['Sub-Rows', 'Tree Data', 'Nested Items', 'Hierarchical']
+      seo.ogSlug = 'plugins-add-sub-rows'
+  }
 </script>
 
 # addSubRows
@@ -26,7 +26,7 @@ The id of a sub-row is in the format `{parentId}>{id}`. Nested sub-rows concaten
 
 ## Options
 
-<Callout type="info">Options passed into <code>addSubRows</code>.</Callout>
+<Admonition type="info">Options passed into <code>addSubRows</code>.</Admonition>
 
 ```ts {3}
 const table = createTable(data, {
@@ -41,7 +41,7 @@ If `children` is missing or returns `[]`, no sub-rows are generated for that row
 
 ## Column Options
 
-<Callout type="info">Options passed into column definitions.</Callout>
+<Admonition type="info">Options passed into column definitions.</Admonition>
 
 ```ts {7}
 const columns = table.createColumns([
@@ -57,7 +57,7 @@ const columns = table.createColumns([
 
 ## Prop Set
 
-<Callout type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Callout>
+<Admonition type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Admonition>
 
 ```svelte
 {#each $headerRows as headerRow (headerRow.id)}

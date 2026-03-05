@@ -5,18 +5,18 @@ sidebar_title: addTableFilter
 ---
 
 <script>
-  import { useHljs } from '$lib/utils/useHljs';
-  import Callout from '$lib/components/Callout.svelte'
+  import Admonition from '$lib/components/Admonition.svelte'
   import SimpleTableFilteringDemo from './SimpleTableFilteringDemo.svelte'
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-  useHljs('ts');
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'addTableFilter Plugin - Svelte Headless Table'
-          seo.description = 'Add global table search filtering that searches across all visible cell values with configurable matching functions and debounced input handling for Svelte tables'
-      }
-  })
+  if (seo) {
+      seo.title = 'addTableFilter Plugin - Svelte Headless Table'
+      seo.description = 'Add global table search filtering that searches across all visible cell values with configurable matching functions and debounced input handling for Svelte tables'
+      seo.ogTitle = 'addTableFilter Plugin'
+      seo.ogTagline = 'Filter rows across all columns at once.'
+      seo.ogFeatures = ['Global Search', 'Text Match', 'Custom Filter', 'Filter State']
+      seo.ogSlug = 'plugins-add-table-filter'
+  }
 </script>
 
 # addTableFilter
@@ -25,7 +25,7 @@ sidebar_title: addTableFilter
 
 ## Options
 
-<Callout type="info">Options passed into <code>addTableFilter</code>.</Callout>
+<Admonition type="info">Options passed into <code>addTableFilter</code>.</Admonition>
 
 ```ts {3}
 const table = createTable(data, {
@@ -47,7 +47,7 @@ If `true`, use server-side filtering by updating <a href="/docs/api/create-table
 
 ## Column Options
 
-<Callout type="info">Options passed into column definitions.</Callout>
+<Admonition type="info">Options passed into column definitions.</Admonition>
 
 ```ts {7}
 const columns = table.createColumns([
@@ -69,7 +69,7 @@ Map a cell value to a filterable string. Default serializes value.
 
 ## Prop Set
 
-<Callout type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Callout>
+<Admonition type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Admonition>
 
 ```svelte
 {#each $headerRows as headerRow (headerRow.id)}
@@ -89,7 +89,7 @@ Map a cell value to a filterable string. Default serializes value.
 
 ## Plugin State
 
-<Callout type="info">State provided by <code>addTableFilter</code>.</Callout>
+<Admonition type="info">State provided by <code>addTableFilter</code>.</Admonition>
 
 ```ts {3}
 const { headerRows, rows, pluginStates } = table.createViewModel(columns);

@@ -9,14 +9,16 @@ This example demonstrates virtualized table rendering with the `addVirtualScroll
 
 <script>
   import VirtualScrollExample from './VirtualScrollExample.svelte';
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'Virtual Scroll Example - Svelte Headless Table'
-          seo.description = 'Virtualized table rendering example demonstrating how to handle 100,000+ rows with smooth scrolling performance using the Svelte Headless Table addVirtualScroll plugin'
-      }
-  })
+  if (seo) {
+      seo.title = 'Virtual Scroll Example - Svelte Headless Table'
+      seo.description = 'Virtualized table rendering example demonstrating how to handle 100,000+ rows with smooth scrolling performance using the Svelte Headless Table addVirtualScroll plugin'
+      seo.ogTitle = 'Virtual Scroll Example'
+      seo.ogTagline = 'Handle 100,000+ rows with smooth scrolling.'
+      seo.ogFeatures = ['100K Rows', 'Virtual Scroll', 'Performance', 'Smooth']
+      seo.ogSlug = 'examples-virtual-scroll'
+  }
 </script>
 
 <VirtualScrollExample />

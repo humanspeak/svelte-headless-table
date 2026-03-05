@@ -5,18 +5,18 @@ sidebar_title: addSelectedRows
 ---
 
 <script>
-  import { useHljs } from '$lib/utils/useHljs'
-  import Callout from '$lib/components/Callout.svelte'
+  import Admonition from '$lib/components/Admonition.svelte'
   import SimpleSelectedDemo from './SimpleSelectedDemo.svelte'
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-  useHljs('ts')
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'addSelectedRows Plugin - Svelte Headless Table'
-          seo.description = 'Add row selection to your Svelte Headless Table with addSelectedRows, supporting single and multi-select modes, select-all functionality, and linked selection state'
-      }
-  })
+  if (seo) {
+      seo.title = 'addSelectedRows Plugin - Svelte Headless Table'
+      seo.description = 'Add row selection to your Svelte Headless Table with addSelectedRows, supporting single and multi-select modes, select-all functionality, and linked selection state'
+      seo.ogTitle = 'addSelectedRows Plugin'
+      seo.ogTagline = 'Select and deselect table rows.'
+      seo.ogFeatures = ['Row Selection', 'Multi-Select', 'Select All', 'Selection State']
+      seo.ogSlug = 'plugins-add-selected-rows'
+  }
 </script>
 
 # addSelectedRows
@@ -25,7 +25,7 @@ sidebar_title: addSelectedRows
 
 ## Options
 
-<Callout type="info">Options passed into <code>addSelectedRows</code>.</Callout>
+<Admonition type="info">Options passed into <code>addSelectedRows</code>.</Admonition>
 
 ```ts {3}
 const table = createTable(data, {
@@ -41,7 +41,7 @@ Link parent/sub-row selection when updating. Default `true`.
 
 ## Column Options
 
-<Callout type="info">Options passed into column definitions.</Callout>
+<Admonition type="info">Options passed into column definitions.</Admonition>
 
 ```ts {7}
 const columns = table.createColumns([
@@ -57,7 +57,7 @@ const columns = table.createColumns([
 
 ## Prop Set
 
-<Callout type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Callout>
+<Admonition type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Admonition>
 
 ```svelte
 {#each $headerRows as headerRow (headerRow.id)}
@@ -79,7 +79,7 @@ const columns = table.createColumns([
 
 ## Plugin State
 
-<Callout type="info">State provided by <code>addSelectedRows</code>.</Callout>
+<Admonition type="info">State provided by <code>addSelectedRows</code>.</Admonition>
 
 ```ts {3}
 const { headerRows, rows, pluginStates } = table.createViewModel(columns);

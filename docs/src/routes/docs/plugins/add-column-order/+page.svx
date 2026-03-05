@@ -5,17 +5,17 @@ sidebar_title: addColumnOrder
 ---
 
 <script>
-  import { useHljs } from '$lib/utils/useHljs';
-  import Callout from '$lib/components/Callout.svelte'
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-  useHljs('ts');
+  import Admonition from '$lib/components/Admonition.svelte'
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'addColumnOrder Plugin - Svelte Headless Table'
-          seo.description = 'Dynamically re-order table columns at runtime with the addColumnOrder plugin, allowing users to rearrange column positions programmatically in Svelte Headless Table'
-      }
-  })
+  if (seo) {
+      seo.title = 'addColumnOrder Plugin - Svelte Headless Table'
+      seo.description = 'Dynamically re-order table columns at runtime with the addColumnOrder plugin, allowing users to rearrange column positions programmatically in Svelte Headless Table'
+      seo.ogTitle = 'addColumnOrder Plugin'
+      seo.ogTagline = 'Re-order table columns dynamically.'
+      seo.ogFeatures = ['Column Order', 'Drag & Drop', 'Programmatic', 'Runtime']
+      seo.ogSlug = 'plugins-add-column-order'
+  }
 </script>
 
 # addColumnOrder
@@ -24,7 +24,7 @@ sidebar_title: addColumnOrder
 
 ## Options
 
-<Callout type="info">Options passed into <code>addColumnOrder</code>.</Callout>
+<Admonition type="info">Options passed into <code>addColumnOrder</code>.</Admonition>
 
 ```ts {3}
 const table = createTable(data, {
@@ -40,7 +40,7 @@ Hide columns not listed in `pluginStates.[name].columnIdOrder`. Default `false`.
 
 ## Column Options
 
-<Callout type="info">Options passed into column definitions.</Callout>
+<Admonition type="info">Options passed into column definitions.</Admonition>
 
 ```ts {7}
 const columns = table.createColumns([
@@ -56,7 +56,7 @@ const columns = table.createColumns([
 
 ## Prop Set
 
-<Callout type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Callout>
+<Admonition type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Admonition>
 
 ```svelte
 {#each $headerRows as headerRow (headerRow.id)}
@@ -73,7 +73,7 @@ const columns = table.createColumns([
 
 ## Plugin State
 
-<Callout type="info">State provided by <code>addColumnOrder</code>.</Callout>
+<Admonition type="info">State provided by <code>addColumnOrder</code>.</Admonition>
 
 ```ts {3}
 const { headerRows, rows, pluginStates } = table.createViewModel(columns);

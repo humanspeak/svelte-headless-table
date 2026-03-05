@@ -5,17 +5,17 @@ sidebar_title: addFlatten
 ---
 
 <script>
-  import { useHljs } from '$lib/utils/useHljs';
-  import Callout from '$lib/components/Callout.svelte'
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-  useHljs('ts');
+  import Admonition from '$lib/components/Admonition.svelte'
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'addFlatten Plugin - Svelte Headless Table'
-          seo.description = 'Flatten hierarchical table data by surfacing nested sub-rows to the top level with addFlatten, simplifying tree-like data structures into a flat table presentation'
-      }
-  })
+  if (seo) {
+      seo.title = 'addFlatten Plugin - Svelte Headless Table'
+      seo.description = 'Flatten hierarchical table data by surfacing nested sub-rows to the top level with addFlatten, simplifying tree-like data structures into a flat table presentation'
+      seo.ogTitle = 'addFlatten Plugin'
+      seo.ogTagline = 'Flatten hierarchical data into a flat table.'
+      seo.ogFeatures = ['Flatten', 'Sub-Rows', 'Tree to Flat', 'Simplify']
+      seo.ogSlug = 'plugins-add-flatten'
+  }
 </script>
 
 # addFlatten
@@ -24,7 +24,7 @@ sidebar_title: addFlatten
 
 ## Options
 
-<Callout type="info">Options passed into <code>addFlatten</code>.</Callout>
+<Admonition type="info">Options passed into <code>addFlatten</code>.</Admonition>
 
 ```ts {3}
 const table = createTable(data, {
@@ -37,7 +37,7 @@ How many levels to flatten. Default `0`.
 
 ## Column Options
 
-<Callout type="info">Options passed into column definitions.</Callout>
+<Admonition type="info">Options passed into column definitions.</Admonition>
 
 ```ts {7}
 const columns = table.createColumns([
@@ -53,7 +53,7 @@ const columns = table.createColumns([
 
 ## Prop Set
 
-<Callout type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Callout>
+<Admonition type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Admonition>
 
 ```svelte
 {#each $headerRows as headerRow (headerRow.id)}
@@ -74,7 +74,7 @@ const columns = table.createColumns([
 
 ## Plugin State
 
-<Callout type="info">State provided by <code>addFlatten</code>.</Callout>
+<Admonition type="info">State provided by <code>addFlatten</code>.</Admonition>
 
 ```ts {3}
 const { headerRows, rows, pluginStates } = table.createViewModel(columns);

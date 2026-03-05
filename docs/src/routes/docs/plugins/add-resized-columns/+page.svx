@@ -5,17 +5,17 @@ sidebar_title: addResizedColumns
 ---
 
 <script>
-  import { useHljs } from '$lib/utils/useHljs';
-  import Callout from '$lib/components/Callout.svelte'
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-  useHljs('ts');
+  import Admonition from '$lib/components/Admonition.svelte'
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'addResizedColumns Plugin - Svelte Headless Table'
-          seo.description = 'Dynamically resize table columns with addResizedColumns, enabling both programmatic and user-driven column width adjustments with configurable min and max constraints'
-      }
-  })
+  if (seo) {
+      seo.title = 'addResizedColumns Plugin - Svelte Headless Table'
+      seo.description = 'Dynamically resize table columns with addResizedColumns, enabling both programmatic and user-driven column width adjustments with configurable min and max constraints'
+      seo.ogTitle = 'addResizedColumns Plugin'
+      seo.ogTagline = 'Resize table columns by dragging.'
+      seo.ogFeatures = ['Column Resize', 'Drag Handle', 'Min/Max Width', 'Responsive']
+      seo.ogSlug = 'plugins-add-resized-columns'
+  }
 </script>
 
 # addResizedColumns
@@ -24,7 +24,7 @@ sidebar_title: addResizedColumns
 
 ## Options
 
-<Callout type="info">Options passed into <code>addResizedColumns</code>.</Callout>
+<Admonition type="info">Options passed into <code>addResizedColumns</code>.</Admonition>
 
 ```ts {3}
 const table = createTable(data, {
@@ -34,7 +34,7 @@ const table = createTable(data, {
 
 ## Column Options
 
-<Callout type="info">Options passed into column definitions.</Callout>
+<Admonition type="info">Options passed into column definitions.</Admonition>
 
 ```ts {7}
 const columns = table.createColumns([
@@ -62,7 +62,7 @@ Disable resizing for the column. If all child columns of a group are disabled, t
 
 ## Prop Set
 
-<Callout type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Callout>
+<Admonition type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Admonition>
 
 ```svelte
 {#each $headerRows as headerRow (headerRow.id)}

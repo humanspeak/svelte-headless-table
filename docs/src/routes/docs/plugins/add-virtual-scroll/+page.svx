@@ -5,18 +5,17 @@ sidebar_title: addVirtualScroll
 ---
 
 <script>
-  import { useHljs } from '$lib/utils/useHljs';
   import Admonition from '$lib/components/Admonition.svelte'
-  import Callout from '$lib/components/Callout.svelte'
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-  useHljs('ts');
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'addVirtualScroll Plugin - Svelte Headless Table'
-          seo.description = 'Enable virtualized rendering for large datasets with addVirtualScroll, delivering smooth scrolling performance for Svelte Headless Table instances with 100,000+ rows'
-      }
-  })
+  if (seo) {
+      seo.title = 'addVirtualScroll Plugin - Svelte Headless Table'
+      seo.description = 'Enable virtualized rendering for large datasets with addVirtualScroll, delivering smooth scrolling performance for Svelte Headless Table instances with 100,000+ rows'
+      seo.ogTitle = 'addVirtualScroll Plugin'
+      seo.ogTagline = 'Virtualized rendering for massive datasets.'
+      seo.ogFeatures = ['Virtual Scroll', '100K+ Rows', 'Smooth Scroll', 'Performance']
+      seo.ogSlug = 'plugins-add-virtual-scroll'
+  }
 </script>
 
 # addVirtualScroll
@@ -139,7 +138,7 @@ const table = createTable(data, {
 
 ## Options
 
-<Callout type="info">Options passed into <code>addVirtualScroll</code>.</Callout>
+<Admonition type="info">Options passed into <code>addVirtualScroll</code>.</Admonition>
 
 ```ts {3}
 const table = createTable(data, {
@@ -167,7 +166,7 @@ Optional function to get the exact height of a specific row. Enables precise var
 
 ## Plugin State
 
-<Callout type="info">State provided by <code>addVirtualScroll</code>.</Callout>
+<Admonition type="info">State provided by <code>addVirtualScroll</code>.</Admonition>
 
 ```ts {3}
 const { headerRows, pageRows, pluginStates } = table.createViewModel(columns);

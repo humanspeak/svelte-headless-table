@@ -39,6 +39,9 @@ export default [
             globals: {
                 ...globals.browser,
                 ...globals.node
+            },
+            parserOptions: {
+                tsconfigRootDir: import.meta.dirname
             }
         },
         rules: {

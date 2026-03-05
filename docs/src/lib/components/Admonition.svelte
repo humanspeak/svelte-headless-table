@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { Snippet } from 'svelte'
+    import { CircleX, TriangleAlert, CircleCheck, StickyNote, Info } from '@lucide/svelte'
 
     type Props = {
         type?: 'info' | 'note' | 'warning' | 'error' | 'success'
@@ -29,15 +30,15 @@
     <div class="row">
         <div class="icon" aria-hidden="true">
             {#if type === 'error'}
-                <i class="fa-solid fa-circle-xmark"></i>
+                <CircleX class="size-4" />
             {:else if type === 'warning'}
-                <i class="fa-solid fa-triangle-exclamation"></i>
+                <TriangleAlert class="size-4" />
             {:else if type === 'success'}
-                <i class="fa-solid fa-circle-check"></i>
+                <CircleCheck class="size-4" />
             {:else if type === 'note'}
-                <i class="fa-solid fa-note-sticky"></i>
+                <StickyNote class="size-4" />
             {:else}
-                <i class="fa-solid fa-circle-info"></i>
+                <Info class="size-4" />
             {/if}
         </div>
         <div class="body">
