@@ -9,14 +9,17 @@ Svelte Headless Table is designed with extensibility in mind. Its complex featur
 
 <script>
   import Admonition from '$lib/components/Admonition.svelte'
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
+  import { CircleCheck } from '@lucide/svelte'
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'Plugin System - Svelte Headless Table'
-          seo.description = 'Learn how to extend Svelte Headless Table with powerful plugins for sorting, filtering, pagination, grouping, row selection, column resizing, and virtual scrolling'
-      }
-  })
+  if (seo) {
+      seo.title = 'Plugin System - Svelte Headless Table'
+      seo.description = 'Learn how to extend Svelte Headless Table with powerful plugins for sorting, filtering, pagination, grouping, row selection, column resizing, and virtual scrolling'
+      seo.ogTitle = 'Plugins Overview'
+      seo.ogTagline = 'Composable plugins for sorting, filtering, and more.'
+      seo.ogFeatures = ['Sorting', 'Filtering', 'Pagination', 'Selection']
+      seo.ogSlug = 'plugins-overview'
+  }
 </script>
 
 <ul class="grid text-sm md:text-base grid-cols-2 gap-2 p-0 lg:grid-cols-3">
@@ -28,7 +31,7 @@ Svelte Headless Table is designed with extensibility in mind. Its complex featur
     'addVirtualScroll'
   ] as pluginName}
     <li class="flex gap-2 items-center m-0 list-none">
-      <i class="fa-solid fa-circle-check text-brand m-0"></i> <code class="m-0">{pluginName}</code>
+      <CircleCheck class="size-4 text-brand-500 m-0 shrink-0" /> <code class="m-0">{pluginName}</code>
     </li>
   {/each}
 </ul>

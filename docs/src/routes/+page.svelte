@@ -1,9 +1,12 @@
 <script lang="ts">
     import Header from '$lib/components/general/Header.svelte'
     import Footer from '$lib/components/general/Footer.svelte'
-    import { type BreadcrumbContext } from '$lib/components/contexts/Breadcrumb/type'
-    import { getBreadcrumbContext } from '$lib/components/contexts/Breadcrumb/Breadcrumb.context'
-    import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
+    import {
+        type BreadcrumbContext,
+        getBreadcrumbContext,
+        getSeoContext
+    } from '@humanspeak/docs-kit'
+    import { Rocket, BookOpen, Table } from '@lucide/svelte'
 
     // mounted no longer needed for CSS enter
     let headingContainer: HTMLDivElement | null = $state(null)
@@ -16,13 +19,11 @@
     })
 
     const seoContext = getSeoContext()
-    $effect(() => {
-        if (seoContext) {
-            seoContext.title = 'Svelte Headless Table - Build Custom Data Tables for Svelte 5'
-            seoContext.description =
-                'Build powerful, fully customizable data tables for Svelte 5 with this headless, composable table library featuring sorting, filtering, pagination, grouping, and row selection plugins'
-        }
-    })
+    if (seoContext) {
+        seoContext.title = 'Svelte Headless Table - Build Custom Data Tables for Svelte 5'
+        seoContext.description =
+            'Build powerful, fully customizable data tables for Svelte 5 with this headless, composable table library featuring sorting, filtering, pagination, grouping, and row selection plugins'
+    }
 
     // Simple spring-like tap animation using the Web Animations API
     function springTap(node: HTMLElement, options: { pressedScale?: number } = {}) {
@@ -198,11 +199,11 @@
                         <h1
                             class="text-5xl leading-tight font-semibold text-balance text-foreground md:text-7xl"
                         >
-                            <span class="block">Svelte Headless</span>
+                            <span class="block">Svelte</span>
                             <span
                                 class="sheen-gradient block bg-gradient-to-r from-foreground via-brand-500 to-foreground bg-clip-text text-transparent"
                             >
-                                Table
+                                Headless Table
                             </span>
                         </h1>
                         <p
@@ -219,7 +220,7 @@
                                 use:springTap
                             >
                                 Quick Start
-                                <i class="fa-solid fa-rocket ml-2 text-xs"></i>
+                                <Rocket class="ml-2 size-3.5" />
                             </a>
                             <a
                                 href="/docs"
@@ -227,7 +228,7 @@
                                 use:springTap
                             >
                                 Browse Docs
-                                <i class="fa-solid fa-book ml-2 text-xs"></i>
+                                <BookOpen class="ml-2 size-3.5" />
                             </a>
                         </div>
                         <ul
@@ -278,7 +279,7 @@
                                 <div
                                     class="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-600 text-white"
                                 >
-                                    <i class="fa-solid fa-table"></i>
+                                    <Table class="size-5" />
                                 </div>
                                 <h3
                                     class="mb-2 text-xl font-semibold transition-colors group-hover:text-brand-600"

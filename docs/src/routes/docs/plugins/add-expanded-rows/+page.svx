@@ -5,19 +5,19 @@ sidebar_title: addExpandedRows
 ---
 
 <script>
-  import { useHljs } from '$lib/utils/useHljs'
-  import Callout from '$lib/components/Callout.svelte'
+  import Admonition from '$lib/components/Admonition.svelte'
   import SimpleExpandingDemo from './SimpleExpandingDemo.svelte'
   import SimpleGroupByDemo from './SimpleGroupByDemo.svelte'
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-  useHljs('ts')
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'addExpandedRows Plugin - Svelte Headless Table'
-          seo.description = 'Expand and collapse sub-rows in your table with addExpandedRows, enabling tree views, detail panels, and hierarchical data visualization in Svelte Headless Table'
-      }
-  })
+  if (seo) {
+      seo.title = 'addExpandedRows Plugin - Svelte Headless Table'
+      seo.description = 'Expand and collapse sub-rows in your table with addExpandedRows, enabling tree views, detail panels, and hierarchical data visualization in Svelte Headless Table'
+      seo.ogTitle = 'addExpandedRows Plugin'
+      seo.ogTagline = 'Expand and collapse sub-rows in your table.'
+      seo.ogFeatures = ['Tree View', 'Detail Panels', 'Expand/Collapse', 'Hierarchical']
+      seo.ogSlug = 'plugins-add-expanded-rows'
+  }
 </script>
 
 # addExpandedRows
@@ -26,7 +26,7 @@ sidebar_title: addExpandedRows
 
 ## Options
 
-<Callout type="info">Options passed into <code>addExpandedRows</code>.</Callout>
+<Admonition type="info">Options passed into <code>addExpandedRows</code>.</Admonition>
 
 ```ts {3}
 const table = createTable(data, {
@@ -39,7 +39,7 @@ Initial expanded row ids as an object mapping rowId => boolean. Nested sub-rows 
 
 ## Column Options
 
-<Callout type="info">Options passed into column definitions.</Callout>
+<Admonition type="info">Options passed into column definitions.</Admonition>
 
 ```ts {7}
 const columns = table.createColumns([
@@ -55,7 +55,7 @@ const columns = table.createColumns([
 
 ## Prop Set
 
-<Callout type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Callout>
+<Admonition type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Admonition>
 
 ```svelte
 {#each $headerRows as headerRow (headerRow.id)}
@@ -72,7 +72,7 @@ const columns = table.createColumns([
 
 ## Plugin State
 
-<Callout type="info">State provided by <code>addExpandedRows</code>.</Callout>
+<Admonition type="info">State provided by <code>addExpandedRows</code>.</Admonition>
 
 ```ts {3}
 const { headerRows, rows, pluginStates } = table.createViewModel(columns);

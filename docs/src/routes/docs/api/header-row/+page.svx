@@ -5,17 +5,17 @@ sidebar_title: HeaderRow
 ---
 
 <script>
-  import { useHljs } from '$lib/utils/useHljs';
   import Admonition from '$lib/components/Admonition.svelte'
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-  useHljs('ts');
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'HeaderRow API - Svelte Headless Table'
-          seo.description = 'Explore the HeaderRow model API representing a table header row element, including cell access, HTML attributes, and plugin-specific header row state properties'
-      }
-  })
+  if (seo) {
+      seo.title = 'HeaderRow API - Svelte Headless Table'
+      seo.description = 'Explore the HeaderRow model API representing a table header row element, including cell access, HTML attributes, and plugin-specific header row state properties'
+      seo.ogTitle = 'HeaderRow API'
+      seo.ogTagline = 'Model of a header row element.'
+      seo.ogFeatures = ['cells()', 'attrs()', 'Plugin State', 'HTML Attributes']
+      seo.ogSlug = 'api-header-row'
+  }
 </script>
 
 # HeaderRow

@@ -4,14 +4,16 @@ description: What is Svelte Headless Table?
 ---
 
 <script>
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'Overview - Svelte Headless Table'
-          seo.description = 'Learn what Svelte Headless Table is and why a headless, composable approach gives you full control over table markup, styling, accessibility, and design system integration'
-      }
-  })
+  if (seo) {
+      seo.title = 'Overview - Svelte Headless Table'
+      seo.description = 'Learn what Svelte Headless Table is and why a headless, composable approach gives you full control over table markup, styling, accessibility, and design system integration'
+      seo.ogTitle = 'Overview'
+      seo.ogTagline = 'Why a headless, composable table library for Svelte.'
+      seo.ogFeatures = ['Headless', 'Composable Plugins', 'Full Control', 'Svelte 5']
+      seo.ogSlug = 'getting-started-overview'
+  }
 </script>
 
 # Overview

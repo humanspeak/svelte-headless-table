@@ -1,7 +1,7 @@
 <script lang="ts">
     import { motion } from '@humanspeak/svelte-motion'
-    const cn = (...classes: Array<string | false | null | undefined>) =>
-        classes.filter(Boolean).join(' ')
+    import { RotateCw } from '@lucide/svelte'
+    import clsx from 'clsx'
     import type { Snippet } from 'svelte'
 
     type ExampleProps = {
@@ -20,7 +20,7 @@
 </script>
 
 <div
-    class={cn(
+    class={clsx(
         'isolate flex h-full w-full flex-1 flex-col',
         isSmall && 'rounded border border-border'
     )}
@@ -45,7 +45,7 @@
                 whileHover={{ scale: 1.1 }}
                 class="inline-flex size-6 items-center justify-center rounded-full border border-border-muted text-text-muted transition-colors hover:border-border-mid hover:text-text-secondary"
             >
-                <i class="fa-solid fa-rotate-right fa-xs"></i>
+                <RotateCw class="size-3" />
             </motion.button>
         </div>
     </div>

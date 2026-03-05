@@ -5,17 +5,17 @@ sidebar_title: addGroupBy
 ---
 
 <script>
-  import { useHljs } from '$lib/utils/useHljs';
-  import Callout from '$lib/components/Callout.svelte'
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-  useHljs('ts');
+  import Admonition from '$lib/components/Admonition.svelte'
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'addGroupBy Plugin - Svelte Headless Table'
-          seo.description = 'Group table rows by column values with addGroupBy, creating aggregated summary rows with customizable aggregation functions and expandable row groups in your table'
-      }
-  })
+  if (seo) {
+      seo.title = 'addGroupBy Plugin - Svelte Headless Table'
+      seo.description = 'Group table rows by column values with addGroupBy, creating aggregated summary rows with customizable aggregation functions and expandable row groups in your table'
+      seo.ogTitle = 'addGroupBy Plugin'
+      seo.ogTagline = 'Group table rows by column values.'
+      seo.ogFeatures = ['Row Grouping', 'Aggregation', 'Group Headers', 'Nested Groups']
+      seo.ogSlug = 'plugins-add-group-by'
+  }
 </script>
 
 # addGroupBy
@@ -26,7 +26,7 @@ The id of a sub-row is in the format `{parentId}>{id}`.
 
 ## Options
 
-<Callout type="info">Options passed into <code>addGroupBy</code>.</Callout>
+<Admonition type="info">Options passed into <code>addGroupBy</code>.</Admonition>
 
 ```ts {3}
 const table = createTable(data, {
@@ -45,7 +45,7 @@ Override multi-group gesture. Default: shift-click.
 
 ## Column Options
 
-<Callout type="info">Options passed into column definitions.</Callout>
+<Admonition type="info">Options passed into column definitions.</Admonition>
 
 ```ts {7}
 const columns = table.createColumns([
@@ -73,7 +73,7 @@ Custom body cell for grouped rows; receives the row, column, value, and <a href=
 
 ## Prop Set
 
-<Callout type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Callout>
+<Admonition type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Admonition>
 
 ```svelte
 {#each $headerRows as headerRow (headerRow.id)}
@@ -101,7 +101,7 @@ Custom body cell for grouped rows; receives the row, column, value, and <a href=
 
 ## Plugin State
 
-<Callout type="info">State provided by <code>addGroupBy</code>.</Callout>
+<Admonition type="info">State provided by <code>addGroupBy</code>.</Admonition>
 
 ```ts {3}
 const { headerRows, rows, pluginStates } = table.createViewModel(columns);

@@ -5,18 +5,18 @@ sidebar_title: addColumnFilters
 ---
 
 <script>
-  import { useHljs } from '$lib/utils/useHljs'
-  import Callout from '$lib/components/Callout.svelte'
+  import Admonition from '$lib/components/Admonition.svelte'
   import SimpleFilteringDemo from './SimpleFilteringDemo.svelte'
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-  useHljs('ts')
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'addColumnFilters Plugin - Svelte Headless Table'
-          seo.description = 'Filter table rows by individual column values with configurable filter functions, text matching, numeric range filtering, and custom filter UI components in Svelte'
-      }
-  })
+  if (seo) {
+      seo.title = 'addColumnFilters Plugin - Svelte Headless Table'
+      seo.description = 'Filter table rows by individual column values with configurable filter functions, text matching, numeric range filtering, and custom filter UI components in Svelte'
+      seo.ogTitle = 'addColumnFilters Plugin'
+      seo.ogTagline = 'Filter rows by individual column values.'
+      seo.ogFeatures = ['Text Match', 'Numeric Range', 'Custom Filter', 'Filter UI']
+      seo.ogSlug = 'plugins-add-column-filters'
+  }
 </script>
 
 # addColumnFilters
@@ -25,7 +25,7 @@ sidebar_title: addColumnFilters
 
 ## Options
 
-<Callout type="info">Options passed into <code>addColumnFilters</code>.</Callout>
+<Admonition type="info">Options passed into <code>addColumnFilters</code>.</Admonition>
 
 ```ts {3}
 const table = createTable(data, {
@@ -41,7 +41,7 @@ _Defaults to `false`_.
 
 ## Column Options
 
-<Callout type="info">Options passed into column definitions.</Callout>
+<Admonition type="info">Options passed into column definitions.</Admonition>
 
 ```ts {7}
 const columns = table.createColumns([
@@ -75,7 +75,7 @@ Initial filter value.
 
 ## Prop Set
 
-<Callout type="info">Extensions to the view model. Subscribe to <code>.props()</code> on table components.</Callout>
+<Admonition type="info">Extensions to the view model. Subscribe to <code>.props()</code> on table components.</Admonition>
 
 ```svelte
 {#each $headerRows as headerRow (headerRow.id)}
@@ -92,7 +92,7 @@ Initial filter value.
 
 ## Plugin State
 
-<Callout type="info">State provided by <code>addColumnFilters</code>.</Callout>
+<Admonition type="info">State provided by <code>addColumnFilters</code>.</Admonition>
 
 ```ts {3}
 const { headerRows, rows, pluginStates } = table.createViewModel(columns);

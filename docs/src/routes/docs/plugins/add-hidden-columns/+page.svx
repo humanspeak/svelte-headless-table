@@ -5,17 +5,17 @@ sidebar_title: addHiddenColumns
 ---
 
 <script>
-  import { useHljs } from '$lib/utils/useHljs';
-  import Callout from '$lib/components/Callout.svelte'
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-  useHljs('ts');
+  import Admonition from '$lib/components/Admonition.svelte'
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'addHiddenColumns Plugin - Svelte Headless Table'
-          seo.description = 'Toggle table column visibility dynamically with addHiddenColumns, allowing users to show and hide columns without modifying the underlying table column configuration'
-      }
-  })
+  if (seo) {
+      seo.title = 'addHiddenColumns Plugin - Svelte Headless Table'
+      seo.description = 'Toggle table column visibility dynamically with addHiddenColumns, allowing users to show and hide columns without modifying the underlying table column configuration'
+      seo.ogTitle = 'addHiddenColumns Plugin'
+      seo.ogTagline = 'Show and hide table columns.'
+      seo.ogFeatures = ['Column Visibility', 'Toggle Columns', 'Hidden State', 'Dynamic']
+      seo.ogSlug = 'plugins-add-hidden-columns'
+  }
 </script>
 
 # addHiddenColumns
@@ -24,7 +24,7 @@ sidebar_title: addHiddenColumns
 
 ## Options
 
-<Callout type="info">Options passed into <code>addHiddenColumns</code>.</Callout>
+<Admonition type="info">Options passed into <code>addHiddenColumns</code>.</Admonition>
 
 ```ts {3}
 const table = createTable(data, {
@@ -37,7 +37,7 @@ Initial hidden column ids.
 
 ## Column Options
 
-<Callout type="info">Options passed into column definitions.</Callout>
+<Admonition type="info">Options passed into column definitions.</Admonition>
 
 ```ts {7}
 const columns = table.createColumns([
@@ -53,7 +53,7 @@ const columns = table.createColumns([
 
 ## Prop Set
 
-<Callout type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Callout>
+<Admonition type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Admonition>
 
 ```svelte
 {#each $headerRows as headerRow (headerRow.id)}
@@ -70,7 +70,7 @@ const columns = table.createColumns([
 
 ## Plugin State
 
-<Callout type="info">State provided by <code>addHiddenColumns</code>.</Callout>
+<Admonition type="info">State provided by <code>addHiddenColumns</code>.</Admonition>
 
 ```ts {3}
 const { headerRows, rows, pluginStates } = table.createViewModel(columns);

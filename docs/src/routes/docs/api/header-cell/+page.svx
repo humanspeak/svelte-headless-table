@@ -5,17 +5,17 @@ sidebar_title: HeaderCell
 ---
 
 <script>
-  import { useHljs } from '$lib/utils/useHljs';
   import Admonition from '$lib/components/Admonition.svelte'
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-  useHljs('ts');
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'HeaderCell API - Svelte Headless Table'
-          seo.description = 'Explore the HeaderCell model API representing a table header cell element, including cell rendering, HTML attributes, and plugin-specific header cell properties'
-      }
-  })
+  if (seo) {
+      seo.title = 'HeaderCell API - Svelte Headless Table'
+      seo.description = 'Explore the HeaderCell model API representing a table header cell element, including cell rendering, HTML attributes, and plugin-specific header cell properties'
+      seo.ogTitle = 'HeaderCell API'
+      seo.ogTagline = 'Model of a header cell element.'
+      seo.ogFeatures = ['render()', 'attrs()', 'Plugin Props', 'Column ID']
+      seo.ogSlug = 'api-header-cell'
+  }
 </script>
 
 # HeaderCell

@@ -5,18 +5,18 @@ sidebar_title: addSortBy
 ---
 
 <script>
-  import { useHljs } from '$lib/utils/useHljs'
-  import Callout from '$lib/components/Callout.svelte'
+  import Admonition from '$lib/components/Admonition.svelte'
   import SimpleSortingDemo from './SimpleSortingDemo.svelte'
-  import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-  useHljs('ts')
+  import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
-  $effect(() => {
-      if (seo) {
-          seo.title = 'addSortBy Plugin - Svelte Headless Table'
-          seo.description = 'Add column sorting to your Svelte Headless Table with configurable sort directions, multi-column sorting, custom comparator functions, and sort state indicators'
-      }
-  })
+  if (seo) {
+      seo.title = 'addSortBy Plugin - Svelte Headless Table'
+      seo.description = 'Add column sorting to your Svelte Headless Table with configurable sort directions, multi-column sorting, custom comparator functions, and sort state indicators'
+      seo.ogTitle = 'addSortBy Plugin'
+      seo.ogTagline = 'Sort table rows by column values.'
+      seo.ogFeatures = ['Multi-Column', 'Custom Comparator', 'Sort Direction', 'Sort State']
+      seo.ogSlug = 'plugins-add-sort-by'
+  }
 </script>
 # addSortBy
 
@@ -24,7 +24,7 @@ sidebar_title: addSortBy
 
 ## Options
 
-<Callout type="info">Options passed into <code>addSortBy</code>.</Callout>
+<Admonition type="info">Options passed into <code>addSortBy</code>.</Admonition>
 
 ```ts {3}
 const table = createTable(data, {
@@ -66,7 +66,7 @@ _Defaults to `false`_.
 
 ## Column Options
 
-<Callout type="info">Options passed into column definitions.</Callout>
+<Admonition type="info">Options passed into column definitions.</Admonition>
 
 ```ts {7}
 const columns = table.createColumns([
