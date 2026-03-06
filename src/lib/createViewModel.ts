@@ -360,27 +360,23 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         rows = fn(rows as any) as any
     })
 
+    const pluginEntries = Object.entries(pluginInstances)
+
     const injectedRows = derived(rows, ($rows) => {
         derivationCalls.injectedRows++
-        // Inject state.
         $rows.forEach((row) => {
             row.injectState(tableState)
-            row.cells.forEach((cell) => {
-                cell.injectState(tableState)
-            })
-        })
-        // Apply plugin component hooks.
-        Object.entries(pluginInstances).forEach(([pluginName, pluginInstance]) => {
-            $rows.forEach((row) => {
+            row.cells.forEach((cell) => cell.injectState(tableState))
+            for (const [pluginName, pluginInstance] of pluginEntries) {
                 if (pluginInstance.hooks?.['tbody.tr'] !== undefined) {
                     row.applyHook(pluginName, pluginInstance.hooks['tbody.tr'](row))
                 }
-                row.cells.forEach((cell) => {
-                    if (pluginInstance.hooks?.['tbody.tr.td'] !== undefined) {
-                        cell.applyHook(pluginName, pluginInstance.hooks['tbody.tr.td'](cell))
-                    }
-                })
-            })
+                if (pluginInstance.hooks?.['tbody.tr.td'] !== undefined) {
+                    row.cells.forEach((cell) =>
+                        cell.applyHook(pluginName, pluginInstance.hooks!['tbody.tr.td']!(cell))
+                    )
+                }
+            }
         })
         _rows.set($rows)
         return $rows
@@ -399,25 +395,19 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
 
     const injectedPageRows = derived(pageRows, ($pageRows) => {
         derivationCalls.injectedPageRows++
-        // Inject state.
         $pageRows.forEach((row) => {
             row.injectState(tableState)
-            row.cells.forEach((cell) => {
-                cell.injectState(tableState)
-            })
-        })
-        // Apply plugin component hooks.
-        Object.entries(pluginInstances).forEach(([pluginName, pluginInstance]) => {
-            $pageRows.forEach((row) => {
+            row.cells.forEach((cell) => cell.injectState(tableState))
+            for (const [pluginName, pluginInstance] of pluginEntries) {
                 if (pluginInstance.hooks?.['tbody.tr'] !== undefined) {
                     row.applyHook(pluginName, pluginInstance.hooks['tbody.tr'](row))
                 }
-                row.cells.forEach((cell) => {
-                    if (pluginInstance.hooks?.['tbody.tr.td'] !== undefined) {
-                        cell.applyHook(pluginName, pluginInstance.hooks['tbody.tr.td'](cell))
-                    }
-                })
-            })
+                if (pluginInstance.hooks?.['tbody.tr.td'] !== undefined) {
+                    row.cells.forEach((cell) =>
+                        cell.applyHook(pluginName, pluginInstance.hooks!['tbody.tr.td']!(cell))
+                    )
+                }
+            }
         })
         _pageRows.set($pageRows)
         return $pageRows
@@ -429,25 +419,19 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
             columns,
             $injectedColumns.map((c) => c.id)
         )
-        // Inject state.
         $headerRows.forEach((row) => {
             row.injectState(tableState)
-            row.cells.forEach((cell) => {
-                cell.injectState(tableState)
-            })
-        })
-        // Apply plugin component hooks.
-        Object.entries(pluginInstances).forEach(([pluginName, pluginInstance]) => {
-            $headerRows.forEach((row) => {
+            row.cells.forEach((cell) => cell.injectState(tableState))
+            for (const [pluginName, pluginInstance] of pluginEntries) {
                 if (pluginInstance.hooks?.['thead.tr'] !== undefined) {
                     row.applyHook(pluginName, pluginInstance.hooks['thead.tr'](row))
                 }
-                row.cells.forEach((cell) => {
-                    if (pluginInstance.hooks?.['thead.tr.th'] !== undefined) {
-                        cell.applyHook(pluginName, pluginInstance.hooks['thead.tr.th'](cell))
-                    }
-                })
-            })
+                if (pluginInstance.hooks?.['thead.tr.th'] !== undefined) {
+                    row.cells.forEach((cell) =>
+                        cell.applyHook(pluginName, pluginInstance.hooks!['thead.tr.th']!(cell))
+                    )
+                }
+            }
         })
         _headerRows.set($headerRows)
         return $headerRows
