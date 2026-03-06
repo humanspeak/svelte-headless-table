@@ -160,8 +160,12 @@ export const getGroupedRows = <
                 `Missing \`getGroupOn\` column option to aggregate column "${groupById}" with object values`
             )
         }
-        const subRows = subRowsForGroupOnValue.get(groupOnValue) ?? []
-        subRowsForGroupOnValue.set(groupOnValue, [...subRows, row])
+        let subRows = subRowsForGroupOnValue.get(groupOnValue)
+        if (subRows === undefined) {
+            subRows = []
+            subRowsForGroupOnValue.set(groupOnValue, subRows)
+        }
+        subRows.push(row)
     }
 
     const groupedRows: Row[] = []
