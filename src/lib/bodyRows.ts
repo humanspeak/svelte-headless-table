@@ -373,9 +373,7 @@ export const getColumnedBodyRows = <Item, Plugins extends AnyPlugins = AnyPlugin
         columnedRows[rowIdx].cells = visibleCells
         // Include hidden cells in `cellForId` to allow row transformations on
         // hidden cells.
-        cells.forEach((cell) => {
-            columnedRows[rowIdx].cellForId[cell.id] = cell
-        })
+        columnedRows[rowIdx].cellForId = Object.fromEntries(cellById)
     })
     return columnedRows
 }

@@ -368,13 +368,13 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
             row.injectState(tableState)
             row.cells.forEach((cell) => cell.injectState(tableState))
             for (const [pluginName, pluginInstance] of pluginEntries) {
-                if (pluginInstance.hooks?.['tbody.tr'] !== undefined) {
-                    row.applyHook(pluginName, pluginInstance.hooks['tbody.tr'](row))
+                const trHook = pluginInstance.hooks?.['tbody.tr']
+                if (trHook !== undefined) {
+                    row.applyHook(pluginName, trHook(row))
                 }
-                if (pluginInstance.hooks?.['tbody.tr.td'] !== undefined) {
-                    row.cells.forEach((cell) =>
-                        cell.applyHook(pluginName, pluginInstance.hooks!['tbody.tr.td']!(cell))
-                    )
+                const tdHook = pluginInstance.hooks?.['tbody.tr.td']
+                if (tdHook !== undefined) {
+                    row.cells.forEach((cell) => cell.applyHook(pluginName, tdHook(cell)))
                 }
             }
         })
@@ -399,13 +399,13 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
             row.injectState(tableState)
             row.cells.forEach((cell) => cell.injectState(tableState))
             for (const [pluginName, pluginInstance] of pluginEntries) {
-                if (pluginInstance.hooks?.['tbody.tr'] !== undefined) {
-                    row.applyHook(pluginName, pluginInstance.hooks['tbody.tr'](row))
+                const trHook = pluginInstance.hooks?.['tbody.tr']
+                if (trHook !== undefined) {
+                    row.applyHook(pluginName, trHook(row))
                 }
-                if (pluginInstance.hooks?.['tbody.tr.td'] !== undefined) {
-                    row.cells.forEach((cell) =>
-                        cell.applyHook(pluginName, pluginInstance.hooks!['tbody.tr.td']!(cell))
-                    )
+                const tdHook = pluginInstance.hooks?.['tbody.tr.td']
+                if (tdHook !== undefined) {
+                    row.cells.forEach((cell) => cell.applyHook(pluginName, tdHook(cell)))
                 }
             }
         })
@@ -423,13 +423,13 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
             row.injectState(tableState)
             row.cells.forEach((cell) => cell.injectState(tableState))
             for (const [pluginName, pluginInstance] of pluginEntries) {
-                if (pluginInstance.hooks?.['thead.tr'] !== undefined) {
-                    row.applyHook(pluginName, pluginInstance.hooks['thead.tr'](row))
+                const trHook = pluginInstance.hooks?.['thead.tr']
+                if (trHook !== undefined) {
+                    row.applyHook(pluginName, trHook(row))
                 }
-                if (pluginInstance.hooks?.['thead.tr.th'] !== undefined) {
-                    row.cells.forEach((cell) =>
-                        cell.applyHook(pluginName, pluginInstance.hooks!['thead.tr.th']!(cell))
-                    )
+                const thHook = pluginInstance.hooks?.['thead.tr.th']
+                if (thHook !== undefined) {
+                    row.cells.forEach((cell) => cell.applyHook(pluginName, thHook(cell)))
                 }
             }
         })
