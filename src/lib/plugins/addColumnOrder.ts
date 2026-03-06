@@ -57,15 +57,20 @@ export const addColumnOrder =
 
         const deriveFlatColumns: DeriveFlatColumnsFn<Item> = (flatColumns) => {
             return derived([flatColumns, columnIdOrder], ([$flatColumns, $columnIdOrder]) => {
-                const _flatColumns = [...$flatColumns]
+                const colById = new Map($flatColumns.map((c) => [c.id, c]))
                 const orderedFlatColumns: typeof $flatColumns = []
+                const seen = new Set<string>()
                 $columnIdOrder.forEach((id) => {
-                    const colIdx = _flatColumns.findIndex((c) => c.id === id)
-                    orderedFlatColumns.push(..._flatColumns.splice(colIdx, 1))
+                    const col = colById.get(id)
+                    if (col !== undefined) {
+                        orderedFlatColumns.push(col)
+                        seen.add(id)
+                    }
                 })
                 if (!hideUnspecifiedColumns) {
-                    // Push the remaining unspecified columns.
-                    orderedFlatColumns.push(..._flatColumns)
+                    $flatColumns.forEach((c) => {
+                        if (!seen.has(c.id)) orderedFlatColumns.push(c)
+                    })
                 }
                 return orderedFlatColumns
             })
