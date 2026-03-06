@@ -393,22 +393,10 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         pageRows = fn(pageRows as any) as any
     })
 
+    // Page rows are a subset of the same object references already processed
+    // by injectedRows — no need to re-inject state or re-apply hooks.
     const injectedPageRows = derived(pageRows, ($pageRows) => {
         derivationCalls.injectedPageRows++
-        $pageRows.forEach((row) => {
-            row.injectState(tableState)
-            row.cells.forEach((cell) => cell.injectState(tableState))
-            for (const [pluginName, pluginInstance] of pluginEntries) {
-                const trHook = pluginInstance.hooks?.['tbody.tr']
-                if (trHook !== undefined) {
-                    row.applyHook(pluginName, trHook(row))
-                }
-                const tdHook = pluginInstance.hooks?.['tbody.tr.td']
-                if (tdHook !== undefined) {
-                    row.cells.forEach((cell) => cell.applyHook(pluginName, tdHook(cell)))
-                }
-            }
-        })
         _pageRows.set($pageRows)
         return $pageRows
     })
