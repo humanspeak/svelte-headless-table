@@ -76,7 +76,7 @@ test('empty columnIdOrder: all columns shown in original order', () => {
     expect(visibleColumns.map((c) => c.id)).toStrictEqual(['firstName', 'lastName', 'age'])
 })
 
-test('non-existent column ID in order: does not break reordering', () => {
+test('non-existent column ID in order: skips missing IDs gracefully', () => {
     const table = createTable(data, {
         order: addColumnOrder({ initialColumnIdOrder: ['age', 'nonExistent', 'firstName'] })
     })
@@ -88,7 +88,6 @@ test('non-existent column ID in order: does not break reordering', () => {
     const vm = table.createViewModel(columns)
     const visibleColumns = get(vm.visibleColumns)
 
-    // Non-existent ID causes splice(-1,1) which pops last remaining element.
-    // The actual order is: age (matched), lastName (popped by nonExistent), firstName (matched)
-    expect(visibleColumns.map((c) => c.id)).toStrictEqual(['age', 'lastName', 'firstName'])
+    // Non-existent IDs are skipped; matched columns appear in order, then unspecified columns
+    expect(visibleColumns.map((c) => c.id)).toStrictEqual(['age', 'firstName', 'lastName'])
 })

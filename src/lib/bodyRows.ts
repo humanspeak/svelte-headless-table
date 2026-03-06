@@ -368,17 +368,12 @@ export const getColumnedBodyRows = <Item, Plugins extends AnyPlugins = AnyPlugin
             clonedCell.row = columnedRows[rowIdx]
             return clonedCell
         })
-        const visibleCells = columnIdOrder
-            .map((cid) => {
-                return cells.find((c) => c.id === cid)
-            })
-            .filter(nonUndefined)
+        const cellById = new Map(cells.map((c) => [c.id, c]))
+        const visibleCells = columnIdOrder.map((cid) => cellById.get(cid)).filter(nonUndefined)
         columnedRows[rowIdx].cells = visibleCells
         // Include hidden cells in `cellForId` to allow row transformations on
         // hidden cells.
-        cells.forEach((cell) => {
-            columnedRows[rowIdx].cellForId[cell.id] = cell
-        })
+        columnedRows[rowIdx].cellForId = Object.fromEntries(cellById)
     })
     return columnedRows
 }
