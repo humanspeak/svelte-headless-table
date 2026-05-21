@@ -13,9 +13,9 @@ test.describe('initial', () => {
         // Verify pagination shows correct values
         await expect(page.getByText('1 of 1')).toBeVisible()
 
-        // Check some initial data is loaded
-        await expect(page.getByText('Colin Mertz')).toBeVisible()
-        await expect(page.getByText('Jan Renner')).toBeVisible()
+        // Check some initial data is loaded (faker seed=12345 deterministic names)
+        await expect(page.getByText('Clinton Mertz')).toBeVisible()
+        await expect(page.getByText('Jamel Renner')).toBeVisible()
 
         // Verify page size input has default value
         const pageSizeInput = page.getByLabel('Page size')
@@ -25,14 +25,14 @@ test.describe('initial', () => {
     test('filtering functionality works', async ({ page }: { page: Page }) => {
         // Test search input
         const searchInput = page.getByTestId('first-name-filter')
-        await searchInput.fill('Colin')
+        await searchInput.fill('Clinton')
 
         // Verify filtered results
-        await expect(page.getByText('Colin Mertz')).toBeVisible()
-        await expect(page.getByText('Jan Renner')).not.toBeVisible()
+        await expect(page.getByText('Clinton Mertz')).toBeVisible()
+        await expect(page.getByText('Jamel Renner')).not.toBeVisible()
 
         // Clear search
         await searchInput.fill('')
-        await expect(page.getByText('Jan Renner')).toBeVisible()
+        await expect(page.getByText('Jamel Renner')).toBeVisible()
     })
 })
