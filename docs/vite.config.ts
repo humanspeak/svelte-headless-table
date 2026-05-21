@@ -1,19 +1,27 @@
-import { demoManifestPlugin, sitemapManifestPlugin } from '@humanspeak/docs-kit/vite'
+import {
+    demoManifestPlugin,
+    docMirrorsPlugin,
+    sitemapManifestPlugin
+} from '@humanspeak/docs-kit/vite'
 import { sveltekit } from '@sveltejs/kit/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vitest/config'
+import { docsConfig } from './src/lib/docs-config'
 
 export default defineConfig({
-    // Both manifest plugins emit JSON into `src/lib/`:
-    //   * `demoManifestPlugin`     scans `src/lib/examples/<...>/demos/*.svelte`
-    //     and writes pre-highlighted source into `demo-manifest.json`.
-    //   * `sitemapManifestPlugin`  scans `src/routes/**/+page.{svelte,svx,md}`
-    //     and writes `sitemap-manifest.json` (the input to `sitemap.xml`).
-    // Both run on `buildStart` and rewatch via Vite's own file watcher —
-    // no chokidar process, no package.json scripts to maintain.
+    // docs-kit Vite plugins, all running on `buildStart` and watching via
+    // Vite's own file watcher (no chokidar process, no consumer scripts):
+    //   * `sitemapManifestPlugin` scans `src/routes/**/+page.{svelte,svx,md}`
+    //     and writes `src/lib/sitemap-manifest.json` (input to sitemap.xml).
+    //   * `demoManifestPlugin`    scans `src/lib/examples/<...>/demos/*.svelte`
+    //     and writes pre-highlighted source into `src/lib/demo-manifest.json`.
+    //   * `docMirrorsPlugin`      scans `src/routes/docs/**/+page.svx` and
+    //     writes LLM-readable Markdown to `static/docs/<slug>.md` (Tailwind /
+    //     shadcn / Astro use the same pattern for ChatGPT/Perplexity citations).
     plugins: [
         sitemapManifestPlugin({ blogDir: false }),
         demoManifestPlugin(),
+        docMirrorsPlugin({ siteUrl: docsConfig.url }),
         tailwindcss(),
         sveltekit()
     ],

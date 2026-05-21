@@ -9,5 +9,3 @@ procs:
         shell: pnpm -w run dev
     docs:
         shell: rm -rf docs/.svelte-kit docs/node_modules/.vite && pnpm --filter docs run dev
-    doc-mirrors:
-        shell: pnpm --filter docs run doc-mirrors:watch
