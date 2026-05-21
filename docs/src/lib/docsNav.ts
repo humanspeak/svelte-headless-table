@@ -3,6 +3,7 @@ import {
     ArrowRightLeft,
     ArrowUpDown,
     BookOpen,
+    Box,
     Boxes,
     Columns3,
     Database,
@@ -24,6 +25,7 @@ import {
     Rocket,
     Search,
     Shapes,
+    Sparkles,
     SquareCheck,
     Table,
     Table2,
@@ -116,5 +118,33 @@ export const docsSections: NavSection[] = [
     {
         title: 'Guides',
         items: [{ title: 'shadcn-svelte', href: '/docs/guides/shadcn-svelte', icon: BookOpen }]
+    }
+]
+
+/**
+ * External community / sibling-project links surfaced at the bottom of
+ * `SidebarV2`. Mirrors the `motionLoveAndRespect` list in
+ * `svelte-motion/docs/src/lib/docsNav.ts` — the "Things we love and respect"
+ * cluster that nudges visitors toward neighboring tools.
+ */
+export const tableLoveAndRespect = [
+    { title: 'Beye.ai', href: 'https://beye.ai', icon: Sparkles, external: true },
+    {
+        title: 'Svelte Markdown',
+        href: 'https://markdown.svelte.page',
+        icon: BookOpen,
+        external: true
+    },
+    {
+        title: 'Svelte Motion',
+        href: 'https://motion.svelte.page',
+        icon: WandSparkles,
+        external: true
+    },
+    {
+        title: 'shadcn-svelte',
+        href: 'https://www.shadcn-svelte.com',
+        icon: Box,
+        external: true
     }
 ]

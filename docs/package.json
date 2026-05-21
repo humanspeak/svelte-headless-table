@@ -4,12 +4,14 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "tsx ./scripts/fetch-github-stats.ts && tsx ./scripts/generate-social-cards.ts && vite build",
+        "build": "tsx ./scripts/fetch-github-stats.ts && tsx ./scripts/generate-social-cards.ts && node ./scripts/generate-doc-mirrors.mjs && vite build",
         "cf-typegen": "wrangler types && mv worker-configuration.d.ts src/",
         "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
         "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
         "deploy": "npm run build && wrangler deploy",
         "dev": "vite dev",
+        "doc-mirrors": "node ./scripts/generate-doc-mirrors.mjs",
+        "doc-mirrors:watch": "chokidar 'src/routes/docs/**/+page.svx' -c 'node ./scripts/generate-doc-mirrors.mjs' --initial --silent",
         "format": "prettier --write .",
         "generate-social": "tsx ./scripts/generate-social-cards.ts",
         "lint": "prettier --check . && eslint .",
@@ -21,6 +23,8 @@
         "test:unit": "vitest"
     },
     "dependencies": {
+        "@fontsource-variable/inter": "^5.2.8",
+        "@fontsource-variable/jetbrains-mono": "^5.2.8",
         "@humanspeak/docs-kit": "github:humanspeak/docs-kit#2026.5.32",
         "@humanspeak/svelte-headless-table": "workspace:*",
         "@humanspeak/svelte-markdown": "^1.5.2",

@@ -1,12 +1,17 @@
 <script lang="ts">
-    import Header from '$lib/components/general/Header.svelte'
-    import Footer from '$lib/components/general/Footer.svelte'
     import {
+        FooterV2,
+        HeaderV2,
         type BreadcrumbContext,
         getBreadcrumbContext,
         getSeoContext
     } from '@humanspeak/docs-kit'
+    import { docsConfig } from '$lib/docs-config'
+    import favicon from '$lib/assets/logo.svg'
+    import rootPkg from '../../../package.json'
     import { Rocket, BookOpen, Table } from '@lucide/svelte'
+
+    const PKG_VERSION = rootPkg.version
 
     // mounted no longer needed for CSS enter
     let headingContainer: HTMLDivElement | null = $state(null)
@@ -173,7 +178,12 @@
 
 <div class="flex min-h-svh flex-col">
     <!-- Header with links -->
-    <Header />
+    <HeaderV2
+        config={docsConfig}
+        {favicon}
+        version={PKG_VERSION}
+        nav={[{ label: 'docs', href: '/docs' }]}
+    />
     <div class="relative flex flex-1 flex-col overflow-hidden">
         <!-- Layer: subtle grid -->
         <div class="bg-grid pointer-events-none absolute inset-0 -z-20"></div>
@@ -299,7 +309,7 @@
             </div>
         </section>
     </div>
-    <Footer />
+    <FooterV2 version={PKG_VERSION} />
 </div>
 
 <style>
