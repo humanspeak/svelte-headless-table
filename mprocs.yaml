@@ -9,5 +9,3 @@ procs:
         shell: pnpm -w run dev
     docs:
         shell: pnpm --filter docs run dev
-    sitemap:
-        shell: pnpm --filter docs run sitemap:watch
