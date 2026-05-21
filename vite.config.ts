@@ -3,6 +3,9 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
     plugins: [sveltekit()],
+    build: {
+        sourcemap: false
+    },
     server: {
         port: 8417
     },

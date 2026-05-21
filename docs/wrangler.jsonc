@@ -5,9 +5,13 @@
 {
     "$schema": "node_modules/wrangler/config-schema.json",
     "name": "svelte-page-table",
-    "compatibility_date": "2026-01-20",
+    "compatibility_date": "2026-04-21",
     "compatibility_flags": ["nodejs_als", "nodejs_compat"],
-    "pages_build_output_dir": ".svelte-kit/cloudflare",
+    "main": ".svelte-kit/cloudflare/_worker.js",
+    "assets": {
+        "directory": ".svelte-kit/cloudflare",
+        "binding": "ASSETS"
+    },
     "observability": {
         "enabled": true
     },
