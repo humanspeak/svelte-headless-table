@@ -6,6 +6,7 @@ import {
     Box,
     Boxes,
     Columns3,
+    Compass,
     Database,
     EyeOff,
     FileOutput,
@@ -36,6 +37,7 @@ import {
 export const docsSections: NavSection[] = [
     {
         title: 'Get Started',
+        icon: Rocket,
         items: [
             { title: 'Overview', href: '/docs/getting-started/overview', icon: Info },
             { title: 'Quick Start', href: '/docs/getting-started/quick-start', icon: Rocket }
@@ -43,6 +45,7 @@ export const docsSections: NavSection[] = [
     },
     {
         title: 'API',
+        icon: BookOpen,
         items: [
             { title: 'createTable', href: '/docs/api/create-table', icon: Table },
             { title: 'createColumns', href: '/docs/api/create-columns', icon: Columns3 },
@@ -61,6 +64,7 @@ export const docsSections: NavSection[] = [
     },
     {
         title: 'Plugins',
+        icon: Puzzle,
         items: [
             { title: 'Overview', href: '/docs/plugins/overview', icon: Puzzle },
             { title: 'addSortBy', href: '/docs/plugins/add-sort-by', icon: ArrowUpDown },
@@ -110,6 +114,7 @@ export const docsSections: NavSection[] = [
     },
     {
         title: 'Examples',
+        icon: Boxes,
         items: [
             { title: 'Kitchen Sink', href: '/docs/examples/kitchen-sink', icon: Boxes },
             { title: 'Virtual Scroll', href: '/docs/examples/virtual-scroll', icon: ArrowUpDown }
@@ -117,6 +122,7 @@ export const docsSections: NavSection[] = [
     },
     {
         title: 'Guides',
+        icon: Compass,
         items: [{ title: 'shadcn-svelte', href: '/docs/guides/shadcn-svelte', icon: BookOpen }]
     }
 ]
