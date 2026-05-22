@@ -615,7 +615,7 @@
         letter-spacing: 0.08em;
     }
     .brut-hero .meta .v {
-        color: var(--brut-ink-1);
+        color: var(--brut-ink);
     }
     .brut-hero .meta .v.accent {
         color: var(--brut-accent);
@@ -634,7 +634,7 @@
         letter-spacing: -0.04em;
         text-transform: lowercase;
         margin: 0;
-        color: var(--brut-ink-1);
+        color: var(--brut-ink);
     }
     .brut-hero h1 .slash {
         color: var(--brut-accent);
@@ -651,7 +651,7 @@
         margin: 18px 0 0;
     }
     .brut-hero .sub b {
-        color: var(--brut-ink-1);
+        color: var(--brut-ink);
         font-weight: 600;
     }
     .brut-hero .cta-row {
@@ -670,7 +670,7 @@
         align-items: center;
         padding: 8px 14px;
         text-decoration: none;
-        color: var(--brut-ink-1);
+        color: var(--brut-ink);
         background: transparent;
         border: 1px solid var(--brut-rule);
         cursor: pointer;
@@ -688,18 +688,18 @@
         z-index: 1;
     }
     .brut-hero .cta-row .pri {
-        background: var(--brut-ink-1);
-        color: var(--brut-bg);
-        border-color: var(--brut-ink-1);
+        background: var(--brut-accent);
+        color: var(--brut-accent-ink);
+        font-weight: 600;
+        border-color: var(--brut-accent);
     }
     .brut-hero .cta-row .pri:hover {
-        background: var(--brut-accent);
-        border-color: var(--brut-accent);
-        color: var(--brut-bg);
+        background: var(--brut-accent-hover);
+        border-color: var(--brut-accent-hover);
     }
     .brut-hero .cta-row a:not(.pri):hover,
     .brut-hero .cta-row :global(.inst:hover) {
-        background: var(--brut-rule-soft);
+        background: var(--brut-bg-2);
     }
     /* MotionButton renders into a plain <button> without our scoped
        class hierarchy — :global() lets us reach in. */
@@ -718,13 +718,13 @@
         text-transform: lowercase;
     }
     .brut-hero .cta-row :global(.inst:hover) {
-        background: var(--brut-rule-soft);
+        background: var(--brut-bg-2);
     }
     .brut-hero .cta-row :global(.inst .inst-prompt) {
         color: var(--brut-accent);
     }
     .brut-hero .cta-row :global(.inst .inst-cmd) {
-        color: var(--brut-ink-1);
+        color: var(--brut-ink);
     }
     .brut-hero .cta-row :global(.inst .inst-cmd .pkg) {
         color: var(--brut-accent);
@@ -803,7 +803,7 @@
         gap: 4px;
         margin-top: 8px;
         line-height: 1;
-        color: var(--brut-ink-1);
+        color: var(--brut-ink);
     }
     .brut-stats .s .v-num {
         font-size: 36px;
@@ -853,7 +853,7 @@
         text-transform: lowercase;
         font-weight: 500;
         margin: 12px 0 0;
-        color: var(--brut-ink-1);
+        color: var(--brut-ink);
     }
     .lede h2 span {
         color: var(--brut-accent);
@@ -911,7 +911,7 @@
         letter-spacing: -0.02em;
         text-transform: lowercase;
         font-weight: 500;
-        color: var(--brut-ink-1);
+        color: var(--brut-ink);
     }
     .brut-feat .cell p {
         font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
@@ -955,7 +955,7 @@
         text-transform: lowercase;
         font-weight: 500;
         margin: 12px 0 0;
-        color: var(--brut-ink-1);
+        color: var(--brut-ink);
     }
     .brut-comp h2 span {
         color: var(--brut-accent);
@@ -991,7 +991,7 @@
         border-right: 0;
     }
     .brut-comp thead th {
-        background: var(--brut-rule-soft);
+        background: var(--brut-bg-2);
         color: var(--brut-ink-3);
         font-weight: 500;
         text-transform: uppercase;
@@ -1002,7 +1002,7 @@
         border-bottom: 0;
     }
     .brut-comp .us {
-        color: var(--brut-ink-1);
+        color: var(--brut-ink);
         font-weight: 600;
     }
     .brut-comp .us-row {
@@ -1054,8 +1054,8 @@
         letter-spacing: 0.04em;
     }
     .brut-ai .ai-tab.on {
-        background: var(--brut-rule-soft);
-        color: var(--brut-ink-1);
+        background: var(--brut-bg-2);
+        color: var(--brut-ink);
     }
     .brut-ai .ai-head .grow {
         flex: 1 1 0;
@@ -1084,7 +1084,7 @@
         border-right: 0;
     }
     .brut-ai .ai-cell:hover {
-        background: var(--brut-rule-soft);
+        background: var(--brut-bg-2);
     }
     .brut-ai .ai-cell-k {
         font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
@@ -1099,7 +1099,7 @@
         font-size: 18px;
         letter-spacing: -0.02em;
         font-weight: 500;
-        color: var(--brut-ink-1);
+        color: var(--brut-ink);
         text-transform: none;
     }
     .brut-ai .ai-cell h3 code {
@@ -1173,7 +1173,7 @@
         border-right: 0;
     }
     .brut-ex .cell:hover {
-        background: var(--brut-rule-soft);
+        background: var(--brut-bg-2);
     }
     .brut-ex .cell .id {
         font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
@@ -1199,7 +1199,7 @@
         letter-spacing: -0.02em;
         font-weight: 500;
         text-transform: lowercase;
-        color: var(--brut-ink-1);
+        color: var(--brut-ink);
     }
     .brut-ex .cell p {
         font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
@@ -1270,7 +1270,7 @@
         letter-spacing: -0.04em;
         text-transform: lowercase;
         font-weight: 500;
-        color: var(--brut-ink-1);
+        color: var(--brut-ink);
         background: transparent;
         border: 0;
         padding: 0;
