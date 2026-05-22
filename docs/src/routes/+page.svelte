@@ -4,6 +4,7 @@
     import { docsConfig } from '$lib/docs-config'
     import favicon from '$lib/assets/logo.svg'
     import githubStats from '$lib/github-stats.json'
+    import { headerNav } from '$lib/docsNav'
     import VirtualScrollSample from '$lib/components/home/VirtualScrollSample.svelte'
     import '@fontsource-variable/inter/index.css'
     import '@fontsource-variable/jetbrains-mono/index.css'
@@ -96,7 +97,6 @@
     interface CompareRow {
         slug: string
         name: string
-        href: string
         type: string
         svelte5: boolean | string
         headless: boolean | string
@@ -104,45 +104,45 @@
         ts: boolean | string
         pricing: string
     }
+    // Slug matches the /compare/<slug> route group. Truthful per-row
+    // data sourced from each project's npm peer-dependency + README
+    // (verified 2026-05-22) — see docs/src/lib/compare-data.ts for the
+    // full per-row deep-dive.
     const compareRows: CompareRow[] = [
         {
-            slug: 'tanstack-table',
-            name: 'TanStack Table v8',
-            href: 'https://tanstack.com/table',
+            slug: 'vs-tanstack-table',
+            name: 'TanStack Table',
             type: 'headless · multi-framework',
-            svelte5: 'partial',
+            svelte5: 'via community drop-in',
             headless: true,
-            plugins: 'adapters',
+            plugins: 'core modules',
             ts: true,
             pricing: 'free'
         },
         {
-            slug: 'svelte-headless-treegrid',
-            name: 'svelte-headless-treegrid',
-            href: 'https://github.com/geoffrey-roberts/svelte-headless-treegrid',
-            type: 'headless · treegrid',
-            svelte5: false,
-            headless: true,
-            plugins: false,
-            ts: true,
-            pricing: 'free'
-        },
-        {
-            slug: 'svelte-table',
-            name: 'svelte-table',
-            href: 'https://github.com/dasDaniel/svelte-table',
-            type: 'styled · simple',
-            svelte5: 'partial',
-            headless: false,
-            plugins: false,
-            ts: 'partial',
-            pricing: 'free'
-        },
-        {
-            slug: 'vincjo-datatables',
+            slug: 'vs-vincjo-datatables',
             name: '@vincjo/datatables',
-            href: 'https://vincjo.fr/datatables',
-            type: 'styled · client + server',
+            type: 'headless · svelte 5',
+            svelte5: true,
+            headless: true,
+            plugins: 'sort/filter/page/select/lazy',
+            ts: true,
+            pricing: 'free'
+        },
+        {
+            slug: 'vs-svelte-table',
+            name: 'svelte-table',
+            type: 'headless · single component',
+            svelte5: 'not declared',
+            headless: true,
+            plugins: false,
+            ts: true,
+            pricing: 'free'
+        },
+        {
+            slug: 'vs-flowbite-svelte-datatable',
+            name: 'Flowbite Svelte Datatable',
+            type: 'styled · tailwind + flowbite',
             svelte5: true,
             headless: false,
             plugins: false,
@@ -150,32 +150,19 @@
             pricing: 'free'
         },
         {
-            slug: 'svelte-easy-table',
-            name: 'svelte-easy-data-table',
-            href: 'https://github.com/Topiya/svelte-easy-data-table',
-            type: 'styled · prebuilt',
-            svelte5: false,
-            headless: false,
-            plugins: false,
-            ts: 'partial',
-            pricing: 'free'
-        },
-        {
-            slug: 'ag-grid',
+            slug: 'vs-ag-grid',
             name: 'AG Grid',
-            href: 'https://ag-grid.com',
             type: 'styled · multi-framework',
-            svelte5: false,
+            svelte5: 'community wrapper · stale',
             headless: false,
             plugins: true,
             ts: true,
             pricing: 'community + enterprise'
         },
         {
-            slug: 'handsontable',
+            slug: 'vs-handsontable',
             name: 'Handsontable',
-            href: 'https://handsontable.com',
-            type: 'spreadsheet · multi-framework',
+            type: 'spreadsheet · react/angular/vue',
             svelte5: false,
             headless: false,
             plugins: true,
@@ -211,11 +198,6 @@
             title: 'Editable Table',
             body: 'Per-cell inline editing through a custom cell renderer that writes the new value back into the underlying writable store.'
         }
-    ]
-
-    const headerNav = [
-        { label: 'docs', href: '/docs' },
-        { label: 'examples', href: '/examples' }
     ]
 
     // ── Copy install command ─────────────────────────────────────────
@@ -433,13 +415,11 @@
                                 <td>{row.pricing}</td>
                                 <td class="comp-read">
                                     <a
-                                        href={row.href}
+                                        href="/compare/{row.slug}"
                                         class="comp-read-link"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        aria-label="Visit {row.name} homepage"
+                                        aria-label="Read full comparison with {row.name}"
                                     >
-                                        visit ↗
+                                        read more →
                                     </a>
                                 </td>
                             </tr>
@@ -447,6 +427,7 @@
                     </tbody>
                 </table>
             </div>
+            <a class="comp-all" href="/compare">view all comparisons →</a>
         </section>
 
         <!-- ── FIG-005 · AI-READY DOCS ─────────────────────────────── -->

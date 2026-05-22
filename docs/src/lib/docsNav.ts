@@ -33,6 +33,18 @@ import {
     Zap
 } from '@lucide/svelte'
 
+/**
+ * Single source of truth for the top header links used by every layout
+ * (`HeaderV2 nav={...}` on /, /docs, /examples, /compare). Keeping the
+ * literal here means a new top-level surface gets added in one place
+ * and the rest of the site picks it up automatically.
+ */
+export const headerNav: { label: string; href: string }[] = [
+    { label: 'docs', href: '/docs' },
+    { label: 'examples', href: '/examples' },
+    { label: 'compare', href: '/compare' }
+]
+
 export const docsSections: NavSection[] = [
     {
         title: 'Get Started',
