@@ -67,6 +67,17 @@ function parseStats(s) {
         derivPageRows: num(grab('derivPageRows')),
         derivInjectedPageRows: num(grab('derivInjectedPageRows')),
         derivHeaderRows: num(grab('derivHeaderRows')),
+        // vm._debug.derivationTimings snapshot — per-derivation wall-clock
+        // (ms). The first signal to consult when chasing render budget,
+        // since `firstPaintMs` alone can't tell you which derivation ate
+        // the time.
+        timeTotalMs: num(grab('timeTotalMs')),
+        timeTableAttrs: num(grab('timeTableAttrs')),
+        timeVisibleColumns: num(grab('timeVisibleColumns')),
+        timeColumnedRows: num(grab('timeColumnedRows')),
+        timeInjectedRows: num(grab('timeInjectedRows')),
+        timeInjectedPageRows: num(grab('timeInjectedPageRows')),
+        timeHeaderRows: num(grab('timeHeaderRows')),
         // Interaction phase (sort cycle, reorder, expand-all) — null
         // for cold-mount-only scenarios. interactionPaintMs is the
         // critical-path: how long the user waits for the change to

@@ -198,6 +198,16 @@
         derivPageRows: 0,
         derivInjectedPageRows: 0,
         derivHeaderRows: 0,
+        // vm._debug.derivationTimings snapshot. Per-derivation wall-clock
+        // (ms) — the headline number for routing optimization effort.
+        // `timeTotalMs` covers every derivation; the rest break it down.
+        timeTotalMs: 0,
+        timeTableAttrs: 0,
+        timeVisibleColumns: 0,
+        timeColumnedRows: 0,
+        timeInjectedRows: 0,
+        timeInjectedPageRows: 0,
+        timeHeaderRows: 0,
         // Interaction wall-clock (where applicable)
         interactionMs: 0,
         interactionPaintMs: 0,
@@ -229,6 +239,13 @@
             derivPageRows: 0,
             derivInjectedPageRows: 0,
             derivHeaderRows: 0,
+            timeTotalMs: 0,
+            timeTableAttrs: 0,
+            timeVisibleColumns: 0,
+            timeColumnedRows: 0,
+            timeInjectedRows: 0,
+            timeInjectedPageRows: 0,
+            timeHeaderRows: 0,
             interactionMs: 0,
             interactionPaintMs: 0,
             scenarioLongestTaskMs: 0,
@@ -304,6 +321,7 @@
 
     const snapshotDerivations = (vm: AnyVm) => {
         const d = vm._debug.derivationCalls
+        const t = vm._debug.derivationTimings
         return {
             total: vm._debug.getTotalCalls(),
             tableAttrs: d.tableAttrs,
@@ -313,7 +331,14 @@
             injectedRows: d.injectedRows,
             pageRows: d.pageRows,
             injectedPageRows: d.injectedPageRows,
-            headerRows: d.headerRows
+            headerRows: d.headerRows,
+            timeTotalMs: round(vm._debug.getTotalMs(), 3),
+            timeTableAttrs: round(t.tableAttrs, 3),
+            timeVisibleColumns: round(t.visibleColumns, 3),
+            timeColumnedRows: round(t.columnedRows, 3),
+            timeInjectedRows: round(t.injectedRows, 3),
+            timeInjectedPageRows: round(t.injectedPageRows, 3),
+            timeHeaderRows: round(t.headerRows, 3)
         }
     }
 
@@ -409,6 +434,13 @@
             derivPageRows: derivs.pageRows,
             derivInjectedPageRows: derivs.injectedPageRows,
             derivHeaderRows: derivs.headerRows,
+            timeTotalMs: derivs.timeTotalMs,
+            timeTableAttrs: derivs.timeTableAttrs,
+            timeVisibleColumns: derivs.timeVisibleColumns,
+            timeColumnedRows: derivs.timeColumnedRows,
+            timeInjectedRows: derivs.timeInjectedRows,
+            timeInjectedPageRows: derivs.timeInjectedPageRows,
+            timeHeaderRows: derivs.timeHeaderRows,
             scenarioLongestTaskMs: observers.longestTaskMs,
             scenarioMutations: observers.mutations,
             scenarioLoafScriptMaxMs: observers.loafScriptMaxMs
@@ -492,6 +524,13 @@
             derivPageRows: derivs.pageRows,
             derivInjectedPageRows: derivs.injectedPageRows,
             derivHeaderRows: derivs.headerRows,
+            timeTotalMs: derivs.timeTotalMs,
+            timeTableAttrs: derivs.timeTableAttrs,
+            timeVisibleColumns: derivs.timeVisibleColumns,
+            timeColumnedRows: derivs.timeColumnedRows,
+            timeInjectedRows: derivs.timeInjectedRows,
+            timeInjectedPageRows: derivs.timeInjectedPageRows,
+            timeHeaderRows: derivs.timeHeaderRows,
             scenarioLongestTaskMs: observers.longestTaskMs,
             scenarioMutations: observers.mutations,
             scenarioLoafScriptMaxMs: observers.loafScriptMaxMs
@@ -576,6 +615,13 @@
             derivPageRows: derivs.pageRows,
             derivInjectedPageRows: derivs.injectedPageRows,
             derivHeaderRows: derivs.headerRows,
+            timeTotalMs: derivs.timeTotalMs,
+            timeTableAttrs: derivs.timeTableAttrs,
+            timeVisibleColumns: derivs.timeVisibleColumns,
+            timeColumnedRows: derivs.timeColumnedRows,
+            timeInjectedRows: derivs.timeInjectedRows,
+            timeInjectedPageRows: derivs.timeInjectedPageRows,
+            timeHeaderRows: derivs.timeHeaderRows,
             scenarioLongestTaskMs: observers.longestTaskMs,
             scenarioMutations: observers.mutations,
             scenarioLoafScriptMaxMs: observers.loafScriptMaxMs
@@ -681,6 +727,13 @@
             derivPageRows: derivs.pageRows,
             derivInjectedPageRows: derivs.injectedPageRows,
             derivHeaderRows: derivs.headerRows,
+            timeTotalMs: derivs.timeTotalMs,
+            timeTableAttrs: derivs.timeTableAttrs,
+            timeVisibleColumns: derivs.timeVisibleColumns,
+            timeColumnedRows: derivs.timeColumnedRows,
+            timeInjectedRows: derivs.timeInjectedRows,
+            timeInjectedPageRows: derivs.timeInjectedPageRows,
+            timeHeaderRows: derivs.timeHeaderRows,
             interactionMs: round(interactionMs),
             interactionPaintMs: round(interactionPaintMs),
             scenarioLongestTaskMs: observers.longestTaskMs,
@@ -765,6 +818,13 @@
             derivPageRows: derivs.pageRows,
             derivInjectedPageRows: derivs.injectedPageRows,
             derivHeaderRows: derivs.headerRows,
+            timeTotalMs: derivs.timeTotalMs,
+            timeTableAttrs: derivs.timeTableAttrs,
+            timeVisibleColumns: derivs.timeVisibleColumns,
+            timeColumnedRows: derivs.timeColumnedRows,
+            timeInjectedRows: derivs.timeInjectedRows,
+            timeInjectedPageRows: derivs.timeInjectedPageRows,
+            timeHeaderRows: derivs.timeHeaderRows,
             scenarioLongestTaskMs: observers.longestTaskMs,
             scenarioMutations: observers.mutations,
             scenarioLoafScriptMaxMs: observers.loafScriptMaxMs
@@ -872,6 +932,13 @@
             derivPageRows: derivs.pageRows,
             derivInjectedPageRows: derivs.injectedPageRows,
             derivHeaderRows: derivs.headerRows,
+            timeTotalMs: derivs.timeTotalMs,
+            timeTableAttrs: derivs.timeTableAttrs,
+            timeVisibleColumns: derivs.timeVisibleColumns,
+            timeColumnedRows: derivs.timeColumnedRows,
+            timeInjectedRows: derivs.timeInjectedRows,
+            timeInjectedPageRows: derivs.timeInjectedPageRows,
+            timeHeaderRows: derivs.timeHeaderRows,
             interactionMs: round(interactionMs),
             interactionPaintMs: round(interactionPaintTotal),
             scenarioLongestTaskMs: observers.longestTaskMs,
@@ -979,6 +1046,13 @@
             derivPageRows: derivs.pageRows,
             derivInjectedPageRows: derivs.injectedPageRows,
             derivHeaderRows: derivs.headerRows,
+            timeTotalMs: derivs.timeTotalMs,
+            timeTableAttrs: derivs.timeTableAttrs,
+            timeVisibleColumns: derivs.timeVisibleColumns,
+            timeColumnedRows: derivs.timeColumnedRows,
+            timeInjectedRows: derivs.timeInjectedRows,
+            timeInjectedPageRows: derivs.timeInjectedPageRows,
+            timeHeaderRows: derivs.timeHeaderRows,
             interactionMs: round(interactionMs),
             interactionPaintMs: round(interactionPaintMs),
             scenarioLongestTaskMs: observers.longestTaskMs,
@@ -1084,6 +1158,13 @@
             derivPageRows: derivs.pageRows,
             derivInjectedPageRows: derivs.injectedPageRows,
             derivHeaderRows: derivs.headerRows,
+            timeTotalMs: derivs.timeTotalMs,
+            timeTableAttrs: derivs.timeTableAttrs,
+            timeVisibleColumns: derivs.timeVisibleColumns,
+            timeColumnedRows: derivs.timeColumnedRows,
+            timeInjectedRows: derivs.timeInjectedRows,
+            timeInjectedPageRows: derivs.timeInjectedPageRows,
+            timeHeaderRows: derivs.timeHeaderRows,
             scenarioLongestTaskMs: observers.longestTaskMs,
             scenarioMutations: observers.mutations,
             scenarioLoafScriptMaxMs: observers.loafScriptMaxMs
@@ -1274,7 +1355,9 @@
         derivVisibleColumns={stat.derivVisibleColumns} derivColumnedRows={stat.derivColumnedRows}
         derivRows={stat.derivRows} derivInjectedRows={stat.derivInjectedRows} derivPageRows={stat.derivPageRows}
         derivInjectedPageRows={stat.derivInjectedPageRows} derivHeaderRows={stat.derivHeaderRows}
-        interactionMs={stat.interactionMs} interactionPaintMs={stat.interactionPaintMs}
+        timeTotalMs={stat.timeTotalMs} timeTableAttrs={stat.timeTableAttrs} timeVisibleColumns={stat.timeVisibleColumns}
+        timeColumnedRows={stat.timeColumnedRows} timeInjectedRows={stat.timeInjectedRows} timeInjectedPageRows={stat.timeInjectedPageRows}
+        timeHeaderRows={stat.timeHeaderRows} interactionMs={stat.interactionMs} interactionPaintMs={stat.interactionPaintMs}
         scenarioLongestTaskMs={stat.scenarioLongestTaskMs} scenarioMutations={stat.scenarioMutations}
         scenarioLoafScriptMaxMs={stat.scenarioLoafScriptMaxMs} · longestTaskMs={longTaskSupported
             ? displayLongestTaskMs
