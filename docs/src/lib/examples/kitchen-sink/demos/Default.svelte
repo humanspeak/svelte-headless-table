@@ -31,9 +31,13 @@
     import { getDistinct } from '$lib/utils/array'
     import SelectIndicator from '$lib/examples/_shared/SelectIndicator.svelte'
 
-    // 200 top-level rows, each with up to 3 sub-rows — gives the
-    // expand/collapse plugin actual children to toggle on click.
-    const data = readable(createSamples(200, 2, 3, { seed: 42 }))
+    // `createSamples(length, depth, breadth)` creates `length` items at
+    // every level (not just the top), and `breadth` *arrays* of children
+    // per parent — so each parent ends up with `breadth × length`
+    // children. (8, 2, 1) → 8 parents × 8 children = 72 rows total,
+    // enough to demo expand/collapse without making pagination redraw
+    // a 100k-row dataset on every refresh.
+    const data = readable(createSamples(8, 2, 1, { seed: 42 }))
 
     const table = createTable(data, {
         subRows: addSubRows({
