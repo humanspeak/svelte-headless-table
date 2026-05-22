@@ -17,6 +17,7 @@
         addSelectedRows,
         addResizedColumns
     } from '@humanspeak/svelte-headless-table/plugins'
+    import { ChevronDown, ChevronUp, Layers, Shuffle } from '@lucide/svelte'
 
     import { mean, sum } from '$lib/utils/math'
     import { getShuffled } from '$lib/utils/getShuffled'
@@ -246,12 +247,10 @@
     const { hiddenColumnIds } = pluginStates.hideColumns
     const { columnWidths } = pluginStates.resize
 
-    // Use $state for reactive checkbox bindings
     let hideForId: Record<string, boolean> = $state(
         Object.fromEntries(ids.map((id) => [id, false]))
     )
 
-    // Update hidden columns when checkboxes change
     $effect(() => {
         $hiddenColumnIds = Object.entries(hideForId)
             .filter(([, hide]) => hide)
@@ -259,39 +258,59 @@
     })
 </script>
 
-<h3>Hidden columns</h3>
-
-<div style:display="grid" style:grid-template-columns="repeat(3, 1fr)">
-    {#each ids as id}
-        <div class="flex items-center gap-4">
-            <input id="hide-{id}" type="checkbox" bind:checked={hideForId[id]} />
-            <label for="hide-{id}">{id}</label>
+<div class="ks-toolbar">
+    <fieldset class="ks-panel">
+        <legend>Hidden columns</legend>
+        <div class="ks-checks">
+            {#each ids as id (id)}
+                <label class="ks-check" for="hide-{id}">
+                    <input id="hide-{id}" type="checkbox" bind:checked={hideForId[id]} />
+                    <span>{id}</span>
+                </label>
+            {/each}
         </div>
-    {/each}
+    </fieldset>
+
+    <fieldset class="ks-panel">
+        <legend>Pagination</legend>
+        <div class="ks-pager">
+            <button
+                type="button"
+                class="ks-btn"
+                onclick={() => $pageIndex--}
+                disabled={!$hasPreviousPage}>‹ prev</button
+            >
+            <span class="ks-pager-meta">
+                <strong>{$pageIndex + 1}</strong> / {$pageCount}
+            </span>
+            <button
+                type="button"
+                class="ks-btn"
+                onclick={() => $pageIndex++}
+                disabled={!$hasNextPage}>next ›</button
+            >
+            <label class="ks-inline" for="page-size">
+                <span>rows</span>
+                <input id="page-size" type="number" min={1} bind:value={$pageSize} />
+            </label>
+        </div>
+    </fieldset>
+
+    <fieldset class="ks-panel">
+        <legend>Column order</legend>
+        <button
+            type="button"
+            class="ks-btn ks-btn--icon"
+            onclick={() => ($columnIdOrder = getShuffled($columnIdOrder))}
+        >
+            <Shuffle size={14} strokeWidth={2.25} />
+            shuffle
+        </button>
+    </fieldset>
 </div>
 
-<h3>Pagination</h3>
-
-<div>
-    <button onclick={() => $pageIndex--} disabled={!$hasPreviousPage} class="demo"
-        >Previous page</button
-    >
-    {$pageIndex + 1} of {$pageCount}
-    <button onclick={() => $pageIndex++} disabled={!$hasNextPage} class="demo">Next page</button>
-</div>
-<div style:margin-top="1rem">
-    <label for="page-size">Page size</label>
-    <input id="page-size" type="number" min={1} bind:value={$pageSize} class="demo" />
-</div>
-
-<h3>Column order</h3>
-
-<button onclick={() => ($columnIdOrder = getShuffled($columnIdOrder))} class="demo"
-    >Shuffle columns</button
->
-
-<div class="overflow-x-auto">
-    <table {...$tableAttrs} class="demo">
+<div class="ks-shell">
+    <table {...$tableAttrs} class="ks-table">
         <thead>
             {#each $headerRows as headerRow (headerRow.id)}
                 <Subscribe attrs={headerRow.attrs()} let:attrs>
@@ -309,35 +328,42 @@
                                     class:sorted={props.sort.order !== undefined}
                                     use:props.resize
                                 >
-                                    <div>
-                                        <Render of={cell.render()} />
+                                    <div class="ks-th-inner">
+                                        <span class="ks-th-label">
+                                            <Render of={cell.render()} />
+                                        </span>
                                         {#if props.sort.order === 'asc'}
-                                            ⬇️
+                                            <ChevronDown size={12} strokeWidth={2.5} />
                                         {:else if props.sort.order === 'desc'}
-                                            ⬆️
+                                            <ChevronUp size={12} strokeWidth={2.5} />
+                                        {/if}
+                                        {#if !props.group.disabled}
+                                            <button
+                                                type="button"
+                                                class="ks-th-action"
+                                                title={props.group.grouped
+                                                    ? 'Ungroup'
+                                                    : 'Group by this column'}
+                                                onclick={(e) => {
+                                                    e.stopPropagation()
+                                                    props.group.toggle(e)
+                                                }}
+                                            >
+                                                <Layers size={12} strokeWidth={2.25} />
+                                                {props.group.grouped ? 'ungroup' : 'group'}
+                                            </button>
                                         {/if}
                                     </div>
-                                    {#if !props.group.disabled}
-                                        <button
-                                            onclick={(e) => {
-                                                e.stopPropagation()
-                                                props.group.toggle(e)
-                                            }}
-                                            class="demo"
-                                        >
-                                            {#if props.group.grouped}
-                                                ungroup
-                                            {:else}
-                                                group
-                                            {/if}
-                                        </button>
-                                    {/if}
                                     {#if props.filter?.render !== undefined}
-                                        <Render of={props.filter.render} />
+                                        <div class="ks-th-filter">
+                                            <Render of={props.filter.render} />
+                                        </div>
                                     {/if}
                                     {#if !props.resize.disabled}
+                                        <!-- trunk-ignore(eslint/svelte/a11y_click_events_have_key_events): drag handle, not a keyboard interaction surface -->
+                                        <!-- trunk-ignore(eslint/svelte/a11y_no_static_element_interactions): drag handle, not a keyboard interaction surface -->
                                         <div
-                                            class="resizer"
+                                            class="ks-resizer"
                                             onclick={(e) => e.stopPropagation()}
                                             use:props.resize.drag
                                         ></div>
@@ -348,13 +374,13 @@
                     </tr>
                 </Subscribe>
             {/each}
-            <tr>
+            <tr class="ks-search-row">
                 <th colspan={$visibleColumns.length}>
                     <input
                         type="text"
                         bind:value={$filterValue}
-                        placeholder="Search all data..."
-                        class="demo"
+                        placeholder="Search all rows…"
+                        class="ks-search"
                     />
                 </th>
             </tr>
@@ -391,52 +417,330 @@
     </table>
 </div>
 
-<pre>{JSON.stringify(
-        {
-            groupByIds: $groupByIds,
-            sortKeys: $sortKeys,
-            filterValues: $filterValues,
-            selectedDataIds: $selectedDataIds,
-            columnIdOrder: $columnIdOrder,
-            hiddenColumnIds: $hiddenColumnIds,
-            expandedIds: $expandedIds,
-            columnWidths: $columnWidths
-        },
-        null,
-        2
-    )}</pre>
+<details class="ks-state">
+    <summary>plugin state · debug</summary>
+    <pre>{JSON.stringify(
+            {
+                groupByIds: $groupByIds,
+                sortKeys: $sortKeys,
+                filterValues: $filterValues,
+                selectedDataIds: $selectedDataIds,
+                columnIdOrder: $columnIdOrder,
+                hiddenColumnIds: $hiddenColumnIds,
+                expandedIds: $expandedIds,
+                columnWidths: $columnWidths
+            },
+            null,
+            2
+        )}</pre>
+</details>
 
 <style>
-    th {
-        position: relative;
+    /* ── Toolbar ────────────────────────────────────────────────────── */
+    .ks-toolbar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        margin-bottom: 14px;
     }
 
-    th .resizer {
+    .ks-panel {
+        border: 1px solid var(--border);
+        background: var(--background);
+        margin: 0;
+        padding: 12px 14px 14px;
+        font-family: var(--prose-mono, ui-monospace, monospace);
+        font-size: 0.8em;
+    }
+    .ks-panel legend {
+        padding: 0 6px;
+        font-family: var(--prose-sans), system-ui, sans-serif;
+        font-size: 0.7em;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: color-mix(in srgb, var(--foreground) 70%, transparent);
+    }
+
+    .ks-checks {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 6px 12px;
+    }
+    .ks-check {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        font-size: 0.95em;
+    }
+    .ks-check input {
+        accent-color: var(--color-brand-500, var(--foreground));
+    }
+
+    .ks-pager {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+    }
+    .ks-pager-meta {
+        font-variant-numeric: tabular-nums;
+        color: color-mix(in srgb, var(--foreground) 75%, transparent);
+    }
+    .ks-pager-meta strong {
+        color: var(--foreground);
+    }
+    .ks-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-left: auto;
+    }
+    .ks-inline span {
+        font-size: 0.75em;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: color-mix(in srgb, var(--foreground) 65%, transparent);
+    }
+    .ks-inline input {
+        width: 64px;
+        padding: 3px 6px;
+        font-family: inherit;
+        font-size: 0.95em;
+        color: var(--foreground);
+        background: var(--background);
+        border: 1px solid var(--border);
+        border-radius: 0;
+        outline: none;
+    }
+    .ks-inline input:focus {
+        border-color: var(--color-brand-500, var(--foreground));
+    }
+
+    .ks-btn {
+        all: unset;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        font-family: var(--prose-mono, ui-monospace, monospace);
+        font-size: 0.9em;
+        color: var(--foreground);
+        border: 1px solid var(--border);
+        background: var(--background);
+        cursor: pointer;
+        transition:
+            background 100ms ease,
+            color 100ms ease,
+            border-color 100ms ease;
+    }
+    .ks-btn:hover:not(:disabled) {
+        background: var(--foreground);
+        color: var(--background);
+        border-color: var(--foreground);
+    }
+    .ks-btn:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+    }
+    .ks-btn--icon :global(svg) {
+        margin-right: 2px;
+    }
+
+    /* ── Table shell ────────────────────────────────────────────────── */
+    .ks-shell {
+        border: 1px solid var(--border);
+        background: var(--background);
+        overflow: auto;
+        max-height: 620px;
+    }
+
+    .ks-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: var(--prose-mono, ui-monospace, monospace);
+        font-size: 0.85em;
+        color: var(--foreground);
+    }
+
+    .ks-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: color-mix(in srgb, var(--muted, var(--foreground)) 6%, var(--background));
+    }
+    .ks-table thead tr:first-child th {
+        background: color-mix(in srgb, var(--muted, var(--foreground)) 12%, var(--background));
+    }
+
+    .ks-table th,
+    .ks-table td {
+        border-bottom: 1px solid var(--border);
+        border-right: 1px solid var(--border);
+        padding: 6px 10px;
+        text-align: left;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+    .ks-table th:last-child,
+    .ks-table td:last-child {
+        border-right: 0;
+    }
+    .ks-table thead th {
+        font-family: var(--prose-sans), system-ui, sans-serif;
+        font-weight: 600;
+        font-size: 0.7em;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: color-mix(in srgb, var(--foreground) 70%, transparent);
+        cursor: pointer;
+        position: relative;
+    }
+    .ks-th-inner {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .ks-th-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .ks-th-action {
+        all: unset;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 1px 6px;
+        margin-left: 4px;
+        font-size: 0.85em;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: var(--background);
+        color: color-mix(in srgb, var(--foreground) 75%, transparent);
+    }
+    .ks-th-action:hover {
+        background: var(--foreground);
+        color: var(--background);
+        border-color: var(--foreground);
+    }
+    .ks-th-filter {
+        margin-top: 6px;
+        text-transform: none;
+        letter-spacing: 0;
+        font-family: var(--prose-mono, ui-monospace, monospace);
+        font-size: 1em;
+        font-weight: 400;
+    }
+    .ks-resizer {
         position: absolute;
         top: 0;
         bottom: 0;
         right: -4px;
         width: 8px;
         z-index: 1;
-        background: rgba(128, 128, 128, 0.2);
         cursor: col-resize;
+        background: transparent;
+        transition: background 100ms ease;
     }
-    .sorted {
-        background: rgb(144, 191, 148, 0.2);
+    .ks-resizer:hover {
+        background: color-mix(in srgb, var(--color-brand-500, currentColor) 35%, transparent);
     }
-    .matches {
-        font-weight: 700;
+
+    .ks-search-row th {
+        background: var(--background);
+        cursor: default;
+        padding: 4px 8px;
     }
-    .group {
-        background: rgb(144, 191, 148, 0.2);
+    .ks-search {
+        width: 100%;
+        padding: 4px 8px;
+        font-family: var(--prose-mono, ui-monospace, monospace);
+        font-size: 0.95em;
+        color: var(--foreground);
+        background: var(--background);
+        border: 1px solid var(--border);
+        border-radius: 0;
+        outline: none;
     }
-    .aggregate {
-        background: rgb(238, 212, 100, 0.2);
+    .ks-search:focus {
+        border-color: var(--color-brand-500, var(--foreground));
     }
-    .repeat {
-        background: rgb(255, 139, 139, 0.2);
+
+    .ks-table tbody tr {
+        transition: background 80ms ease;
     }
-    .selected {
-        background: rgb(148, 205, 255, 0.2);
+    .ks-table tbody tr:hover {
+        background: color-mix(in srgb, var(--color-brand-500, var(--foreground)) 5%, transparent);
+    }
+    .ks-table tbody tr:nth-child(even) {
+        background: color-mix(in srgb, var(--muted, var(--foreground)) 3%, transparent);
+    }
+
+    /* ── State badges on cells ──────────────────────────────────────── */
+    .ks-table tbody td.sorted {
+        background: color-mix(in srgb, var(--color-brand-500, currentColor) 8%, transparent);
+    }
+    .ks-table tbody td.matches {
+        font-weight: 600;
+        color: var(--foreground);
+    }
+    .ks-table tbody td.group {
+        background: color-mix(in srgb, var(--color-brand-500, currentColor) 14%, transparent);
+        font-weight: 600;
+    }
+    .ks-table tbody td.aggregate {
+        background: color-mix(in srgb, gold 18%, transparent);
+        font-style: italic;
+    }
+    .ks-table tbody td.repeat {
+        background: color-mix(in srgb, currentColor 4%, transparent);
+    }
+    .ks-table tbody tr.selected {
+        background: color-mix(in srgb, var(--color-brand-500, currentColor) 12%, transparent);
+    }
+    .ks-table tbody tr.selected:hover {
+        background: color-mix(in srgb, var(--color-brand-500, currentColor) 18%, transparent);
+    }
+
+    /* ── Debug panel ────────────────────────────────────────────────── */
+    .ks-state {
+        margin-top: 14px;
+        border: 1px solid var(--border);
+        background: var(--background);
+    }
+    .ks-state summary {
+        cursor: pointer;
+        padding: 8px 12px;
+        font-family: var(--prose-sans), system-ui, sans-serif;
+        font-size: 0.7em;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: color-mix(in srgb, var(--foreground) 70%, transparent);
+        list-style: none;
+    }
+    .ks-state summary::before {
+        content: '▸ ';
+        display: inline-block;
+        transform-origin: center;
+        transition: transform 120ms ease;
+    }
+    .ks-state[open] summary::before {
+        transform: rotate(90deg);
+    }
+    .ks-state pre {
+        margin: 0;
+        padding: 12px 14px;
+        border-top: 1px solid var(--border);
+        background: color-mix(in srgb, var(--muted, var(--foreground)) 4%, transparent);
+        font-family: var(--prose-mono, ui-monospace, monospace);
+        font-size: 0.78em;
+        line-height: 1.45;
+        color: color-mix(in srgb, var(--foreground) 85%, transparent);
+        overflow: auto;
+        max-height: 260px;
     }
 </style>
