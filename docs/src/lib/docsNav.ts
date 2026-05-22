@@ -130,18 +130,6 @@ export const docsSections: NavSection[] = [
 export const tableLoveAndRespect = [
     { title: 'Beye.ai', href: 'https://beye.ai', icon: Sparkles, external: true },
     {
-        title: 'Svelte Markdown',
-        href: 'https://markdown.svelte.page',
-        icon: BookOpen,
-        external: true
-    },
-    {
-        title: 'Svelte Motion',
-        href: 'https://motion.svelte.page',
-        icon: WandSparkles,
-        external: true
-    },
-    {
         title: 'shadcn-svelte',
         href: 'https://www.shadcn-svelte.com',
         icon: Box,
