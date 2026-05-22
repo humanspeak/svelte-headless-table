@@ -357,7 +357,7 @@
                                 '0'
                             )}
                         </div>
-                        <div class="corner">▢</div>
+                        <div class="corner">↗</div>
                         <h3>{f.title}</h3>
                         <p>{f.body}</p>
                         <div class="marker"></div>
@@ -931,38 +931,49 @@
     }
     .brut-feat .cell {
         position: relative;
-        padding: 28px 24px 36px;
+        padding: 20px 22px;
+        min-height: 200px;
         border-right: 1px solid var(--brut-rule);
         border-bottom: 1px solid var(--brut-rule);
         background: var(--brut-bg);
     }
-    .brut-feat .cell:nth-child(3n) {
-        border-right: 0;
+    /* Inset hover ring matches the reference: 1px transparent border
+       sat 8px in from each side, fades to accent on hover. */
+    .brut-feat .cell::after {
+        content: '';
+        position: absolute;
+        inset: 8px;
+        border: 1px solid transparent;
+        pointer-events: none;
+        transition: border-color 200ms ease;
     }
-    .brut-feat .cell:nth-last-child(-n + 3) {
-        border-bottom: 0;
+    .brut-feat .cell:hover::after {
+        border-color: var(--brut-accent);
     }
     .brut-feat .cell .id {
         font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
-        font-size: 10px;
+        font-size: 10.5px;
         letter-spacing: 0.14em;
         color: var(--brut-ink-3);
     }
     .brut-feat .cell .corner {
         position: absolute;
-        top: 18px;
-        right: 18px;
+        top: 14px;
+        right: 16px;
         font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
         font-size: 14px;
         color: var(--brut-ink-3);
+        transition: color 200ms ease;
+    }
+    .brut-feat .cell:hover .corner {
+        color: var(--brut-accent);
     }
     .brut-feat .cell h3 {
-        margin: 14px 0 8px;
-        font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
-        font-size: 20px;
-        line-height: 1.1;
+        margin: 30px 0 8px;
+        font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
+        font-size: 22px;
+        line-height: 1.2;
         letter-spacing: -0.02em;
-        text-transform: lowercase;
         font-weight: 500;
         color: var(--brut-ink);
     }
@@ -972,20 +983,30 @@
         line-height: 1.55;
         color: var(--brut-ink-2);
         margin: 0;
+        max-width: 320px;
     }
+    /* Bottom-right indicator: outlined square by default, accent fill on
+       every third cell (nth-child(3n+1)) — gives the grid a subtle
+       rhythm without colouring every card. */
     .brut-feat .cell .marker {
         position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
+        bottom: 16px;
+        right: 16px;
+        width: 14px;
+        height: 14px;
+        border: 1px solid var(--brut-ink-3);
+        background: transparent;
+        transition:
+            background 200ms ease,
+            border-color 200ms ease;
+    }
+    .brut-feat .cell:nth-child(3n + 1) .marker {
         background: var(--brut-accent);
-        transform-origin: left;
-        transform: scaleX(0);
-        transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+        border-color: var(--brut-accent);
     }
     .brut-feat .cell:hover .marker {
-        transform: scaleX(1);
+        background: var(--brut-accent);
+        border-color: var(--brut-accent);
     }
 
     /* ── Compare table ────────────────────────────────────────────── */
@@ -1224,45 +1245,51 @@
     }
     .brut-ex .cell {
         position: relative;
-        padding: 28px 24px 36px;
+        display: block;
+        padding: 20px 22px;
+        min-height: 200px;
         border-right: 1px solid var(--brut-rule);
+        border-bottom: 1px solid var(--brut-rule);
         background: var(--brut-bg);
         text-decoration: none;
-        color: inherit;
-        display: flex;
-        flex-direction: column;
-        transition: background 120ms ease;
+        color: var(--brut-ink);
     }
-    .brut-ex .cell:last-child {
-        border-right: 0;
+    .brut-ex .cell::after {
+        content: '';
+        position: absolute;
+        inset: 8px;
+        border: 1px solid transparent;
+        pointer-events: none;
+        transition: border-color 200ms ease;
     }
-    .brut-ex .cell:hover {
-        background: var(--brut-bg-2);
+    .brut-ex .cell:hover::after {
+        border-color: var(--brut-accent);
     }
     .brut-ex .cell .id {
         font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
-        font-size: 10px;
+        font-size: 10.5px;
         letter-spacing: 0.14em;
         color: var(--brut-ink-3);
     }
     .brut-ex .cell .corner {
         position: absolute;
-        top: 18px;
-        right: 18px;
+        top: 14px;
+        right: 16px;
         font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
         font-size: 14px;
         color: var(--brut-ink-3);
+        transition: color 200ms ease;
     }
     .brut-ex .cell:hover .corner {
         color: var(--brut-accent);
     }
     .brut-ex .cell h3 {
-        margin: 14px 0 8px;
-        font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
-        font-size: 20px;
+        margin: 30px 0 8px;
+        font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
+        font-size: 22px;
+        line-height: 1.2;
         letter-spacing: -0.02em;
         font-weight: 500;
-        text-transform: lowercase;
         color: var(--brut-ink);
     }
     .brut-ex .cell p {
@@ -1270,22 +1297,28 @@
         font-size: 13.5px;
         line-height: 1.55;
         color: var(--brut-ink-2);
-        flex: 1 1 0;
         margin: 0;
+        max-width: 320px;
     }
     .brut-ex .cell .marker {
         position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
+        bottom: 16px;
+        right: 16px;
+        width: 14px;
+        height: 14px;
+        border: 1px solid var(--brut-ink-3);
+        background: transparent;
+        transition:
+            background 200ms ease,
+            border-color 200ms ease;
+    }
+    .brut-ex .cell:nth-child(3n + 1) .marker {
         background: var(--brut-accent);
-        transform-origin: left;
-        transform: scaleX(0);
-        transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+        border-color: var(--brut-accent);
     }
     .brut-ex .cell:hover .marker {
-        transform: scaleX(1);
+        background: var(--brut-accent);
+        border-color: var(--brut-accent);
     }
     .brut-ex .ex-all {
         display: block;
@@ -1301,37 +1334,46 @@
         color: var(--brut-accent);
     }
 
-    /* ── Footer big-type ──────────────────────────────────────────── */
+    /* ── Footer big-type (3-col: left labels | big-type | right labels) ── */
     .brut-foot {
-        position: relative;
-        padding: 64px 32px 96px;
-        text-align: center;
+        padding: 60px 24px 36px;
+        display: grid;
+        grid-template-columns: 200px 1fr 200px;
+        gap: 24px;
+        align-items: end;
+        border-top: 1px solid var(--brut-rule);
     }
     .brut-foot .info {
-        display: flex;
-        gap: 18px;
         font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
-        font-size: 10px;
-        letter-spacing: 0.14em;
+        font-size: 11px;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
         color: var(--brut-ink-3);
-        margin-bottom: 28px;
+        line-height: 1.8;
+        display: block;
+    }
+    .brut-foot .info > div {
+        display: block;
     }
     .brut-foot .info.right {
-        justify-content: flex-end;
-        margin-top: 28px;
-        margin-bottom: 0;
+        text-align: right;
     }
-    .brut-foot .info .v {
-        color: var(--brut-accent);
+    .brut-foot .info .v,
+    .brut-foot .info a.v {
+        color: var(--brut-ink);
         text-decoration: none;
+        display: block;
+        margin-top: 12px;
+    }
+    .brut-foot .info a.v:hover {
+        color: var(--brut-accent);
     }
     .brut-foot :global(.big) {
         position: relative;
         font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
-        font-size: clamp(36px, 7vw, 96px);
-        line-height: 1.05;
-        letter-spacing: -0.04em;
+        font-size: clamp(40px, 7vw, 96px);
+        line-height: 0.9;
+        letter-spacing: -0.06em;
         text-transform: lowercase;
         font-weight: 500;
         color: var(--brut-ink);
@@ -1339,28 +1381,29 @@
         border: 0;
         padding: 0;
         cursor: pointer;
+        text-align: left;
         display: inline-block;
+        justify-self: start;
     }
     .brut-foot :global(.big span) {
         color: var(--brut-accent);
     }
     .brut-foot :global(.big .copy-hint) {
         position: absolute;
-        bottom: -28px;
+        bottom: -22px;
         left: 0;
-        right: 0;
         height: 18px;
         font-size: 11px;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: var(--brut-ink-3);
+        color: var(--brut-accent);
+        white-space: nowrap;
     }
     .brut-foot :global(.big .copy-hint-label) {
         position: absolute;
         inset: 0;
         display: inline-flex;
         align-items: center;
-        justify-content: center;
     }
 
     /* ── Responsive collapse ─────────────────────────────────────── */
