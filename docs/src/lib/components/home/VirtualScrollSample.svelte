@@ -93,7 +93,8 @@
         bottomSpacerHeight,
         visibleRange,
         totalRows,
-        renderedRows
+        renderedRows,
+        measureRowAction
     } = pluginStates.virtualScroll
     const { sortKeys } = pluginStates.sort
 
@@ -159,7 +160,7 @@
             {/if}
             {#each $pageRows as row (row.id)}
                 <Subscribe attrs={row.attrs()} let:attrs>
-                    <tr {...attrs}>
+                    <tr {...attrs} use:measureRowAction={row.id}>
                         {#each row.cells as cell (cell.id)}
                             <Subscribe attrs={cell.attrs()} let:attrs>
                                 <td {...attrs}>

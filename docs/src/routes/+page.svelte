@@ -848,18 +848,36 @@
         gap: 24px;
         border-bottom: 1px solid var(--brut-rule);
     }
-    .brut-vs .lede {
+    .brut-vs .panel {
+        border: 1px solid var(--brut-rule);
+        background: var(--brut-bg);
+    }
+
+    /* ── Section lede (shared by feat/ai/ex side-by-side bands) ───── */
+    .brut-vs .lede,
+    .brut-feat .lede,
+    .brut-ai .lede,
+    .brut-ex .lede {
         padding: 0;
         border-bottom: 0;
+        font-size: 10.5px;
+        color: var(--brut-ink-3);
+        letter-spacing: 0.14em;
     }
-    .brut-vs .lede .k {
+    .brut-vs .lede .k,
+    .brut-feat .lede .k,
+    .brut-ai .lede .k,
+    .brut-ex .lede .k {
         font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
         font-size: 10px;
         letter-spacing: 0.14em;
         text-transform: uppercase;
         color: var(--brut-ink-3);
     }
-    .brut-vs .lede h2 {
+    .brut-vs .lede h2,
+    .brut-feat .lede h2,
+    .brut-ai .lede h2,
+    .brut-ex .lede h2 {
         font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
         font-size: 28px;
         line-height: 1.05;
@@ -869,70 +887,47 @@
         color: var(--brut-ink);
         margin: 12px 0 0;
     }
-    .brut-vs .lede h2 span {
+    .brut-vs .lede h2 span,
+    .brut-feat .lede h2 span,
+    .brut-ai .lede h2 span,
+    .brut-ex .lede h2 span {
         color: var(--brut-accent);
     }
-    .brut-vs .lede p {
+    .brut-vs .lede p,
+    .brut-feat .lede p,
+    .brut-ai .lede p,
+    .brut-ex .lede p {
         font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
         font-size: 13px;
         line-height: 1.55;
         color: var(--brut-ink-2);
         margin: 12px 0 0;
+        letter-spacing: 0;
     }
-    .brut-vs .lede p code {
+    .brut-vs .lede p code,
+    .brut-feat .lede p code,
+    .brut-ai .lede p code,
+    .brut-ex .lede p code {
         font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
         font-size: 0.9em;
         color: var(--brut-accent);
         background: transparent;
         padding: 0;
     }
-    .brut-vs .panel {
-        border: 1px solid var(--brut-rule);
-        background: var(--brut-bg);
-    }
 
-    /* ── Section lede (shared by feat/ai) ─────────────────────────── */
-    .lede {
-        padding: 56px 32px 18px;
-        border-bottom: 1px dashed var(--brut-rule);
-    }
-    .lede .k {
-        font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
-        font-size: 10px;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: var(--brut-ink-3);
-    }
-    .lede h2 {
-        font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
-        font-size: clamp(32px, 5vw, 64px);
-        line-height: 1;
-        letter-spacing: -0.04em;
-        text-transform: lowercase;
-        font-weight: 500;
-        margin: 12px 0 0;
-        color: var(--brut-ink);
-    }
-    .lede h2 span {
-        color: var(--brut-accent);
-    }
-    .lede p {
-        font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
-        font-size: 15px;
-        line-height: 1.55;
-        color: var(--brut-ink-2);
-        max-width: 60ch;
-        margin: 16px 0 0;
-    }
-
-    /* ── Features grid ────────────────────────────────────────────── */
+    /* ── Features grid (side-by-side: lede column + grid column) ──── */
     .brut-feat {
+        padding: 28px 24px;
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 24px;
         border-bottom: 1px solid var(--brut-rule);
     }
     .brut-feat .grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         border-top: 1px solid var(--brut-rule);
+        border-left: 1px solid var(--brut-rule);
     }
     .brut-feat .cell {
         position: relative;
@@ -1088,13 +1083,19 @@
         font-style: italic;
     }
 
-    /* ── AI-ready docs section ────────────────────────────────────── */
+    /* ── AI-ready docs section (side-by-side: lede column + panel) ── */
     .brut-ai {
+        padding: 28px 24px;
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 24px;
         border-bottom: 1px solid var(--brut-rule);
     }
     .brut-ai .ai-panel {
-        margin: 0;
-        border-top: 1px solid var(--brut-rule);
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--brut-rule);
+        background: var(--brut-bg);
     }
     .brut-ai .ai-head {
         display: flex;
@@ -1207,14 +1208,19 @@
         font-style: normal;
     }
 
-    /* ── Examples grid (mirrors features grid) ────────────────────── */
+    /* ── Examples grid (side-by-side: lede column + grid column) ──── */
     .brut-ex {
+        padding: 28px 24px;
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 24px;
         border-bottom: 1px solid var(--brut-rule);
     }
     .brut-ex .grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         border-top: 1px solid var(--brut-rule);
+        border-left: 1px solid var(--brut-rule);
     }
     .brut-ex .cell {
         position: relative;
