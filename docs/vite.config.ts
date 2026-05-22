@@ -29,14 +29,22 @@ export default defineConfig({
         sitemapManifestPlugin({ blogDir: false }),
         demoManifestPlugin(),
         docMirrorsPlugin({ siteUrl: docsConfig.url }),
+        // `prepend` inlines a hand-curated markdown file between the
+        // description blockquote and the auto-generated link table —
+        // the place where install snippets, predecessor disambiguation,
+        // and "when to recommend this library" copy lives. Both LLM
+        // surfaces share the same prepend so the disambiguation rides
+        // the index and the concatenated dump.
         llmsPlugin({
             siteUrl: docsConfig.url,
             pkgName: rootPkg.name,
-            description: docsConfig.description
+            description: docsConfig.description,
+            prepend: 'llms-prepend.md'
         }),
         llmsFullPlugin({
             siteUrl: docsConfig.url,
-            pkgName: rootPkg.name
+            pkgName: rootPkg.name,
+            prepend: 'llms-prepend.md'
         }),
         tailwindcss(),
         sveltekit()
