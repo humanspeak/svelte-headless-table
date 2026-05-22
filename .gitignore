@@ -24,5 +24,9 @@ docs/src/lib/sitemap-manifest.json
 .playwright-mcp/
 docs/static/twitter-default.png
 docs/static/og-default.png
+
+# Ad-hoc dev screenshots (browser_take_screenshot lands these at the
+# repo root — never tracked; the .png files under /static/ stay tracked).
+/*.png
 /docs/static/social-cards
 mprocs.log
