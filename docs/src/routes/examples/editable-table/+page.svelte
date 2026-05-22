@@ -41,7 +41,7 @@
             tag: 'EDIT',
             title: { prefix: 'inline ', accent: 'edit', end: '.' },
             description:
-                'Cells render through a custom `EditableCell` component that swaps a `<span>` for an `<input>` on click and writes the new value back into the data store on blur.',
+                'Cells render through a custom `EditableCell` component that swaps a `<span>` for an `<input>` on click. Press Enter (or the ✓ button) to commit the new value into the writable data store; Escape (or ✗) reverts.',
             snippet: defaultSection,
             codeSnippet: defaultCode,
             notes: defaultNotes,

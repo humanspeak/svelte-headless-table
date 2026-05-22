@@ -9,31 +9,42 @@
         onUpdateValue: (rowDataId: string, columnId: string, newValue: unknown) => void
     }
 
-    let { row, column, value = $bindable(), onUpdateValue }: Props = $props()
+    let { row, column, value, onUpdateValue }: Props = $props()
 
     let isEditing = $state(false)
     let inputElement: HTMLInputElement | undefined = $state(undefined)
 
-    // Capture the value the cell entered edit mode with — Escape reverts to it.
-    let snapshot: unknown = value
+    // Local draft. We deliberately do NOT bind back to the `value` prop —
+    // committing happens through `onUpdateValue`, which writes the change
+    // to the parent store. Keeping `draft` local avoids reactive
+    // round-trips that would re-render the cell mid-typing.
+    let draft = $state<string>('')
 
+    const startEditing = () => {
+        draft = value == null ? '' : String(value)
+        isEditing = true
+    }
+
+    // Focus + select once per edit session. The effect only reads
+    // `isEditing` (and `inputElement` for the imperative call), NOT
+    // `draft` — so subsequent keystrokes don't re-run it. A naive
+    // `if (isEditing) { ... select() }` block that read `draft` would
+    // re-select on every character and wipe the user's input.
     $effect(() => {
-        if (isEditing) {
-            snapshot = value
-            inputElement?.focus()
-            inputElement?.select()
+        if (isEditing && inputElement) {
+            inputElement.focus()
+            inputElement.select()
         }
     })
 
     const commit = () => {
         isEditing = false
         if (row.isData()) {
-            onUpdateValue(row.dataId, column.id, value)
+            onUpdateValue(row.dataId, column.id, draft)
         }
     }
 
     const cancel = () => {
-        value = snapshot
         isEditing = false
     }
 
@@ -46,12 +57,7 @@
 </script>
 
 {#if !isEditing}
-    <button
-        type="button"
-        class="cell-display"
-        onclick={() => (isEditing = true)}
-        title="Click to edit"
-    >
+    <button type="button" class="cell-display" onclick={startEditing} title="Click to edit">
         <span class="cell-value">{value}</span>
     </button>
 {:else}
@@ -62,13 +68,7 @@
             commit()
         }}
     >
-        <input
-            bind:this={inputElement}
-            bind:value
-            type="text"
-            onkeydown={onKeydown}
-            onblur={commit}
-        />
+        <input bind:this={inputElement} bind:value={draft} type="text" onkeydown={onKeydown} />
         <button type="submit" class="icon-btn icon-btn--commit" title="Commit (Enter)">
             <Check size={14} strokeWidth={2.25} />
         </button>
