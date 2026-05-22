@@ -8,4 +8,4 @@ procs:
     dev:
         shell: pnpm -w run dev
     docs:
-        shell: pnpm --filter docs run dev
+        shell: rm -rf docs/.svelte-kit docs/node_modules/.vite && pnpm --filter docs run dev

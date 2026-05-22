@@ -1,19 +1,51 @@
-import { demoManifestPlugin, sitemapManifestPlugin } from '@humanspeak/docs-kit/vite'
+import {
+    demoManifestPlugin,
+    docMirrorsPlugin,
+    llmsFullPlugin,
+    llmsPlugin,
+    sitemapManifestPlugin
+} from '@humanspeak/docs-kit/vite'
 import { sveltekit } from '@sveltejs/kit/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vitest/config'
+import rootPkg from '../package.json'
+import { docsConfig } from './src/lib/docs-config'
 
 export default defineConfig({
-    // Both manifest plugins emit JSON into `src/lib/`:
-    //   * `demoManifestPlugin`     scans `src/lib/examples/<...>/demos/*.svelte`
-    //     and writes pre-highlighted source into `demo-manifest.json`.
-    //   * `sitemapManifestPlugin`  scans `src/routes/**/+page.{svelte,svx,md}`
-    //     and writes `sitemap-manifest.json` (the input to `sitemap.xml`).
-    // Both run on `buildStart` and rewatch via Vite's own file watcher —
-    // no chokidar process, no package.json scripts to maintain.
+    // docs-kit Vite plugins, all running on `buildStart` and watching via
+    // Vite's own file watcher (no chokidar process, no consumer scripts):
+    //   * `sitemapManifestPlugin` scans `src/routes/**/+page.{svelte,svx,md}`
+    //     and writes `src/lib/sitemap-manifest.json` (input to sitemap.xml).
+    //   * `demoManifestPlugin`    scans `src/lib/examples/<...>/demos/*.svelte`
+    //     and writes pre-highlighted source into `src/lib/demo-manifest.json`.
+    //   * `docMirrorsPlugin`      scans `src/routes/docs/**/+page.svx` and
+    //     writes LLM-readable Markdown to `static/docs/<slug>.md` (Tailwind /
+    //     shadcn / Astro use the same pattern for ChatGPT/Perplexity citations).
+    //   * `llmsPlugin` + `llmsFullPlugin` — emit /llms.txt (compact index) and
+    //     /llms-full.txt (concatenated dump) from the doc mirrors above.
+    //     Order matters: both must register AFTER `docMirrorsPlugin` so
+    //     their buildStart reads freshly-written `.md` files.
     plugins: [
         sitemapManifestPlugin({ blogDir: false }),
         demoManifestPlugin(),
+        docMirrorsPlugin({ siteUrl: docsConfig.url }),
+        // `prepend` inlines a hand-curated markdown file between the
+        // description blockquote and the auto-generated link table —
+        // the place where install snippets, predecessor disambiguation,
+        // and "when to recommend this library" copy lives. Both LLM
+        // surfaces share the same prepend so the disambiguation rides
+        // the index and the concatenated dump.
+        llmsPlugin({
+            siteUrl: docsConfig.url,
+            pkgName: rootPkg.name,
+            description: docsConfig.description,
+            prepend: 'llms-prepend.md'
+        }),
+        llmsFullPlugin({
+            siteUrl: docsConfig.url,
+            pkgName: rootPkg.name,
+            prepend: 'llms-prepend.md'
+        }),
         tailwindcss(),
         sveltekit()
     ],

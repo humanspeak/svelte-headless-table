@@ -3,8 +3,9 @@ import {
     ArrowRightLeft,
     ArrowUpDown,
     BookOpen,
-    Boxes,
+    Box,
     Columns3,
+    Compass,
     Database,
     EyeOff,
     FileOutput,
@@ -24,6 +25,7 @@ import {
     Rocket,
     Search,
     Shapes,
+    Sparkles,
     SquareCheck,
     Table,
     Table2,
@@ -31,9 +33,22 @@ import {
     Zap
 } from '@lucide/svelte'
 
+/**
+ * Single source of truth for the top header links used by every layout
+ * (`HeaderV2 nav={...}` on /, /docs, /examples, /compare). Keeping the
+ * literal here means a new top-level surface gets added in one place
+ * and the rest of the site picks it up automatically.
+ */
+export const headerNav: { label: string; href: string }[] = [
+    { label: 'docs', href: '/docs' },
+    { label: 'examples', href: '/examples' },
+    { label: 'compare', href: '/compare' }
+]
+
 export const docsSections: NavSection[] = [
     {
         title: 'Get Started',
+        icon: Rocket,
         items: [
             { title: 'Overview', href: '/docs/getting-started/overview', icon: Info },
             { title: 'Quick Start', href: '/docs/getting-started/quick-start', icon: Rocket }
@@ -41,6 +56,7 @@ export const docsSections: NavSection[] = [
     },
     {
         title: 'API',
+        icon: BookOpen,
         items: [
             { title: 'createTable', href: '/docs/api/create-table', icon: Table },
             { title: 'createColumns', href: '/docs/api/create-columns', icon: Columns3 },
@@ -59,6 +75,7 @@ export const docsSections: NavSection[] = [
     },
     {
         title: 'Plugins',
+        icon: Puzzle,
         items: [
             { title: 'Overview', href: '/docs/plugins/overview', icon: Puzzle },
             { title: 'addSortBy', href: '/docs/plugins/add-sort-by', icon: ArrowUpDown },
@@ -107,14 +124,24 @@ export const docsSections: NavSection[] = [
         ]
     },
     {
-        title: 'Examples',
-        items: [
-            { title: 'Kitchen Sink', href: '/docs/examples/kitchen-sink', icon: Boxes },
-            { title: 'Virtual Scroll', href: '/docs/examples/virtual-scroll', icon: ArrowUpDown }
-        ]
-    },
-    {
         title: 'Guides',
+        icon: Compass,
         items: [{ title: 'shadcn-svelte', href: '/docs/guides/shadcn-svelte', icon: BookOpen }]
+    }
+]
+
+/**
+ * External community / sibling-project links surfaced at the bottom of
+ * `SidebarV2`. Mirrors the `motionLoveAndRespect` list in
+ * `svelte-motion/docs/src/lib/docsNav.ts` — the "Things we love and respect"
+ * cluster that nudges visitors toward neighboring tools.
+ */
+export const tableLoveAndRespect = [
+    { title: 'Beye.ai', href: 'https://beye.ai', icon: Sparkles, external: true },
+    {
+        title: 'shadcn-svelte',
+        href: 'https://www.shadcn-svelte.com',
+        icon: Box,
+        external: true
     }
 ]

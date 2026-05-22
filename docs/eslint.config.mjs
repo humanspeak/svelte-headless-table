@@ -67,6 +67,13 @@ export default [
             'no-var': ['error'],
             'prefer-const': ['error'],
 
+            // The newer eslint-plugin-svelte ships a strict rule requiring
+            // every internal `href` to flow through SvelteKit's typed
+            // `resolve()` helper. Sibling humanspeak docs sites
+            // (`svelte-markdown`, `svelte-motion`) use static `href`s
+            // throughout; disabling here keeps the three sites consistent.
+            'svelte/no-navigation-without-resolve': 'off',
+
             '@typescript-eslint/no-unused-expressions': [
                 'error',
                 {
