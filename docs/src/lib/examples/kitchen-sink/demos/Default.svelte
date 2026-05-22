@@ -253,7 +253,10 @@
     const { hiddenColumnIds } = pluginStates.hideColumns
     const { columnWidths } = pluginStates.resize
 
-    let hideForId: Record<string, boolean> = $state(
+    // `const` + `$state` — mutation goes through the rune's Proxy, the
+    // binding itself never reassigns. `let` would trigger
+    // `eslint/prefer-const`; ESLint's prefer-const doesn't know about runes.
+    const hideForId: Record<string, boolean> = $state(
         Object.fromEntries(ids.map((id) => [id, false]))
     )
 
@@ -367,8 +370,6 @@
                                         {/if}
                                     </div>
                                     {#if props.filter?.render !== undefined}
-                                        <!-- trunk-ignore(eslint/svelte/a11y_click_events_have_key_events): filter wrapper exists only to stop the sort-toggle click from bubbling out of inline form inputs -->
-                                        <!-- trunk-ignore(eslint/svelte/a11y_no_static_element_interactions): see above — non-interactive wrapper for inline filter controls -->
                                         <div
                                             class="ks-th-filter"
                                             onclick={(e) => e.stopPropagation()}
@@ -377,8 +378,6 @@
                                         </div>
                                     {/if}
                                     {#if !props.resize.disabled}
-                                        <!-- trunk-ignore(eslint/svelte/a11y_click_events_have_key_events): drag handle, not a keyboard interaction surface -->
-                                        <!-- trunk-ignore(eslint/svelte/a11y_no_static_element_interactions): drag handle, not a keyboard interaction surface -->
                                         <div
                                             class="ks-resizer"
                                             onclick={(e) => e.stopPropagation()}

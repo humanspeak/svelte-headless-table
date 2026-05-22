@@ -6,7 +6,7 @@
 
 <select class="demo" bind:value={$filterValue}>
     <option value={undefined}>All</option>
-    {#each $preFilteredValues as v}
+    {#each $preFilteredValues as v (v)}
         <option value={v}>{v}</option>
     {/each}
 </select>
