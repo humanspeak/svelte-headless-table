@@ -1,11 +1,14 @@
 import {
     demoManifestPlugin,
     docMirrorsPlugin,
+    llmsFullPlugin,
+    llmsPlugin,
     sitemapManifestPlugin
 } from '@humanspeak/docs-kit/vite'
 import { sveltekit } from '@sveltejs/kit/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vitest/config'
+import rootPkg from '../package.json'
 import { docsConfig } from './src/lib/docs-config'
 
 export default defineConfig({
@@ -18,10 +21,23 @@ export default defineConfig({
     //   * `docMirrorsPlugin`      scans `src/routes/docs/**/+page.svx` and
     //     writes LLM-readable Markdown to `static/docs/<slug>.md` (Tailwind /
     //     shadcn / Astro use the same pattern for ChatGPT/Perplexity citations).
+    //   * `llmsPlugin` + `llmsFullPlugin` — emit /llms.txt (compact index) and
+    //     /llms-full.txt (concatenated dump) from the doc mirrors above.
+    //     Order matters: both must register AFTER `docMirrorsPlugin` so
+    //     their buildStart reads freshly-written `.md` files.
     plugins: [
         sitemapManifestPlugin({ blogDir: false }),
         demoManifestPlugin(),
         docMirrorsPlugin({ siteUrl: docsConfig.url }),
+        llmsPlugin({
+            siteUrl: docsConfig.url,
+            pkgName: rootPkg.name,
+            description: docsConfig.description
+        }),
+        llmsFullPlugin({
+            siteUrl: docsConfig.url,
+            pkgName: rootPkg.name
+        }),
         tailwindcss(),
         sveltekit()
     ],

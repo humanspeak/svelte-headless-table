@@ -4,7 +4,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "tsx ./scripts/fetch-github-stats.ts && tsx ./scripts/generate-social-cards.ts && vite build && node ./scripts/generate-llms.mjs",
+        "build": "tsx ./scripts/fetch-github-stats.ts && tsx ./scripts/generate-social-cards.ts && vite build",
         "cf-typegen": "wrangler types && mv worker-configuration.d.ts src/",
         "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
         "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -14,7 +14,6 @@
         "generate-social": "tsx ./scripts/generate-social-cards.ts",
         "lint": "prettier --check . && eslint .",
         "lint:fix": "npm run format && eslint . --fix",
-        "llms": "node ./scripts/generate-llms.mjs",
         "preview": "vite preview",
         "social:watch": "chokidar 'src/lib/components/OG.svelte' 'scripts/generate-social-cards.ts' -c 'tsx ./scripts/generate-social-cards.ts' --initial --silent",
         "test": "npm run test:unit -- --run && npm run test:e2e",
@@ -24,7 +23,7 @@
     "dependencies": {
         "@fontsource-variable/inter": "^5.2.8",
         "@fontsource-variable/jetbrains-mono": "^5.2.8",
-        "@humanspeak/docs-kit": "github:humanspeak/docs-kit#2026.5.33",
+        "@humanspeak/docs-kit": "github:humanspeak/docs-kit#2026.5.35",
         "@humanspeak/svelte-headless-table": "workspace:*",
         "@humanspeak/svelte-markdown": "^1.5.2",
         "@humanspeak/svelte-motion": "^0.4.8",

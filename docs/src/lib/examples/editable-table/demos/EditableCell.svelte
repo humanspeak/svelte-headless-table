@@ -6,10 +6,10 @@
         row: BodyRow<unknown>
         column: DataColumn<unknown>
         value: unknown
-        onUpdateValue: (rowDataId: string, columnId: string, newValue: unknown) => void
+        onUpdateValue: (_rowDataId: string, _columnId: string, _newValue: unknown) => void
     }
 
-    let { row, column, value, onUpdateValue }: Props = $props()
+    const { row, column, value, onUpdateValue }: Props = $props()
 
     let isEditing = $state(false)
     let inputElement: HTMLInputElement | undefined = $state(undefined)

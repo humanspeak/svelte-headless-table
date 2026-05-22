@@ -9,7 +9,7 @@
         depth: number
     }
 
-    let { isExpanded, canExpand, depth }: Props = $props()
+    const { isExpanded, canExpand, depth }: Props = $props()
 
     const toggle = (e: MouseEvent) => {
         e.stopPropagation()
