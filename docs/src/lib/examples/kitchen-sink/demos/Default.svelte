@@ -31,7 +31,9 @@
     import { getDistinct } from '$lib/utils/array'
     import SelectIndicator from '$lib/examples/_shared/SelectIndicator.svelte'
 
-    const data = readable(createSamples(1000, 1, 0, { seed: 42 }))
+    // 200 top-level rows, each with up to 3 sub-rows — gives the
+    // expand/collapse plugin actual children to toggle on click.
+    const data = readable(createSamples(200, 2, 3, { seed: 42 }))
 
     const table = createTable(data, {
         subRows: addSubRows({
@@ -301,7 +303,13 @@
         <button
             type="button"
             class="ks-btn ks-btn--icon"
-            onclick={() => ($columnIdOrder = getShuffled($columnIdOrder))}
+            onclick={() => {
+                // The plugin's columnIdOrder starts empty and falls back to
+                // declaration order. Seed it with the live ID list on first
+                // shuffle so a single click actually rearranges columns.
+                const current = $columnIdOrder.length ? $columnIdOrder : ids
+                $columnIdOrder = getShuffled(current)
+            }}
         >
             <Shuffle size={14} strokeWidth={2.25} />
             shuffle
@@ -355,7 +363,12 @@
                                         {/if}
                                     </div>
                                     {#if props.filter?.render !== undefined}
-                                        <div class="ks-th-filter">
+                                        <!-- trunk-ignore(eslint/svelte/a11y_click_events_have_key_events): filter wrapper exists only to stop the sort-toggle click from bubbling out of inline form inputs -->
+                                        <!-- trunk-ignore(eslint/svelte/a11y_no_static_element_interactions): see above — non-interactive wrapper for inline filter controls -->
+                                        <div
+                                            class="ks-th-filter"
+                                            onclick={(e) => e.stopPropagation()}
+                                        >
                                             <Render of={props.filter.render} />
                                         </div>
                                     {/if}
