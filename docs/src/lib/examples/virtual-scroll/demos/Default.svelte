@@ -2,6 +2,7 @@
     import { writable } from 'svelte/store'
     import { Render, Subscribe, createTable } from '@humanspeak/svelte-headless-table'
     import { addVirtualScroll, addSortBy } from '@humanspeak/svelte-headless-table/plugins'
+    import { ChevronDown, ChevronUp, MoveDown, MoveRight } from '@lucide/svelte'
 
     // Simple data item
     interface DataItem {
@@ -177,48 +178,67 @@
     }
 </script>
 
-<div class="controls">
-    <div class="control-row">
-        <span class="label">Load rows:</span>
-        <button onclick={() => loadLargeBatch(1000)}>1K</button>
-        <button onclick={() => loadLargeBatch(10000)}>10K</button>
-        <button onclick={() => loadLargeBatch(50000)}>50K</button>
-        <button onclick={() => loadLargeBatch(100000)}>100K</button>
-    </div>
-    <div class="control-row">
-        <label>
-            Jump to row:
-            <input type="number" min={0} max={$totalRows - 1} bind:value={jumpToRow} />
-            <button onclick={handleJumpToRow}>Go</button>
-        </label>
-    </div>
+<div class="vs-toolbar">
+    <fieldset class="vs-panel">
+        <legend>Load rows</legend>
+        <div class="vs-row">
+            <button type="button" class="vs-btn" onclick={() => loadLargeBatch(1000)}>1K</button>
+            <button type="button" class="vs-btn" onclick={() => loadLargeBatch(10000)}>10K</button>
+            <button type="button" class="vs-btn" onclick={() => loadLargeBatch(50000)}>50K</button>
+            <button type="button" class="vs-btn" onclick={() => loadLargeBatch(100000)}>100K</button
+            >
+        </div>
+    </fieldset>
+
+    <fieldset class="vs-panel">
+        <legend>Jump to row</legend>
+        <div class="vs-row">
+            <input
+                type="number"
+                min={0}
+                max={$totalRows - 1}
+                bind:value={jumpToRow}
+                class="vs-input"
+                aria-label="Row index"
+            />
+            <button type="button" class="vs-btn vs-btn--icon" onclick={handleJumpToRow}>
+                <MoveRight size={14} strokeWidth={2.25} />
+                go
+            </button>
+        </div>
+    </fieldset>
+
+    <fieldset class="vs-panel vs-stats">
+        <legend>State</legend>
+        <dl>
+            <div>
+                <dt>total</dt>
+                <dd class="num">{$totalRows.toLocaleString()}</dd>
+            </div>
+            <div>
+                <dt>rendered</dt>
+                <dd class="num">{$renderedRows}</dd>
+            </div>
+            <div>
+                <dt>visible</dt>
+                <dd class="num">{$visibleRange.start}–{$visibleRange.end}</dd>
+            </div>
+            <div>
+                <dt>loading</dt>
+                <dd class="num" class:on={$isLoading}>{$isLoading ? 'yes' : 'no'}</dd>
+            </div>
+        </dl>
+    </fieldset>
 </div>
 
-<div class="stats">
-    <div class="stat">
-        <span class="stat-label">Total Rows:</span>
-        <span class="stat-value">{$totalRows.toLocaleString()}</span>
-    </div>
-    <div class="stat">
-        <span class="stat-label">Rendered:</span>
-        <span class="stat-value">{$renderedRows}</span>
-    </div>
-    <div class="stat">
-        <span class="stat-label">Visible Range:</span>
-        <span class="stat-value">{$visibleRange.start} - {$visibleRange.end}</span>
-    </div>
-    <div class="stat">
-        <span class="stat-label">Loading:</span>
-        <span class="stat-value">{$isLoading ? 'Yes' : 'No'}</span>
-    </div>
-</div>
-
-<p class="hint">
-    Scroll down to trigger infinite loading, or use buttons to load large datasets instantly.
+<p class="vs-hint">
+    <MoveDown size={12} strokeWidth={2.5} />
+    scroll the panel to trigger infinite loading, or hit one of the size buttons above to load a large
+    dataset instantly.
 </p>
 
-<div class="table-container" use:virtualScroll>
-    <table {...$tableAttrs}>
+<div class="vs-shell" use:virtualScroll>
+    <table {...$tableAttrs} class="vs-table">
         <thead>
             {#each $headerRows as headerRow (headerRow.id)}
                 <Subscribe attrs={headerRow.attrs()} let:attrs>
@@ -235,12 +255,14 @@
                                     onclick={props.sort.toggle}
                                     class:sorted={props.sort.order !== undefined}
                                 >
-                                    <Render of={cell.render()} />
-                                    {#if props.sort.order === 'asc'}
-                                        <span class="sort-indicator">▲</span>
-                                    {:else if props.sort.order === 'desc'}
-                                        <span class="sort-indicator">▼</span>
-                                    {/if}
+                                    <span class="vs-th-inner">
+                                        <Render of={cell.render()} />
+                                        {#if props.sort.order === 'asc'}
+                                            <ChevronDown size={12} strokeWidth={2.5} />
+                                        {:else if props.sort.order === 'desc'}
+                                            <ChevronUp size={12} strokeWidth={2.5} />
+                                        {/if}
+                                    </span>
                                 </th>
                             </Subscribe>
                         {/each}
@@ -250,11 +272,8 @@
         </thead>
         <tbody {...$tableBodyAttrs}>
             {#if $topSpacerHeight > 0}
-                <tr class="spacer-row">
-                    <td
-                        colspan={$visibleColumns.length}
-                        style="height: {$topSpacerHeight}px; padding: 0; border: none;"
-                    ></td>
+                <tr class="vs-spacer">
+                    <td colspan={$visibleColumns.length} style="height: {$topSpacerHeight}px;"></td>
                 </tr>
             {/if}
 
@@ -273,17 +292,15 @@
             {/each}
 
             {#if $bottomSpacerHeight > 0}
-                <tr class="spacer-row">
-                    <td
-                        colspan={$visibleColumns.length}
-                        style="height: {$bottomSpacerHeight}px; padding: 0; border: none;"
+                <tr class="vs-spacer">
+                    <td colspan={$visibleColumns.length} style="height: {$bottomSpacerHeight}px;"
                     ></td>
                 </tr>
             {/if}
 
             {#if $isLoading}
-                <tr class="loading-row">
-                    <td colspan={$visibleColumns.length}> Loading more rows... </td>
+                <tr class="vs-loading">
+                    <td colspan={$visibleColumns.length}> loading more rows… </td>
                 </tr>
             {/if}
         </tbody>
@@ -291,170 +308,213 @@
 </div>
 
 <style>
-    .controls {
-        margin-bottom: 1rem;
-        padding: 1rem;
-        border: 1px solid rgba(128, 128, 128, 0.3);
-        border-radius: 8px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
+    /* ── Toolbar ────────────────────────────────────────────────────── */
+    .vs-toolbar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        margin-bottom: 14px;
     }
 
-    .control-row {
+    .vs-panel {
+        border: 1px solid var(--border);
+        background: var(--background);
+        margin: 0;
+        padding: 12px 14px 14px;
+        font-family: var(--prose-mono, ui-monospace, monospace);
+        font-size: 0.8em;
+    }
+    .vs-panel legend {
+        padding: 0 6px;
+        font-family: var(--prose-sans), system-ui, sans-serif;
+        font-size: 0.7em;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: color-mix(in srgb, var(--foreground) 70%, transparent);
+    }
+
+    .vs-row {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
-        gap: 0.5rem;
+        gap: 8px;
     }
 
-    .control-row .label {
-        font-weight: 500;
-    }
-
-    .control-row button {
-        padding: 0.25rem 0.75rem;
+    .vs-btn {
+        all: unset;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        font-family: var(--prose-mono, ui-monospace, monospace);
+        font-size: 0.9em;
+        color: var(--foreground);
+        border: 1px solid var(--border);
+        background: var(--background);
         cursor: pointer;
-        border: 1px solid rgba(128, 128, 128, 0.4);
-        border-radius: 4px;
-        background: transparent;
-        color: inherit;
+        transition:
+            background 100ms ease,
+            color 100ms ease,
+            border-color 100ms ease;
+    }
+    .vs-btn:hover:not(:disabled) {
+        background: var(--foreground);
+        color: var(--background);
+        border-color: var(--foreground);
+    }
+    .vs-btn:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+    }
+    .vs-btn--icon :global(svg) {
+        margin-right: 2px;
     }
 
-    .control-row button:hover {
-        background: rgba(128, 128, 128, 0.2);
+    .vs-input {
+        flex: 1 1 0;
+        min-width: 0;
+        max-width: 120px;
+        padding: 3px 8px;
+        font-family: var(--prose-mono, ui-monospace, monospace);
+        font-size: 0.9em;
+        color: var(--foreground);
+        background: var(--background);
+        border: 1px solid var(--border);
+        border-radius: 0;
+        outline: none;
+    }
+    .vs-input:focus {
+        border-color: var(--color-brand-500, var(--foreground));
     }
 
-    .control-row input[type='number'] {
-        width: 80px;
-        padding: 0.25rem;
-        border: 1px solid rgba(128, 128, 128, 0.4);
-        border-radius: 4px;
-        background: transparent;
-        color: inherit;
+    /* ── Stats panel ────────────────────────────────────────────────── */
+    .vs-stats dl {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 4px 14px;
+        margin: 0;
     }
-
-    .stats {
+    .vs-stats dl > div {
         display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        margin-bottom: 1rem;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+    }
+    .vs-stats dt {
+        font-size: 0.7em;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: color-mix(in srgb, var(--foreground) 65%, transparent);
+    }
+    .vs-stats dd {
+        margin: 0;
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+        color: var(--foreground);
+    }
+    .vs-stats dd.on {
+        color: var(--color-brand-500, var(--foreground));
     }
 
-    .stat {
-        display: flex;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        border: 1px solid rgba(128, 128, 128, 0.3);
-        border-radius: 4px;
+    /* ── Hint ───────────────────────────────────────────────────────── */
+    .vs-hint {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0 0 10px;
+        font-family: var(--prose-mono, ui-monospace, monospace);
+        font-size: 0.78em;
+        color: color-mix(in srgb, var(--foreground) 65%, transparent);
     }
 
-    .stat-label {
-        font-weight: 500;
-    }
-
-    .stat-value {
-        font-family: monospace;
-        color: rgb(34, 197, 94);
-    }
-
-    .hint {
-        opacity: 0.7;
-        font-style: italic;
-        margin-bottom: 0.5rem;
-    }
-
-    .table-container {
-        height: 400px;
+    /* ── Table shell ────────────────────────────────────────────────── */
+    .vs-shell {
+        height: 480px;
+        border: 1px solid var(--border);
+        background: var(--background);
         overflow-y: auto;
-        border: 1px solid rgba(128, 128, 128, 0.3);
-        border-radius: 4px;
     }
 
-    table {
+    .vs-table {
         width: 100%;
         border-collapse: collapse;
         table-layout: fixed;
         margin: 0;
+        font-family: var(--prose-mono, ui-monospace, monospace);
+        font-size: 0.85em;
+        color: var(--foreground);
     }
 
-    thead {
+    .vs-table thead {
         position: sticky;
         top: 0;
         z-index: 1;
+        background: color-mix(in srgb, var(--muted, var(--foreground)) 12%, var(--background));
     }
 
-    thead tr {
-        background-color: #f5f5f5;
-    }
-
-    @media (prefers-color-scheme: dark) {
-        thead tr {
-            background-color: #262626;
-        }
-    }
-
-    :global(html.dark) thead tr,
-    :global([data-theme='dark']) thead tr {
-        background-color: #262626;
-    }
-
-    th,
-    td {
-        padding: 0.5rem 0.75rem;
+    .vs-table th,
+    .vs-table td {
+        padding: 6px 10px;
         text-align: left;
-        border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+        border-bottom: 1px solid var(--border);
+        border-right: 1px solid var(--border);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
+    .vs-table th:last-child,
+    .vs-table td:last-child {
+        border-right: 0;
+    }
 
-    th {
+    .vs-table th {
+        font-family: var(--prose-sans), system-ui, sans-serif;
         font-weight: 600;
+        font-size: 0.7em;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: color-mix(in srgb, var(--foreground) 70%, transparent);
         cursor: pointer;
         user-select: none;
     }
-
-    th:hover {
-        background-color: #e8e8e8;
+    .vs-table th:hover {
+        background: color-mix(in srgb, var(--color-brand-500, currentColor) 6%, transparent);
+    }
+    .vs-table th.sorted {
+        background: color-mix(in srgb, var(--color-brand-500, currentColor) 14%, transparent);
+        color: var(--foreground);
+    }
+    .vs-th-inner {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
     }
 
-    th.sorted {
-        background-color: #d4f5e0;
+    .vs-table tbody tr {
+        transition: background 80ms ease;
+    }
+    .vs-table tbody tr:hover {
+        background: color-mix(in srgb, var(--color-brand-500, currentColor) 5%, transparent);
+    }
+    .vs-table tbody tr:nth-child(even):not(.vs-spacer):not(.vs-loading) {
+        background: color-mix(in srgb, var(--muted, var(--foreground)) 3%, transparent);
     }
 
-    @media (prefers-color-scheme: dark) {
-        th:hover {
-            background-color: #3a3a3a;
-        }
-
-        th.sorted {
-            background-color: #1a4d2e;
-        }
+    /* Spacer rows hold scrollbar position for the virtual window.
+       They must have no borders / padding so they don't add measurable
+       height beyond the inline `style="height: …"` set on the <td>. */
+    .vs-spacer td {
+        padding: 0 !important;
+        border: 0 !important;
+        background: transparent;
     }
 
-    :global(html.dark) th:hover,
-    :global([data-theme='dark']) th:hover {
-        background-color: #3a3a3a;
-    }
-
-    :global(html.dark) th.sorted,
-    :global([data-theme='dark']) th.sorted {
-        background-color: #1a4d2e;
-    }
-
-    .sort-indicator {
-        margin-left: 0.5rem;
-        font-size: 0.8em;
-    }
-
-    tbody tr:hover {
-        background: rgba(128, 128, 128, 0.1);
-    }
-
-    .loading-row td {
+    .vs-loading td {
         text-align: center;
-        padding: 1rem;
-        opacity: 0.7;
+        padding: 12px;
         font-style: italic;
+        color: color-mix(in srgb, var(--foreground) 65%, transparent);
+        background: color-mix(in srgb, var(--color-brand-500, currentColor) 4%, transparent);
     }
 </style>
