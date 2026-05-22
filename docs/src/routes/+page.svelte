@@ -4,6 +4,7 @@
     import { docsConfig } from '$lib/docs-config'
     import favicon from '$lib/assets/logo.svg'
     import githubStats from '$lib/github-stats.json'
+    import VirtualScrollSample from '$lib/components/home/VirtualScrollSample.svelte'
     import rootPkg from '../../../package.json'
     import '@fontsource-variable/inter/index.css'
     import '@fontsource-variable/jetbrains-mono/index.css'
@@ -306,7 +307,7 @@
                 </div>
             </div>
             <div class="corner bl">FIG-001</div>
-            <div class="corner br">SHEET 01 / 06</div>
+            <div class="corner br">SHEET 01 / 07</div>
         </section>
 
         <!-- ── Stats row ───────────────────────────────────────────── -->
@@ -324,10 +325,26 @@
             {/each}
         </section>
 
-        <!-- ── FIG-002 · CAPABILITIES ──────────────────────────────── -->
+        <!-- ── FIG-002 · VIRTUAL SCROLL DEMO ───────────────────────── -->
+        <section class="brut-vs">
+            <div class="lede">
+                <div class="k">FIG-002 / VIRTUAL SCROLL</div>
+                <h2>render <span>thousands</span> of rows.</h2>
+                <p>
+                    10,000 rows handed to the table, only the viewport-visible window mounts.
+                    Sorting and filtering still iterate the full dataset — the windowing layer sits
+                    downstream. Drop in <code>addVirtualScroll</code> and you're done.
+                </p>
+            </div>
+            <div class="panel">
+                <VirtualScrollSample />
+            </div>
+        </section>
+
+        <!-- ── FIG-003 · CAPABILITIES ──────────────────────────────── -->
         <section class="brut-feat">
             <div class="lede">
-                <div class="k">FIG-002 / CAPABILITIES</div>
+                <div class="k">FIG-003 / CAPABILITIES</div>
                 <h2>why <span>svelte-headless-table</span>.</h2>
                 <p>The most complete headless table primitive for Svelte 5.</p>
             </div>
@@ -349,9 +366,9 @@
             </div>
         </section>
 
-        <!-- ── FIG-003 · COMPARISON MATRIX ─────────────────────────── -->
+        <!-- ── FIG-004 · COMPARISON MATRIX ─────────────────────────── -->
         <section class="brut-comp">
-            <div class="k">FIG-003 / COMPARISON MATRIX</div>
+            <div class="k">FIG-004 / COMPARISON MATRIX</div>
             <h2>how we <span>compare</span>.</h2>
             <p class="lede-p">
                 Honest, side-by-side comparisons with every major Svelte (and a couple of
@@ -413,10 +430,10 @@
             </div>
         </section>
 
-        <!-- ── FIG-004 · AI-READY DOCS ─────────────────────────────── -->
+        <!-- ── FIG-005 · AI-READY DOCS ─────────────────────────────── -->
         <section class="brut-ai" id="ai-ready">
             <div class="lede">
-                <div class="k">FIG-004 / AI-READY</div>
+                <div class="k">FIG-005 / AI-READY</div>
                 <h2>built for <span>ai-assisted</span> code.</h2>
                 <p>
                     Point Cursor, Claude Code, or any LLM at the manifests below and they know the
@@ -426,18 +443,42 @@
             </div>
             <div class="ai-panel">
                 <div class="ai-head">
-                    <span class="ai-tab on">/docs/&lt;slug&gt;.md</span>
+                    <span class="ai-tab on">llms.txt</span>
+                    <span class="ai-tab">llms-full.txt</span>
                     <span class="grow"></span>
                     <span class="ai-meta">/llmstxt.org</span>
                 </div>
                 <div class="ai-grid">
+                    <a class="ai-cell" href="/llms.txt" target="_blank" rel="noopener">
+                        <div class="ai-cell-k">01 · index</div>
+                        <h3>
+                            <code>/llms.txt</code>
+                        </h3>
+                        <p>
+                            Compact map. Project blurb, doc URLs, link to the full reference. Drop
+                            into any agent for ground-truth lookup before fetching individual pages.
+                        </p>
+                        <div class="ai-cell-foot">~4 kB · open ↗</div>
+                    </a>
+                    <a class="ai-cell" href="/llms-full.txt" target="_blank" rel="noopener">
+                        <div class="ai-cell-k">02 · full</div>
+                        <h3>
+                            <code>/llms-full.txt</code>
+                        </h3>
+                        <p>
+                            Full reference, one document. Every plugin, every accessor, every cell
+                            renderer pattern — concatenated from the per-page mirrors. Optimised for
+                            "paste the whole library into one context window" prompts.
+                        </p>
+                        <div class="ai-cell-foot">~120 kB · open ↗</div>
+                    </a>
                     <a
                         class="ai-cell"
                         href="/docs/api-create-table.md"
                         target="_blank"
                         rel="noopener"
                     >
-                        <div class="ai-cell-k">01 · per-page mirrors</div>
+                        <div class="ai-cell-k">03 · per-page mirrors</div>
                         <h3>
                             <code>/docs/&lt;slug&gt;.md</code>
                         </h3>
@@ -448,57 +489,23 @@
                         </p>
                         <div class="ai-cell-foot">35 docs · open ↗</div>
                     </a>
-                    <a
-                        class="ai-cell"
-                        href="/docs/getting-started-quick-start.md"
-                        target="_blank"
-                        rel="noopener"
-                    >
-                        <div class="ai-cell-k">02 · quick start</div>
-                        <h3>
-                            <code>quick-start.md</code>
-                        </h3>
-                        <p>
-                            The full quick-start walkthrough, stripped to clean markdown so an LLM
-                            can read your install + first-table-in-30s flow without parsing the site
-                            shell.
-                        </p>
-                        <div class="ai-cell-foot">~12 kB · open ↗</div>
-                    </a>
-                    <a
-                        class="ai-cell"
-                        href="/docs/plugins-overview.md"
-                        target="_blank"
-                        rel="noopener"
-                    >
-                        <div class="ai-cell-k">03 · plugins overview</div>
-                        <h3>
-                            <code>plugins-overview.md</code>
-                        </h3>
-                        <p>
-                            All {PLUGIN_COUNT} plugins on one page — composition rules, plugin order semantics,
-                            and the canonical examples. Optimised for LLM context windows.
-                        </p>
-                        <div class="ai-cell-foot">~9 kB · open ↗</div>
-                    </a>
                 </div>
                 <div class="ai-prompt">
                     <span class="ai-prompt-k">// example prompt</span>
                     <code>
-                        Use https://table.svelte.page/docs/api-create-table.md and
-                        https://table.svelte.page/docs/plugins-overview.md as the source for
+                        Use https://table.svelte.page/llms.txt as the source for
                         <em>@humanspeak/svelte-headless-table</em>. Build a Svelte 5 admin table
-                        with `addSortBy`, `addColumnFilters`, `addPagination`, and a custom cell
-                        renderer for the status column.
+                        with <em>addSortBy</em>, <em>addColumnFilters</em>, <em>addPagination</em>,
+                        and a custom cell renderer for the status column.
                     </code>
                 </div>
             </div>
         </section>
 
-        <!-- ── FIG-005 · EXAMPLES ──────────────────────────────────── -->
+        <!-- ── FIG-006 · EXAMPLES ──────────────────────────────────── -->
         <section class="brut-ex">
             <div class="lede">
-                <div class="k">FIG-005 / EXAMPLES</div>
+                <div class="k">FIG-006 / EXAMPLES</div>
                 <h2>explore <span>live examples</span>.</h2>
                 <p>
                     Three self-contained demos — every plugin composed, virtual-scroll over 10k
@@ -559,7 +566,7 @@
                 </span>
             </MotionButton>
             <div class="info right">
-                <div>SHEET 06 / 06</div>
+                <div>SHEET 07 / 07</div>
                 <div>END OF DOCUMENT</div>
                 <a class="v" href="#top">↩ TO TOP</a>
             </div>
@@ -831,6 +838,57 @@
         font-size: 9px;
         color: var(--brut-ink-3);
         opacity: 0.6;
+    }
+
+    /* ── FIG-002 · Virtual scroll demo (side-by-side lede + panel) ── */
+    .brut-vs {
+        padding: 28px 24px;
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 24px;
+        border-bottom: 1px solid var(--brut-rule);
+    }
+    .brut-vs .lede {
+        padding: 0;
+        border-bottom: 0;
+    }
+    .brut-vs .lede .k {
+        font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--brut-ink-3);
+    }
+    .brut-vs .lede h2 {
+        font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
+        font-size: 28px;
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+        text-transform: lowercase;
+        font-weight: 500;
+        color: var(--brut-ink);
+        margin: 12px 0 0;
+    }
+    .brut-vs .lede h2 span {
+        color: var(--brut-accent);
+    }
+    .brut-vs .lede p {
+        font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
+        font-size: 13px;
+        line-height: 1.55;
+        color: var(--brut-ink-2);
+        margin: 12px 0 0;
+    }
+    .brut-vs .lede p code {
+        font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
+        font-size: 0.9em;
+        color: var(--brut-accent);
+        background: transparent;
+        padding: 0;
+    }
+    .brut-vs .panel {
+        border: 1px solid var(--brut-rule);
+        background: var(--brut-bg);
     }
 
     /* ── Section lede (shared by feat/ai) ─────────────────────────── */
@@ -1301,9 +1359,13 @@
 
     /* ── Responsive collapse ─────────────────────────────────────── */
     @media (max-width: 900px) {
-        .brut-hero {
+        .brut-hero,
+        .brut-vs {
             grid-template-columns: 1fr;
             gap: 24px;
+            padding: 28px 20px;
+        }
+        .brut-hero {
             padding: 40px 20px 56px;
         }
         .brut-stats {

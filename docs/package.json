@@ -4,7 +4,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "tsx ./scripts/fetch-github-stats.ts && tsx ./scripts/generate-social-cards.ts && vite build",
+        "build": "tsx ./scripts/fetch-github-stats.ts && tsx ./scripts/generate-social-cards.ts && vite build && node ./scripts/generate-llms.mjs",
         "cf-typegen": "wrangler types && mv worker-configuration.d.ts src/",
         "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
         "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -14,6 +14,7 @@
         "generate-social": "tsx ./scripts/generate-social-cards.ts",
         "lint": "prettier --check . && eslint .",
         "lint:fix": "npm run format && eslint . --fix",
+        "llms": "node ./scripts/generate-llms.mjs",
         "preview": "vite preview",
         "social:watch": "chokidar 'src/lib/components/OG.svelte' 'scripts/generate-social-cards.ts' -c 'tsx ./scripts/generate-social-cards.ts' --initial --silent",
         "test": "npm run test:unit -- --run && npm run test:e2e",
