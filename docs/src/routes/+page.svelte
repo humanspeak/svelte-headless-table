@@ -182,7 +182,10 @@
         config={docsConfig}
         {favicon}
         version={PKG_VERSION}
-        nav={[{ label: 'docs', href: '/docs' }]}
+        nav={[
+            { label: 'docs', href: '/docs' },
+            { label: 'examples', href: '/examples' }
+        ]}
     />
     <div class="relative flex flex-1 flex-col overflow-hidden">
         <!-- Layer: subtle grid -->

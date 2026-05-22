@@ -115,7 +115,10 @@
         config={docsConfig}
         {favicon}
         version={PKG_VERSION}
-        nav={[{ label: 'docs', href: '/docs' }]}
+        nav={[
+            { label: 'docs', href: '/docs' },
+            { label: 'examples', href: '/examples' }
+        ]}
     />
 
     <DocSlugStrip slug={docSlug} />

@@ -4,7 +4,6 @@ import {
     ArrowUpDown,
     BookOpen,
     Box,
-    Boxes,
     Columns3,
     Compass,
     Database,
@@ -110,14 +109,6 @@ export const docsSections: NavSection[] = [
                 href: '/docs/plugins/add-virtual-scroll',
                 icon: ArrowUpDown
             }
-        ]
-    },
-    {
-        title: 'Examples',
-        icon: Boxes,
-        items: [
-            { title: 'Kitchen Sink', href: '/docs/examples/kitchen-sink', icon: Boxes },
-            { title: 'Virtual Scroll', href: '/docs/examples/virtual-scroll', icon: ArrowUpDown }
         ]
     },
     {

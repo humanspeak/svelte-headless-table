@@ -21,14 +21,14 @@
     import { mean, sum } from '$lib/utils/math'
     import { getShuffled } from '$lib/utils/getShuffled'
     import { createSamples } from '$lib/utils/createSamples'
-    import Italic from '../Italic.svelte'
-    import Profile from '../Profile.svelte'
-    import TextFilter from '../TextFilter.svelte'
-    import NumberRangeFilter from '../NumberRangeFilter.svelte'
-    import SelectFilter from '../SelectFilter.svelte'
-    import ExpandIndicator from '../ExpandIndicator.svelte'
+    import Italic from '$lib/examples/_shared/Italic.svelte'
+    import Profile from '$lib/examples/_shared/Profile.svelte'
+    import TextFilter from '$lib/examples/_shared/TextFilter.svelte'
+    import NumberRangeFilter from '$lib/examples/_shared/NumberRangeFilter.svelte'
+    import SelectFilter from '$lib/examples/_shared/SelectFilter.svelte'
+    import ExpandIndicator from '$lib/examples/_shared/ExpandIndicator.svelte'
     import { getDistinct } from '$lib/utils/array'
-    import SelectIndicator from '../SelectIndicator.svelte'
+    import SelectIndicator from '$lib/examples/_shared/SelectIndicator.svelte'
 
     const data = readable(createSamples(1000, 1, 0, { seed: 42 }))
 
