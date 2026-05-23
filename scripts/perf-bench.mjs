@@ -8,9 +8,15 @@
  *
  * Usage:
  *     pnpm dev                                                      # in another shell
- *     pnpm perf:bench                                               # against http://localhost:8417
+ *     pnpm perf:bench                                               # 1 iteration, COLD + WARM
  *     pnpm perf:bench > scripts/perf-baseline.json                  # capture a baseline
  *     PERF_BENCH_URL=http://localhost:9000 pnpm perf:bench          # custom URL
+ *     PERF_BENCH_ITERATIONS=100 PERF_BENCH_COLD_ONLY=1 pnpm perf:bench \
+ *         > /tmp/before.json                                        # 100× cold-only for A/B
+ *
+ * Iteration mode reloads the page between iterations so each sample is
+ * a fresh COLD measurement; aggregates emit mean/median/p95/stddev so
+ * single-run jitter doesn't swamp the signal you're trying to see.
  *
  * Caveat: headless Chromium is not a DevTools session — absolute
  * numbers differ from a manual capture. The deltas between commits
@@ -20,6 +26,8 @@
 import { chromium } from '@playwright/test'
 
 const URL = process.env.PERF_BENCH_URL ?? 'http://localhost:8417/test/perf-bench'
+const ITERATIONS = Math.max(1, Number(process.env.PERF_BENCH_ITERATIONS ?? '1'))
+const COLD_ONLY = process.env.PERF_BENCH_COLD_ONLY === '1'
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
@@ -157,6 +165,57 @@ async function runAll(label, page) {
     return out
 }
 
+/**
+ * Compute mean / median / p95 / stddev / min / max for a numeric array.
+ * Used in iteration mode to aggregate N samples per scenario per metric
+ * into a single comparable record. Returns null fields for empty input.
+ */
+function aggregate(values) {
+    const nums = values.filter((v) => typeof v === 'number' && Number.isFinite(v))
+    if (nums.length === 0) return { n: 0 }
+    const sorted = [...nums].sort((a, b) => a - b)
+    const sum = nums.reduce((a, b) => a + b, 0)
+    const mean = sum / nums.length
+    const median = sorted[Math.floor(sorted.length / 2)]
+    const p95 = sorted[Math.min(sorted.length - 1, Math.ceil(0.95 * sorted.length) - 1)]
+    const variance = nums.reduce((acc, v) => acc + (v - mean) ** 2, 0) / nums.length
+    const stddev = Math.sqrt(variance)
+    const round = (n) => Math.round(n * 100) / 100
+    return {
+        n: nums.length,
+        mean: round(mean),
+        median: round(median),
+        p95: round(p95),
+        stddev: round(stddev),
+        min: round(sorted[0]),
+        max: round(sorted[sorted.length - 1])
+    }
+}
+
+/**
+ * Folds N iterations of per-scenario sample objects into per-scenario
+ * aggregate stats. For each scenario, walks every numeric metric key
+ * and computes the stats record above. Non-numeric fields (e.g.
+ * `scenario` name) are dropped from aggregates.
+ */
+function aggregateAll(iterations) {
+    if (iterations.length === 0) return {}
+    const out = {}
+    const scenarioKeys = Object.keys(iterations[0])
+    for (const sk of scenarioKeys) {
+        const sampleArr = iterations.map((it) => it[sk]).filter((s) => s && typeof s === 'object')
+        if (sampleArr.length === 0) continue
+        const metricKeys = Object.keys(sampleArr[0])
+        const stats = {}
+        for (const mk of metricKeys) {
+            if (typeof sampleArr[0][mk] !== 'number') continue
+            stats[mk] = aggregate(sampleArr.map((s) => s[mk]))
+        }
+        out[sk] = { samples: sampleArr, stats }
+    }
+    return out
+}
+
 ;(async () => {
     const browser = await chromium.launch({
         headless: true,
@@ -173,21 +232,60 @@ async function runAll(label, page) {
     })
     page.on('pageerror', (err) => console.log('  [page error]', err.message))
 
-    await page.goto(URL, { waitUntil: 'load' })
-    await page.waitForSelector('[data-testid="perf-stats"]')
-    await sleep(1000)
-    const cold = await runAll('COLD', page)
+    // Single-iteration mode preserves the original output shape ({cold, warm})
+    // so existing tooling and the committed baseline file keep working.
+    if (ITERATIONS === 1) {
+        await page.goto(URL, { waitUntil: 'load' })
+        await page.waitForSelector('[data-testid="perf-stats"]')
+        await sleep(1000)
+        const cold = await runAll('COLD', page)
 
-    await page.reload({ waitUntil: 'load' })
-    await page.waitForSelector('[data-testid="perf-stats"]')
-    await sleep(1000)
-    const warm = await runAll('WARM', page)
+        let warm = null
+        if (!COLD_ONLY) {
+            await page.reload({ waitUntil: 'load' })
+            await page.waitForSelector('[data-testid="perf-stats"]')
+            await sleep(1000)
+            warm = await runAll('WARM', page)
+        }
+
+        await browser.close()
+        const allResults = { cold, warm, capturedAt: new Date().toISOString(), url: URL }
+        console.log('\n=== JSON ===')
+        console.log(JSON.stringify(allResults, null, 2))
+        return
+    }
+
+    // Iteration mode: collect N cold passes (and N warm passes if not
+    // COLD_ONLY) by reloading between each. Each iteration is a fresh
+    // COLD measurement.
+    const coldIterations = []
+    const warmIterations = []
+    for (let i = 0; i < ITERATIONS; i++) {
+        console.log(`\n### iteration ${i + 1}/${ITERATIONS} ###`)
+        await page.goto(URL, { waitUntil: 'load' })
+        await page.waitForSelector('[data-testid="perf-stats"]')
+        await sleep(500)
+        coldIterations.push(await runAll('COLD', page))
+
+        if (!COLD_ONLY) {
+            await page.reload({ waitUntil: 'load' })
+            await page.waitForSelector('[data-testid="perf-stats"]')
+            await sleep(500)
+            warmIterations.push(await runAll('WARM', page))
+        }
+    }
 
     await browser.close()
-
-    const allResults = { cold, warm, capturedAt: new Date().toISOString(), url: URL }
+    const result = {
+        iterations: ITERATIONS,
+        coldOnly: COLD_ONLY,
+        url: URL,
+        capturedAt: new Date().toISOString(),
+        cold: aggregateAll(coldIterations),
+        warm: COLD_ONLY ? null : aggregateAll(warmIterations)
+    }
     console.log('\n=== JSON ===')
-    console.log(JSON.stringify(allResults, null, 2))
+    console.log(JSON.stringify(result, null, 2))
 })().catch((err) => {
     console.error(err)
     process.exit(1)
