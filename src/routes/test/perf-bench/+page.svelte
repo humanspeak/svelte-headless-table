@@ -565,8 +565,7 @@
             colDefs.push(
                 table.column({
                     header: `Col ${c}`,
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    accessor: id as any
+                    accessor: id as keyof WideRow
                 })
             )
         }
@@ -660,8 +659,7 @@
             colDefs.push(
                 table.column({
                     header: `Col ${c}`,
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    accessor: id as any
+                    accessor: id as keyof WideRow
                 })
             )
         }

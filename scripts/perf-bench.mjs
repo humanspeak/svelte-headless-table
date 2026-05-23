@@ -26,7 +26,12 @@
 import { chromium } from '@playwright/test'
 
 const URL = process.env.PERF_BENCH_URL ?? 'http://localhost:8417/test/perf-bench'
-const ITERATIONS = Math.max(1, Number(process.env.PERF_BENCH_ITERATIONS ?? '1'))
+// Number('abc') -> NaN, and Math.max(1, NaN) -> NaN, which makes the
+// iteration loop run zero times and emit an empty stats blob — a
+// silent failure mode that's easy to miss when the bench is wired
+// into CI. Parse strictly + fall back to 1.
+const parsedIterations = Number.parseInt(process.env.PERF_BENCH_ITERATIONS ?? '1', 10)
+const ITERATIONS = Number.isFinite(parsedIterations) && parsedIterations > 0 ? parsedIterations : 1
 const COLD_ONLY = process.env.PERF_BENCH_COLD_ONLY === '1'
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -176,7 +181,11 @@ function aggregate(values) {
     const sorted = [...nums].sort((a, b) => a - b)
     const sum = nums.reduce((a, b) => a + b, 0)
     const mean = sum / nums.length
-    const median = sorted[Math.floor(sorted.length / 2)]
+    // True median: average the two middle values for even-n samples
+    // (the default 100-iteration mode is even-n). Picking only the
+    // upper-middle skews the reported number toward the higher half.
+    const mid = Math.floor(sorted.length / 2)
+    const median = sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
     const p95 = sorted[Math.min(sorted.length - 1, Math.ceil(0.95 * sorted.length) - 1)]
     const variance = nums.reduce((acc, v) => acc + (v - mean) ** 2, 0) / nums.length
     const stddev = Math.sqrt(variance)
