@@ -16,7 +16,6 @@
     // forces a clean remount; within a single instance `vm` never changes.
     // The store references destructured below stay live for the component's
     // lifetime.
-    // trunk-ignore(eslint/svelte/no-reactive-reassign)
     const { vm }: { vm: AnyVm } = $props()
 
     const { headerRows, pageRows, tableAttrs, tableBodyAttrs } = vm

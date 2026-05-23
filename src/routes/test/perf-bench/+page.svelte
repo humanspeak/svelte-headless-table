@@ -154,17 +154,6 @@
 
     // ---- Stats state ---------------------------------------------------------
 
-    type Scenario =
-        | 'idle'
-        | 'rows-1k'
-        | 'rows-10k'
-        | 'columns-50'
-        | 'column-reorder-1k'
-        | 'group-by-1k'
-        | 'sort-cycle-1k'
-        | 'subrows-tree-1k'
-        | 'kitchen-sink-1k'
-
     let scenario = $state<string>('idle')
 
     // Holds the currently-mounted view-model + plugin states so the shared
