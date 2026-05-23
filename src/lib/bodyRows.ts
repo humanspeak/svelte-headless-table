@@ -361,19 +361,23 @@ export const getColumnedBodyRows = <Item, Plugins extends AnyPlugins = AnyPlugin
     })
     if (rows.length === 0 || columnIdOrder.length === 0) return rows
     rows.forEach((row, rowIdx) => {
-        // Create a shallow copy of `row.cells` to reassign each `cell`'s `row`
-        // reference.
-        const cells = row.cells.map((cell) => {
+        // Build `cellForId` directly during the clone pass so we don't
+        // pay for an intermediate Map + Object.fromEntries detour
+        // (which is what the previous shape did — see plan-1A in
+        // .notes/performance-optimization-plan.md). The id-keyed object
+        // gives us O(1) lookups for `visibleCells` and is the same shape
+        // BodyRow.cellForId already expects.
+        const cellForId: Record<string, BodyCell<Item, Plugins>> = {}
+        row.cells.forEach((cell) => {
             const clonedCell = cell.clone()
             clonedCell.row = columnedRows[rowIdx]
-            return clonedCell
+            cellForId[clonedCell.id] = clonedCell
         })
-        const cellById = new Map(cells.map((c) => [c.id, c]))
-        const visibleCells = columnIdOrder.map((cid) => cellById.get(cid)).filter(nonUndefined)
+        const visibleCells = columnIdOrder.map((cid) => cellForId[cid]).filter(nonUndefined)
         columnedRows[rowIdx].cells = visibleCells
-        // Include hidden cells in `cellForId` to allow row transformations on
-        // hidden cells.
-        columnedRows[rowIdx].cellForId = Object.fromEntries(cellById)
+        // `cellForId` includes hidden cells so row transformations can
+        // still reach them.
+        columnedRows[rowIdx].cellForId = cellForId
     })
     return columnedRows
 }

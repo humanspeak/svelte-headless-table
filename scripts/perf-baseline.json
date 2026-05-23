@@ -1,0 +1,2488 @@
+{
+    "capturedAt": "2026-05-23T15:22:29.403Z",
+    "cold": {
+        "rows1k": {
+            "stats": {
+                "rows": {
+                    "n": 100,
+                    "mean": 1000,
+                    "median": 1000,
+                    "p95": 1000,
+                    "stddev": 0,
+                    "min": 1000,
+                    "max": 1000
+                },
+                "cols": {
+                    "n": 100,
+                    "mean": 8,
+                    "median": 8,
+                    "p95": 8,
+                    "stddev": 0,
+                    "min": 8,
+                    "max": 8
+                },
+                "plugins": {
+                    "n": 100,
+                    "mean": 3,
+                    "median": 3,
+                    "p95": 3,
+                    "stddev": 0,
+                    "min": 3,
+                    "max": 3
+                },
+                "createTableMs": {
+                    "n": 100,
+                    "mean": 0.02,
+                    "median": 0,
+                    "p95": 0.1,
+                    "stddev": 0.04,
+                    "min": 0,
+                    "max": 0.2
+                },
+                "createColumnsMs": {
+                    "n": 100,
+                    "mean": 0.07,
+                    "median": 0.1,
+                    "p95": 0.1,
+                    "stddev": 0.05,
+                    "min": 0,
+                    "max": 0.2
+                },
+                "createViewModelMs": {
+                    "n": 100,
+                    "mean": 0.22,
+                    "median": 0.2,
+                    "p95": 0.3,
+                    "stddev": 0.1,
+                    "min": 0.1,
+                    "max": 1
+                },
+                "firstPaintMs": {
+                    "n": 100,
+                    "mean": 55.93,
+                    "median": 55,
+                    "p95": 66.6,
+                    "stddev": 4.88,
+                    "min": 49.5,
+                    "max": 81
+                },
+                "renderOnlyMs": {
+                    "n": 100,
+                    "mean": 55.71,
+                    "median": 54.8,
+                    "p95": 66.3,
+                    "stddev": 4.82,
+                    "min": 49.3,
+                    "max": 80
+                },
+                "domCells": {
+                    "n": 100,
+                    "mean": 400,
+                    "median": 400,
+                    "p95": 400,
+                    "stddev": 0,
+                    "min": 400,
+                    "max": 400
+                },
+                "rowsPerSec": {
+                    "n": 100,
+                    "mean": 17902.61,
+                    "median": 18149,
+                    "p95": 19531,
+                    "stddev": 1368.22,
+                    "min": 12136,
+                    "max": 20080
+                },
+                "cellsPerSec": {
+                    "n": 100,
+                    "mean": 7161.06,
+                    "median": 7260,
+                    "p95": 7812,
+                    "stddev": 547.29,
+                    "min": 4854,
+                    "max": 8032
+                },
+                "derivTotal": {
+                    "n": 100,
+                    "mean": 7,
+                    "median": 7,
+                    "p95": 7,
+                    "stddev": 0,
+                    "min": 7,
+                    "max": 7
+                },
+                "derivTableAttrs": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivVisibleColumns": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivColumnedRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivInjectedRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivPageRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivInjectedPageRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivHeaderRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "timeTotalMs": {
+                    "n": 100,
+                    "mean": 13.77,
+                    "median": 13.6,
+                    "p95": 16.5,
+                    "stddev": 1.79,
+                    "min": 6.1,
+                    "max": 19.2
+                },
+                "timeTableAttrs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0.02,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "timeVisibleColumns": {
+                    "n": 100,
+                    "mean": 0.01,
+                    "median": 0,
+                    "p95": 0.1,
+                    "stddev": 0.03,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "timeColumnedRows": {
+                    "n": 100,
+                    "mean": 2.04,
+                    "median": 2,
+                    "p95": 2.5,
+                    "stddev": 0.27,
+                    "min": 1.6,
+                    "max": 3.4
+                },
+                "timeInjectedRows": {
+                    "n": 100,
+                    "mean": 11.52,
+                    "median": 11.5,
+                    "p95": 13.8,
+                    "stddev": 1.74,
+                    "min": 3.9,
+                    "max": 16.7
+                },
+                "timeInjectedPageRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0.02,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "timeHeaderRows": {
+                    "n": 100,
+                    "mean": 0.18,
+                    "median": 0.2,
+                    "p95": 0.3,
+                    "stddev": 0.08,
+                    "min": 0.1,
+                    "max": 0.8
+                },
+                "interactionMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "interactionPaintMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "scenarioLongestTaskMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "scenarioMutations": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "scenarioLoafScriptMaxMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "rafP95Ms": {
+                    "n": 100,
+                    "mean": 16.78,
+                    "median": 16.8,
+                    "p95": 16.8,
+                    "stddev": 0.04,
+                    "min": 16.7,
+                    "max": 16.8
+                },
+                "mutations10s": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                }
+            }
+        },
+        "rows10k": {
+            "stats": {
+                "rows": {
+                    "n": 100,
+                    "mean": 10000,
+                    "median": 10000,
+                    "p95": 10000,
+                    "stddev": 0,
+                    "min": 10000,
+                    "max": 10000
+                },
+                "cols": {
+                    "n": 100,
+                    "mean": 8,
+                    "median": 8,
+                    "p95": 8,
+                    "stddev": 0,
+                    "min": 8,
+                    "max": 8
+                },
+                "plugins": {
+                    "n": 100,
+                    "mean": 3,
+                    "median": 3,
+                    "p95": 3,
+                    "stddev": 0,
+                    "min": 3,
+                    "max": 3
+                },
+                "createTableMs": {
+                    "n": 100,
+                    "mean": 0.02,
+                    "median": 0,
+                    "p95": 0.1,
+                    "stddev": 0.04,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "createColumnsMs": {
+                    "n": 100,
+                    "mean": 0.03,
+                    "median": 0,
+                    "p95": 0.1,
+                    "stddev": 0.05,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "createViewModelMs": {
+                    "n": 100,
+                    "mean": 0.09,
+                    "median": 0.1,
+                    "p95": 0.2,
+                    "stddev": 0.06,
+                    "min": 0,
+                    "max": 0.2
+                },
+                "firstPaintMs": {
+                    "n": 100,
+                    "mean": 223.03,
+                    "median": 219.6,
+                    "p95": 255.6,
+                    "stddev": 24.8,
+                    "min": 186.8,
+                    "max": 331.9
+                },
+                "renderOnlyMs": {
+                    "n": 100,
+                    "mean": 222.93,
+                    "median": 219.6,
+                    "p95": 255.5,
+                    "stddev": 24.8,
+                    "min": 186.7,
+                    "max": 331.7
+                },
+                "domCells": {
+                    "n": 100,
+                    "mean": 400,
+                    "median": 400,
+                    "p95": 400,
+                    "stddev": 0,
+                    "min": 400,
+                    "max": 400
+                },
+                "rowsPerSec": {
+                    "n": 100,
+                    "mean": 45285.75,
+                    "median": 45600,
+                    "p95": 51125,
+                    "stddev": 4353.22,
+                    "min": 30111,
+                    "max": 53505
+                },
+                "cellsPerSec": {
+                    "n": 100,
+                    "mean": 1811.45,
+                    "median": 1824,
+                    "p95": 2045,
+                    "stddev": 174.14,
+                    "min": 1204,
+                    "max": 2140
+                },
+                "derivTotal": {
+                    "n": 100,
+                    "mean": 7,
+                    "median": 7,
+                    "p95": 7,
+                    "stddev": 0,
+                    "min": 7,
+                    "max": 7
+                },
+                "derivTableAttrs": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivVisibleColumns": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivColumnedRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivInjectedRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivPageRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivInjectedPageRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivHeaderRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "timeTotalMs": {
+                    "n": 100,
+                    "mean": 76.88,
+                    "median": 75.4,
+                    "p95": 86.6,
+                    "stddev": 11.37,
+                    "min": 67,
+                    "max": 170.2
+                },
+                "timeTableAttrs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0.01,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "timeVisibleColumns": {
+                    "n": 100,
+                    "mean": 0.01,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0.02,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "timeColumnedRows": {
+                    "n": 100,
+                    "mean": 18.85,
+                    "median": 18.6,
+                    "p95": 21.5,
+                    "stddev": 1.42,
+                    "min": 16.8,
+                    "max": 24.3
+                },
+                "timeInjectedRows": {
+                    "n": 100,
+                    "mean": 57.96,
+                    "median": 56.4,
+                    "p95": 66.2,
+                    "stddev": 10.52,
+                    "min": 49.1,
+                    "max": 146.8
+                },
+                "timeInjectedPageRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0.01,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "timeHeaderRows": {
+                    "n": 100,
+                    "mean": 0.06,
+                    "median": 0.1,
+                    "p95": 0.1,
+                    "stddev": 0.06,
+                    "min": 0,
+                    "max": 0.2
+                },
+                "interactionMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "interactionPaintMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "scenarioLongestTaskMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "scenarioMutations": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "scenarioLoafScriptMaxMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "rafP95Ms": {
+                    "n": 100,
+                    "mean": 16.77,
+                    "median": 16.8,
+                    "p95": 16.8,
+                    "stddev": 0.04,
+                    "min": 16.7,
+                    "max": 16.8
+                },
+                "mutations10s": {
+                    "n": 100,
+                    "mean": 6,
+                    "median": 6,
+                    "p95": 6,
+                    "stddev": 0,
+                    "min": 6,
+                    "max": 6
+                }
+            }
+        },
+        "columns50": {
+            "stats": {
+                "rows": {
+                    "n": 100,
+                    "mean": 1000,
+                    "median": 1000,
+                    "p95": 1000,
+                    "stddev": 0,
+                    "min": 1000,
+                    "max": 1000
+                },
+                "cols": {
+                    "n": 100,
+                    "mean": 50,
+                    "median": 50,
+                    "p95": 50,
+                    "stddev": 0,
+                    "min": 50,
+                    "max": 50
+                },
+                "plugins": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "createTableMs": {
+                    "n": 100,
+                    "mean": 0.02,
+                    "median": 0,
+                    "p95": 0.1,
+                    "stddev": 0.04,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "createColumnsMs": {
+                    "n": 100,
+                    "mean": 0.04,
+                    "median": 0,
+                    "p95": 0.1,
+                    "stddev": 0.05,
+                    "min": 0,
+                    "max": 0.2
+                },
+                "createViewModelMs": {
+                    "n": 100,
+                    "mean": 0.06,
+                    "median": 0.1,
+                    "p95": 0.1,
+                    "stddev": 0.05,
+                    "min": 0,
+                    "max": 0.2
+                },
+                "firstPaintMs": {
+                    "n": 100,
+                    "mean": 85.89,
+                    "median": 84,
+                    "p95": 103.4,
+                    "stddev": 7.87,
+                    "min": 75.4,
+                    "max": 115.3
+                },
+                "renderOnlyMs": {
+                    "n": 100,
+                    "mean": 85.83,
+                    "median": 83.8,
+                    "p95": 103.3,
+                    "stddev": 7.87,
+                    "min": 75.4,
+                    "max": 115.3
+                },
+                "domCells": {
+                    "n": 100,
+                    "mean": 1250,
+                    "median": 1250,
+                    "p95": 1250,
+                    "stddev": 0,
+                    "min": 1250,
+                    "max": 1250
+                },
+                "rowsPerSec": {
+                    "n": 100,
+                    "mean": 11713.15,
+                    "median": 11919,
+                    "p95": 12821,
+                    "stddev": 956.73,
+                    "min": 8666,
+                    "max": 13245
+                },
+                "cellsPerSec": {
+                    "n": 100,
+                    "mean": 14641.47,
+                    "median": 14899,
+                    "p95": 16026,
+                    "stddev": 1195.97,
+                    "min": 10832,
+                    "max": 16556
+                },
+                "derivTotal": {
+                    "n": 100,
+                    "mean": 7,
+                    "median": 7,
+                    "p95": 7,
+                    "stddev": 0,
+                    "min": 7,
+                    "max": 7
+                },
+                "derivTableAttrs": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivVisibleColumns": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivColumnedRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivInjectedRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivPageRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivInjectedPageRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivHeaderRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "timeTotalMs": {
+                    "n": 100,
+                    "mean": 8.7,
+                    "median": 8.4,
+                    "p95": 9.8,
+                    "stddev": 1.01,
+                    "min": 7.5,
+                    "max": 16
+                },
+                "timeTableAttrs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0.02,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "timeVisibleColumns": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0.02,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "timeColumnedRows": {
+                    "n": 100,
+                    "mean": 7.82,
+                    "median": 7.6,
+                    "p95": 8.8,
+                    "stddev": 0.93,
+                    "min": 6.8,
+                    "max": 15.4
+                },
+                "timeInjectedRows": {
+                    "n": 100,
+                    "mean": 0.71,
+                    "median": 0.6,
+                    "p95": 1.1,
+                    "stddev": 0.24,
+                    "min": 0.5,
+                    "max": 2.1
+                },
+                "timeInjectedPageRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "timeHeaderRows": {
+                    "n": 100,
+                    "mean": 0.17,
+                    "median": 0.2,
+                    "p95": 0.3,
+                    "stddev": 0.06,
+                    "min": 0,
+                    "max": 0.3
+                },
+                "interactionMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "interactionPaintMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "scenarioLongestTaskMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "scenarioMutations": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "scenarioLoafScriptMaxMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "rafP95Ms": {
+                    "n": 100,
+                    "mean": 16.77,
+                    "median": 16.8,
+                    "p95": 16.8,
+                    "stddev": 0.04,
+                    "min": 16.7,
+                    "max": 16.8
+                },
+                "mutations10s": {
+                    "n": 100,
+                    "mean": 6,
+                    "median": 6,
+                    "p95": 6,
+                    "stddev": 0,
+                    "min": 6,
+                    "max": 6
+                }
+            }
+        },
+        "columnReorder1k": {
+            "stats": {
+                "rows": {
+                    "n": 100,
+                    "mean": 1000,
+                    "median": 1000,
+                    "p95": 1000,
+                    "stddev": 0,
+                    "min": 1000,
+                    "max": 1000
+                },
+                "cols": {
+                    "n": 100,
+                    "mean": 20,
+                    "median": 20,
+                    "p95": 20,
+                    "stddev": 0,
+                    "min": 20,
+                    "max": 20
+                },
+                "plugins": {
+                    "n": 100,
+                    "mean": 2,
+                    "median": 2,
+                    "p95": 2,
+                    "stddev": 0,
+                    "min": 2,
+                    "max": 2
+                },
+                "createTableMs": {
+                    "n": 100,
+                    "mean": 0.02,
+                    "median": 0,
+                    "p95": 0.1,
+                    "stddev": 0.04,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "createColumnsMs": {
+                    "n": 100,
+                    "mean": 0.03,
+                    "median": 0,
+                    "p95": 0.1,
+                    "stddev": 0.04,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "createViewModelMs": {
+                    "n": 100,
+                    "mean": 0.08,
+                    "median": 0.1,
+                    "p95": 0.2,
+                    "stddev": 0.06,
+                    "min": 0,
+                    "max": 0.2
+                },
+                "firstPaintMs": {
+                    "n": 100,
+                    "mean": 32.23,
+                    "median": 31.8,
+                    "p95": 36.8,
+                    "stddev": 2.42,
+                    "min": 27.7,
+                    "max": 41.2
+                },
+                "renderOnlyMs": {
+                    "n": 100,
+                    "mean": 32.15,
+                    "median": 31.8,
+                    "p95": 36.7,
+                    "stddev": 2.42,
+                    "min": 27.6,
+                    "max": 41
+                },
+                "domCells": {
+                    "n": 100,
+                    "mean": 500,
+                    "median": 500,
+                    "p95": 500,
+                    "stddev": 0,
+                    "min": 500,
+                    "max": 500
+                },
+                "rowsPerSec": {
+                    "n": 100,
+                    "mean": 31075.4,
+                    "median": 31447,
+                    "p95": 33784,
+                    "stddev": 2192.01,
+                    "min": 24155,
+                    "max": 35971
+                },
+                "cellsPerSec": {
+                    "n": 100,
+                    "mean": 15537.72,
+                    "median": 15723,
+                    "p95": 16892,
+                    "stddev": 1096,
+                    "min": 12077,
+                    "max": 17986
+                },
+                "derivTotal": {
+                    "n": 100,
+                    "mean": 5,
+                    "median": 5,
+                    "p95": 5,
+                    "stddev": 0,
+                    "min": 5,
+                    "max": 5
+                },
+                "derivTableAttrs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivVisibleColumns": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivColumnedRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivInjectedRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivPageRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivInjectedPageRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivHeaderRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "timeTotalMs": {
+                    "n": 100,
+                    "mean": 3.61,
+                    "median": 3.5,
+                    "p95": 4.1,
+                    "stddev": 0.79,
+                    "min": 3.1,
+                    "max": 10.8
+                },
+                "timeTableAttrs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "timeVisibleColumns": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0.02,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "timeColumnedRows": {
+                    "n": 100,
+                    "mean": 3.07,
+                    "median": 3,
+                    "p95": 3.5,
+                    "stddev": 0.26,
+                    "min": 2.7,
+                    "max": 4
+                },
+                "timeInjectedRows": {
+                    "n": 100,
+                    "mean": 0.47,
+                    "median": 0.4,
+                    "p95": 0.5,
+                    "stddev": 0.69,
+                    "min": 0.2,
+                    "max": 7.2
+                },
+                "timeInjectedPageRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0.01,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "timeHeaderRows": {
+                    "n": 100,
+                    "mean": 0.07,
+                    "median": 0.1,
+                    "p95": 0.2,
+                    "stddev": 0.06,
+                    "min": 0,
+                    "max": 0.2
+                },
+                "interactionMs": {
+                    "n": 100,
+                    "mean": 14.76,
+                    "median": 14.6,
+                    "p95": 16.9,
+                    "stddev": 1.51,
+                    "min": 12.8,
+                    "max": 24.5
+                },
+                "interactionPaintMs": {
+                    "n": 100,
+                    "mean": 14.74,
+                    "median": 14.6,
+                    "p95": 16.8,
+                    "stddev": 1.5,
+                    "min": 12.8,
+                    "max": 24.5
+                },
+                "scenarioLongestTaskMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "scenarioMutations": {
+                    "n": 100,
+                    "mean": 4941,
+                    "median": 4941,
+                    "p95": 4941,
+                    "stddev": 0,
+                    "min": 4941,
+                    "max": 4941
+                },
+                "scenarioLoafScriptMaxMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "rafP95Ms": {
+                    "n": 100,
+                    "mean": 16.77,
+                    "median": 16.8,
+                    "p95": 16.8,
+                    "stddev": 0.05,
+                    "min": 16.7,
+                    "max": 16.8
+                },
+                "mutations10s": {
+                    "n": 100,
+                    "mean": 4946,
+                    "median": 4946,
+                    "p95": 4946,
+                    "stddev": 0,
+                    "min": 4946,
+                    "max": 4946
+                }
+            }
+        },
+        "groupBy1k": {
+            "stats": {
+                "rows": {
+                    "n": 100,
+                    "mean": 1000,
+                    "median": 1000,
+                    "p95": 1000,
+                    "stddev": 0,
+                    "min": 1000,
+                    "max": 1000
+                },
+                "cols": {
+                    "n": 100,
+                    "mean": 8,
+                    "median": 8,
+                    "p95": 8,
+                    "stddev": 0,
+                    "min": 8,
+                    "max": 8
+                },
+                "plugins": {
+                    "n": 100,
+                    "mean": 2,
+                    "median": 2,
+                    "p95": 2,
+                    "stddev": 0,
+                    "min": 2,
+                    "max": 2
+                },
+                "createTableMs": {
+                    "n": 100,
+                    "mean": 0.02,
+                    "median": 0,
+                    "p95": 0.1,
+                    "stddev": 0.04,
+                    "min": 0,
+                    "max": 0.2
+                },
+                "createColumnsMs": {
+                    "n": 100,
+                    "mean": 0.04,
+                    "median": 0,
+                    "p95": 0.1,
+                    "stddev": 0.05,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "createViewModelMs": {
+                    "n": 100,
+                    "mean": 0.08,
+                    "median": 0.1,
+                    "p95": 0.2,
+                    "stddev": 0.06,
+                    "min": 0,
+                    "max": 0.3
+                },
+                "firstPaintMs": {
+                    "n": 100,
+                    "mean": 9.69,
+                    "median": 9.5,
+                    "p95": 11.3,
+                    "stddev": 0.74,
+                    "min": 8.6,
+                    "max": 11.9
+                },
+                "renderOnlyMs": {
+                    "n": 100,
+                    "mean": 9.61,
+                    "median": 9.4,
+                    "p95": 11.2,
+                    "stddev": 0.74,
+                    "min": 8.5,
+                    "max": 11.8
+                },
+                "domCells": {
+                    "n": 100,
+                    "mean": 24,
+                    "median": 24,
+                    "p95": 24,
+                    "stddev": 0,
+                    "min": 24,
+                    "max": 24
+                },
+                "rowsPerSec": {
+                    "n": 100,
+                    "mean": 102379.61,
+                    "median": 104167,
+                    "p95": 112360,
+                    "stddev": 7321.22,
+                    "min": 81967,
+                    "max": 114943
+                },
+                "cellsPerSec": {
+                    "n": 100,
+                    "mean": 2457.12,
+                    "median": 2500,
+                    "p95": 2697,
+                    "stddev": 175.74,
+                    "min": 1967,
+                    "max": 2759
+                },
+                "derivTotal": {
+                    "n": 100,
+                    "mean": 7,
+                    "median": 7,
+                    "p95": 7,
+                    "stddev": 0,
+                    "min": 7,
+                    "max": 7
+                },
+                "derivTableAttrs": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivVisibleColumns": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivColumnedRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivInjectedRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivPageRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivInjectedPageRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivHeaderRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "timeTotalMs": {
+                    "n": 100,
+                    "mean": 1.35,
+                    "median": 1.3,
+                    "p95": 1.7,
+                    "stddev": 0.18,
+                    "min": 1,
+                    "max": 2
+                },
+                "timeTableAttrs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0.02,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "timeVisibleColumns": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0.01,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "timeColumnedRows": {
+                    "n": 100,
+                    "mean": 1.23,
+                    "median": 1.2,
+                    "p95": 1.5,
+                    "stddev": 0.16,
+                    "min": 1,
+                    "max": 1.9
+                },
+                "timeInjectedRows": {
+                    "n": 100,
+                    "mean": 0.07,
+                    "median": 0.1,
+                    "p95": 0.2,
+                    "stddev": 0.06,
+                    "min": 0,
+                    "max": 0.3
+                },
+                "timeInjectedPageRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "timeHeaderRows": {
+                    "n": 100,
+                    "mean": 0.04,
+                    "median": 0,
+                    "p95": 0.1,
+                    "stddev": 0.05,
+                    "min": 0,
+                    "max": 0.2
+                },
+                "interactionMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "interactionPaintMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "scenarioLongestTaskMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "scenarioMutations": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "scenarioLoafScriptMaxMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "rafP95Ms": {
+                    "n": 100,
+                    "mean": 16.75,
+                    "median": 16.7,
+                    "p95": 16.8,
+                    "stddev": 0.05,
+                    "min": 16.7,
+                    "max": 16.8
+                },
+                "mutations10s": {
+                    "n": 100,
+                    "mean": 6,
+                    "median": 6,
+                    "p95": 6,
+                    "stddev": 0,
+                    "min": 6,
+                    "max": 6
+                }
+            }
+        },
+        "sortCycle1k": {
+            "stats": {
+                "rows": {
+                    "n": 100,
+                    "mean": 1000,
+                    "median": 1000,
+                    "p95": 1000,
+                    "stddev": 0,
+                    "min": 1000,
+                    "max": 1000
+                },
+                "cols": {
+                    "n": 100,
+                    "mean": 8,
+                    "median": 8,
+                    "p95": 8,
+                    "stddev": 0,
+                    "min": 8,
+                    "max": 8
+                },
+                "plugins": {
+                    "n": 100,
+                    "mean": 2,
+                    "median": 2,
+                    "p95": 2,
+                    "stddev": 0,
+                    "min": 2,
+                    "max": 2
+                },
+                "createTableMs": {
+                    "n": 100,
+                    "mean": 0.01,
+                    "median": 0,
+                    "p95": 0.1,
+                    "stddev": 0.03,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "createColumnsMs": {
+                    "n": 100,
+                    "mean": 0.04,
+                    "median": 0,
+                    "p95": 0.1,
+                    "stddev": 0.05,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "createViewModelMs": {
+                    "n": 100,
+                    "mean": 0.06,
+                    "median": 0.1,
+                    "p95": 0.1,
+                    "stddev": 0.06,
+                    "min": 0,
+                    "max": 0.2
+                },
+                "firstPaintMs": {
+                    "n": 100,
+                    "mean": 27.89,
+                    "median": 27.1,
+                    "p95": 32.9,
+                    "stddev": 2.65,
+                    "min": 24.2,
+                    "max": 41.3
+                },
+                "renderOnlyMs": {
+                    "n": 100,
+                    "mean": 27.83,
+                    "median": 27.1,
+                    "p95": 32.8,
+                    "stddev": 2.66,
+                    "min": 24.2,
+                    "max": 41.2
+                },
+                "domCells": {
+                    "n": 100,
+                    "mean": 400,
+                    "median": 400,
+                    "p95": 400,
+                    "stddev": 0,
+                    "min": 400,
+                    "max": 400
+                },
+                "rowsPerSec": {
+                    "n": 100,
+                    "mean": 35998.66,
+                    "median": 36765,
+                    "p95": 39526,
+                    "stddev": 2976.82,
+                    "min": 24096,
+                    "max": 41152
+                },
+                "cellsPerSec": {
+                    "n": 100,
+                    "mean": 14399.46,
+                    "median": 14706,
+                    "p95": 15810,
+                    "stddev": 1190.7,
+                    "min": 9639,
+                    "max": 16461
+                },
+                "derivTotal": {
+                    "n": 100,
+                    "mean": 6,
+                    "median": 6,
+                    "p95": 6,
+                    "stddev": 0,
+                    "min": 6,
+                    "max": 6
+                },
+                "derivTableAttrs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivVisibleColumns": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivColumnedRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivInjectedRows": {
+                    "n": 100,
+                    "mean": 3,
+                    "median": 3,
+                    "p95": 3,
+                    "stddev": 0,
+                    "min": 3,
+                    "max": 3
+                },
+                "derivPageRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivInjectedPageRows": {
+                    "n": 100,
+                    "mean": 3,
+                    "median": 3,
+                    "p95": 3,
+                    "stddev": 0,
+                    "min": 3,
+                    "max": 3
+                },
+                "derivHeaderRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "timeTotalMs": {
+                    "n": 100,
+                    "mean": 9.84,
+                    "median": 9.7,
+                    "p95": 11.3,
+                    "stddev": 1.43,
+                    "min": 8.2,
+                    "max": 21.1
+                },
+                "timeTableAttrs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "timeVisibleColumns": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "timeColumnedRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "timeInjectedRows": {
+                    "n": 100,
+                    "mean": 9.84,
+                    "median": 9.7,
+                    "p95": 11.3,
+                    "stddev": 1.43,
+                    "min": 8.2,
+                    "max": 21.1
+                },
+                "timeInjectedPageRows": {
+                    "n": 100,
+                    "mean": 0.01,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0.02,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "timeHeaderRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "interactionMs": {
+                    "n": 100,
+                    "mean": 86.6,
+                    "median": 83.5,
+                    "p95": 98.7,
+                    "stddev": 19.76,
+                    "min": 74.2,
+                    "max": 273.1
+                },
+                "interactionPaintMs": {
+                    "n": 100,
+                    "mean": 86.53,
+                    "median": 83.4,
+                    "p95": 98.7,
+                    "stddev": 19.73,
+                    "min": 74.2,
+                    "max": 272.7
+                },
+                "scenarioLongestTaskMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "scenarioMutations": {
+                    "n": 100,
+                    "mean": 1441,
+                    "median": 1441,
+                    "p95": 1441,
+                    "stddev": 0,
+                    "min": 1441,
+                    "max": 1441
+                },
+                "scenarioLoafScriptMaxMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "rafP95Ms": {
+                    "n": 100,
+                    "mean": 16.76,
+                    "median": 16.8,
+                    "p95": 16.8,
+                    "stddev": 0.05,
+                    "min": 16.7,
+                    "max": 16.8
+                },
+                "mutations10s": {
+                    "n": 100,
+                    "mean": 1446,
+                    "median": 1446,
+                    "p95": 1446,
+                    "stddev": 0,
+                    "min": 1446,
+                    "max": 1446
+                }
+            }
+        },
+        "subrowsTree1k": {
+            "stats": {
+                "rows": {
+                    "n": 100,
+                    "mean": 1100,
+                    "median": 1100,
+                    "p95": 1100,
+                    "stddev": 0,
+                    "min": 1100,
+                    "max": 1100
+                },
+                "cols": {
+                    "n": 100,
+                    "mean": 7,
+                    "median": 7,
+                    "p95": 7,
+                    "stddev": 0,
+                    "min": 7,
+                    "max": 7
+                },
+                "plugins": {
+                    "n": 100,
+                    "mean": 3,
+                    "median": 3,
+                    "p95": 3,
+                    "stddev": 0,
+                    "min": 3,
+                    "max": 3
+                },
+                "createTableMs": {
+                    "n": 100,
+                    "mean": 0.01,
+                    "median": 0,
+                    "p95": 0.1,
+                    "stddev": 0.03,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "createColumnsMs": {
+                    "n": 100,
+                    "mean": 0.02,
+                    "median": 0,
+                    "p95": 0.1,
+                    "stddev": 0.04,
+                    "min": 0,
+                    "max": 0.2
+                },
+                "createViewModelMs": {
+                    "n": 100,
+                    "mean": 0.09,
+                    "median": 0.1,
+                    "p95": 0.2,
+                    "stddev": 0.06,
+                    "min": 0,
+                    "max": 0.3
+                },
+                "firstPaintMs": {
+                    "n": 100,
+                    "mean": 22.06,
+                    "median": 21.6,
+                    "p95": 26.1,
+                    "stddev": 2.1,
+                    "min": 18.9,
+                    "max": 29.6
+                },
+                "renderOnlyMs": {
+                    "n": 100,
+                    "mean": 21.97,
+                    "median": 21.5,
+                    "p95": 25.8,
+                    "stddev": 2.08,
+                    "min": 18.9,
+                    "max": 29.5
+                },
+                "domCells": {
+                    "n": 100,
+                    "mean": 350,
+                    "median": 350,
+                    "p95": 350,
+                    "stddev": 0,
+                    "min": 350,
+                    "max": 350
+                },
+                "rowsPerSec": {
+                    "n": 100,
+                    "mean": 49979.74,
+                    "median": 50691,
+                    "p95": 55556,
+                    "stddev": 4322.1,
+                    "min": 36913,
+                    "max": 58201
+                },
+                "cellsPerSec": {
+                    "n": 100,
+                    "mean": 15902.65,
+                    "median": 16129,
+                    "p95": 17677,
+                    "stddev": 1375.15,
+                    "min": 11745,
+                    "max": 18519
+                },
+                "derivTotal": {
+                    "n": 100,
+                    "mean": 2,
+                    "median": 2,
+                    "p95": 2,
+                    "stddev": 0,
+                    "min": 2,
+                    "max": 2
+                },
+                "derivTableAttrs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivVisibleColumns": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivColumnedRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivInjectedRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivPageRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivInjectedPageRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivHeaderRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "timeTotalMs": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1.3,
+                    "stddev": 0.13,
+                    "min": 0.8,
+                    "max": 1.4
+                },
+                "timeTableAttrs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "timeVisibleColumns": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "timeColumnedRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "timeInjectedRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1.3,
+                    "stddev": 0.13,
+                    "min": 0.8,
+                    "max": 1.4
+                },
+                "timeInjectedPageRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0.01,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "timeHeaderRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "interactionMs": {
+                    "n": 100,
+                    "mean": 19.18,
+                    "median": 18.7,
+                    "p95": 22.7,
+                    "stddev": 2.05,
+                    "min": 16.7,
+                    "max": 30.7
+                },
+                "interactionPaintMs": {
+                    "n": 100,
+                    "mean": 19.16,
+                    "median": 18.7,
+                    "p95": 22.7,
+                    "stddev": 2.06,
+                    "min": 16.6,
+                    "max": 30.7
+                },
+                "scenarioLongestTaskMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "scenarioMutations": {
+                    "n": 100,
+                    "mean": 451,
+                    "median": 451,
+                    "p95": 451,
+                    "stddev": 0,
+                    "min": 451,
+                    "max": 451
+                },
+                "scenarioLoafScriptMaxMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "rafP95Ms": {
+                    "n": 100,
+                    "mean": 16.75,
+                    "median": 16.8,
+                    "p95": 16.8,
+                    "stddev": 0.05,
+                    "min": 16.7,
+                    "max": 16.8
+                },
+                "mutations10s": {
+                    "n": 100,
+                    "mean": 456,
+                    "median": 456,
+                    "p95": 456,
+                    "stddev": 0,
+                    "min": 456,
+                    "max": 456
+                }
+            }
+        },
+        "kitchenSink1k": {
+            "stats": {
+                "rows": {
+                    "n": 100,
+                    "mean": 1000,
+                    "median": 1000,
+                    "p95": 1000,
+                    "stddev": 0,
+                    "min": 1000,
+                    "max": 1000
+                },
+                "cols": {
+                    "n": 100,
+                    "mean": 8,
+                    "median": 8,
+                    "p95": 8,
+                    "stddev": 0,
+                    "min": 8,
+                    "max": 8
+                },
+                "plugins": {
+                    "n": 100,
+                    "mean": 7,
+                    "median": 7,
+                    "p95": 7,
+                    "stddev": 0,
+                    "min": 7,
+                    "max": 7
+                },
+                "createTableMs": {
+                    "n": 100,
+                    "mean": 0.02,
+                    "median": 0,
+                    "p95": 0.1,
+                    "stddev": 0.04,
+                    "min": 0,
+                    "max": 0.2
+                },
+                "createColumnsMs": {
+                    "n": 100,
+                    "mean": 0.03,
+                    "median": 0,
+                    "p95": 0.1,
+                    "stddev": 0.05,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "createViewModelMs": {
+                    "n": 100,
+                    "mean": 0.14,
+                    "median": 0.1,
+                    "p95": 0.2,
+                    "stddev": 0.06,
+                    "min": 0,
+                    "max": 0.4
+                },
+                "firstPaintMs": {
+                    "n": 100,
+                    "mean": 42.94,
+                    "median": 42.2,
+                    "p95": 48,
+                    "stddev": 2.96,
+                    "min": 38.4,
+                    "max": 53.3
+                },
+                "renderOnlyMs": {
+                    "n": 100,
+                    "mean": 42.8,
+                    "median": 42,
+                    "p95": 47.9,
+                    "stddev": 2.95,
+                    "min": 38.3,
+                    "max": 53.2
+                },
+                "domCells": {
+                    "n": 100,
+                    "mean": 400,
+                    "median": 400,
+                    "p95": 400,
+                    "stddev": 0,
+                    "min": 400,
+                    "max": 400
+                },
+                "rowsPerSec": {
+                    "n": 100,
+                    "mean": 23288.62,
+                    "median": 23641,
+                    "p95": 25316,
+                    "stddev": 1509.53,
+                    "min": 18692,
+                    "max": 25974
+                },
+                "cellsPerSec": {
+                    "n": 100,
+                    "mean": 9315.49,
+                    "median": 9456,
+                    "p95": 10127,
+                    "stddev": 603.77,
+                    "min": 7477,
+                    "max": 10390
+                },
+                "derivTotal": {
+                    "n": 100,
+                    "mean": 7,
+                    "median": 7,
+                    "p95": 7,
+                    "stddev": 0,
+                    "min": 7,
+                    "max": 7
+                },
+                "derivTableAttrs": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivVisibleColumns": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivColumnedRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivInjectedRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivPageRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "derivInjectedPageRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "derivHeaderRows": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "timeTotalMs": {
+                    "n": 100,
+                    "mean": 11.06,
+                    "median": 11.1,
+                    "p95": 12.7,
+                    "stddev": 1.09,
+                    "min": 6,
+                    "max": 13.8
+                },
+                "timeTableAttrs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0.01,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "timeVisibleColumns": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0.01,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "timeColumnedRows": {
+                    "n": 100,
+                    "mean": 1.67,
+                    "median": 1.6,
+                    "p95": 2,
+                    "stddev": 0.18,
+                    "min": 1.4,
+                    "max": 2.2
+                },
+                "timeInjectedRows": {
+                    "n": 100,
+                    "mean": 9.26,
+                    "median": 9.2,
+                    "p95": 10.7,
+                    "stddev": 1.03,
+                    "min": 3.9,
+                    "max": 11.8
+                },
+                "timeInjectedPageRows": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0.01,
+                    "min": 0,
+                    "max": 0.1
+                },
+                "timeHeaderRows": {
+                    "n": 100,
+                    "mean": 0.12,
+                    "median": 0.1,
+                    "p95": 0.2,
+                    "stddev": 0.06,
+                    "min": 0,
+                    "max": 0.3
+                },
+                "interactionMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "interactionPaintMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "scenarioLongestTaskMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "scenarioMutations": {
+                    "n": 100,
+                    "mean": 1,
+                    "median": 1,
+                    "p95": 1,
+                    "stddev": 0,
+                    "min": 1,
+                    "max": 1
+                },
+                "scenarioLoafScriptMaxMs": {
+                    "n": 100,
+                    "mean": 0,
+                    "median": 0,
+                    "p95": 0,
+                    "stddev": 0,
+                    "min": 0,
+                    "max": 0
+                },
+                "rafP95Ms": {
+                    "n": 100,
+                    "mean": 16.76,
+                    "median": 16.8,
+                    "p95": 16.8,
+                    "stddev": 0.05,
+                    "min": 16.7,
+                    "max": 16.8
+                },
+                "mutations10s": {
+                    "n": 100,
+                    "mean": 6,
+                    "median": 6,
+                    "p95": 6,
+                    "stddev": 0,
+                    "min": 6,
+                    "max": 6
+                }
+            }
+        }
+    },
+    "coldOnly": true,
+    "iterations": 100,
+    "url": "http://localhost:8417/test/perf-bench"
+}

@@ -84,10 +84,31 @@ export interface ViewModelDebug {
         injectedPageRows: number
         headerRows: number
     }
-    /** Reset all derivation call counters to 0 */
+    /**
+     * Per-derivation cumulative wall-clock in milliseconds, accumulated
+     * via `performance.now()` deltas inside each `derived(...)` body.
+     * Mirrors `derivationCalls` so the perf bench can attribute a
+     * scenario's render budget to a specific derivation rather than the
+     * aggregated `firstPaintMs`. Reset by `resetCounters()`.
+     */
+    derivationTimings: {
+        tableAttrs: number
+        tableHeadAttrs: number
+        tableBodyAttrs: number
+        visibleColumns: number
+        columnedRows: number
+        rows: number
+        injectedRows: number
+        pageRows: number
+        injectedPageRows: number
+        headerRows: number
+    }
+    /** Reset all derivation call counters and timings to 0 */
     resetCounters: () => void
     /** Get total derivation calls since last reset */
     getTotalCalls: () => number
+    /** Get total derivation wall-clock (ms) since last reset */
+    getTotalMs: () => number
 }
 
 /**
@@ -195,6 +216,23 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         injectedPageRows: 0,
         headerRows: 0
     }
+    // Per-derivation cumulative ms, populated alongside derivationCalls.
+    // Each `derived(...)` body wraps its work in performance.now() pairs
+    // so the perf bench can attribute a scenario's render budget to a
+    // specific derivation. `rows` / `pageRows` stay at 0 — they're
+    // plugin-pipeline pass-throughs that don't run a body of their own.
+    const derivationTimings = {
+        tableAttrs: 0,
+        tableHeadAttrs: 0,
+        tableBodyAttrs: 0,
+        visibleColumns: 0,
+        columnedRows: 0,
+        rows: 0,
+        injectedRows: 0,
+        pageRows: 0,
+        injectedPageRows: 0,
+        headerRows: 0
+    }
 
     const $flatColumns = getFlatColumns(columns)
     const flatColumns = readable($flatColumns)
@@ -282,9 +320,11 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         tableAttrs = fn(tableAttrs)
     })
     const finalizedTableAttrs = derived(tableAttrs, ($tableAttrs) => {
+        const _t0 = performance.now()
         derivationCalls.tableAttrs++
         const $finalizedAttrs = finalizeAttributes($tableAttrs) as TableAttributes<Item>
         _tableAttrs.set($finalizedAttrs)
+        derivationTimings.tableAttrs += performance.now() - _t0
         return $finalizedAttrs
     })
 
@@ -298,9 +338,11 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         tableHeadAttrs = fn(tableHeadAttrs)
     })
     const finalizedTableHeadAttrs = derived(tableHeadAttrs, ($tableHeadAttrs) => {
+        const _t0 = performance.now()
         derivationCalls.tableHeadAttrs++
         const $finalizedAttrs = finalizeAttributes($tableHeadAttrs) as TableHeadAttributes<Item>
         _tableHeadAttrs.set($finalizedAttrs)
+        derivationTimings.tableHeadAttrs += performance.now() - _t0
         return $finalizedAttrs
     })
 
@@ -316,9 +358,11 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         tableBodyAttrs = fn(tableBodyAttrs)
     })
     const finalizedTableBodyAttrs = derived(tableBodyAttrs, ($tableBodyAttrs) => {
+        const _t0 = performance.now()
         derivationCalls.tableBodyAttrs++
         const $finalizedAttrs = finalizeAttributes($tableBodyAttrs) as TableBodyAttributes<Item>
         _tableBodyAttrs.set($finalizedAttrs)
+        derivationTimings.tableBodyAttrs += performance.now() - _t0
         return $finalizedAttrs
     })
 
@@ -334,19 +378,24 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     })
 
     const injectedColumns = derived(visibleColumns, ($visibleColumns) => {
+        const _t0 = performance.now()
         derivationCalls.visibleColumns++
         _visibleColumns.set($visibleColumns)
+        derivationTimings.visibleColumns += performance.now() - _t0
         return $visibleColumns
     })
 
     const columnedRows = derived(
         [originalRows, injectedColumns],
         ([$originalRows, $injectedColumns]) => {
+            const _t0 = performance.now()
             derivationCalls.columnedRows++
-            return getColumnedBodyRows(
+            const result = getColumnedBodyRows(
                 $originalRows,
                 $injectedColumns.map((c) => c.id)
             )
+            derivationTimings.columnedRows += performance.now() - _t0
+            return result
         }
     )
 
@@ -363,6 +412,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     const pluginEntries = Object.entries(pluginInstances)
 
     const injectedRows = derived(rows, ($rows) => {
+        const _t0 = performance.now()
         derivationCalls.injectedRows++
         $rows.forEach((row) => {
             row.injectState(tableState)
@@ -379,6 +429,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
             }
         })
         _rows.set($rows)
+        derivationTimings.injectedRows += performance.now() - _t0
         return $rows
     })
 
@@ -396,12 +447,15 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     // Page rows are a subset of the same object references already processed
     // by injectedRows — no need to re-inject state or re-apply hooks.
     const injectedPageRows = derived(pageRows, ($pageRows) => {
+        const _t0 = performance.now()
         derivationCalls.injectedPageRows++
         _pageRows.set($pageRows)
+        derivationTimings.injectedPageRows += performance.now() - _t0
         return $pageRows
     })
 
     const headerRows = derived(injectedColumns, ($injectedColumns) => {
+        const _t0 = performance.now()
         derivationCalls.headerRows++
         const $headerRows = getHeaderRows(
             columns,
@@ -422,6 +476,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
             }
         })
         _headerRows.set($headerRows)
+        derivationTimings.headerRows += performance.now() - _t0
         return $headerRows
     })
 
@@ -437,13 +492,18 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
             pageRows: derivePageRowsFns.length + 1 // +1 for injected
         },
         derivationCalls,
+        derivationTimings,
         resetCounters: () => {
             Object.keys(derivationCalls).forEach((key) => {
                 derivationCalls[key as keyof typeof derivationCalls] = 0
+                derivationTimings[key as keyof typeof derivationTimings] = 0
             })
         },
         getTotalCalls: () => {
             return Object.values(derivationCalls).reduce((sum, count) => sum + count, 0)
+        },
+        getTotalMs: () => {
+            return Object.values(derivationTimings).reduce((sum, ms) => sum + ms, 0)
         }
     }
 
