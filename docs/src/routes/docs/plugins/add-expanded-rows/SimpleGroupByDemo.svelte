@@ -109,7 +109,7 @@
         <thead>
             {#each $headerRows as headerRow (headerRow.id)}
                 <Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
-                    <tr>
+                    <tr {...rowAttrs}>
                         {#each headerRow.cells as cell (cell.id)}
                             <Subscribe
                                 attrs={cell.attrs()}
@@ -138,7 +138,7 @@
         <tbody {...$tableBodyAttrs}>
             {#each $rows as row (row.id)}
                 <Subscribe rowAttrs={row.attrs()} let:rowAttrs>
-                    <tr>
+                    <tr {...rowAttrs}>
                         {#each row.cells as cell (cell.id)}
                             <Subscribe
                                 attrs={cell.attrs()}

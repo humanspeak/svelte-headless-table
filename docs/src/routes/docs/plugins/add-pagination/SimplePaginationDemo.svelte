@@ -12,7 +12,7 @@
 
     const columns = table.createColumns([
         table.group({
-            header: (_, { rows, pageRows }) =>
+            header: (_, { pageRows }) =>
                 derived([pageRows], ([_pageRows]) => `Name (${_pageRows.length} on page)`),
             columns: [
                 table.column({
@@ -80,12 +80,7 @@
                 <Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
                     <tr {...rowAttrs}>
                         {#each headerRow.cells as cell (cell.id)}
-                            <Subscribe
-                                attrs={cell.attrs()}
-                                let:attrs
-                                props={cell.props()}
-                                let:props
-                            >
+                            <Subscribe attrs={cell.attrs()} let:attrs>
                                 <th {...attrs}>
                                     <Render of={cell.render()} />
                                 </th>
