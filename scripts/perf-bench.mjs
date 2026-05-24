@@ -186,7 +186,11 @@ function aggregate(values) {
     // upper-middle skews the reported number toward the higher half.
     const mid = Math.floor(sorted.length / 2)
     const median = sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
-    const p95 = sorted[Math.min(sorted.length - 1, Math.ceil(0.95 * sorted.length) - 1)]
+    // Standard percentile-by-nearest-rank formula. The previous
+    // `Math.ceil(0.95 * n) - 1` form collapsed to the max element
+    // for small n (e.g. n=10 → index 9 = max); this form yields the
+    // correct 9th element. For our default n=100 both agree.
+    const p95 = sorted[Math.floor(0.95 * (sorted.length - 1))]
     const variance = nums.reduce((acc, v) => acc + (v - mean) ** 2, 0) / nums.length
     const stddev = Math.sqrt(variance)
     const round = (n) => Math.round(n * 100) / 100

@@ -271,17 +271,29 @@
         return Math.round(n * m) / m
     }
 
+    // Safety timeout so a scenario that fails to commit any DOM change
+    // doesn't hang the headless runner indefinitely. 5s is well above
+    // even the slowest scenario's worst observed paint (rows-10k p95
+    // is ~300ms), so legitimate mounts never hit this path.
+    const PAINT_TIMEOUT_MS = 5000
+
     const waitForPaint = (): Promise<number> =>
         new Promise((resolve) => {
             if (!previewEl) {
                 resolve(performance.now())
                 return
             }
-            const mo = new MutationObserver(() => {
+            let fired = false
+            const settle = () => {
+                if (fired) return
+                fired = true
                 mo.disconnect()
+                clearTimeout(timer)
                 resolve(performance.now())
-            })
+            }
+            const mo = new MutationObserver(settle)
             mo.observe(previewEl, { childList: true, subtree: true, characterData: true })
+            const timer = setTimeout(settle, PAINT_TIMEOUT_MS)
         })
 
     const snapshotScenarioObservers = (start: number, end: number) => {
