@@ -30,7 +30,7 @@
         "github-slugger": "^2.0.0"
     },
     "devDependencies": {
-        "@cloudflare/workers-types": "^4.20260521.1",
+        "@cloudflare/workers-types": "^4.20260525.1",
         "@eslint/compat": "^2.1.0",
         "@eslint/js": "^10.0.1",
         "@faker-js/faker": "^10.4.0",
