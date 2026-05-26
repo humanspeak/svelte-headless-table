@@ -31,14 +31,20 @@ export interface ToggleOptions {
     clearOthers?: boolean
 }
 
+/* trunk-ignore-all(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
+// Parameter names in these declaration-only signatures are part of the
+// public API surface — they show up in IntelliSense / generated docs.
+// The lint rule can't tell the names are "used" by readers; we suppress
+// it at the file scope rather than mangle the names with `_` prefixes.
+
 export interface ArraySetStoreOptions<T> {
-    isEqual?: (_a: T, _b: T) => boolean
+    isEqual?: (a: T, b: T) => boolean
 }
 
 export interface ArraySetStore<T> extends Writable<T[]> {
-    toggle: (_item: T, _options?: ToggleOptions) => void
-    add: (_item: T) => void
-    remove: (_item: T) => void
+    toggle: (item: T, options?: ToggleOptions) => void
+    add: (item: T) => void
+    remove: (item: T) => void
     clear: () => void
 }
 
@@ -95,11 +101,11 @@ export const arraySetStore = <T>(
 }
 
 export interface RecordSetStore<T extends string | number> extends Writable<Record<T, boolean>> {
-    toggle: (_item: T) => void
-    add: (_item: T) => void
-    addAll: (_items: T[]) => void
-    remove: (_item: T) => void
-    removeAll: (_items: T[]) => void
+    toggle: (item: T) => void
+    add: (item: T) => void
+    addAll: (items: T[]) => void
+    remove: (item: T) => void
+    removeAll: (items: T[]) => void
     clear: () => void
 }
 
