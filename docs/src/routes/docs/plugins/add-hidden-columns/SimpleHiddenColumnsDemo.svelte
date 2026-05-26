@@ -53,7 +53,7 @@
     const ids = flatColumns.map((c) => c.id)
 
     // Use $state for reactive checkbox bindings
-    let hideForId: Record<string, boolean> = $state(
+    const hideForId: Record<string, boolean> = $state(
         Object.fromEntries(ids.map((id) => [id, false]))
     )
 
@@ -67,7 +67,7 @@
 
 <pre>$hiddenColumnIds = {JSON.stringify($hiddenColumnIds, null, 2)}</pre>
 
-{#each ids as id}
+{#each ids as id (id)}
     <div class="flex items-center gap-4">
         <input id="hide-{id}" type="checkbox" bind:checked={hideForId[id]} />
         <label for="hide-{id}">{id}</label>

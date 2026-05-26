@@ -101,7 +101,11 @@ export default [
         }
     },
     {
-        files: ['**/*.svelte'],
+        // Also covers `*.svelte.ts` / `*.svelte.js` (Svelte 5 typed-runes
+        // files) — without `parser: ts.parser` as the inner parser, the
+        // svelte-eslint-parser chokes on TypeScript generic-call syntax
+        // like `$state<T>()`.
+        files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
         languageOptions: {
             parserOptions: {
                 parser: ts.parser

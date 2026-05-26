@@ -1,3 +1,4 @@
+import { MemoryCache } from '@humanspeak/memory-cache'
 import { derived, writable, type Readable, type Writable } from 'svelte/store'
 import type { DataBodyCell } from '../bodyCells.js'
 import type { BodyRow } from '../bodyRows.js'
@@ -292,6 +293,17 @@ export const addSortBy =
 
         const pluginState: SortByState<Item> = { sortKeys, preSortedRows }
 
+        // The `tbody.tr.td` hook output only depends on `cell.id` (the
+        // column ID — closed-over) and the reactive `sortKeys` store.
+        // Two body cells in the same column produce identical Readables,
+        // so we can share one Readable per column ID across every row.
+        // For rows-10k × 8 cols that collapses 80,000 Readable allocations
+        // per cold mount into 8. LRU eviction means we stay bounded even
+        // if column IDs churn over the view-model's lifetime.
+        const tdPropsCache = new MemoryCache<Readable<SortByPropSet['tbody.tr.td']>>({
+            maxSize: 256
+        })
+
         return {
             pluginState,
             deriveRows,
@@ -323,12 +335,16 @@ export const addSortBy =
                     return { props }
                 },
                 'tbody.tr.td': (cell) => {
-                    const props = derived(sortKeys, ($sortKeys) => {
-                        const key = $sortKeys.find((k) => k.id === cell.id)
-                        return {
-                            order: key?.order
-                        }
-                    })
+                    let props = tdPropsCache.get(cell.id)
+                    if (props === undefined) {
+                        props = derived(sortKeys, ($sortKeys) => {
+                            const key = $sortKeys.find((k) => k.id === cell.id)
+                            return {
+                                order: key?.order
+                            }
+                        })
+                        tdPropsCache.set(cell.id, props)
+                    }
                     return { props }
                 }
             }

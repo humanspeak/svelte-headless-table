@@ -24,8 +24,10 @@
 <script lang="ts">
     import { readable } from 'svelte/store'
     import { createRender, createTable, Render, Subscribe } from '@humanspeak/svelte-headless-table'
-    import { addColumnFilters } from '@humanspeak/svelte-headless-table/plugins'
-    import type { ColumnFilterFn } from '@humanspeak/svelte-headless-table/plugins'
+    import {
+        addColumnFilters,
+        type ColumnFilterFn
+    } from '@humanspeak/svelte-headless-table/plugins'
     import TextFilter from './TextFilter.svelte'
     import SelectFilter from './SelectFilter.svelte'
     import NumberRangeFilter from './NumberRangeFilter.svelte'

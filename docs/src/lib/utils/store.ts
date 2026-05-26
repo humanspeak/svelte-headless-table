@@ -31,6 +31,12 @@ export interface ToggleOptions {
     clearOthers?: boolean
 }
 
+/* trunk-ignore-all(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
+// Parameter names in these declaration-only signatures are part of the
+// public API surface — they show up in IntelliSense / generated docs.
+// The lint rule can't tell the names are "used" by readers; we suppress
+// it at the file scope rather than mangle the names with `_` prefixes.
+
 export interface ArraySetStoreOptions<T> {
     isEqual?: (a: T, b: T) => boolean
 }

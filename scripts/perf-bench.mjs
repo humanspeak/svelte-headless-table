@@ -186,7 +186,13 @@ function aggregate(values) {
     // upper-middle skews the reported number toward the higher half.
     const mid = Math.floor(sorted.length / 2)
     const median = sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
-    const p95 = sorted[Math.min(sorted.length - 1, Math.ceil(0.95 * sorted.length) - 1)]
+    // p95 via lower-rank interpolation: index = floor(0.95 * (n - 1)).
+    // For n=100 this is sorted[94] — the 95th-smallest, 0-indexed.
+    // Chosen over true nearest-rank (`Math.ceil(0.95 * n) - 1`) because
+    // that form collapses to the max element on small n (e.g. n=10 → 9),
+    // which is a noisy reading; the lower-rank form stays well-defined
+    // for any n without an explicit clamp.
+    const p95 = sorted[Math.floor(0.95 * (sorted.length - 1))]
     const variance = nums.reduce((acc, v) => acc + (v - mean) ** 2, 0) / nums.length
     const stddev = Math.sqrt(variance)
     const round = (n) => Math.round(n * 100) / 100

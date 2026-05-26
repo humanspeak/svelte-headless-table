@@ -1,5 +1,5 @@
 {
-    "capturedAt": "2026-05-23T15:22:29.403Z",
+    "capturedAt": "2026-05-24T14:34:23.676Z",
     "cold": {
         "rows1k": {
             "stats": {
@@ -43,14 +43,14 @@
                     "n": 100,
                     "mean": 0.07,
                     "median": 0.1,
-                    "p95": 0.1,
-                    "stddev": 0.05,
+                    "p95": 0.2,
+                    "stddev": 0.07,
                     "min": 0,
                     "max": 0.2
                 },
                 "createViewModelMs": {
                     "n": 100,
-                    "mean": 0.22,
+                    "mean": 0.25,
                     "median": 0.2,
                     "p95": 0.3,
                     "stddev": 0.1,
@@ -59,21 +59,21 @@
                 },
                 "firstPaintMs": {
                     "n": 100,
-                    "mean": 55.93,
-                    "median": 55,
-                    "p95": 66.6,
-                    "stddev": 4.88,
-                    "min": 49.5,
-                    "max": 81
+                    "mean": 56.34,
+                    "median": 55.5,
+                    "p95": 65,
+                    "stddev": 4.49,
+                    "min": 50.6,
+                    "max": 81.9
                 },
                 "renderOnlyMs": {
                     "n": 100,
-                    "mean": 55.71,
-                    "median": 54.8,
-                    "p95": 66.3,
-                    "stddev": 4.82,
-                    "min": 49.3,
-                    "max": 80
+                    "mean": 56.09,
+                    "median": 55.2,
+                    "p95": 64.8,
+                    "stddev": 4.45,
+                    "min": 50.4,
+                    "max": 80.9
                 },
                 "domCells": {
                     "n": 100,
@@ -86,21 +86,21 @@
                 },
                 "rowsPerSec": {
                     "n": 100,
-                    "mean": 17902.61,
-                    "median": 18149,
-                    "p95": 19531,
-                    "stddev": 1368.22,
-                    "min": 12136,
-                    "max": 20080
+                    "mean": 17740.3,
+                    "median": 17905,
+                    "p95": 19268,
+                    "stddev": 1236.63,
+                    "min": 12005,
+                    "max": 19646
                 },
                 "cellsPerSec": {
                     "n": 100,
-                    "mean": 7161.06,
-                    "median": 7260,
-                    "p95": 7812,
-                    "stddev": 547.29,
-                    "min": 4854,
-                    "max": 8032
+                    "mean": 7096.09,
+                    "median": 7162,
+                    "p95": 7707,
+                    "stddev": 494.65,
+                    "min": 4802,
+                    "max": 7859
                 },
                 "derivTotal": {
                     "n": 100,
@@ -185,55 +185,55 @@
                 },
                 "timeTotalMs": {
                     "n": 100,
-                    "mean": 13.77,
-                    "median": 13.6,
-                    "p95": 16.5,
-                    "stddev": 1.79,
-                    "min": 6.1,
-                    "max": 19.2
+                    "mean": 6.73,
+                    "median": 6.6,
+                    "p95": 7.7,
+                    "stddev": 1.09,
+                    "min": 5.7,
+                    "max": 14
                 },
                 "timeTableAttrs": {
                     "n": 100,
                     "mean": 0,
                     "median": 0,
                     "p95": 0,
-                    "stddev": 0.02,
+                    "stddev": 0.01,
                     "min": 0,
                     "max": 0.1
                 },
                 "timeVisibleColumns": {
                     "n": 100,
-                    "mean": 0.01,
+                    "mean": 0,
                     "median": 0,
-                    "p95": 0.1,
-                    "stddev": 0.03,
+                    "p95": 0,
+                    "stddev": 0.02,
                     "min": 0,
                     "max": 0.1
                 },
                 "timeColumnedRows": {
                     "n": 100,
-                    "mean": 2.04,
+                    "mean": 2.02,
                     "median": 2,
-                    "p95": 2.5,
-                    "stddev": 0.27,
-                    "min": 1.6,
-                    "max": 3.4
+                    "p95": 2.3,
+                    "stddev": 0.26,
+                    "min": 1.7,
+                    "max": 3.7
                 },
                 "timeInjectedRows": {
                     "n": 100,
-                    "mean": 11.52,
-                    "median": 11.5,
-                    "p95": 13.8,
-                    "stddev": 1.74,
-                    "min": 3.9,
-                    "max": 16.7
+                    "mean": 4.52,
+                    "median": 4.3,
+                    "p95": 5.3,
+                    "stddev": 0.89,
+                    "min": 3.8,
+                    "max": 10.7
                 },
                 "timeInjectedPageRows": {
                     "n": 100,
                     "mean": 0,
                     "median": 0,
                     "p95": 0,
-                    "stddev": 0.02,
+                    "stddev": 0.01,
                     "min": 0,
                     "max": 0.1
                 },
@@ -242,8 +242,8 @@
                     "mean": 0.18,
                     "median": 0.2,
                     "p95": 0.3,
-                    "stddev": 0.08,
-                    "min": 0.1,
+                    "stddev": 0.09,
+                    "min": 0,
                     "max": 0.8
                 },
                 "interactionMs": {
@@ -293,7 +293,7 @@
                 },
                 "rafP95Ms": {
                     "n": 100,
-                    "mean": 16.78,
+                    "mean": 16.77,
                     "median": 16.8,
                     "p95": 16.8,
                     "stddev": 0.04,
@@ -369,21 +369,21 @@
                 },
                 "firstPaintMs": {
                     "n": 100,
-                    "mean": 223.03,
-                    "median": 219.6,
-                    "p95": 255.6,
-                    "stddev": 24.8,
-                    "min": 186.8,
-                    "max": 331.9
+                    "mean": 172.39,
+                    "median": 168.75,
+                    "p95": 196.9,
+                    "stddev": 14.46,
+                    "min": 150,
+                    "max": 239.9
                 },
                 "renderOnlyMs": {
                     "n": 100,
-                    "mean": 222.93,
-                    "median": 219.6,
-                    "p95": 255.5,
-                    "stddev": 24.8,
-                    "min": 186.7,
-                    "max": 331.7
+                    "mean": 172.31,
+                    "median": 168.7,
+                    "p95": 196.8,
+                    "stddev": 14.46,
+                    "min": 149.9,
+                    "max": 239.8
                 },
                 "domCells": {
                     "n": 100,
@@ -396,21 +396,21 @@
                 },
                 "rowsPerSec": {
                     "n": 100,
-                    "mean": 45285.75,
-                    "median": 45600,
-                    "p95": 51125,
-                    "stddev": 4353.22,
-                    "min": 30111,
-                    "max": 53505
+                    "mean": 58319.56,
+                    "median": 59242,
+                    "p95": 63776,
+                    "stddev": 4339.2,
+                    "min": 41649,
+                    "max": 66622
                 },
                 "cellsPerSec": {
                     "n": 100,
-                    "mean": 1811.45,
-                    "median": 1824,
-                    "p95": 2045,
-                    "stddev": 174.14,
-                    "min": 1204,
-                    "max": 2140
+                    "mean": 2332.78,
+                    "median": 2369.5,
+                    "p95": 2551,
+                    "stddev": 173.56,
+                    "min": 1666,
+                    "max": 2665
                 },
                 "derivTotal": {
                     "n": 100,
@@ -495,12 +495,12 @@
                 },
                 "timeTotalMs": {
                     "n": 100,
-                    "mean": 76.88,
-                    "median": 75.4,
-                    "p95": 86.6,
-                    "stddev": 11.37,
-                    "min": 67,
-                    "max": 170.2
+                    "mean": 55.02,
+                    "median": 53.9,
+                    "p95": 62.6,
+                    "stddev": 4.93,
+                    "min": 48.2,
+                    "max": 87.2
                 },
                 "timeTableAttrs": {
                     "n": 100,
@@ -515,37 +515,37 @@
                     "n": 100,
                     "mean": 0.01,
                     "median": 0,
-                    "p95": 0,
+                    "p95": 0.1,
                     "stddev": 0.02,
                     "min": 0,
                     "max": 0.1
                 },
                 "timeColumnedRows": {
                     "n": 100,
-                    "mean": 18.85,
-                    "median": 18.6,
-                    "p95": 21.5,
-                    "stddev": 1.42,
-                    "min": 16.8,
-                    "max": 24.3
+                    "mean": 18.56,
+                    "median": 18.4,
+                    "p95": 20.2,
+                    "stddev": 1.03,
+                    "min": 16.3,
+                    "max": 21.4
                 },
                 "timeInjectedRows": {
                     "n": 100,
-                    "mean": 57.96,
-                    "median": 56.4,
-                    "p95": 66.2,
-                    "stddev": 10.52,
-                    "min": 49.1,
-                    "max": 146.8
+                    "mean": 36.38,
+                    "median": 35.35,
+                    "p95": 41.5,
+                    "stddev": 4.31,
+                    "min": 30.6,
+                    "max": 67.2
                 },
                 "timeInjectedPageRows": {
                     "n": 100,
                     "mean": 0,
                     "median": 0,
                     "p95": 0,
-                    "stddev": 0.01,
+                    "stddev": 0,
                     "min": 0,
-                    "max": 0.1
+                    "max": 0
                 },
                 "timeHeaderRows": {
                     "n": 100,
@@ -652,12 +652,12 @@
                 },
                 "createTableMs": {
                     "n": 100,
-                    "mean": 0.02,
+                    "mean": 0.03,
                     "median": 0,
                     "p95": 0.1,
-                    "stddev": 0.04,
+                    "stddev": 0.05,
                     "min": 0,
-                    "max": 0.1
+                    "max": 0.2
                 },
                 "createColumnsMs": {
                     "n": 100,
@@ -666,34 +666,34 @@
                     "p95": 0.1,
                     "stddev": 0.05,
                     "min": 0,
-                    "max": 0.2
+                    "max": 0.1
                 },
                 "createViewModelMs": {
                     "n": 100,
-                    "mean": 0.06,
+                    "mean": 0.07,
                     "median": 0.1,
                     "p95": 0.1,
-                    "stddev": 0.05,
+                    "stddev": 0.06,
                     "min": 0,
-                    "max": 0.2
+                    "max": 0.3
                 },
                 "firstPaintMs": {
                     "n": 100,
-                    "mean": 85.89,
-                    "median": 84,
-                    "p95": 103.4,
-                    "stddev": 7.87,
-                    "min": 75.4,
-                    "max": 115.3
+                    "mean": 88.55,
+                    "median": 87.6,
+                    "p95": 98.7,
+                    "stddev": 6.01,
+                    "min": 77.8,
+                    "max": 112
                 },
                 "renderOnlyMs": {
                     "n": 100,
-                    "mean": 85.83,
-                    "median": 83.8,
-                    "p95": 103.3,
-                    "stddev": 7.87,
-                    "min": 75.4,
-                    "max": 115.3
+                    "mean": 88.49,
+                    "median": 87.55,
+                    "p95": 98.6,
+                    "stddev": 6,
+                    "min": 77.7,
+                    "max": 111.9
                 },
                 "domCells": {
                     "n": 100,
@@ -706,21 +706,21 @@
                 },
                 "rowsPerSec": {
                     "n": 100,
-                    "mean": 11713.15,
-                    "median": 11919,
-                    "p95": 12821,
-                    "stddev": 956.73,
-                    "min": 8666,
-                    "max": 13245
+                    "mean": 11325.39,
+                    "median": 11396.5,
+                    "p95": 12361,
+                    "stddev": 729.12,
+                    "min": 8913,
+                    "max": 12837
                 },
                 "cellsPerSec": {
                     "n": 100,
-                    "mean": 14641.47,
-                    "median": 14899,
-                    "p95": 16026,
-                    "stddev": 1195.97,
-                    "min": 10832,
-                    "max": 16556
+                    "mean": 14156.79,
+                    "median": 14245,
+                    "p95": 15451,
+                    "stddev": 911.53,
+                    "min": 11141,
+                    "max": 16046
                 },
                 "derivTotal": {
                     "n": 100,
@@ -805,12 +805,12 @@
                 },
                 "timeTotalMs": {
                     "n": 100,
-                    "mean": 8.7,
-                    "median": 8.4,
-                    "p95": 9.8,
-                    "stddev": 1.01,
-                    "min": 7.5,
-                    "max": 16
+                    "mean": 9.37,
+                    "median": 9.3,
+                    "p95": 10.2,
+                    "stddev": 0.53,
+                    "min": 8.2,
+                    "max": 10.6
                 },
                 "timeTableAttrs": {
                     "n": 100,
@@ -826,27 +826,27 @@
                     "mean": 0,
                     "median": 0,
                     "p95": 0,
-                    "stddev": 0.02,
+                    "stddev": 0.01,
                     "min": 0,
                     "max": 0.1
                 },
                 "timeColumnedRows": {
                     "n": 100,
                     "mean": 7.82,
-                    "median": 7.6,
-                    "p95": 8.8,
-                    "stddev": 0.93,
-                    "min": 6.8,
-                    "max": 15.4
+                    "median": 7.8,
+                    "p95": 8.5,
+                    "stddev": 0.42,
+                    "min": 6.9,
+                    "max": 8.9
                 },
                 "timeInjectedRows": {
                     "n": 100,
-                    "mean": 0.71,
-                    "median": 0.6,
-                    "p95": 1.1,
-                    "stddev": 0.24,
-                    "min": 0.5,
-                    "max": 2.1
+                    "mean": 1.38,
+                    "median": 1.3,
+                    "p95": 2.1,
+                    "stddev": 0.29,
+                    "min": 1,
+                    "max": 2.2
                 },
                 "timeInjectedPageRows": {
                     "n": 100,
@@ -913,7 +913,7 @@
                 },
                 "rafP95Ms": {
                     "n": 100,
-                    "mean": 16.77,
+                    "mean": 16.78,
                     "median": 16.8,
                     "p95": 16.8,
                     "stddev": 0.04,
@@ -971,16 +971,16 @@
                 },
                 "createColumnsMs": {
                     "n": 100,
-                    "mean": 0.03,
+                    "mean": 0.02,
                     "median": 0,
                     "p95": 0.1,
                     "stddev": 0.04,
                     "min": 0,
-                    "max": 0.1
+                    "max": 0.2
                 },
                 "createViewModelMs": {
                     "n": 100,
-                    "mean": 0.08,
+                    "mean": 0.09,
                     "median": 0.1,
                     "p95": 0.2,
                     "stddev": 0.06,
@@ -989,21 +989,21 @@
                 },
                 "firstPaintMs": {
                     "n": 100,
-                    "mean": 32.23,
-                    "median": 31.8,
-                    "p95": 36.8,
-                    "stddev": 2.42,
-                    "min": 27.7,
-                    "max": 41.2
+                    "mean": 32.39,
+                    "median": 32.35,
+                    "p95": 35.2,
+                    "stddev": 1.78,
+                    "min": 28.8,
+                    "max": 38.5
                 },
                 "renderOnlyMs": {
                     "n": 100,
-                    "mean": 32.15,
-                    "median": 31.8,
-                    "p95": 36.7,
-                    "stddev": 2.42,
-                    "min": 27.6,
-                    "max": 41
+                    "mean": 32.3,
+                    "median": 32.3,
+                    "p95": 35.1,
+                    "stddev": 1.77,
+                    "min": 28.7,
+                    "max": 38.5
                 },
                 "domCells": {
                     "n": 100,
@@ -1016,21 +1016,21 @@
                 },
                 "rowsPerSec": {
                     "n": 100,
-                    "mean": 31075.4,
-                    "median": 31447,
-                    "p95": 33784,
-                    "stddev": 2192.01,
-                    "min": 24155,
-                    "max": 35971
+                    "mean": 30845.82,
+                    "median": 30816.5,
+                    "p95": 33557,
+                    "stddev": 1673.38,
+                    "min": 25840,
+                    "max": 34602
                 },
                 "cellsPerSec": {
                     "n": 100,
-                    "mean": 15537.72,
-                    "median": 15723,
-                    "p95": 16892,
-                    "stddev": 1096,
-                    "min": 12077,
-                    "max": 17986
+                    "mean": 15422.94,
+                    "median": 15408.5,
+                    "p95": 16779,
+                    "stddev": 836.71,
+                    "min": 12920,
+                    "max": 17301
                 },
                 "derivTotal": {
                     "n": 100,
@@ -1115,12 +1115,12 @@
                 },
                 "timeTotalMs": {
                     "n": 100,
-                    "mean": 3.61,
-                    "median": 3.5,
-                    "p95": 4.1,
-                    "stddev": 0.79,
-                    "min": 3.1,
-                    "max": 10.8
+                    "mean": 4.01,
+                    "median": 3.9,
+                    "p95": 4.5,
+                    "stddev": 0.29,
+                    "min": 3.5,
+                    "max": 4.9
                 },
                 "timeTableAttrs": {
                     "n": 100,
@@ -1136,36 +1136,36 @@
                     "mean": 0,
                     "median": 0,
                     "p95": 0,
-                    "stddev": 0.02,
+                    "stddev": 0.01,
                     "min": 0,
                     "max": 0.1
                 },
                 "timeColumnedRows": {
                     "n": 100,
-                    "mean": 3.07,
-                    "median": 3,
-                    "p95": 3.5,
-                    "stddev": 0.26,
-                    "min": 2.7,
-                    "max": 4
+                    "mean": 3.16,
+                    "median": 3.1,
+                    "p95": 3.6,
+                    "stddev": 0.2,
+                    "min": 2.8,
+                    "max": 3.8
                 },
                 "timeInjectedRows": {
                     "n": 100,
-                    "mean": 0.47,
-                    "median": 0.4,
-                    "p95": 0.5,
-                    "stddev": 0.69,
-                    "min": 0.2,
-                    "max": 7.2
+                    "mean": 0.77,
+                    "median": 0.7,
+                    "p95": 1,
+                    "stddev": 0.14,
+                    "min": 0.6,
+                    "max": 1.3
                 },
                 "timeInjectedPageRows": {
                     "n": 100,
                     "mean": 0,
                     "median": 0,
                     "p95": 0,
-                    "stddev": 0.01,
+                    "stddev": 0,
                     "min": 0,
-                    "max": 0.1
+                    "max": 0
                 },
                 "timeHeaderRows": {
                     "n": 100,
@@ -1178,21 +1178,21 @@
                 },
                 "interactionMs": {
                     "n": 100,
-                    "mean": 14.76,
-                    "median": 14.6,
+                    "mean": 15.25,
+                    "median": 15.3,
                     "p95": 16.9,
-                    "stddev": 1.51,
-                    "min": 12.8,
-                    "max": 24.5
+                    "stddev": 0.93,
+                    "min": 13,
+                    "max": 17.8
                 },
                 "interactionPaintMs": {
                     "n": 100,
-                    "mean": 14.74,
-                    "median": 14.6,
-                    "p95": 16.8,
-                    "stddev": 1.5,
-                    "min": 12.8,
-                    "max": 24.5
+                    "mean": 15.23,
+                    "median": 15.3,
+                    "p95": 16.9,
+                    "stddev": 0.92,
+                    "min": 13,
+                    "max": 17.7
                 },
                 "scenarioLongestTaskMs": {
                     "n": 100,
@@ -1226,7 +1226,7 @@
                     "mean": 16.77,
                     "median": 16.8,
                     "p95": 16.8,
-                    "stddev": 0.05,
+                    "stddev": 0.04,
                     "min": 16.7,
                     "max": 16.8
                 },
@@ -1277,7 +1277,7 @@
                     "p95": 0.1,
                     "stddev": 0.04,
                     "min": 0,
-                    "max": 0.2
+                    "max": 0.1
                 },
                 "createColumnsMs": {
                     "n": 100,
@@ -1286,34 +1286,34 @@
                     "p95": 0.1,
                     "stddev": 0.05,
                     "min": 0,
-                    "max": 0.1
+                    "max": 0.2
                 },
                 "createViewModelMs": {
                     "n": 100,
-                    "mean": 0.08,
+                    "mean": 0.07,
                     "median": 0.1,
-                    "p95": 0.2,
-                    "stddev": 0.06,
+                    "p95": 0.1,
+                    "stddev": 0.05,
                     "min": 0,
-                    "max": 0.3
+                    "max": 0.2
                 },
                 "firstPaintMs": {
                     "n": 100,
-                    "mean": 9.69,
-                    "median": 9.5,
-                    "p95": 11.3,
-                    "stddev": 0.74,
-                    "min": 8.6,
-                    "max": 11.9
+                    "mean": 9.85,
+                    "median": 9.8,
+                    "p95": 11.1,
+                    "stddev": 0.66,
+                    "min": 8.4,
+                    "max": 11.6
                 },
                 "renderOnlyMs": {
                     "n": 100,
-                    "mean": 9.61,
-                    "median": 9.4,
-                    "p95": 11.2,
-                    "stddev": 0.74,
-                    "min": 8.5,
-                    "max": 11.8
+                    "mean": 9.79,
+                    "median": 9.75,
+                    "p95": 11,
+                    "stddev": 0.66,
+                    "min": 8.3,
+                    "max": 11.5
                 },
                 "domCells": {
                     "n": 100,
@@ -1326,21 +1326,21 @@
                 },
                 "rowsPerSec": {
                     "n": 100,
-                    "mean": 102379.61,
-                    "median": 104167,
-                    "p95": 112360,
-                    "stddev": 7321.22,
-                    "min": 81967,
-                    "max": 114943
+                    "mean": 100706.82,
+                    "median": 101010,
+                    "p95": 111111,
+                    "stddev": 6663.06,
+                    "min": 84746,
+                    "max": 116279
                 },
                 "cellsPerSec": {
                     "n": 100,
-                    "mean": 2457.12,
-                    "median": 2500,
-                    "p95": 2697,
-                    "stddev": 175.74,
-                    "min": 1967,
-                    "max": 2759
+                    "mean": 2416.96,
+                    "median": 2424,
+                    "p95": 2667,
+                    "stddev": 159.94,
+                    "min": 2034,
+                    "max": 2791
                 },
                 "derivTotal": {
                     "n": 100,
@@ -1425,12 +1425,12 @@
                 },
                 "timeTotalMs": {
                     "n": 100,
-                    "mean": 1.35,
-                    "median": 1.3,
-                    "p95": 1.7,
-                    "stddev": 0.18,
-                    "min": 1,
-                    "max": 2
+                    "mean": 1.44,
+                    "median": 1.4,
+                    "p95": 1.8,
+                    "stddev": 0.17,
+                    "min": 1.1,
+                    "max": 1.9
                 },
                 "timeTableAttrs": {
                     "n": 100,
@@ -1446,41 +1446,41 @@
                     "mean": 0,
                     "median": 0,
                     "p95": 0,
-                    "stddev": 0.01,
+                    "stddev": 0,
                     "min": 0,
-                    "max": 0.1
+                    "max": 0
                 },
                 "timeColumnedRows": {
                     "n": 100,
-                    "mean": 1.23,
-                    "median": 1.2,
-                    "p95": 1.5,
-                    "stddev": 0.16,
-                    "min": 1,
-                    "max": 1.9
+                    "mean": 1.32,
+                    "median": 1.3,
+                    "p95": 1.6,
+                    "stddev": 0.17,
+                    "min": 1.1,
+                    "max": 1.8
                 },
                 "timeInjectedRows": {
                     "n": 100,
-                    "mean": 0.07,
+                    "mean": 0.06,
                     "median": 0.1,
-                    "p95": 0.2,
-                    "stddev": 0.06,
+                    "p95": 0.1,
+                    "stddev": 0.05,
                     "min": 0,
-                    "max": 0.3
+                    "max": 0.2
                 },
                 "timeInjectedPageRows": {
                     "n": 100,
                     "mean": 0,
                     "median": 0,
                     "p95": 0,
-                    "stddev": 0,
+                    "stddev": 0.01,
                     "min": 0,
-                    "max": 0
+                    "max": 0.1
                 },
                 "timeHeaderRows": {
                     "n": 100,
-                    "mean": 0.04,
-                    "median": 0,
+                    "mean": 0.05,
+                    "median": 0.05,
                     "p95": 0.1,
                     "stddev": 0.05,
                     "min": 0,
@@ -1582,48 +1582,48 @@
                 },
                 "createTableMs": {
                     "n": 100,
-                    "mean": 0.01,
+                    "mean": 0.02,
                     "median": 0,
                     "p95": 0.1,
-                    "stddev": 0.03,
+                    "stddev": 0.04,
                     "min": 0,
                     "max": 0.1
                 },
                 "createColumnsMs": {
                     "n": 100,
-                    "mean": 0.04,
+                    "mean": 0.03,
                     "median": 0,
                     "p95": 0.1,
                     "stddev": 0.05,
                     "min": 0,
-                    "max": 0.1
+                    "max": 0.2
                 },
                 "createViewModelMs": {
                     "n": 100,
-                    "mean": 0.06,
-                    "median": 0.1,
+                    "mean": 0.05,
+                    "median": 0.05,
                     "p95": 0.1,
-                    "stddev": 0.06,
+                    "stddev": 0.05,
                     "min": 0,
                     "max": 0.2
                 },
                 "firstPaintMs": {
                     "n": 100,
-                    "mean": 27.89,
-                    "median": 27.1,
-                    "p95": 32.9,
-                    "stddev": 2.65,
-                    "min": 24.2,
-                    "max": 41.3
+                    "mean": 28.98,
+                    "median": 28.7,
+                    "p95": 32.3,
+                    "stddev": 1.78,
+                    "min": 25.8,
+                    "max": 34.5
                 },
                 "renderOnlyMs": {
                     "n": 100,
-                    "mean": 27.83,
-                    "median": 27.1,
-                    "p95": 32.8,
-                    "stddev": 2.66,
-                    "min": 24.2,
-                    "max": 41.2
+                    "mean": 28.92,
+                    "median": 28.7,
+                    "p95": 32.3,
+                    "stddev": 1.78,
+                    "min": 25.7,
+                    "max": 34.4
                 },
                 "domCells": {
                     "n": 100,
@@ -1636,21 +1636,21 @@
                 },
                 "rowsPerSec": {
                     "n": 100,
-                    "mean": 35998.66,
-                    "median": 36765,
-                    "p95": 39526,
-                    "stddev": 2976.82,
-                    "min": 24096,
-                    "max": 41152
+                    "mean": 34518.02,
+                    "median": 34722,
+                    "p95": 37175,
+                    "stddev": 2028.3,
+                    "min": 28902,
+                    "max": 38610
                 },
                 "cellsPerSec": {
                     "n": 100,
-                    "mean": 14399.46,
-                    "median": 14706,
-                    "p95": 15810,
-                    "stddev": 1190.7,
-                    "min": 9639,
-                    "max": 16461
+                    "mean": 13807.2,
+                    "median": 13889,
+                    "p95": 14870,
+                    "stddev": 811.41,
+                    "min": 11561,
+                    "max": 15444
                 },
                 "derivTotal": {
                     "n": 100,
@@ -1735,12 +1735,12 @@
                 },
                 "timeTotalMs": {
                     "n": 100,
-                    "mean": 9.84,
-                    "median": 9.7,
-                    "p95": 11.3,
-                    "stddev": 1.43,
-                    "min": 8.2,
-                    "max": 21.1
+                    "mean": 5.91,
+                    "median": 5.8,
+                    "p95": 6.6,
+                    "stddev": 0.51,
+                    "min": 5,
+                    "max": 8.6
                 },
                 "timeTableAttrs": {
                     "n": 100,
@@ -1771,19 +1771,19 @@
                 },
                 "timeInjectedRows": {
                     "n": 100,
-                    "mean": 9.84,
-                    "median": 9.7,
-                    "p95": 11.3,
-                    "stddev": 1.43,
-                    "min": 8.2,
-                    "max": 21.1
+                    "mean": 5.91,
+                    "median": 5.8,
+                    "p95": 6.6,
+                    "stddev": 0.51,
+                    "min": 5,
+                    "max": 8.6
                 },
                 "timeInjectedPageRows": {
                     "n": 100,
-                    "mean": 0.01,
+                    "mean": 0,
                     "median": 0,
                     "p95": 0,
-                    "stddev": 0.02,
+                    "stddev": 0.01,
                     "min": 0,
                     "max": 0.1
                 },
@@ -1798,21 +1798,21 @@
                 },
                 "interactionMs": {
                     "n": 100,
-                    "mean": 86.6,
-                    "median": 83.5,
-                    "p95": 98.7,
-                    "stddev": 19.76,
-                    "min": 74.2,
-                    "max": 273.1
+                    "mean": 82.71,
+                    "median": 82.4,
+                    "p95": 91,
+                    "stddev": 4.85,
+                    "min": 74.1,
+                    "max": 99.2
                 },
                 "interactionPaintMs": {
                     "n": 100,
-                    "mean": 86.53,
-                    "median": 83.4,
-                    "p95": 98.7,
-                    "stddev": 19.73,
-                    "min": 74.2,
-                    "max": 272.7
+                    "mean": 82.64,
+                    "median": 82.25,
+                    "p95": 90.9,
+                    "stddev": 4.85,
+                    "min": 74,
+                    "max": 99.1
                 },
                 "scenarioLongestTaskMs": {
                     "n": 100,
@@ -1843,7 +1843,7 @@
                 },
                 "rafP95Ms": {
                     "n": 100,
-                    "mean": 16.76,
+                    "mean": 16.77,
                     "median": 16.8,
                     "p95": 16.8,
                     "stddev": 0.05,
@@ -1892,12 +1892,12 @@
                 },
                 "createTableMs": {
                     "n": 100,
-                    "mean": 0.01,
+                    "mean": 0.02,
                     "median": 0,
                     "p95": 0.1,
-                    "stddev": 0.03,
+                    "stddev": 0.04,
                     "min": 0,
-                    "max": 0.1
+                    "max": 0.2
                 },
                 "createColumnsMs": {
                     "n": 100,
@@ -1910,7 +1910,7 @@
                 },
                 "createViewModelMs": {
                     "n": 100,
-                    "mean": 0.09,
+                    "mean": 0.07,
                     "median": 0.1,
                     "p95": 0.2,
                     "stddev": 0.06,
@@ -1920,20 +1920,20 @@
                 "firstPaintMs": {
                     "n": 100,
                     "mean": 22.06,
-                    "median": 21.6,
-                    "p95": 26.1,
-                    "stddev": 2.1,
-                    "min": 18.9,
-                    "max": 29.6
+                    "median": 21.85,
+                    "p95": 24.7,
+                    "stddev": 1.56,
+                    "min": 19.8,
+                    "max": 31
                 },
                 "renderOnlyMs": {
                     "n": 100,
-                    "mean": 21.97,
-                    "median": 21.5,
-                    "p95": 25.8,
-                    "stddev": 2.08,
-                    "min": 18.9,
-                    "max": 29.5
+                    "mean": 21.98,
+                    "median": 21.8,
+                    "p95": 24.4,
+                    "stddev": 1.56,
+                    "min": 19.7,
+                    "max": 31
                 },
                 "domCells": {
                     "n": 100,
@@ -1946,21 +1946,21 @@
                 },
                 "rowsPerSec": {
                     "n": 100,
-                    "mean": 49979.74,
-                    "median": 50691,
-                    "p95": 55556,
-                    "stddev": 4322.1,
-                    "min": 36913,
-                    "max": 58201
+                    "mean": 49844.83,
+                    "median": 50114,
+                    "p95": 54455,
+                    "stddev": 3217.71,
+                    "min": 35370,
+                    "max": 55556
                 },
                 "cellsPerSec": {
                     "n": 100,
-                    "mean": 15902.65,
-                    "median": 16129,
-                    "p95": 17677,
-                    "stddev": 1375.15,
-                    "min": 11745,
-                    "max": 18519
+                    "mean": 15859.72,
+                    "median": 15945.5,
+                    "p95": 17327,
+                    "stddev": 1023.8,
+                    "min": 11254,
+                    "max": 17677
                 },
                 "derivTotal": {
                     "n": 100,
@@ -2045,12 +2045,12 @@
                 },
                 "timeTotalMs": {
                     "n": 100,
-                    "mean": 1,
-                    "median": 1,
-                    "p95": 1.3,
-                    "stddev": 0.13,
-                    "min": 0.8,
-                    "max": 1.4
+                    "mean": 0.46,
+                    "median": 0.4,
+                    "p95": 0.6,
+                    "stddev": 0.1,
+                    "min": 0.3,
+                    "max": 0.9
                 },
                 "timeTableAttrs": {
                     "n": 100,
@@ -2081,21 +2081,21 @@
                 },
                 "timeInjectedRows": {
                     "n": 100,
-                    "mean": 1,
-                    "median": 1,
-                    "p95": 1.3,
-                    "stddev": 0.13,
-                    "min": 0.8,
-                    "max": 1.4
+                    "mean": 0.46,
+                    "median": 0.4,
+                    "p95": 0.6,
+                    "stddev": 0.1,
+                    "min": 0.3,
+                    "max": 0.9
                 },
                 "timeInjectedPageRows": {
                     "n": 100,
                     "mean": 0,
                     "median": 0,
                     "p95": 0,
-                    "stddev": 0.01,
+                    "stddev": 0,
                     "min": 0,
-                    "max": 0.1
+                    "max": 0
                 },
                 "timeHeaderRows": {
                     "n": 100,
@@ -2108,21 +2108,21 @@
                 },
                 "interactionMs": {
                     "n": 100,
-                    "mean": 19.18,
-                    "median": 18.7,
-                    "p95": 22.7,
-                    "stddev": 2.05,
-                    "min": 16.7,
-                    "max": 30.7
+                    "mean": 18.85,
+                    "median": 18.8,
+                    "p95": 20.7,
+                    "stddev": 1.04,
+                    "min": 16.8,
+                    "max": 22
                 },
                 "interactionPaintMs": {
                     "n": 100,
-                    "mean": 19.16,
+                    "mean": 18.84,
                     "median": 18.7,
-                    "p95": 22.7,
-                    "stddev": 2.06,
-                    "min": 16.6,
-                    "max": 30.7
+                    "p95": 20.7,
+                    "stddev": 1.04,
+                    "min": 16.8,
+                    "max": 21.9
                 },
                 "scenarioLongestTaskMs": {
                     "n": 100,
@@ -2154,7 +2154,7 @@
                 "rafP95Ms": {
                     "n": 100,
                     "mean": 16.75,
-                    "median": 16.8,
+                    "median": 16.7,
                     "p95": 16.8,
                     "stddev": 0.05,
                     "min": 16.7,
@@ -2202,16 +2202,16 @@
                 },
                 "createTableMs": {
                     "n": 100,
-                    "mean": 0.02,
+                    "mean": 0.03,
                     "median": 0,
                     "p95": 0.1,
-                    "stddev": 0.04,
+                    "stddev": 0.05,
                     "min": 0,
-                    "max": 0.2
+                    "max": 0.1
                 },
                 "createColumnsMs": {
                     "n": 100,
-                    "mean": 0.03,
+                    "mean": 0.04,
                     "median": 0,
                     "p95": 0.1,
                     "stddev": 0.05,
@@ -2220,30 +2220,30 @@
                 },
                 "createViewModelMs": {
                     "n": 100,
-                    "mean": 0.14,
+                    "mean": 0.12,
                     "median": 0.1,
                     "p95": 0.2,
                     "stddev": 0.06,
                     "min": 0,
-                    "max": 0.4
+                    "max": 0.3
                 },
                 "firstPaintMs": {
                     "n": 100,
-                    "mean": 42.94,
-                    "median": 42.2,
-                    "p95": 48,
-                    "stddev": 2.96,
-                    "min": 38.4,
-                    "max": 53.3
+                    "mean": 44.49,
+                    "median": 43.7,
+                    "p95": 49.1,
+                    "stddev": 4.82,
+                    "min": 39.5,
+                    "max": 83.3
                 },
                 "renderOnlyMs": {
                     "n": 100,
-                    "mean": 42.8,
-                    "median": 42,
-                    "p95": 47.9,
-                    "stddev": 2.95,
-                    "min": 38.3,
-                    "max": 53.2
+                    "mean": 44.36,
+                    "median": 43.55,
+                    "p95": 49,
+                    "stddev": 4.84,
+                    "min": 39.4,
+                    "max": 83.3
                 },
                 "domCells": {
                     "n": 100,
@@ -2256,21 +2256,21 @@
                 },
                 "rowsPerSec": {
                     "n": 100,
-                    "mean": 23288.62,
-                    "median": 23641,
-                    "p95": 25316,
-                    "stddev": 1509.53,
-                    "min": 18692,
-                    "max": 25974
+                    "mean": 22558.47,
+                    "median": 22779,
+                    "p95": 24510,
+                    "stddev": 1708.08,
+                    "min": 11990,
+                    "max": 25253
                 },
                 "cellsPerSec": {
                     "n": 100,
-                    "mean": 9315.49,
-                    "median": 9456,
-                    "p95": 10127,
-                    "stddev": 603.77,
-                    "min": 7477,
-                    "max": 10390
+                    "mean": 9023.49,
+                    "median": 9112,
+                    "p95": 9804,
+                    "stddev": 683.19,
+                    "min": 4796,
+                    "max": 10101
                 },
                 "derivTotal": {
                     "n": 100,
@@ -2355,19 +2355,19 @@
                 },
                 "timeTotalMs": {
                     "n": 100,
-                    "mean": 11.06,
-                    "median": 11.1,
-                    "p95": 12.7,
-                    "stddev": 1.09,
-                    "min": 6,
-                    "max": 13.8
+                    "mean": 4.97,
+                    "median": 4.9,
+                    "p95": 5.6,
+                    "stddev": 0.43,
+                    "min": 4.4,
+                    "max": 6.9
                 },
                 "timeTableAttrs": {
                     "n": 100,
                     "mean": 0,
                     "median": 0,
                     "p95": 0,
-                    "stddev": 0.01,
+                    "stddev": 0.02,
                     "min": 0,
                     "max": 0.1
                 },
@@ -2376,45 +2376,45 @@
                     "mean": 0,
                     "median": 0,
                     "p95": 0,
-                    "stddev": 0.01,
+                    "stddev": 0,
                     "min": 0,
-                    "max": 0.1
+                    "max": 0
                 },
                 "timeColumnedRows": {
                     "n": 100,
-                    "mean": 1.67,
-                    "median": 1.6,
-                    "p95": 2,
-                    "stddev": 0.18,
-                    "min": 1.4,
-                    "max": 2.2
+                    "mean": 1.74,
+                    "median": 1.7,
+                    "p95": 2.1,
+                    "stddev": 0.26,
+                    "min": 1.5,
+                    "max": 3.6
                 },
                 "timeInjectedRows": {
                     "n": 100,
-                    "mean": 9.26,
-                    "median": 9.2,
-                    "p95": 10.7,
-                    "stddev": 1.03,
-                    "min": 3.9,
-                    "max": 11.8
+                    "mean": 3.12,
+                    "median": 3.1,
+                    "p95": 3.6,
+                    "stddev": 0.3,
+                    "min": 2.8,
+                    "max": 4.9
                 },
                 "timeInjectedPageRows": {
                     "n": 100,
                     "mean": 0,
                     "median": 0,
                     "p95": 0,
-                    "stddev": 0.01,
+                    "stddev": 0,
                     "min": 0,
-                    "max": 0.1
+                    "max": 0
                 },
                 "timeHeaderRows": {
                     "n": 100,
-                    "mean": 0.12,
+                    "mean": 0.1,
                     "median": 0.1,
                     "p95": 0.2,
                     "stddev": 0.06,
                     "min": 0,
-                    "max": 0.3
+                    "max": 0.4
                 },
                 "interactionMs": {
                     "n": 100,

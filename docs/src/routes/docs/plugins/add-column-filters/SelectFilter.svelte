@@ -14,7 +14,7 @@
 
 <select bind:value={$filterValue} onclick={(e) => e.stopPropagation()} class="demo">
     <option value={undefined}>All</option>
-    {#each uniqueValues as value}
+    {#each uniqueValues as value (value)}
         <option {value}>{value}</option>
     {/each}
 </select>

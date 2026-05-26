@@ -1,3 +1,4 @@
+import type { BodyCell } from '$lib/bodyCells.js'
 import { BodyRow, DataBodyRow, getBodyRows, getColumnedBodyRows } from '$lib/bodyRows.js'
 import { FlatColumn, getFlatColumns, type Column } from '$lib/columns.js'
 import type { Table } from '$lib/createTable.js'
@@ -411,21 +412,49 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
 
     const pluginEntries = Object.entries(pluginInstances)
 
+    // Pre-filter to plugins that actually define each body hook.
+    // The previous shape walked every plugin per row and did two
+    // optional-chain lookups that returned `undefined` for the
+    // common sort + filter + paginate stack — rows-10k cold mount
+    // performed 60,000 such lookups per derivation pass, all hot
+    // for plugins that have nothing to contribute here. Plugin
+    // shape is static after createTable, so it's safe to resolve
+    // these once at view-model build time.
+    type TrHookFn = NonNullable<
+        NonNullable<ReturnType<Plugins[keyof Plugins]>['hooks']>['tbody.tr']
+    >
+    type TdHookFn = NonNullable<
+        NonNullable<ReturnType<Plugins[keyof Plugins]>['hooks']>['tbody.tr.td']
+    >
+    const trHookEntries: [string, TrHookFn][] = []
+    const tdHookEntries: [string, TdHookFn][] = []
+    for (const [name, instance] of pluginEntries) {
+        const trHook = instance.hooks?.['tbody.tr']
+        if (trHook !== undefined) trHookEntries.push([name, trHook as TrHookFn])
+        const tdHook = instance.hooks?.['tbody.tr.td']
+        if (tdHook !== undefined) tdHookEntries.push([name, tdHook as TdHookFn])
+    }
+
+    // Hoisted out of the per-row loop so we don't allocate a fresh
+    // closure on every iteration. For rows-10k that's 10,000 fewer
+    // closure allocations per derivation pass.
+    const injectCellState = (cell: BodyCell<Item, Plugins>) => cell.injectState(tableState)
+
     const injectedRows = derived(rows, ($rows) => {
         const _t0 = performance.now()
         derivationCalls.injectedRows++
         $rows.forEach((row) => {
             row.injectState(tableState)
-            row.cells.forEach((cell) => cell.injectState(tableState))
-            for (const [pluginName, pluginInstance] of pluginEntries) {
-                const trHook = pluginInstance.hooks?.['tbody.tr']
-                if (trHook !== undefined) {
-                    row.applyHook(pluginName, trHook(row))
-                }
-                const tdHook = pluginInstance.hooks?.['tbody.tr.td']
-                if (tdHook !== undefined) {
-                    row.cells.forEach((cell) => cell.applyHook(pluginName, tdHook(cell)))
-                }
+            row.cells.forEach(injectCellState)
+            for (const [pluginName, trHook] of trHookEntries) {
+                row.applyHook(pluginName, trHook(row))
+            }
+            if (tdHookEntries.length > 0) {
+                row.cells.forEach((cell) => {
+                    for (const [pluginName, tdHook] of tdHookEntries) {
+                        cell.applyHook(pluginName, tdHook(cell))
+                    }
+                })
             }
         })
         _rows.set($rows)

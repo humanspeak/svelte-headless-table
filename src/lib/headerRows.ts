@@ -282,7 +282,9 @@ export const getMergedRow = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     }
     const mergedCells: HeaderCell<Item, Plugins>[] = []
     let startIdx = 0
-    let endIdx = 1
+    // endIdx is initialized inside the merge branch (line ~293) before
+    // it's read; declared here only so the inner-while loop can see it.
+    let endIdx: number
     while (startIdx < cells.length) {
         const cell = cells[startIdx].clone()
         if (!cell.isGroup()) {
