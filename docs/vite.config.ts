@@ -3,12 +3,14 @@ import {
     docMirrorsPlugin,
     llmsFullPlugin,
     llmsPlugin,
-    sitemapManifestPlugin
+    sitemapManifestPlugin,
+    socialCardsPlugin
 } from '@humanspeak/docs-kit/vite'
 import { sveltekit } from '@sveltejs/kit/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vitest/config'
 import rootPkg from '../package.json'
+import { competitors } from './src/lib/compare-data'
 import { docsConfig } from './src/lib/docs-config'
 
 export default defineConfig({
@@ -25,8 +27,20 @@ export default defineConfig({
     //     /llms-full.txt (concatenated dump) from the doc mirrors above.
     //     Order matters: both must register AFTER `docMirrorsPlugin` so
     //     their buildStart reads freshly-written `.md` files.
+    //   * `socialCardsPlugin` renders the OG/Twitter PNGs on `buildStart`
+    //     (replaces the old standalone `scripts/generate-social-cards.ts`),
+    //     including a per-competitor card for every `/compare/<slug>` page.
     plugins: [
-        sitemapManifestPlugin({ blogDir: false }),
+        // `extraPages` injects the dynamic `/compare/<slug>` routes — which
+        // `[slug]` globbing can't see — so the manifest carries concrete
+        // compare URLs (and `lastmod` keyed off `compare-data.ts`).
+        sitemapManifestPlugin({
+            blogDir: false,
+            extraPages: competitors.map((competitor) => ({
+                route: `/compare/${competitor.slug}`,
+                source: 'src/lib/compare-data.ts'
+            }))
+        }),
         demoManifestPlugin(),
         docMirrorsPlugin({ siteUrl: docsConfig.url }),
         // `prepend` inlines a hand-curated markdown file between the
@@ -45,6 +59,23 @@ export default defineConfig({
             siteUrl: docsConfig.url,
             pkgName: rootPkg.name,
             prepend: 'llms-prepend.md'
+        }),
+        socialCardsPlugin({
+            npmPackage: docsConfig.npmPackage,
+            defaultTitle: docsConfig.name,
+            defaultDescription: docsConfig.description,
+            defaultFeatures: docsConfig.defaultFeatures,
+            extraPages: competitors.map((competitor) => ({
+                ogSlug: `compare-${competitor.slug}`,
+                ogTitle: `vs ${competitor.name}`,
+                ogTagline: competitor.tagline,
+                ogFeatures: [
+                    'Feature Comparison',
+                    'Pros & Cons',
+                    'Migration Guide',
+                    'Honest Verdict'
+                ]
+            }))
         }),
         tailwindcss(),
         sveltekit()
