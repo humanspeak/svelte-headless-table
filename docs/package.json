@@ -23,7 +23,7 @@
         "@fontsource-variable/jetbrains-mono": "^5.2.8",
         "@humanspeak/docs-kit": "github:humanspeak/docs-kit#2026.5.46",
         "@humanspeak/svelte-headless-table": "workspace:*",
-        "@humanspeak/svelte-markdown": "^1.5.2",
+        "@humanspeak/svelte-markdown": "^1.5.3",
         "@humanspeak/svelte-motion": "^0.5.1",
         "github-slugger": "^2.0.0"
     },
