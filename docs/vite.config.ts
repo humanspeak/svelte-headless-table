@@ -41,7 +41,7 @@ export default defineConfig({
                 source: 'src/lib/compare-data.ts'
             }))
         }),
-        demoManifestPlugin(),
+        demoManifestPlugin({ split: true }),
         docMirrorsPlugin({ siteUrl: docsConfig.url }),
         // `prepend` inlines a hand-curated markdown file between the
         // description blockquote and the auto-generated link table —

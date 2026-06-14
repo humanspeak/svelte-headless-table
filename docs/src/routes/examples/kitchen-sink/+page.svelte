@@ -5,11 +5,10 @@
         formatSheetLabel,
         getBreadcrumbContext,
         getSeoContext,
-        type DemoManifestEntry,
         type ExampleSection
     } from '@humanspeak/docs-kit'
     import { Boxes, Layers, Puzzle } from '@lucide/svelte'
-    import demoManifest from '$lib/demo-manifest.json'
+    import { demoCodeSample } from '$lib/demo-loaders'
     import KitchenSinkDefault from '$lib/examples/kitchen-sink/demos/Default.svelte'
 
     const breadcrumbs = getBreadcrumbContext()
@@ -28,12 +27,11 @@
         seo.ogTagline = 'Every plugin, one table.'
         seo.ogFeatures = ['Sorting', 'Filtering', 'Selection', 'Custom Cells']
         seo.ogSlug = 'examples-kitchen-sink'
+        seo.h1 = { title: seo.title.split('|')[0].trim(), mode: 'sr-only' }
     }
 
     const SOURCE_URL =
         'https://github.com/humanspeak/svelte-headless-table/blob/main/docs/src/lib/examples/'
-
-    const manifest = demoManifest as Record<string, DemoManifestEntry>
 
     const sections: ExampleSection[] = [
         {
@@ -84,11 +82,11 @@
 {#snippet defaultCode()}
     <CodeReferenceV2
         samples={[
-            {
-                id: 'kitchen-sink-default',
-                label: 'Default.svelte',
-                ...manifest['kitchen-sink/demos/Default.svelte']
-            }
+            demoCodeSample(
+                'kitchen-sink/demos/Default.svelte',
+                'kitchen-sink-default',
+                'Default.svelte'
+            )
         ]}
         columns={1}
     />
