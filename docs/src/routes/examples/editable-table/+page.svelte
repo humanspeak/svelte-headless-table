@@ -5,11 +5,10 @@
         formatSheetLabel,
         getBreadcrumbContext,
         getSeoContext,
-        type DemoManifestEntry,
         type ExampleSection
     } from '@humanspeak/docs-kit'
     import { Keyboard, Pencil, Workflow } from '@lucide/svelte'
-    import demoManifest from '$lib/demo-manifest.json'
+    import { demoCodeSample } from '$lib/demo-loaders'
     import EditableTableDefault from '$lib/examples/editable-table/demos/Default.svelte'
 
     const breadcrumbs = getBreadcrumbContext()
@@ -28,12 +27,11 @@
         seo.ogTagline = 'Click a cell, edit, commit.'
         seo.ogFeatures = ['Inline Edit', 'Custom Renderers', 'Store Round-Trip', 'Keyboard']
         seo.ogSlug = 'examples-editable-table'
+        seo.h1 = { title: seo.title.split('|')[0].trim(), mode: 'sr-only' }
     }
 
     const SOURCE_URL =
         'https://github.com/humanspeak/svelte-headless-table/blob/main/docs/src/lib/examples/'
-
-    const manifest = demoManifest as Record<string, DemoManifestEntry>
 
     const sections: ExampleSection[] = [
         {
@@ -82,16 +80,16 @@
 {#snippet defaultCode()}
     <CodeReferenceV2
         samples={[
-            {
-                id: 'editable-table-default',
-                label: 'Default.svelte',
-                ...manifest['editable-table/demos/Default.svelte']
-            },
-            {
-                id: 'editable-table-cell',
-                label: 'EditableCell.svelte',
-                ...manifest['editable-table/demos/EditableCell.svelte']
-            }
+            demoCodeSample(
+                'editable-table/demos/Default.svelte',
+                'editable-table-default',
+                'Default.svelte'
+            ),
+            demoCodeSample(
+                'editable-table/demos/EditableCell.svelte',
+                'editable-table-cell',
+                'EditableCell.svelte'
+            )
         ]}
         columns={1}
     />

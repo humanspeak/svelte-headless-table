@@ -25,6 +25,7 @@
         seo.ogTagline = 'Live Svelte Headless Table demos'
         seo.ogFeatures = ['Kitchen Sink', 'Virtual Scroll', 'Editable Cells', 'Plugin Composition']
         seo.ogSlug = 'examples'
+        seo.h1 = undefined
     }
 
     const examples = $derived.by(() => {

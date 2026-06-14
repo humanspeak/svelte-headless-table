@@ -40,6 +40,7 @@
         seoContext.ogTagline = 'Headless tables for Svelte 5.'
         seoContext.ogFeatures = ['Svelte 5 Runes', 'Headless', 'Plugin Composition', 'TypeScript']
         seoContext.ogSlug = 'home'
+        seoContext.h1 = undefined
     }
 
     interface StatItem {

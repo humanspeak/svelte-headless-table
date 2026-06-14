@@ -5,11 +5,10 @@
         formatSheetLabel,
         getBreadcrumbContext,
         getSeoContext,
-        type DemoManifestEntry,
         type ExampleSection
     } from '@humanspeak/docs-kit'
     import { Database, Gauge, Layers } from '@lucide/svelte'
-    import demoManifest from '$lib/demo-manifest.json'
+    import { demoCodeSample } from '$lib/demo-loaders'
     import VirtualScrollDefault from '$lib/examples/virtual-scroll/demos/Default.svelte'
 
     const breadcrumbs = getBreadcrumbContext()
@@ -28,12 +27,11 @@
         seo.ogTagline = 'Thousands of rows, a few mounted at a time.'
         seo.ogFeatures = ['Windowed Rendering', 'Sticky Headers', 'Sorting', 'Pagination']
         seo.ogSlug = 'examples-virtual-scroll'
+        seo.h1 = { title: seo.title.split('|')[0].trim(), mode: 'sr-only' }
     }
 
     const SOURCE_URL =
         'https://github.com/humanspeak/svelte-headless-table/blob/main/docs/src/lib/examples/'
-
-    const manifest = demoManifest as Record<string, DemoManifestEntry>
 
     const sections: ExampleSection[] = [
         {
@@ -83,11 +81,11 @@
 {#snippet defaultCode()}
     <CodeReferenceV2
         samples={[
-            {
-                id: 'virtual-scroll-default',
-                label: 'Default.svelte',
-                ...manifest['virtual-scroll/demos/Default.svelte']
-            }
+            demoCodeSample(
+                'virtual-scroll/demos/Default.svelte',
+                'virtual-scroll-default',
+                'Default.svelte'
+            )
         ]}
         columns={1}
     />
