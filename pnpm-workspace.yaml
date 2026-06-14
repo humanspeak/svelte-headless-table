@@ -2,8 +2,11 @@ packages:
     - .
     - docs
 
-onlyBuiltDependencies:
-    - '@humanspeak/docs-kit'
 minimumReleaseAge: 2880
 minimumReleaseAgeExclude:
     - '@humanspeak/*'
+allowBuilds:
+    '@humanspeak/docs-kit': true
+    esbuild: true
+    sharp: true
+    workerd: true
