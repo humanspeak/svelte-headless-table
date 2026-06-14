@@ -49,7 +49,6 @@ lint:
               - svelte
               - javascript
     enabled:
-        - pinact@4.1.0
         - grype@0.114.0
         - sort-package-json@4.0.0
         - actionlint@1.7.12
