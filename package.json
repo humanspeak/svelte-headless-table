@@ -97,7 +97,7 @@
         "@faker-js/faker": "^10.4.0",
         "@playwright/test": "^1.60.0",
         "@sveltejs/adapter-auto": "^7.0.1",
-        "@sveltejs/kit": "^2.65.0",
+        "@sveltejs/kit": "^2.66.0",
         "@sveltejs/package": "^2.5.8",
         "@sveltejs/vite-plugin-svelte": "^7.1.2",
         "@testing-library/jest-dom": "^6.9.1",
