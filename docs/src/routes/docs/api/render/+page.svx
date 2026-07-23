@@ -14,7 +14,7 @@ sidebar_title: Render
       seo.description = 'Use the Render component to display Svelte components configured as render configs within your table cells, headers, and other customizable table elements'
       seo.ogTitle = 'Render Component'
       seo.ogTagline = 'Display Svelte components configured as render configs.'
-      seo.ogFeatures = ['<Render />', 'createRender', 'Custom Cells', 'Headers']
+      seo.ogFeatures = ['Render', 'createRender', 'Custom Cells', 'Headers']
       seo.ogSlug = 'api-render'
   }
 </script>

@@ -17,7 +17,7 @@ sidebar_title: Subscribe
       seo.description = 'Subscribe to non top-level Svelte stores within your template using the Subscribe component for reactive access to nested store values and plugin state'
       seo.ogTitle = 'Subscribe Component'
       seo.ogTagline = 'Subscribe to nested stores within your template.'
-      seo.ogFeatures = ['<Subscribe />', 'Nested Stores', 'Reactive', 'Plugin State']
+      seo.ogFeatures = ['Subscribe', 'Nested Stores', 'Reactive', 'Plugin State']
       seo.ogSlug = 'api-subscribe'
   }
 </script>
