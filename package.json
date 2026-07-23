@@ -132,7 +132,7 @@
     "peerDependencies": {
         "svelte": "^5.30.0"
     },
-    "packageManager": "pnpm@11.5.1",
+    "packageManager": "pnpm@11.9.0",
     "volta": {
         "node": "24.15.0"
     }
