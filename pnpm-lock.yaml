@@ -140,7 +140,7 @@ importers:
         version: 5.2.8
       '@humanspeak/docs-kit':
         specifier: github:humanspeak/docs-kit#2026.7.6
-        version: https://codeload.github.com/humanspeak/docs-kit/tar.gz/a474a0725babdda6f267951a578d14289037b0cc(@humanspeak/svelte-markdown@1.6.0(svelte@5.56.3(@typescript-eslint/types@8.61.0)))(@humanspeak/svelte-motion@0.6.6(svelte@5.56.3(@typescript-eslint/types@8.61.0)))(@internationalized/date@3.12.2)(@lucide/svelte@1.18.0(svelte@5.56.3(@typescript-eslint/types@8.61.0)))(@sveltejs/kit@2.65.0(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.56.3(@typescript-eslint/types@8.61.0))(vite@8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)))(svelte@5.56.3(@typescript-eslint/types@8.61.0))(typescript@6.0.3)(vite@8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)))(mode-watcher@1.1.0(svelte@5.56.3(@typescript-eslint/types@8.61.0)))(shiki@4.2.0)(svelte@5.56.3(@typescript-eslint/types@8.61.0))(zod@4.4.3)
+        version: https://codeload.github.com/humanspeak/docs-kit/tar.gz/a474a0725babdda6f267951a578d14289037b0cc(@humanspeak/svelte-markdown@1.6.0(svelte@5.56.3(@typescript-eslint/types@8.61.0)))(@humanspeak/svelte-motion@0.6.6(svelte@5.56.3(@typescript-eslint/types@8.61.0)))(@internationalized/date@3.12.2)(@lucide/svelte@1.28.0(svelte@5.56.3(@typescript-eslint/types@8.61.0)))(@sveltejs/kit@2.65.0(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.56.3(@typescript-eslint/types@8.61.0))(vite@8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)))(svelte@5.56.3(@typescript-eslint/types@8.61.0))(typescript@6.0.3)(vite@8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)))(mode-watcher@1.1.0(svelte@5.56.3(@typescript-eslint/types@8.61.0)))(shiki@4.2.0)(svelte@5.56.3(@typescript-eslint/types@8.61.0))(zod@4.4.3)
       '@humanspeak/svelte-headless-table':
         specifier: workspace:*
         version: link:..
@@ -170,8 +170,8 @@ importers:
         specifier: ^3.12.2
         version: 3.12.2
       '@lucide/svelte':
-        specifier: ^1.18.0
-        version: 1.18.0(svelte@5.56.3(@typescript-eslint/types@8.61.0))
+        specifier: ^1.28.0
+        version: 1.28.0(svelte@5.56.3(@typescript-eslint/types@8.61.0))
       '@sveltejs/adapter-auto':
         specifier: ^7.0.1
         version: 7.0.1(@sveltejs/kit@2.65.0(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.56.3(@typescript-eslint/types@8.61.0))(vite@8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)))(svelte@5.56.3(@typescript-eslint/types@8.61.0))(typescript@6.0.3)(vite@8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)))
@@ -1060,8 +1060,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
-  '@lucide/svelte@1.18.0':
-    resolution: {integrity: sha512-S1cjiJflMLIirDZtZ8ou2Vy0xMrOqEQzYzDo29AUxoJiOjUfMHUeClvprJsGUEr60RYDJzEgkjSkWm1nlN9iyQ==}
+  '@lucide/svelte@1.28.0':
+    resolution: {integrity: sha512-C1Ge84KW2z4q44/WDIEo/2KC2jby5u6mSlta7q+p6g7u0ld8sC/w1fMBiSswF+4bxAl9jlzzaVTpp79qqkiy5g==}
     peerDependencies:
       svelte: ^5
 
@@ -2691,8 +2691,8 @@ packages:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
 
-  libphonenumber-js@1.13.6:
-    resolution: {integrity: sha512-NdB6O6QvlGMCoG003m0YIKG2+Xw7DjmCZhmc1RH+K6HncADUbRf8TZeLegxBBN1VFyPHcNpPTKpIhYLXzJVy1Q==}
+  libphonenumber-js@1.13.10:
+    resolution: {integrity: sha512-xJxrdqvbl2rtn2MaUJrUejz8J7/uZNC0V77oks2LxYrO/+ZtVpRmz+fEQMuu6VusnEB1fmpByiLS1WXecOnAnw==}
 
   lightningcss-android-arm64@1.32.0:
     resolution: {integrity: sha512-YK7/ClTt4kAK0vo6w3X+Pnm0D2cf2vPHbhOXdoNti1Ga0al1P4TBZhwjATvjNwLEBCnKvjJc2jQgHXH0NEwlAg==}
@@ -2896,8 +2896,8 @@ packages:
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
-  nanoid@3.3.12:
-    resolution: {integrity: sha512-ZB9RH/39qpq5Vu6Y+NmUaFhQR6pp+M2Xt76XBnEwDaGcVAqhlvxrl3B2bKS5D3NH3QR76v3aSrKaF/Kiy7lEtQ==}
+  nanoid@3.3.16:
+    resolution: {integrity: sha512-bzlKTyNJ7+LdGIIwy8ijFpIqEQIvafahV7eYykJ8Cvh42EdJeODoJ6gUJXpQJvej1BddH8OqTXZNE/KfbWAu8Q==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
@@ -4269,11 +4269,11 @@ snapshots:
 
   '@humanfs/types@0.15.0': {}
 
-  '@humanspeak/docs-kit@https://codeload.github.com/humanspeak/docs-kit/tar.gz/a474a0725babdda6f267951a578d14289037b0cc(@humanspeak/svelte-markdown@1.6.0(svelte@5.56.3(@typescript-eslint/types@8.61.0)))(@humanspeak/svelte-motion@0.6.6(svelte@5.56.3(@typescript-eslint/types@8.61.0)))(@internationalized/date@3.12.2)(@lucide/svelte@1.18.0(svelte@5.56.3(@typescript-eslint/types@8.61.0)))(@sveltejs/kit@2.65.0(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.56.3(@typescript-eslint/types@8.61.0))(vite@8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)))(svelte@5.56.3(@typescript-eslint/types@8.61.0))(typescript@6.0.3)(vite@8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)))(mode-watcher@1.1.0(svelte@5.56.3(@typescript-eslint/types@8.61.0)))(shiki@4.2.0)(svelte@5.56.3(@typescript-eslint/types@8.61.0))(zod@4.4.3)':
+  '@humanspeak/docs-kit@https://codeload.github.com/humanspeak/docs-kit/tar.gz/a474a0725babdda6f267951a578d14289037b0cc(@humanspeak/svelte-markdown@1.6.0(svelte@5.56.3(@typescript-eslint/types@8.61.0)))(@humanspeak/svelte-motion@0.6.6(svelte@5.56.3(@typescript-eslint/types@8.61.0)))(@internationalized/date@3.12.2)(@lucide/svelte@1.28.0(svelte@5.56.3(@typescript-eslint/types@8.61.0)))(@sveltejs/kit@2.65.0(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.56.3(@typescript-eslint/types@8.61.0))(vite@8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)))(svelte@5.56.3(@typescript-eslint/types@8.61.0))(typescript@6.0.3)(vite@8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)))(mode-watcher@1.1.0(svelte@5.56.3(@typescript-eslint/types@8.61.0)))(shiki@4.2.0)(svelte@5.56.3(@typescript-eslint/types@8.61.0))(zod@4.4.3)':
     dependencies:
       '@humanspeak/svelte-motion': 0.6.6(svelte@5.56.3(@typescript-eslint/types@8.61.0))
       '@humanspeak/svelte-satori-fix': 0.0.6(svelte@5.56.3(@typescript-eslint/types@8.61.0))
-      '@lucide/svelte': 1.18.0(svelte@5.56.3(@typescript-eslint/types@8.61.0))
+      '@lucide/svelte': 1.28.0(svelte@5.56.3(@typescript-eslint/types@8.61.0))
       '@resvg/resvg-js': 2.6.2
       '@sveltejs/kit': 2.65.0(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.56.3(@typescript-eslint/types@8.61.0))(vite@8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)))(svelte@5.56.3(@typescript-eslint/types@8.61.0))(typescript@6.0.3)(vite@8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4))
       bits-ui: 2.18.1(@internationalized/date@3.12.2)(@sveltejs/kit@2.65.0(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.56.3(@typescript-eslint/types@8.61.0))(vite@8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)))(svelte@5.56.3(@typescript-eslint/types@8.61.0))(typescript@6.0.3)(vite@8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)))(svelte@5.56.3(@typescript-eslint/types@8.61.0))
@@ -4454,7 +4454,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@lucide/svelte@1.18.0(svelte@5.56.3(@typescript-eslint/types@8.61.0))':
+  '@lucide/svelte@1.28.0(svelte@5.56.3(@typescript-eslint/types@8.61.0))':
     dependencies:
       svelte: 5.56.3(@typescript-eslint/types@8.61.0)
 
@@ -5302,7 +5302,7 @@ snapshots:
   class-validator@0.14.4:
     dependencies:
       '@types/validator': 13.15.10
-      libphonenumber-js: 1.13.6
+      libphonenumber-js: 1.13.10
       validator: 13.15.35
     optional: true
 
@@ -6185,7 +6185,7 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
-  libphonenumber-js@1.13.6:
+  libphonenumber-js@1.13.10:
     optional: true
 
   lightningcss-android-arm64@1.32.0:
@@ -6367,7 +6367,7 @@ snapshots:
 
   ms@2.1.3: {}
 
-  nanoid@3.3.12: {}
+  nanoid@3.3.16: {}
 
   natural-compare@1.4.0: {}
 
@@ -6540,7 +6540,7 @@ snapshots:
 
   postcss@8.5.15:
     dependencies:
-      nanoid: 3.3.12
+      nanoid: 3.3.16
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
