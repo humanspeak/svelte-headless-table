@@ -27,7 +27,7 @@
         seo.ogTagline = 'Every plugin, one table.'
         seo.ogFeatures = ['Sorting', 'Filtering', 'Selection', 'Custom Cells']
         seo.ogSlug = 'examples-kitchen-sink'
-        seo.h1 = { title: seo.title.split('|')[0].trim(), mode: 'sr-only' }
+        seo.h1 = { title: 'Kitchen Sink', mode: 'sr-only' }
     }
 
     const SOURCE_URL =

@@ -1,6 +1,8 @@
 import {
     demoManifestPlugin,
     docMirrorsPlugin,
+    exampleMirrorsPlugin,
+    indexNowPlugin,
     llmsFullPlugin,
     llmsPlugin,
     sitemapManifestPlugin,
@@ -9,9 +11,9 @@ import {
 import { sveltekit } from '@sveltejs/kit/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vitest/config'
-import rootPkg from '../package.json'
-import { competitors } from './src/lib/compare-data'
-import { docsConfig } from './src/lib/docs-config'
+import rootPkg from '../package.json' with { type: 'json' }
+import { competitors } from './src/lib/compare-data.js'
+import { docsConfig } from './src/lib/docs-config.js'
 
 export default defineConfig({
     // docs-kit Vite plugins, all running on `buildStart` and watching via
@@ -31,6 +33,13 @@ export default defineConfig({
     //     (replaces the old standalone `scripts/generate-social-cards.ts`),
     //     including a per-competitor card for every `/compare/<slug>` page.
     plugins: [
+        {
+            name: 'docs-watcher-listener-budget',
+            configureServer(server) {
+                // Each docs-kit plugin watches its own inputs through Vite's shared watcher.
+                server.watcher.setMaxListeners(20)
+            }
+        },
         // `extraPages` injects the dynamic `/compare/<slug>` routes — which
         // `[slug]` globbing can't see — so the manifest carries concrete
         // compare URLs (and `lastmod` keyed off `compare-data.ts`).
@@ -43,6 +52,16 @@ export default defineConfig({
         }),
         demoManifestPlugin({ split: true }),
         docMirrorsPlugin({ siteUrl: docsConfig.url }),
+        // `exampleMirrorsPlugin` is the /examples counterpart to
+        // `docMirrorsPlugin`: it mirrors every `/examples/<slug>` page (and the
+        // demo source each page references via `demoCodeSample(...)`) into
+        // `static/examples/<slug>.md` plus a `static/examples.md` index, so
+        // the live demos are citable by LLMs. Registered before the llms
+        // plugins for the same freshly-written-`.md` ordering reason.
+        exampleMirrorsPlugin({
+            siteUrl: docsConfig.url,
+            sourceBaseUrl: `https://github.com/${docsConfig.repo}/blob/main/docs`
+        }),
         // `prepend` inlines a hand-curated markdown file between the
         // description blockquote and the auto-generated link table —
         // the place where install snippets, predecessor disambiguation,
@@ -76,6 +95,16 @@ export default defineConfig({
                     'Honest Verdict'
                 ]
             }))
+        }),
+        // Submits every sitemap-manifest URL to IndexNow after a successful
+        // build — but only when built with `--mode indexnow` (the `deploy`
+        // script), so plain `vite build` / CI test builds never ping search
+        // engines. The key must match the public `static/<key>.txt` file.
+        indexNowPlugin({
+            siteUrl: docsConfig.url,
+            key: '8db10ffc-731e-46a3-b48d-1aec3cc48dbe',
+            productionMode: 'indexnow',
+            failOnError: false
         }),
         tailwindcss(),
         sveltekit()

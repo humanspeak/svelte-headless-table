@@ -8,7 +8,7 @@
         type ExampleSection
     } from '@humanspeak/docs-kit'
     import { Keyboard, Pencil, Workflow } from '@lucide/svelte'
-    import { demoCodeSample } from '$lib/demo-loaders'
+    import { demoCodeSamples } from '$lib/demo-loaders'
     import EditableTableDefault from '$lib/examples/editable-table/demos/Default.svelte'
 
     const breadcrumbs = getBreadcrumbContext()
@@ -27,7 +27,7 @@
         seo.ogTagline = 'Click a cell, edit, commit.'
         seo.ogFeatures = ['Inline Edit', 'Custom Renderers', 'Store Round-Trip', 'Keyboard']
         seo.ogSlug = 'examples-editable-table'
-        seo.h1 = { title: seo.title.split('|')[0].trim(), mode: 'sr-only' }
+        seo.h1 = { title: 'Editable Table', mode: 'sr-only' }
     }
 
     const SOURCE_URL =
@@ -79,18 +79,11 @@
 {/snippet}
 {#snippet defaultCode()}
     <CodeReferenceV2
-        samples={[
-            demoCodeSample(
-                'editable-table/demos/Default.svelte',
-                'editable-table-default',
-                'Default.svelte'
-            ),
-            demoCodeSample(
-                'editable-table/demos/EditableCell.svelte',
-                'editable-table-cell',
-                'EditableCell.svelte'
-            )
-        ]}
+        samples={demoCodeSamples(
+            'editable-table/demos/Default.svelte',
+            'editable-table-default',
+            'Default.svelte'
+        )}
         columns={1}
     />
 {/snippet}

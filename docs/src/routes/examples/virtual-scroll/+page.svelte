@@ -27,7 +27,7 @@
         seo.ogTagline = 'Thousands of rows, a few mounted at a time.'
         seo.ogFeatures = ['Windowed Rendering', 'Sticky Headers', 'Sorting', 'Pagination']
         seo.ogSlug = 'examples-virtual-scroll'
-        seo.h1 = { title: seo.title.split('|')[0].trim(), mode: 'sr-only' }
+        seo.h1 = { title: 'Virtual Scroll', mode: 'sr-only' }
     }
 
     const SOURCE_URL =
