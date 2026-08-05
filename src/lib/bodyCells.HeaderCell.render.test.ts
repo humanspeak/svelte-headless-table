@@ -44,7 +44,6 @@ it('renders dynamic label with state', () => {
         colstart: 1
     })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     actual.injectState(state as any)
 
     expect(actual.render()).toBe('0 columns')

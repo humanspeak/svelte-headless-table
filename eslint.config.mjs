@@ -26,7 +26,6 @@ export default [
             '**/yarn.lock',
             'src/routes/poc',
             '**/dist',
-            '**/*.test.ts',
             '**/*.d.ts',
             'docs-old/**',
             'docs-new/**',
@@ -45,6 +44,8 @@ export default [
                 ...globals.node
             },
             parserOptions: {
+                extraFileExtensions: ['.svelte'],
+                projectService: true,
                 tsconfigRootDir: import.meta.dirname
             }
         },
@@ -95,6 +96,28 @@ export default [
                     ignoreRestSiblings: true
                 }
             ]
+        }
+    },
+    {
+        files: ['src/**/*.ts', 'src/**/*.svelte', 'tests/**/*.ts'],
+        rules: {
+            '@typescript-eslint/no-floating-promises': 'error',
+            '@typescript-eslint/no-misused-promises': 'error'
+        }
+    },
+    {
+        files: ['**/*.test.ts'],
+        rules: {
+            '@typescript-eslint/no-explicit-any': 'off',
+            '@typescript-eslint/no-non-null-assertion': 'off'
+        }
+    },
+    {
+        files: ['eslint.config.mjs', 'playwright.config.ts', 'svelte.config.js', 'scripts/*.mjs'],
+        languageOptions: {
+            parserOptions: {
+                projectService: false
+            }
         }
     },
     {

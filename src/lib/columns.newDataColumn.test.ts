@@ -31,9 +31,7 @@ it('falls back on the string accessor as id', () => {
 it('throws if id is undefined without string accessor or header', () => {
     expect(() => {
         new DataColumn<User>({
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             accessor: (u: any) => u.firstName
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any)
     }).toThrowError('A column id, string accessor, or header is required')
 })

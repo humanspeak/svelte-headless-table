@@ -167,10 +167,13 @@ export const addVirtualScroll =
 
                 const result = onLoadMore()
                 if (result instanceof Promise) {
-                    result.finally(() => {
+                    const resetLoadingState = () => {
                         loadMorePending = false
                         isLoading.set(false)
-                    })
+                    }
+
+                    // The callback promise only gates loading state; handle either outcome locally.
+                    void result.then(resetLoadingState, resetLoadingState)
                 } else {
                     loadMorePending = false
                     isLoading.set(false)
