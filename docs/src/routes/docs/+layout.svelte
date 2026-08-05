@@ -73,8 +73,9 @@
 >
     {@render children()}
     <!-- `not-prose` keeps the typography plugin's link/heading styles off the
-         pager; PagerV2 brings its own brutalist-token styling. -->
-    <div class="not-prose">
+         pager; `brut-wrap` supplies the `--brut-*` tokens PagerV2 styles with
+         (DocsLayoutV2, unlike the example/compare shells, has no brut surface). -->
+    <div class="not-prose brut-wrap">
         <PagerV2 items={pagerItems} counterLabel="doc" ariaLabel="Docs pagination" />
     </div>
 </DocsLayoutV2>
