@@ -25,6 +25,14 @@ lint:
         - linters: [osv-scanner]
           paths:
               - '**/pnpm-lock.yaml'
+        # docs-kit-generated LLM mirrors of site pages; headings mirror the
+        # site's brutalist style (trailing periods etc.), not authored prose.
+        - linters: [markdownlint]
+          paths:
+              - docs/static/docs/**
+              - docs/static/examples/**
+              - docs/static/examples.md
+              - docs/static/llms*.txt
         - linters: [eslint, prettier]
           paths:
               - '**/worker-configuration.d.ts'
