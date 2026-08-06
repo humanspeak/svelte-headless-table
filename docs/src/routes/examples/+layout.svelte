@@ -1,5 +1,10 @@
 <script lang="ts">
-    import { ExampleLayoutV2, PagerV2, enhanceCodeBlocks, type PagerItem } from '@humanspeak/docs-kit'
+    import {
+        ExampleLayoutV2,
+        PagerV2,
+        enhanceCodeBlocks,
+        type PagerItem
+    } from '@humanspeak/docs-kit'
     import favicon from '$lib/assets/logo.svg'
     import { docsConfig } from '$lib/docs-config'
     import { headerNav } from '$lib/docsNav'

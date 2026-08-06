@@ -5,16 +5,20 @@ import type { DemoManifestEntry } from '@humanspeak/docs-kit'
 export type DemoCodeLoader = () => Promise<{ default: DemoManifestEntry }>
 
 export const demoCodeLoaders = {
-    'editable-table/demos/Default.svelte': () => import('virtual:docs-kit/demo/editable-table/demos/Default.svelte'),
-    'editable-table/demos/EditableCell.svelte': () => import('virtual:docs-kit/demo/editable-table/demos/EditableCell.svelte'),
-    'kitchen-sink/demos/Default.svelte': () => import('virtual:docs-kit/demo/kitchen-sink/demos/Default.svelte'),
-    'virtual-scroll/demos/Default.svelte': () => import('virtual:docs-kit/demo/virtual-scroll/demos/Default.svelte'),
+    'editable-table/demos/Default.svelte': () =>
+        import('virtual:docs-kit/demo/editable-table/demos/Default.svelte'),
+    'editable-table/demos/EditableCell.svelte': () =>
+        import('virtual:docs-kit/demo/editable-table/demos/EditableCell.svelte'),
+    'kitchen-sink/demos/Default.svelte': () =>
+        import('virtual:docs-kit/demo/kitchen-sink/demos/Default.svelte'),
+    'virtual-scroll/demos/Default.svelte': () =>
+        import('virtual:docs-kit/demo/virtual-scroll/demos/Default.svelte')
 } satisfies Record<string, DemoCodeLoader>
 
 export type DemoCodeLoaderKey = keyof typeof demoCodeLoaders
 
 export const demoCodeDependencies: Partial<Record<DemoCodeLoaderKey, DemoCodeLoaderKey[]>> = {
-    'editable-table/demos/Default.svelte': ['editable-table/demos/EditableCell.svelte'],
+    'editable-table/demos/Default.svelte': ['editable-table/demos/EditableCell.svelte']
 }
 
 export interface DemoCodeSample {
