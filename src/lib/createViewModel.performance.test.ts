@@ -140,10 +140,10 @@ describe('Store derivation chain performance', () => {
 
         const elapsed = performance.now() - start
 
-        console.log(`\n=== Large Dataset (1000 rows) ===`)
+        console.log('\n=== Large Dataset (1000 rows) ===')
         console.log(`  Filter update: ${elapsed.toFixed(2)}ms`)
         console.log(`  Derivation calls: ${vm._debug.getTotalCalls()}`)
-        console.log(`================================\n`)
+        console.log('================================\n')
 
         unsub()
 

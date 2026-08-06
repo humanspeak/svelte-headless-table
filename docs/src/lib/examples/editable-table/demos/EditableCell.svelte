@@ -3,8 +3,13 @@
     import { Check, X } from '@lucide/svelte'
 
     type Props = {
-        row: BodyRow<unknown>
-        column: DataColumn<unknown>
+        // `any` (not `unknown`) so the cell accepts a column/row of any table
+        // data shape — `createRender` can't carry a caller's generic through
+        // `ComponentProps`, and `DataColumn<T>` is invariant in `T`.
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        row: BodyRow<any>
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        column: DataColumn<any>
         value: unknown
         onUpdateValue: (_rowDataId: string, _columnId: string, _newValue: unknown) => void
     }

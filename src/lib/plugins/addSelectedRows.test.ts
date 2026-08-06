@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { derived, get, readable } from 'svelte/store'
 import type { Sample } from '../../routes/_createSamples.js'
 import { createTable } from '../createTable.js'

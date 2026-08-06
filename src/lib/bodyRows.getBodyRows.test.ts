@@ -295,7 +295,6 @@ const displayColumns = [
 ]
 
 it('transforms data with display columns', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const actual = getBodyRows(data, displayColumns as any)
 
     const row0 = new DataBodyRow<User>({
