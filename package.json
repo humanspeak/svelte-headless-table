@@ -119,7 +119,7 @@
         "prettier-plugin-sort-json": "^4.2.0",
         "prettier-plugin-svelte": "^4.1.1",
         "prettier-plugin-tailwindcss": "^0.8.1",
-        "publint": "^0.3.22",
+        "publint": "^0.3.23",
         "svelte": "^5.56.8",
         "svelte-check": "^4.7.4",
         "tslib": "^2.8.1",
