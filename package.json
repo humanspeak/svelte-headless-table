@@ -121,7 +121,7 @@
         "prettier-plugin-tailwindcss": "^0.8.1",
         "publint": "^0.3.22",
         "svelte": "^5.56.8",
-        "svelte-check": "^4.7.4",
+        "svelte-check": "^4.7.5",
         "tslib": "^2.8.1",
         "type-fest": "^5.8.0",
         "typescript": "^6.0.3",
