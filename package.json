@@ -100,7 +100,7 @@
         "@sveltejs/kit": "^2.70.2",
         "@sveltejs/package": "^2.5.8",
         "@sveltejs/vite-plugin-svelte": "^7.2.0",
-        "@testing-library/jest-dom": "^7.0.0",
+        "@testing-library/jest-dom": "^7.0.1",
         "@testing-library/svelte": "^5.4.2",
         "@types/eslint": "9.6.1",
         "@types/node": "^26.1.2",
