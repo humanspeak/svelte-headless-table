@@ -12,7 +12,7 @@ import { sveltekit } from '@sveltejs/kit/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vitest/config'
 import rootPkg from '../package.json' with { type: 'json' }
-import { competitors } from './src/lib/compare-data.js'
+import { competitors, ours } from './src/lib/compare-data.js'
 import { docsConfig } from './src/lib/docs-config.js'
 
 export default defineConfig({
@@ -72,7 +72,12 @@ export default defineConfig({
             siteUrl: docsConfig.url,
             pkgName: rootPkg.name,
             description: docsConfig.description,
-            prepend: 'llms-prepend.md'
+            prepend: 'llms-prepend.md',
+            comparisons: {
+                ours,
+                competitors,
+                priority: ['vs-tanstack-table', 'vs-svelte-table', 'vs-vincjo-datatables']
+            }
         }),
         llmsFullPlugin({
             siteUrl: docsConfig.url,

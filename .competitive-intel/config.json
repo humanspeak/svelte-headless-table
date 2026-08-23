@@ -1,0 +1,81 @@
+{
+    "_slack_channel_comment": "#claude-reports in human-speak.slack.com via the shared webhook in common.env — same channel as the other OSS digests.",
+    "ahrefs_project_id": 8934906,
+
+    "category": "Headless table library for Svelte 5 — sorting, filtering, pagination, grouping, expansion, selection as plugins; zero styling opinions, fully accessible",
+
+    "compare_data_paths": ["docs/src/lib/compare-data.ts"],
+    "competitors": [
+        {
+            "npm": "@tanstack/svelte-table",
+            "repo": "TanStack/table",
+            "note": "The 800lb headless option; 28k+ stars, feature-broad (pinning, virtualization). Our nearest head-to-head on 'svelte headless table'."
+        },
+        {
+            "npm": "@vincjo/datatables",
+            "repo": "vincjo/datatables",
+            "note": "Popular Svelte datatable with server-side/lazy mode; more batteries-included, less headless."
+        },
+        {
+            "npm": "svelte-table",
+            "repo": "dasDaniel/svelte-table",
+            "note": "Long-standing simple Svelte table component; overlaps on the 'svelte table' head term."
+        }
+    ],
+
+    "github_handle": "jaysin586",
+    "non_goals": [
+        "Styled/opinionated components (headless by design — no bundled CSS/theme)",
+        "Column/row pinning and built-in virtualization (TanStack covers these; documented patterns instead)",
+        "A spreadsheet/grid-editing surface (that's ag-grid/handsontable territory)"
+    ],
+
+    "page_validation": {
+        "download_tolerance": 0.3,
+        "_comment": "compare-data.ts drives six /compare pages: vs-tanstack-table, vs-vincjo-datatables, vs-svelte-table, vs-flowbite-svelte-datatable, vs-ag-grid, vs-handsontable. Validator checks framework/Svelte-5 claims, hardcoded stars/download figures (e.g. TanStack '28k+'), and them: feature cells on competitor version bumps."
+    },
+
+    "project": "@humanspeak/svelte-headless-table",
+    "repo_triage": {
+        "enabled": true,
+        "_comment": "Public repo — GITHUB_TOKEN raises rate limits; public-read fallback works without it. Surfaces open PRs/issues NOT opened by github_handle, and threads awaiting your reply since the previous last_run."
+    },
+
+    "self_features": [
+        "Headless — you own 100% of the markup/styling; it manages state, not UI",
+        "Svelte 5 runes-native",
+        "Plugin architecture: sort, column + global filter, pagination, addGroupBy, addExpandedRows + addSubRows, addSelectedRows, addResizedColumns, addColumnOrder, addHiddenColumns",
+        "Full TypeScript typing",
+        "Accessible data-table primitives",
+        "Continuation/maintained successor to the original svelte-headless-table"
+    ],
+
+    "self_npm": "@humanspeak/svelte-headless-table",
+    "self_repo": "humanspeak/svelte-headless-table",
+    "seo": {
+        "enabled": true,
+        "docs_domain": "table.svelte.page",
+        "gsc_dir": ".competitive-intel/gsc",
+        "gsc_staleness_days": 14,
+        "_comment": "3 keywords in Ahrefs rank tracker (project 8934906). Head terms: 'svelte headless table', 'svelte table', 'svelte data table', 'svelte datagrid'. Drop a GSC export into .competitive-intel/gsc/ when available."
+    },
+
+    "slack_channel": "C0BP5BF1UTX",
+    "watchlist": [
+        {
+            "npm": "svelte-headless-table",
+            "repo": "bryanmylee/svelte-headless-table",
+            "note": "The ORIGINAL namesake (Bryan Lee), now largely dormant — this package is its Svelte 5 continuation. Watch for any upstream revival."
+        },
+        {
+            "npm": "ag-grid-community",
+            "repo": "ag-grid/ag-grid",
+            "note": "Enterprise JS grid; covered on the /compare page. Different weight class but ranks for 'data grid'."
+        },
+        {
+            "npm": "handsontable",
+            "repo": "handsontable/handsontable",
+            "note": "Spreadsheet-grid; /compare rival for the 'data grid / editable table' intent."
+        }
+    ]
+}

@@ -21,35 +21,13 @@ export const ours: ComparisonOurs = {
     url: 'https://table.svelte.page'
 }
 
-/**
- * Strengths + weaknesses that apply across every comparison — saves
- * repeating the same lines under each competitor while letting each
- * page append competitor-specific bullets via spread.
- */
-const shared = {
-    prosUs: [
-        'Svelte 5 runes-native — peer-dependency is `svelte: ^5`, rebuilt for runes (not retrofitted)',
-        'Truly headless — you own the `<table>` markup and every cell',
-        'TypeScript-first with generics that carry the row type through every plugin',
-        '15 composable plugins on one `createTable` call — sorting, filtering, pagination, grouping, expansion, selection, column resize, sub-rows, virtual scroll, and more',
-        'Custom cell renderers via `createRender` — any Svelte component becomes a cell',
-        'Store-based view model — composes with whatever state library you already use',
-        'MIT — zero licence fees and no Enterprise tier'
-    ],
-    consUs: [
-        'Headless by design — you write more markup than a prebuilt styled table',
-        'Smaller community than TanStack Table or AG Grid',
-        'Plugin order matters — composition is powerful but takes a few minutes to learn'
-    ]
-}
-
 export const competitors: Competitor[] = [
     {
         slug: 'vs-tanstack-table',
         name: 'TanStack Table',
-        tagline: 'Multi-framework adapter (Svelte 3/4) vs Svelte 5-native headless',
+        tagline: 'A focused Svelte table API vs a larger multi-framework ecosystem',
         description:
-            'TanStack Table is the multi-framework headless table primitive that powers React, Vue, Solid, Angular, Qwik, Lit, and Svelte through adapters. The official `@tanstack/svelte-table` adapter targets Svelte 3 / 4 — Svelte 5 support is community-supplied via `tanstack-table-8-svelte-5`. @humanspeak/svelte-headless-table is purpose-built for Svelte 5, no adapter layer, no React-flavoured patterns leaking through.',
+            'Both libraries are MIT-licensed, headless, TypeScript-first, and native to Svelte 5. TanStack Table v9 provides a runes-native Svelte adapter over a high-performance core shared across ten frameworks. @humanspeak/svelte-headless-table is the narrower option: its public API, documentation, stores, plugin state, and component renderers are designed only for Svelte. The choice is focus and familiarity versus ecosystem breadth and advanced features — not Svelte 5 support or licensing.',
         website: 'https://tanstack.com/table',
         github: 'https://github.com/TanStack/table',
         npm: '@tanstack/svelte-table',
@@ -57,13 +35,18 @@ export const competitors: Competitor[] = [
         approach: 'Framework-agnostic core + per-framework adapter',
         features: [
             {
-                name: 'Svelte 5 Native',
+                name: 'Svelte 5 Support',
                 us: true,
-                them: false,
-                note: '`@tanstack/svelte-table@8.21.3` peerDependency is `svelte: ^4.0.0 || ^3.49.0`. Svelte 5 requires the community drop-in `tanstack-table-8-svelte-5` (peer `svelte: ^5`).'
+                them: true,
+                note: 'Both packages support Svelte 5 natively. `@tanstack/svelte-table@9.1.2` declares `svelte: ^5.0.0` and uses runes with Svelte-aware atom bindings.'
             },
             { name: 'TypeScript Support', us: true, them: true },
-            { name: 'Headless Rendering', us: true, them: true },
+            {
+                name: 'Headless Rendering',
+                us: true,
+                them: true,
+                note: 'Both libraries leave markup and styling entirely to the application.'
+            },
             { name: 'Sorting', us: true, them: true },
             { name: 'Column Filters', us: true, them: true },
             { name: 'Global Filter', us: 'addTableFilter plugin', them: true },
@@ -75,7 +58,7 @@ export const competitors: Competitor[] = [
             {
                 name: 'Column Ordering',
                 us: 'addColumnOrder plugin',
-                them: 'Drag-and-drop reordering'
+                them: 'Column-order state; pair with a DnD library for drag controls'
             },
             { name: 'Column Visibility', us: 'addHiddenColumns plugin', them: true },
             { name: 'Column Pinning', us: false, them: true },
@@ -83,37 +66,49 @@ export const competitors: Competitor[] = [
             {
                 name: 'Virtualization',
                 us: 'addVirtualScroll plugin',
-                them: 'Integrated (incl. virtualized infinite scroll)'
+                them: 'Pair with TanStack Virtual or another virtualizer'
             },
             { name: 'Editable Data', us: 'createRender(EditableCell)', them: 'Documented pattern' },
             {
                 name: 'API Style',
-                us: 'Svelte stores + plugin builders',
-                them: 'Framework-agnostic core ported to each adapter'
+                us: 'Svelte stores + named plugin builders + pluginStates',
+                them: 'TanStack Store atoms + framework adapter'
             },
             { name: 'GitHub Stars', us: 'Smaller community', them: '28k+' },
-            { name: 'Licence', us: 'MIT', them: 'MIT' }
+            {
+                name: 'Licence',
+                us: 'MIT',
+                them: 'MIT',
+                note: 'Licence is parity, not a differentiator.'
+            }
         ],
         prosUs: [
-            ...shared.prosUs,
-            'Officially supports Svelte 5 today via the package peer dependency',
-            'API designed against Svelte 5 patterns — runes, stores, snippets — not ported from a React-shaped core'
+            'Svelte-only public API and documentation — there is no framework-neutral guide to translate into Svelte concepts',
+            'Table behaviours are named plugins on one createTable call, with their stores grouped under pluginStates',
+            'Cell renderers are ordinary Svelte components through createRender, and the view model exposes familiar Svelte stores',
+            'Integrated addVirtualScroll plugin for semantic table virtualization without choosing and wiring a separate virtualizer'
         ],
         prosThem: [
-            'Battle-tested at scale across React, Vue, Solid, Svelte, Qwik, Angular, and Lit',
+            'Runes-native Svelte 5 adapter backed by TanStack Store atoms',
+            'Battle-tested core shared across React, Vue, Solid, Svelte, Qwik, Angular, Lit, and other adapters',
             'Massive ecosystem (~28k GitHub stars) and rich third-party tooling',
-            'Column pinning, row pinning, and virtualized infinite scroll built into the core',
+            'Column pinning, row pinning, and a broader set of advanced table primitives',
+            'Published large-table performance work and tree-shakable feature registration',
             'Cross-framework knowledge transfer — same mental model in every adapter'
         ],
-        consUs: [...shared.consUs, 'No column pinning or row pinning yet — open feature requests'],
+        consUs: [
+            'Much smaller community and third-party ecosystem',
+            'No column pinning or row pinning yet — open feature requests',
+            'No published large-table benchmark suite to compare with TanStack v9 claims',
+            'Plugin order affects transformations and must be understood when composing complex tables'
+        ],
         consThem: [
-            'Official `@tanstack/svelte-table` adapter does not list Svelte 5 in its peer dependencies as of v8.21.3',
-            'Svelte 5 users rely on the community drop-in `tanstack-table-8-svelte-5` (maintained by a Svelte core team member, but separate package)',
-            'API is a port of the framework-agnostic core — still feels secondhand in Svelte',
-            'Heavier mental overhead juggling core types + adapter types'
+            'Framework-agnostic core plus a Svelte adapter introduces more concepts and type boundaries than a Svelte-only API',
+            'Broader feature surface can mean more API to learn when you only need a focused data table',
+            'Virtualization requires choosing and integrating TanStack Virtual or another virtualizer'
         ],
         verdict:
-            'Choose TanStack Table when you need the same primitive across multiple frameworks, or when column pinning is a hard requirement today. Choose @humanspeak/svelte-headless-table when first-class Svelte 5 support — straight from the package peer dependency, not via a community drop-in — matters more than cross-framework reach.',
+            'TanStack Table is the stronger default when you need pinning, a large ecosystem, published performance work, or one table model across frameworks. Choose @humanspeak/svelte-headless-table when your application is Svelte-only, its focused feature set covers the job, and you prefer named plugins, pluginStates, Svelte stores, and Svelte component renderers over adopting the broader TanStack model. Both are native to Svelte 5, headless, TypeScript-first, and MIT.',
         keywords: [
             'tanstack table',
             'tanstack svelte table',
@@ -125,9 +120,9 @@ export const competitors: Competitor[] = [
     {
         slug: 'vs-vincjo-datatables',
         name: '@vincjo/datatables',
-        tagline: 'Svelte 5-native datatable toolkit vs plugin-composed primitive',
+        tagline: 'Server-friendly table handlers vs a broader plugin-composed table model',
         description:
-            '@vincjo/datatables is an actively maintained Svelte 5-native headless toolkit for datatables — pagination, filter, sort, selection, lazy-loading. @humanspeak/svelte-headless-table covers the same surface as composable plugins plus group-by, expanded rows, sub-rows, column resize / reorder / hide, and a virtual-scroll plugin.',
+            'Both libraries are MIT-licensed, TypeScript-first, and native to Svelte 5. @vincjo/datatables centres on a TableHandler with concise client- and server-side APIs plus optional prebuilt controls. @humanspeak/svelte-headless-table uses named plugins and a store-based view model to cover a broader set of structural table behaviours. Vincjo is the more direct fit for server-driven CRUD tables; ours is the stronger fit for grouped, hierarchical, resizable, reorderable, or virtualized tables.',
         website: 'https://vincjo.fr/datatables',
         github: 'https://github.com/vincjo/datatables',
         npm: '@vincjo/datatables',
@@ -138,7 +133,7 @@ export const competitors: Competitor[] = [
                 name: 'Svelte 5 Native',
                 us: true,
                 them: true,
-                note: '`@vincjo/datatables@2.8.0` peerDependency is `svelte: ^5.16.0` — Svelte 5 only.'
+                note: '`@vincjo/datatables@2.8.1` declares `svelte: ^5.56.1` — both packages target Svelte 5.'
             },
             { name: 'TypeScript Support', us: true, them: true },
             { name: 'Headless Rendering', us: true, them: true },
@@ -156,29 +151,38 @@ export const competitors: Competitor[] = [
             { name: 'Sub-Rows / Expansion', us: 'addExpandedRows + addSubRows', them: false },
             { name: 'Column Resizing', us: 'addResizedColumns plugin', them: false },
             { name: 'Column Reordering', us: 'addColumnOrder plugin', them: false },
-            { name: 'Hidden Columns', us: 'addHiddenColumns plugin', them: false },
+            { name: 'Hidden Columns', us: 'addHiddenColumns plugin', them: true },
             { name: 'Virtual Scroll', us: 'addVirtualScroll plugin', them: false },
             { name: 'GitHub Stars', us: 'Smaller community', them: '~585' },
-            { name: 'Licence', us: 'MIT', them: 'MIT' }
+            {
+                name: 'Licence',
+                us: 'MIT',
+                them: 'MIT',
+                note: 'Licence is parity, not a differentiator.'
+            }
         ],
         prosUs: [
-            ...shared.prosUs,
             'Group-by, expansion, column reorder / resize / hide, and virtual scroll are first-class plugins',
-            'Cell renderers are real Svelte components — embed charts, action menus, status pills',
-            'Reactive store-based view model — fits any state library, no special "handler" abstraction'
+            'Named plugin stores expose each behaviour through one pluginStates object',
+            'Cell renderers are ordinary Svelte components through createRender'
         ],
         prosThem: [
             'First-class lazy-loading / server-driven sort + filter + paginate handler',
-            'Smaller surface to learn — pagination, filter, sort, selection covers most CRUD UIs',
-            'Strong out-of-box ergonomics for table-as-form patterns'
+            'Smaller surface to learn for common sort, filter, paginate, and select workflows',
+            'Optional Datatable, Search, RowsPerPage, RowCount, and Pagination components reduce setup',
+            'Rune-backed handler properties and concise setter methods minimise boilerplate'
         ],
-        consUs: [...shared.consUs, 'No built-in server-side handler — you wire the fetch yourself'],
+        consUs: [
+            'No dedicated server-side handler — you wire plugin state into data fetching yourself',
+            'More concepts and markup to learn for a conventional CRUD table',
+            'Plugin order affects row transformations'
+        ],
         consThem: [
-            'No group-by, sub-rows, column reorder / resize / hide, or virtual scroll',
+            'No documented group-by, sub-row hierarchy, column reorder / resize, or virtual scroll',
             'Smaller plugin surface — long-tail table features need DIY implementation'
         ],
         verdict:
-            'Choose @vincjo/datatables when your needs are sort + filter + paginate + select (especially with a server-driven backend) and the smaller surface area is a feature, not a limitation. Choose @humanspeak/svelte-headless-table when you need group-by, true virtual scroll, column resize / reorder, or sub-row hierarchies.',
+            'Choose @vincjo/datatables for a conventional sort, filter, paginate, and select table — especially when the server owns the data operations or its optional controls save useful setup. Choose @humanspeak/svelte-headless-table when the table needs grouping, hierarchical rows, integrated virtual scrolling, or column resize and reorder. Svelte 5, TypeScript, headless markup, hidden columns, and MIT licensing are not reasons to choose between them.',
         keywords: [
             '@vincjo/datatables',
             'vincjo datatables',
@@ -190,9 +194,9 @@ export const competitors: Competitor[] = [
     {
         slug: 'vs-svelte-table',
         name: 'svelte-table',
-        tagline: 'Minimal sortable table vs full plugin suite',
+        tagline: 'A drop-in sortable component vs a composable table toolkit',
         description:
-            'svelte-table (by dasDaniel) is a small, actively maintained headless table component with sortable headers, filters, search, custom cell rendering, and row select / expand. @humanspeak/svelte-headless-table gives up the single-component API in exchange for plugin composition that covers the long-tail features svelte-table does not.',
+            'svelte-table by dasDaniel is a small, MIT-licensed component for sorting, filtering, searching, selecting, and expanding rows. Its last release was v0.6.5 in July 2025 and it declares no Svelte peer dependency. @humanspeak/svelte-headless-table requires more setup, but provides explicit Svelte 5 support, full markup ownership, and plugins for pagination, grouping, hierarchical data, column operations, and virtual scrolling.',
         website: 'https://github.com/dasDaniel/svelte-table',
         github: 'https://github.com/dasDaniel/svelte-table',
         npm: 'svelte-table',
@@ -200,18 +204,17 @@ export const competitors: Competitor[] = [
         approach: 'Single `<SvelteTable>` component with extensive className + render props',
         features: [
             {
-                name: 'Latest Version',
-                us: '6.0.6',
-                them: '0.6.5 (Jul 2025)'
-            },
-            {
-                name: 'Svelte 5 Native',
+                name: 'Svelte 5 Support',
                 us: true,
                 them: 'Not declared',
                 note: '`svelte-table@0.6.5` ships no `peerDependencies` field; flexibility is up to the runtime.'
             },
             { name: 'TypeScript Support', us: true, them: true },
-            { name: 'Headless Rendering', us: true, them: true },
+            {
+                name: 'Markup Ownership',
+                us: 'Application owns the complete table tree',
+                them: 'Component-owned markup with slots, renderers, and class props'
+            },
             { name: 'Sorting', us: true, them: true },
             { name: 'Column Filters', us: true, them: true },
             { name: 'Search', us: 'addTableFilter plugin', them: true },
@@ -230,27 +233,37 @@ export const competitors: Competitor[] = [
                 them: 'Components or functions'
             },
             { name: 'GitHub Stars', us: 'Smaller community', them: '~560' },
-            { name: 'Licence', us: 'MIT', them: 'MIT' }
+            {
+                name: 'Licence',
+                us: 'MIT',
+                them: 'MIT',
+                note: 'Licence is parity, not a differentiator.'
+            }
         ],
         prosUs: [
-            ...shared.prosUs,
             'Pagination, group-by, sub-rows, column resize / reorder, and virtual scroll are first-class plugins',
-            'Hidden columns are a runtime setting, not a re-render gymnastics exercise'
+            'The application owns every table element rather than styling component-owned markup through class props',
+            'Explicit Svelte 5 peer dependency and actively maintained Svelte 5 implementation'
         ],
         prosThem: [
             'Single-component API — drop in a `<SvelteTable>` and pass props',
             'Tiny bundle footprint',
-            'Actively maintained — latest release July 2025',
-            'Friendly first-time experience for simple sortable tables'
+            'Built-in sorting, filters, search, selection, and expandable content cover many small tables',
+            'Components or functions can render custom cell content'
         ],
-        consUs: [...shared.consUs, 'Not the fastest path to a "just a sortable table" prototype'],
+        consUs: [
+            'More setup and concepts than a single component',
+            'Not the fastest path to a simple sortable-table prototype',
+            'Smaller community despite the broader feature surface'
+        ],
         consThem: [
             'No pagination, group-by, sub-rows, column resize, or virtual scroll',
             'Single-component API limits markup customisation beyond `className*` props',
-            'No declared Svelte 5 peer-dependency — flexibility is implicit, not contractual'
+            'No declared Svelte 5 peer dependency — compatibility is implicit rather than contractual',
+            'No release since July 2025'
         ],
         verdict:
-            'Choose svelte-table when you want a single drop-in component for a sortable, filterable, selectable table with minimal ceremony. Choose @humanspeak/svelte-headless-table when you need pagination, group-by, sub-rows, column resize / reorder, virtual scroll, or any feature beyond what a one-component API can express.',
+            'Choose svelte-table when a tiny drop-in component with sorting, filtering, selection, and expandable content is enough and minimal setup matters most. Choose @humanspeak/svelte-headless-table when you need explicit Svelte 5 support, complete control of table markup, pagination, grouping, hierarchical rows, column resize or reorder, or virtual scrolling. TypeScript and MIT licensing are parity.',
         keywords: [
             'svelte-table',
             'dasDaniel svelte-table',
@@ -262,9 +275,9 @@ export const competitors: Competitor[] = [
     {
         slug: 'vs-flowbite-svelte-datatable',
         name: 'Flowbite Svelte Datatable',
-        tagline: 'Tailwind-styled Flowbite datatable vs design-system-agnostic headless',
+        tagline: 'A ready-made Flowbite table vs complete markup and state control',
         description:
-            '@flowbite-svelte-plugins/datatable is an advanced datatable plugin for the Flowbite Svelte design system, built against Svelte 5 + Tailwind 4. @humanspeak/svelte-headless-table is design-system-agnostic — drop it into Flowbite, shadcn-svelte, bits-ui, or your own CSS without fighting class names.',
+            '@flowbite-svelte-plugins/datatable is a Svelte 5 and Tailwind 4 component built for the Flowbite Svelte design system. It provides styled table chrome and practical datatable controls with little setup. @humanspeak/svelte-headless-table owns table state but renders no UI, making it a better foundation when the application must own every element or use another design system. Both are TypeScript-first and MIT-licensed.',
         website: 'https://github.com/shinokada/flowbite-svelte-plugins',
         github: 'https://github.com/shinokada/flowbite-svelte-plugins',
         npm: '@flowbite-svelte-plugins/datatable',
@@ -292,6 +305,8 @@ export const competitors: Competitor[] = [
             { name: 'Sorting', us: true, them: true },
             { name: 'Filtering', us: true, them: true },
             { name: 'Pagination', us: true, them: true },
+            { name: 'Row Selection', us: 'addSelectedRows plugin', them: true },
+            { name: 'Prebuilt Table UI', us: false, them: 'Flowbite-styled component' },
             { name: 'Group By', us: 'addGroupBy plugin', them: 'Not documented' },
             {
                 name: 'Sub-Rows / Expansion',
@@ -301,26 +316,36 @@ export const competitors: Competitor[] = [
             { name: 'Column Resizing', us: 'addResizedColumns plugin', them: 'Not documented' },
             { name: 'Column Reordering', us: 'addColumnOrder plugin', them: 'Not documented' },
             { name: 'Virtual Scroll', us: 'addVirtualScroll plugin', them: 'Not documented' },
-            { name: 'Licence', us: 'MIT', them: 'MIT' }
+            {
+                name: 'Licence',
+                us: 'MIT',
+                them: 'MIT',
+                note: 'Licence is parity, not a differentiator.'
+            }
         ],
         prosUs: [
-            ...shared.prosUs,
-            'Bring your own design system — Flowbite, shadcn-svelte, bits-ui, or hand-rolled CSS all work',
-            'Plugin set covers the long tail (group-by, virtual scroll, column resize / reorder) Flowbite Datatable does not document'
+            'Application owns every table element and can use any design system or CSS strategy',
+            'Plugin set covers grouping, hierarchical rows, virtual scrolling, and column resize / reorder',
+            'Cell content can be an ordinary Svelte component rather than a string-producing render callback'
         ],
         prosThem: [
             'Visually consistent with the rest of a Flowbite Svelte UI out of the box',
-            'Pre-styled — no Tailwind utility classes to write yourself',
-            'Single-import experience inside Flowbite-based apps'
+            'Prebuilt pagination, search, sorting, row selection, and table controls minimise setup',
+            'Extensive simple-datatables options and render hooks for common datatable customisation',
+            'Single-component experience inside Flowbite-based apps'
         ],
-        consUs: [...shared.consUs, 'No prebuilt Flowbite-styled chrome — you write the markup'],
+        consUs: [
+            'No prebuilt chrome — you write the table markup, controls, and styles',
+            'More setup than a ready-made Flowbite component',
+            'Plugin order affects row transformations'
+        ],
         consThem: [
-            'Requires Tailwind 4 + the Flowbite Svelte design system to integrate cleanly',
-            'Visual style is tied to Flowbite — overriding the look means fighting the design system',
-            'Plugin is early-stage (v0.4.1) — feature coverage and stability are still maturing'
+            'Requires Tailwind 4 and is designed around the Flowbite Svelte visual system',
+            'Component-owned markup offers less structural control than a headless view model',
+            'No documented grouping, hierarchical rows, column resize / reorder, or virtual scrolling'
         ],
         verdict:
-            'Choose @flowbite-svelte-plugins/datatable when you are already shipping a Flowbite Svelte UI and want the datatable to match. Choose @humanspeak/svelte-headless-table when your app uses a different design system (or none), or when you need the long-tail features the Flowbite plugin does not yet ship.',
+            'Choose Flowbite Svelte Datatable when the application already uses Flowbite and a styled, low-setup table is the goal. Choose @humanspeak/svelte-headless-table when you need complete markup ownership, another design system, Svelte component renderers, grouping, hierarchical rows, column operations, or integrated virtual scrolling. Svelte 5, TypeScript, sorting, filtering, pagination, selection, and MIT licensing are shared capabilities.',
         keywords: [
             'flowbite svelte datatable',
             'flowbite-svelte-plugins',
@@ -332,9 +357,9 @@ export const competitors: Competitor[] = [
     {
         slug: 'vs-ag-grid',
         name: 'AG Grid',
-        tagline: 'Enterprise multi-framework grid vs Svelte 5-native headless primitive',
+        tagline: 'A full enterprise grid vs a Svelte-native headless table toolkit',
         description:
-            'AG Grid is the gold standard for enterprise data grids — pivot tables, master/detail, range selection, integrated charts, server-side row model. It officially supports React, Angular, and Vue; Svelte usage is via the unofficial community wrapper `ag-grid-svelte`. @humanspeak/svelte-headless-table is a focused, MIT-licensed, Svelte 5-native headless primitive that stays out of your markup and your budget.',
+            'AG Grid is a complete, styled data-grid platform with community and paid Enterprise features, including pivoting, master/detail, range selection, charts, and a server-side row model. It has no first-party Svelte adapter; Svelte applications can mount the JavaScript grid directly or use an outdated community wrapper. @humanspeak/svelte-headless-table is a first-party Svelte 5 headless toolkit for applications that want to own the markup and do not need spreadsheet-grade enterprise features.',
         website: 'https://www.ag-grid.com',
         github: 'https://github.com/ag-grid/ag-grid',
         npm: 'ag-grid-community',
@@ -345,7 +370,7 @@ export const competitors: Competitor[] = [
                 name: 'Svelte 5 Native',
                 us: true,
                 them: false,
-                note: '`ag-grid-svelte@0.3.0` (unofficial community wrapper) peerDependency: `svelte: ^3`, `ag-grid-community: ^28 || ^29 || ^30`. Current `ag-grid-community` is v35 — the wrapper trails by five major versions.'
+                note: '`ag-grid-svelte@0.3.0` is an unofficial wrapper declaring `svelte: ^3` and `ag-grid-community: ^28 || ^29 || ^30`; current `ag-grid-community` is v36.1.0. Direct JavaScript mounting remains possible.'
             },
             { name: 'First-Party Svelte Support', us: true, them: false },
             { name: 'TypeScript Support', us: true, them: true },
@@ -379,10 +404,10 @@ export const competitors: Competitor[] = [
             { name: 'GitHub Stars', us: 'Smaller community', them: '~15k' }
         ],
         prosUs: [
-            ...shared.prosUs,
-            'No licensing tier — every plugin is MIT, no surprise paid features',
             'First-party Svelte 5 support via the package peer dependency — no community wrapper required',
-            'Tree-shakeable — pay only for the plugins you import'
+            'Application owns semantic table markup and can use any design system',
+            'Every shipped plugin is MIT; grouping and hierarchical rows are not paid features',
+            'Smaller conceptual and bundle surface for conventional application tables'
         ],
         prosThem: [
             'Industry-leading feature set — pivot, master/detail, range selection, integrated charts',
@@ -391,18 +416,19 @@ export const competitors: Competitor[] = [
             'Battle-tested in financial, analytics, and BI dashboards at very large scale'
         ],
         consUs: [
-            ...shared.consUs,
+            'You build all table markup, controls, and styling',
+            'Far smaller ecosystem and less evidence from very large production datasets',
             'No pivot tables, range selection, or master/detail out of the box',
             'No managed server-side row model — you wire data fetching yourself'
         ],
         consThem: [
-            'No first-party Svelte integration; the unofficial `ag-grid-svelte` wrapper is stuck on Svelte 3 + AG Grid v28–30 (current AG Grid is v35)',
+            'No first-party Svelte integration; the unofficial wrapper targets Svelte 3 and AG Grid v28–30 while the current core is v36',
             'Pivot, tree data, master/detail, and server-side row model are gated behind the paid Enterprise licence',
-            'Heavy bundle for use cases that don’t need pivot / charts',
-            'Theming requires AG Grid theme APIs — not a Tailwind / shadcn-svelte drop-in'
+            'More package and API surface than conventional tables need',
+            'Markup and theming are controlled through AG Grid APIs rather than application-owned table elements'
         ],
         verdict:
-            'Choose AG Grid when your product centres on heavyweight enterprise grid features — pivots, master/detail, range selection, server-side row model — and the Enterprise budget fits. Choose @humanspeak/svelte-headless-table when you want first-party Svelte 5 support, MIT licensing across every feature, and a markup surface you control.',
+            'Choose AG Grid when the grid is a major product surface and you need pivoting, master/detail, range selection, managed server-side data, enterprise support, or its mature ecosystem. Choose @humanspeak/svelte-headless-table for a Svelte 5 application table when first-party Svelte integration, application-owned markup, a smaller surface, and MIT grouping or hierarchical-row features matter more than enterprise-grid breadth. AG Grid Community is also MIT; licensing only differentiates features that AG Grid reserves for Enterprise.',
         keywords: [
             'ag-grid svelte',
             'ag-grid alternative',
@@ -414,9 +440,9 @@ export const competitors: Competitor[] = [
     {
         slug: 'vs-handsontable',
         name: 'Handsontable',
-        tagline: 'JavaScript spreadsheet (React/Angular/Vue) vs Svelte 5-native data table',
+        tagline: 'A spreadsheet-grade data grid vs a Svelte-native application table',
         description:
-            'Handsontable is a JavaScript spreadsheet component — cell formulas, range selection, copy/paste from Excel — with first-party React, Angular, and Vue wrappers. There is no first-party Svelte integration; Svelte users mount it on a div ref like a vanilla JS widget. @humanspeak/svelte-headless-table is a focused Svelte 5-native data-table primitive — not a spreadsheet.',
+            'Handsontable is a spreadsheet-style JavaScript data grid with first-party React, Angular, and Vue integrations, plus a vanilla JavaScript API that Svelte applications can mount directly. It provides editing, range selection, formulas, copy/paste, merged cells, and frozen regions. @humanspeak/svelte-headless-table is a headless Svelte 5 toolkit for rendering application data tables, not a substitute for spreadsheet workflows.',
         website: 'https://handsontable.com',
         github: 'https://github.com/handsontable/handsontable',
         npm: 'handsontable',
@@ -439,21 +465,26 @@ export const competitors: Competitor[] = [
                 them: false,
                 note: 'Spreadsheets scroll the full sheet; pagination is not a typical pattern.'
             },
-            { name: 'Inline Cell Editing', us: 'createRender(EditableCell)', them: 'First-class' },
+            {
+                name: 'Inline Cell Editing',
+                us: 'Application-owned EditableCell renderer',
+                them: 'First-class editors and cell types'
+            },
             { name: 'Cell Formulas', us: false, them: 'HyperFormula engine' },
             { name: 'Range / Cell Selection', us: false, them: true },
             { name: 'Copy / Paste from Excel', us: false, them: true },
             { name: 'Merged Cells', us: false, them: true },
-            { name: 'Frozen Rows + Cols', us: 'BYO via CSS', them: true },
+            { name: 'Frozen Rows + Cols', us: false, them: true },
             { name: 'Virtual Scroll', us: 'addVirtualScroll plugin', them: true },
             { name: 'Group By', us: 'addGroupBy plugin', them: false },
             { name: 'GitHub Stars', us: 'Smaller community', them: '~22k' },
             { name: 'Licence', us: 'MIT', them: 'Non-commercial free / Commercial paid' }
         ],
         prosUs: [
-            ...shared.prosUs,
-            'Truly headless — drop into Tailwind / shadcn-svelte / bits-ui without fighting a theme',
-            'MIT — no commercial licence required for commercial use'
+            'First-party Svelte 5 API with familiar stores and Svelte component renderers',
+            'Application owns semantic table markup and can use any design system',
+            'MIT licence permits commercial use without a paid Handsontable licence',
+            'Focused table-state surface when spreadsheet interactions are unnecessary'
         ],
         prosThem: [
             'Excel-like interactions out of the box — formulas, range selection, copy/paste from Excel',
@@ -462,17 +493,18 @@ export const competitors: Competitor[] = [
             'Long history (since 2012) with active commercial support'
         ],
         consUs: [
-            ...shared.consUs,
-            'Not a spreadsheet — no formulas, range selection, or Excel paste'
+            'Not a spreadsheet — no formulas, range selection, merged cells, frozen regions, or Excel paste',
+            'Editing is an application-owned renderer pattern rather than a built-in editor system',
+            'You build all table markup, controls, and styling'
         ],
         consThem: [
             'No first-party Svelte integration — mount on a div ref like a vanilla JS widget',
             'Commercial use requires a paid licence',
-            'Heavy bundle for table-only use cases',
-            'CSS is theme-locked; integrating with a design system means custom theme work'
+            'Substantially more UI and API surface than a read-oriented application table needs',
+            'Handsontable owns the grid DOM and styling model rather than exposing application-owned table markup'
         ],
         verdict:
-            'Choose Handsontable when your product is fundamentally a spreadsheet — formulas, range selection, Excel-style interactions are core to the workflow — and you accept the commercial licence + DIY Svelte mount. Choose @humanspeak/svelte-headless-table when you are displaying rows of data, not building a spreadsheet: lighter, MIT, Svelte 5-native.',
+            'Choose Handsontable when users need a spreadsheet: rich editing, formulas, range selection, Excel-style copy/paste, merged cells, or frozen regions justify its grid model and commercial licence. Choose @humanspeak/svelte-headless-table when the product needs a Svelte-native application table with owned markup, composable data operations, and MIT commercial use. These tools solve different jobs more than they compete feature-for-feature.',
         keywords: [
             'handsontable svelte',
             'svelte spreadsheet',
