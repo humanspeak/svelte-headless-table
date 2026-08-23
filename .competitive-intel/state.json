@@ -1,0 +1,277 @@
+{
+    "compare_validation": {
+        "@tanstack/svelte-table": {
+            "validated_against_version": "9.1.2",
+            "status": "stale",
+            "findings": [
+                "tagline claims Svelte 3/4 adapter (compare-data.ts L50)",
+                "feature row 'Svelte 5 Native' them:false + 8.21.3 peer-dep note (L60-63)",
+                "consThem 'does not list Svelte 5 ... as of v8.21.3' + community drop-in line (L110-111)",
+                "prosUs L99 / verdict L116 lean on the now-dead Svelte-5-only differentiator"
+            ]
+        },
+        "@vincjo/datatables": {
+            "validated_against_version": "2.8.1",
+            "status": "minor",
+            "findings": [
+                "note cites 2.8.0 / peer ^5.16.0; actual 2.8.1 / ^5.56.1 \u2014 claim direction unchanged"
+            ]
+        },
+        "svelte-table": {
+            "validated_against_version": "0.6.5",
+            "status": "clean",
+            "findings": []
+        },
+        "ag-grid-community": {
+            "validated_against_version": "36.1.0",
+            "status": "clean",
+            "findings": ["'~15k' stars vs actual 15,557"]
+        },
+        "handsontable": {
+            "validated_against_version": "18.0.0",
+            "status": "clean",
+            "findings": ["'~22k' stars vs actual 22,027"]
+        }
+    },
+    "competitors": [
+        {
+            "npm": "@tanstack/svelte-table",
+            "repo": "TanStack/table",
+            "latest_version": "9.1.2",
+            "last_publish": "2026-08-09",
+            "last_release": "2026-08-13",
+            "weekly_downloads": 64359,
+            "svelte_peer": "^5.0.0",
+            "stars": 28365,
+            "archived": false,
+            "error": null
+        },
+        {
+            "npm": "@vincjo/datatables",
+            "repo": "vincjo/datatables",
+            "latest_version": "2.8.1",
+            "last_publish": "2026-06-04",
+            "last_release": null,
+            "weekly_downloads": 18021,
+            "svelte_peer": "^5.56.1",
+            "stars": 588,
+            "archived": false,
+            "error": null
+        },
+        {
+            "npm": "svelte-table",
+            "repo": "dasDaniel/svelte-table",
+            "latest_version": "0.6.5",
+            "last_publish": "2025-07-10",
+            "last_release": "2025-07-10",
+            "weekly_downloads": 8946,
+            "svelte_peer": null,
+            "stars": 562,
+            "archived": false,
+            "error": null
+        }
+    ],
+    "fetched_at": "2026-08-23T07:50:33Z",
+    "last_run": "2026-08-23",
+    "non_gaps_by_policy": [
+        "column/row pinning",
+        "built-in virtualization",
+        "spreadsheet/grid editing"
+    ],
+    "open_gaps": [
+        {
+            "gap": "Svelte-5-native is no longer a differentiator vs TanStack",
+            "why": "TanStack v9 (2026-08-04) ships a runes-native adapter with peer svelte ^5.0.0; it was our lead argument on /compare/vs-tanstack-table",
+            "worth_doing": "yes \u2014 positioning rewrite, near-term",
+            "opened": "2026-08-23"
+        },
+        {
+            "gap": "Tree-shakable feature registration",
+            "why": "TanStack v9 registers only used features/row models (~25KB full, min+brotli)",
+            "worth_doing": "measure first \u2014 our plugins are already opt-in at createTable",
+            "opened": "2026-08-23"
+        },
+        {
+            "gap": "No published large-table performance numbers",
+            "why": "v9 advertises up to 90% memory savings and 40-70% faster row models; we publish nothing",
+            "worth_doing": "yes \u2014 a modest benchmark page",
+            "opened": "2026-08-23"
+        }
+    ],
+    "project": "@humanspeak/svelte-headless-table",
+    "rank_tracker": {
+        "date": "2026-08-23",
+        "summary": {
+            "tracked": 3,
+            "top10": 1,
+            "improved": 2,
+            "declined": 0,
+            "avg_position": 12.3
+        },
+        "rows": [
+            {
+                "keyword": "svelte headless table",
+                "position": 5,
+                "position_diff": -1,
+                "volume": 20
+            },
+            {
+                "keyword": "svelte table",
+                "position": 14,
+                "position_diff": 0,
+                "volume": 150
+            },
+            {
+                "keyword": "svelte data table",
+                "position": 18,
+                "position_diff": -3,
+                "volume": 30
+            }
+        ]
+    },
+    "repo_triage": {
+        "since": "2026-07-24",
+        "new_external_prs": 0,
+        "new_external_issues": 0,
+        "awaiting_your_reply": 0,
+        "bots": {
+            "prs": 10,
+            "issues": 0
+        }
+    },
+    "self": {
+        "npm": "@humanspeak/svelte-headless-table",
+        "repo": "humanspeak/svelte-headless-table",
+        "latest_version": "6.0.13",
+        "last_publish": "2026-08-06",
+        "last_release": "2026-08-06",
+        "weekly_downloads": 1976,
+        "svelte_peer": "^5.30.0",
+        "stars": 36,
+        "archived": false,
+        "error": null
+    },
+    "seo": {
+        "export_date": "2026-08-22",
+        "striking_distance": [
+            {
+                "query": "svelte table",
+                "impressions": 379.0,
+                "position": 16.18
+            },
+            {
+                "query": "svelte headless table",
+                "impressions": 172.0,
+                "position": 8.72
+            },
+            {
+                "query": "svelte-headless-table",
+                "impressions": 129.0,
+                "position": 7.16
+            },
+            {
+                "query": "svelte tables",
+                "impressions": 78.0,
+                "position": 7.97
+            },
+            {
+                "query": "headless table",
+                "impressions": 59.0,
+                "position": 8.86
+            },
+            {
+                "query": "npm svelte-headless-table 0.17.4",
+                "impressions": 47.0,
+                "position": 5.28
+            },
+            {
+                "query": "svelte-headless-table addhiddencolumns hiddencolumnids documentation",
+                "impressions": 24.0,
+                "position": 8.17
+            },
+            {
+                "query": "svelte grid table",
+                "impressions": 23.0,
+                "position": 19.7
+            }
+        ],
+        "underperforming_pages": [
+            {
+                "page": "https://table.svelte.page/",
+                "impressions": 10256.0,
+                "position": 7.6,
+                "ctr": 0.94
+            },
+            {
+                "page": "https://table.svelte.page/docs/guides/shadcn-svelte",
+                "impressions": 1351.0,
+                "position": 6.5,
+                "ctr": 0.44
+            },
+            {
+                "page": "https://table.svelte.page/docs/api/create-table",
+                "impressions": 240.0,
+                "position": 11.2,
+                "ctr": 0.0
+            },
+            {
+                "page": "https://table.svelte.page/docs/api/render",
+                "impressions": 228.0,
+                "position": 9.72,
+                "ctr": 0.0
+            },
+            {
+                "page": "https://table.svelte.page/examples/editable-table",
+                "impressions": 113.0,
+                "position": 17.3,
+                "ctr": 3.54
+            }
+        ],
+        "recommendations_open": [
+            "rewrite homepage title/meta (10256 impr @ 0.94% CTR, pos 7.6)",
+            "rewrite /docs/guides/shadcn-svelte title/meta (0.44% CTR, pos 6.5)",
+            "add meta descriptions to /docs/api/create-table and /docs/api/render (0 clicks)",
+            "audit addHiddenColumns/hiddenColumnIds docs page for the query it ranks on",
+            "publish 'migrating from svelte-headless-table 0.17.x' page",
+            "add 'svelte tables', 'headless table', 'svelte grid table' to Ahrefs rank tracker"
+        ]
+    },
+    "watchlist": [
+        {
+            "npm": "svelte-headless-table",
+            "repo": "bryanmylee/svelte-headless-table",
+            "latest_version": "0.18.3",
+            "last_publish": "2024-10-28",
+            "last_release": "2024-10-28",
+            "weekly_downloads": 22709,
+            "svelte_peer": "^4.0.0",
+            "stars": 483,
+            "archived": false,
+            "error": null
+        },
+        {
+            "npm": "ag-grid-community",
+            "repo": "ag-grid/ag-grid",
+            "latest_version": "36.1.0",
+            "last_publish": "2026-08-05",
+            "last_release": "2026-08-05",
+            "weekly_downloads": 3254341,
+            "svelte_peer": null,
+            "stars": 15557,
+            "archived": false,
+            "error": null
+        },
+        {
+            "npm": "handsontable",
+            "repo": "handsontable/handsontable",
+            "latest_version": "18.0.0",
+            "last_publish": "2026-06-30",
+            "last_release": "2026-06-30",
+            "weekly_downloads": 307701,
+            "svelte_peer": null,
+            "stars": 22027,
+            "archived": false,
+            "error": null
+        }
+    ]
+}
