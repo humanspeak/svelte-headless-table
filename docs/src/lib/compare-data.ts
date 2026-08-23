@@ -47,9 +47,9 @@ export const competitors: Competitor[] = [
     {
         slug: 'vs-tanstack-table',
         name: 'TanStack Table',
-        tagline: 'Svelte-first plugin composition vs a multi-framework table core',
+        tagline: 'A focused Svelte table API vs a larger multi-framework ecosystem',
         description:
-            'TanStack Table is the multi-framework headless table primitive that powers React, Vue, Solid, Angular, Qwik, Lit, and Svelte through adapters. As of v9, its official Svelte adapter is runes-native and supports Svelte 5. @humanspeak/svelte-headless-table takes a narrower, Svelte-first approach: one createTable API, composable plugins, and zero styling or markup opinions.',
+            'Both libraries are MIT-licensed, headless, TypeScript-first, and native to Svelte 5. TanStack Table v9 provides a runes-native Svelte adapter over a high-performance core shared across ten frameworks. @humanspeak/svelte-headless-table is the narrower option: its public API, documentation, stores, plugin state, and component renderers are designed only for Svelte. The choice is focus and familiarity versus ecosystem breadth and advanced features — not Svelte 5 support or licensing.',
         website: 'https://tanstack.com/table',
         github: 'https://github.com/TanStack/table',
         npm: '@tanstack/svelte-table',
@@ -63,7 +63,12 @@ export const competitors: Competitor[] = [
                 note: 'Both packages support Svelte 5 natively. `@tanstack/svelte-table@9.1.2` declares `svelte: ^5.0.0` and uses runes with Svelte-aware atom bindings.'
             },
             { name: 'TypeScript Support', us: true, them: true },
-            { name: 'Headless Rendering', us: true, them: true },
+            {
+                name: 'Headless Rendering',
+                us: true,
+                them: true,
+                note: 'Both libraries leave markup and styling entirely to the application.'
+            },
             { name: 'Sorting', us: true, them: true },
             { name: 'Column Filters', us: true, them: true },
             { name: 'Global Filter', us: 'addTableFilter plugin', them: true },
@@ -75,7 +80,7 @@ export const competitors: Competitor[] = [
             {
                 name: 'Column Ordering',
                 us: 'addColumnOrder plugin',
-                them: 'Drag-and-drop reordering'
+                them: 'Column-order state; pair with a DnD library for drag controls'
             },
             { name: 'Column Visibility', us: 'addHiddenColumns plugin', them: true },
             { name: 'Column Pinning', us: false, them: true },
@@ -83,37 +88,49 @@ export const competitors: Competitor[] = [
             {
                 name: 'Virtualization',
                 us: 'addVirtualScroll plugin',
-                them: 'Integrated (incl. virtualized infinite scroll)'
+                them: 'Pair with TanStack Virtual or another virtualizer'
             },
             { name: 'Editable Data', us: 'createRender(EditableCell)', them: 'Documented pattern' },
             {
                 name: 'API Style',
-                us: 'Svelte stores + plugin builders',
-                them: 'Framework-agnostic core ported to each adapter'
+                us: 'Svelte stores + named plugin builders + pluginStates',
+                them: 'TanStack Store atoms + framework adapter'
             },
             { name: 'GitHub Stars', us: 'Smaller community', them: '28k+' },
-            { name: 'Licence', us: 'MIT', them: 'MIT' }
+            {
+                name: 'Licence',
+                us: 'MIT',
+                them: 'MIT',
+                note: 'Licence is parity, not a differentiator.'
+            }
         ],
         prosUs: [
-            ...shared.prosUs,
-            'Svelte-first API with one createTable surface — no core + adapter type boundary to reason across',
-            'Focused plugin composition keeps the conceptual surface smaller: add only the table behaviours you need',
-            'Zero styling or markup opinions — plugins manage state while your Svelte components own the UI'
+            'Svelte-only public API and documentation — there is no framework-neutral guide to translate into Svelte concepts',
+            'Table behaviours are named plugins on one createTable call, with their stores grouped under pluginStates',
+            'Cell renderers are ordinary Svelte components through createRender, and the view model exposes familiar Svelte stores',
+            'Integrated addVirtualScroll plugin for semantic table virtualization without choosing and wiring a separate virtualizer'
         ],
         prosThem: [
-            'Battle-tested at scale across React, Vue, Solid, Svelte, Qwik, Angular, and Lit',
+            'Runes-native Svelte 5 adapter backed by TanStack Store atoms',
+            'Battle-tested core shared across React, Vue, Solid, Svelte, Qwik, Angular, Lit, and other adapters',
             'Massive ecosystem (~28k GitHub stars) and rich third-party tooling',
-            'Column pinning, row pinning, and virtualized infinite scroll built into the core',
+            'Column pinning, row pinning, and a broader set of advanced table primitives',
+            'Published large-table performance work and tree-shakable feature registration',
             'Cross-framework knowledge transfer — same mental model in every adapter'
         ],
-        consUs: [...shared.consUs, 'No column pinning or row pinning yet — open feature requests'],
+        consUs: [
+            'Much smaller community and third-party ecosystem',
+            'No column pinning or row pinning yet — open feature requests',
+            'No published large-table benchmark suite to compare with TanStack v9 claims',
+            'Plugin order affects transformations and must be understood when composing complex tables'
+        ],
         consThem: [
             'Framework-agnostic core plus a Svelte adapter introduces more concepts and type boundaries than a Svelte-only API',
             'Broader feature surface can mean more API to learn when you only need a focused data table',
-            'Headless by design, but its patterns must remain consistent across ten framework adapters rather than optimise solely for Svelte'
+            'Virtualization requires choosing and integrating TanStack Virtual or another virtualizer'
         ],
         verdict:
-            'Choose TanStack Table when you need the same table model across multiple frameworks, its larger ecosystem, or built-in pinning. Choose @humanspeak/svelte-headless-table when you want a smaller Svelte-first mental model, one plugin-composed API, and complete control of markup and styling. Both support Svelte 5 natively.',
+            'TanStack Table is the stronger default when you need pinning, a large ecosystem, published performance work, or one table model across frameworks. Choose @humanspeak/svelte-headless-table when your application is Svelte-only, its focused feature set covers the job, and you prefer named plugins, pluginStates, Svelte stores, and Svelte component renderers over adopting the broader TanStack model. Both are native to Svelte 5, headless, TypeScript-first, and MIT.',
         keywords: [
             'tanstack table',
             'tanstack svelte table',
