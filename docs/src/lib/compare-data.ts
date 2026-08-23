@@ -142,9 +142,9 @@ export const competitors: Competitor[] = [
     {
         slug: 'vs-vincjo-datatables',
         name: '@vincjo/datatables',
-        tagline: 'Svelte 5-native datatable toolkit vs plugin-composed primitive',
+        tagline: 'Server-friendly table handlers vs a broader plugin-composed table model',
         description:
-            '@vincjo/datatables is an actively maintained Svelte 5-native headless toolkit for datatables — pagination, filter, sort, selection, lazy-loading. @humanspeak/svelte-headless-table covers the same surface as composable plugins plus group-by, expanded rows, sub-rows, column resize / reorder / hide, and a virtual-scroll plugin.',
+            'Both libraries are MIT-licensed, TypeScript-first, and native to Svelte 5. @vincjo/datatables centres on a TableHandler with concise client- and server-side APIs plus optional prebuilt controls. @humanspeak/svelte-headless-table uses named plugins and a store-based view model to cover a broader set of structural table behaviours. Vincjo is the more direct fit for server-driven CRUD tables; ours is the stronger fit for grouped, hierarchical, resizable, reorderable, or virtualized tables.',
         website: 'https://vincjo.fr/datatables',
         github: 'https://github.com/vincjo/datatables',
         npm: '@vincjo/datatables',
@@ -155,7 +155,7 @@ export const competitors: Competitor[] = [
                 name: 'Svelte 5 Native',
                 us: true,
                 them: true,
-                note: '`@vincjo/datatables@2.8.0` peerDependency is `svelte: ^5.16.0` — Svelte 5 only.'
+                note: '`@vincjo/datatables@2.8.1` declares `svelte: ^5.56.1` — both packages target Svelte 5.'
             },
             { name: 'TypeScript Support', us: true, them: true },
             { name: 'Headless Rendering', us: true, them: true },
@@ -173,29 +173,38 @@ export const competitors: Competitor[] = [
             { name: 'Sub-Rows / Expansion', us: 'addExpandedRows + addSubRows', them: false },
             { name: 'Column Resizing', us: 'addResizedColumns plugin', them: false },
             { name: 'Column Reordering', us: 'addColumnOrder plugin', them: false },
-            { name: 'Hidden Columns', us: 'addHiddenColumns plugin', them: false },
+            { name: 'Hidden Columns', us: 'addHiddenColumns plugin', them: true },
             { name: 'Virtual Scroll', us: 'addVirtualScroll plugin', them: false },
             { name: 'GitHub Stars', us: 'Smaller community', them: '~585' },
-            { name: 'Licence', us: 'MIT', them: 'MIT' }
+            {
+                name: 'Licence',
+                us: 'MIT',
+                them: 'MIT',
+                note: 'Licence is parity, not a differentiator.'
+            }
         ],
         prosUs: [
-            ...shared.prosUs,
             'Group-by, expansion, column reorder / resize / hide, and virtual scroll are first-class plugins',
-            'Cell renderers are real Svelte components — embed charts, action menus, status pills',
-            'Reactive store-based view model — fits any state library, no special "handler" abstraction'
+            'Named plugin stores expose each behaviour through one pluginStates object',
+            'Cell renderers are ordinary Svelte components through createRender'
         ],
         prosThem: [
             'First-class lazy-loading / server-driven sort + filter + paginate handler',
-            'Smaller surface to learn — pagination, filter, sort, selection covers most CRUD UIs',
-            'Strong out-of-box ergonomics for table-as-form patterns'
+            'Smaller surface to learn for common sort, filter, paginate, and select workflows',
+            'Optional Datatable, Search, RowsPerPage, RowCount, and Pagination components reduce setup',
+            'Rune-backed handler properties and concise setter methods minimise boilerplate'
         ],
-        consUs: [...shared.consUs, 'No built-in server-side handler — you wire the fetch yourself'],
+        consUs: [
+            'No dedicated server-side handler — you wire plugin state into data fetching yourself',
+            'More concepts and markup to learn for a conventional CRUD table',
+            'Plugin order affects row transformations'
+        ],
         consThem: [
-            'No group-by, sub-rows, column reorder / resize / hide, or virtual scroll',
+            'No documented group-by, sub-row hierarchy, column reorder / resize, or virtual scroll',
             'Smaller plugin surface — long-tail table features need DIY implementation'
         ],
         verdict:
-            'Choose @vincjo/datatables when your needs are sort + filter + paginate + select (especially with a server-driven backend) and the smaller surface area is a feature, not a limitation. Choose @humanspeak/svelte-headless-table when you need group-by, true virtual scroll, column resize / reorder, or sub-row hierarchies.',
+            'Choose @vincjo/datatables for a conventional sort, filter, paginate, and select table — especially when the server owns the data operations or its optional controls save useful setup. Choose @humanspeak/svelte-headless-table when the table needs grouping, hierarchical rows, integrated virtual scrolling, or column resize and reorder. Svelte 5, TypeScript, headless markup, hidden columns, and MIT licensing are not reasons to choose between them.',
         keywords: [
             '@vincjo/datatables',
             'vincjo datatables',
