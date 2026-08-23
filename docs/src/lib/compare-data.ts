@@ -379,9 +379,9 @@ export const competitors: Competitor[] = [
     {
         slug: 'vs-ag-grid',
         name: 'AG Grid',
-        tagline: 'Enterprise multi-framework grid vs Svelte 5-native headless primitive',
+        tagline: 'A full enterprise grid vs a Svelte-native headless table toolkit',
         description:
-            'AG Grid is the gold standard for enterprise data grids — pivot tables, master/detail, range selection, integrated charts, server-side row model. It officially supports React, Angular, and Vue; Svelte usage is via the unofficial community wrapper `ag-grid-svelte`. @humanspeak/svelte-headless-table is a focused, MIT-licensed, Svelte 5-native headless primitive that stays out of your markup and your budget.',
+            'AG Grid is a complete, styled data-grid platform with community and paid Enterprise features, including pivoting, master/detail, range selection, charts, and a server-side row model. It has no first-party Svelte adapter; Svelte applications can mount the JavaScript grid directly or use an outdated community wrapper. @humanspeak/svelte-headless-table is a first-party Svelte 5 headless toolkit for applications that want to own the markup and do not need spreadsheet-grade enterprise features.',
         website: 'https://www.ag-grid.com',
         github: 'https://github.com/ag-grid/ag-grid',
         npm: 'ag-grid-community',
@@ -392,7 +392,7 @@ export const competitors: Competitor[] = [
                 name: 'Svelte 5 Native',
                 us: true,
                 them: false,
-                note: '`ag-grid-svelte@0.3.0` (unofficial community wrapper) peerDependency: `svelte: ^3`, `ag-grid-community: ^28 || ^29 || ^30`. Current `ag-grid-community` is v35 — the wrapper trails by five major versions.'
+                note: '`ag-grid-svelte@0.3.0` is an unofficial wrapper declaring `svelte: ^3` and `ag-grid-community: ^28 || ^29 || ^30`; current `ag-grid-community` is v36.1.0. Direct JavaScript mounting remains possible.'
             },
             { name: 'First-Party Svelte Support', us: true, them: false },
             { name: 'TypeScript Support', us: true, them: true },
@@ -426,10 +426,10 @@ export const competitors: Competitor[] = [
             { name: 'GitHub Stars', us: 'Smaller community', them: '~15k' }
         ],
         prosUs: [
-            ...shared.prosUs,
-            'No licensing tier — every plugin is MIT, no surprise paid features',
             'First-party Svelte 5 support via the package peer dependency — no community wrapper required',
-            'Tree-shakeable — pay only for the plugins you import'
+            'Application owns semantic table markup and can use any design system',
+            'Every shipped plugin is MIT; grouping and hierarchical rows are not paid features',
+            'Smaller conceptual and bundle surface for conventional application tables'
         ],
         prosThem: [
             'Industry-leading feature set — pivot, master/detail, range selection, integrated charts',
@@ -438,18 +438,19 @@ export const competitors: Competitor[] = [
             'Battle-tested in financial, analytics, and BI dashboards at very large scale'
         ],
         consUs: [
-            ...shared.consUs,
+            'You build all table markup, controls, and styling',
+            'Far smaller ecosystem and less evidence from very large production datasets',
             'No pivot tables, range selection, or master/detail out of the box',
             'No managed server-side row model — you wire data fetching yourself'
         ],
         consThem: [
-            'No first-party Svelte integration; the unofficial `ag-grid-svelte` wrapper is stuck on Svelte 3 + AG Grid v28–30 (current AG Grid is v35)',
+            'No first-party Svelte integration; the unofficial wrapper targets Svelte 3 and AG Grid v28–30 while the current core is v36',
             'Pivot, tree data, master/detail, and server-side row model are gated behind the paid Enterprise licence',
-            'Heavy bundle for use cases that don’t need pivot / charts',
-            'Theming requires AG Grid theme APIs — not a Tailwind / shadcn-svelte drop-in'
+            'More package and API surface than conventional tables need',
+            'Markup and theming are controlled through AG Grid APIs rather than application-owned table elements'
         ],
         verdict:
-            'Choose AG Grid when your product centres on heavyweight enterprise grid features — pivots, master/detail, range selection, server-side row model — and the Enterprise budget fits. Choose @humanspeak/svelte-headless-table when you want first-party Svelte 5 support, MIT licensing across every feature, and a markup surface you control.',
+            'Choose AG Grid when the grid is a major product surface and you need pivoting, master/detail, range selection, managed server-side data, enterprise support, or its mature ecosystem. Choose @humanspeak/svelte-headless-table for a Svelte 5 application table when first-party Svelte integration, application-owned markup, a smaller surface, and MIT grouping or hierarchical-row features matter more than enterprise-grid breadth. AG Grid Community is also MIT; licensing only differentiates features that AG Grid reserves for Enterprise.',
         keywords: [
             'ag-grid svelte',
             'ag-grid alternative',
