@@ -47,9 +47,9 @@ export const competitors: Competitor[] = [
     {
         slug: 'vs-tanstack-table',
         name: 'TanStack Table',
-        tagline: 'Multi-framework adapter (Svelte 3/4) vs Svelte 5-native headless',
+        tagline: 'Svelte-first plugin composition vs a multi-framework table core',
         description:
-            'TanStack Table is the multi-framework headless table primitive that powers React, Vue, Solid, Angular, Qwik, Lit, and Svelte through adapters. The official `@tanstack/svelte-table` adapter targets Svelte 3 / 4 — Svelte 5 support is community-supplied via `tanstack-table-8-svelte-5`. @humanspeak/svelte-headless-table is purpose-built for Svelte 5, no adapter layer, no React-flavoured patterns leaking through.',
+            'TanStack Table is the multi-framework headless table primitive that powers React, Vue, Solid, Angular, Qwik, Lit, and Svelte through adapters. As of v9, its official Svelte adapter is runes-native and supports Svelte 5. @humanspeak/svelte-headless-table takes a narrower, Svelte-first approach: one createTable API, composable plugins, and zero styling or markup opinions.',
         website: 'https://tanstack.com/table',
         github: 'https://github.com/TanStack/table',
         npm: '@tanstack/svelte-table',
@@ -57,10 +57,10 @@ export const competitors: Competitor[] = [
         approach: 'Framework-agnostic core + per-framework adapter',
         features: [
             {
-                name: 'Svelte 5 Native',
+                name: 'Svelte 5 Support',
                 us: true,
-                them: false,
-                note: '`@tanstack/svelte-table@8.21.3` peerDependency is `svelte: ^4.0.0 || ^3.49.0`. Svelte 5 requires the community drop-in `tanstack-table-8-svelte-5` (peer `svelte: ^5`).'
+                them: true,
+                note: 'Both packages support Svelte 5 natively. `@tanstack/svelte-table@9.1.2` declares `svelte: ^5.0.0` and uses runes with Svelte-aware atom bindings.'
             },
             { name: 'TypeScript Support', us: true, them: true },
             { name: 'Headless Rendering', us: true, them: true },
@@ -96,8 +96,9 @@ export const competitors: Competitor[] = [
         ],
         prosUs: [
             ...shared.prosUs,
-            'Officially supports Svelte 5 today via the package peer dependency',
-            'API designed against Svelte 5 patterns — runes, stores, snippets — not ported from a React-shaped core'
+            'Svelte-first API with one createTable surface — no core + adapter type boundary to reason across',
+            'Focused plugin composition keeps the conceptual surface smaller: add only the table behaviours you need',
+            'Zero styling or markup opinions — plugins manage state while your Svelte components own the UI'
         ],
         prosThem: [
             'Battle-tested at scale across React, Vue, Solid, Svelte, Qwik, Angular, and Lit',
@@ -107,13 +108,12 @@ export const competitors: Competitor[] = [
         ],
         consUs: [...shared.consUs, 'No column pinning or row pinning yet — open feature requests'],
         consThem: [
-            'Official `@tanstack/svelte-table` adapter does not list Svelte 5 in its peer dependencies as of v8.21.3',
-            'Svelte 5 users rely on the community drop-in `tanstack-table-8-svelte-5` (maintained by a Svelte core team member, but separate package)',
-            'API is a port of the framework-agnostic core — still feels secondhand in Svelte',
-            'Heavier mental overhead juggling core types + adapter types'
+            'Framework-agnostic core plus a Svelte adapter introduces more concepts and type boundaries than a Svelte-only API',
+            'Broader feature surface can mean more API to learn when you only need a focused data table',
+            'Headless by design, but its patterns must remain consistent across ten framework adapters rather than optimise solely for Svelte'
         ],
         verdict:
-            'Choose TanStack Table when you need the same primitive across multiple frameworks, or when column pinning is a hard requirement today. Choose @humanspeak/svelte-headless-table when first-class Svelte 5 support — straight from the package peer dependency, not via a community drop-in — matters more than cross-framework reach.',
+            'Choose TanStack Table when you need the same table model across multiple frameworks, its larger ecosystem, or built-in pinning. Choose @humanspeak/svelte-headless-table when you want a smaller Svelte-first mental model, one plugin-composed API, and complete control of markup and styling. Both support Svelte 5 natively.',
         keywords: [
             'tanstack table',
             'tanstack svelte table',
