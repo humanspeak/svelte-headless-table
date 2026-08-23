@@ -462,9 +462,9 @@ export const competitors: Competitor[] = [
     {
         slug: 'vs-handsontable',
         name: 'Handsontable',
-        tagline: 'JavaScript spreadsheet (React/Angular/Vue) vs Svelte 5-native data table',
+        tagline: 'A spreadsheet-grade data grid vs a Svelte-native application table',
         description:
-            'Handsontable is a JavaScript spreadsheet component — cell formulas, range selection, copy/paste from Excel — with first-party React, Angular, and Vue wrappers. There is no first-party Svelte integration; Svelte users mount it on a div ref like a vanilla JS widget. @humanspeak/svelte-headless-table is a focused Svelte 5-native data-table primitive — not a spreadsheet.',
+            'Handsontable is a spreadsheet-style JavaScript data grid with first-party React, Angular, and Vue integrations, plus a vanilla JavaScript API that Svelte applications can mount directly. It provides editing, range selection, formulas, copy/paste, merged cells, and frozen regions. @humanspeak/svelte-headless-table is a headless Svelte 5 toolkit for rendering application data tables, not a substitute for spreadsheet workflows.',
         website: 'https://handsontable.com',
         github: 'https://github.com/handsontable/handsontable',
         npm: 'handsontable',
@@ -487,21 +487,26 @@ export const competitors: Competitor[] = [
                 them: false,
                 note: 'Spreadsheets scroll the full sheet; pagination is not a typical pattern.'
             },
-            { name: 'Inline Cell Editing', us: 'createRender(EditableCell)', them: 'First-class' },
+            {
+                name: 'Inline Cell Editing',
+                us: 'Application-owned EditableCell renderer',
+                them: 'First-class editors and cell types'
+            },
             { name: 'Cell Formulas', us: false, them: 'HyperFormula engine' },
             { name: 'Range / Cell Selection', us: false, them: true },
             { name: 'Copy / Paste from Excel', us: false, them: true },
             { name: 'Merged Cells', us: false, them: true },
-            { name: 'Frozen Rows + Cols', us: 'BYO via CSS', them: true },
+            { name: 'Frozen Rows + Cols', us: false, them: true },
             { name: 'Virtual Scroll', us: 'addVirtualScroll plugin', them: true },
             { name: 'Group By', us: 'addGroupBy plugin', them: false },
             { name: 'GitHub Stars', us: 'Smaller community', them: '~22k' },
             { name: 'Licence', us: 'MIT', them: 'Non-commercial free / Commercial paid' }
         ],
         prosUs: [
-            ...shared.prosUs,
-            'Truly headless — drop into Tailwind / shadcn-svelte / bits-ui without fighting a theme',
-            'MIT — no commercial licence required for commercial use'
+            'First-party Svelte 5 API with familiar stores and Svelte component renderers',
+            'Application owns semantic table markup and can use any design system',
+            'MIT licence permits commercial use without a paid Handsontable licence',
+            'Focused table-state surface when spreadsheet interactions are unnecessary'
         ],
         prosThem: [
             'Excel-like interactions out of the box — formulas, range selection, copy/paste from Excel',
@@ -510,17 +515,18 @@ export const competitors: Competitor[] = [
             'Long history (since 2012) with active commercial support'
         ],
         consUs: [
-            ...shared.consUs,
-            'Not a spreadsheet — no formulas, range selection, or Excel paste'
+            'Not a spreadsheet — no formulas, range selection, merged cells, frozen regions, or Excel paste',
+            'Editing is an application-owned renderer pattern rather than a built-in editor system',
+            'You build all table markup, controls, and styling'
         ],
         consThem: [
             'No first-party Svelte integration — mount on a div ref like a vanilla JS widget',
             'Commercial use requires a paid licence',
-            'Heavy bundle for table-only use cases',
-            'CSS is theme-locked; integrating with a design system means custom theme work'
+            'Substantially more UI and API surface than a read-oriented application table needs',
+            'Handsontable owns the grid DOM and styling model rather than exposing application-owned table markup'
         ],
         verdict:
-            'Choose Handsontable when your product is fundamentally a spreadsheet — formulas, range selection, Excel-style interactions are core to the workflow — and you accept the commercial licence + DIY Svelte mount. Choose @humanspeak/svelte-headless-table when you are displaying rows of data, not building a spreadsheet: lighter, MIT, Svelte 5-native.',
+            'Choose Handsontable when users need a spreadsheet: rich editing, formulas, range selection, Excel-style copy/paste, merged cells, or frozen regions justify its grid model and commercial licence. Choose @humanspeak/svelte-headless-table when the product needs a Svelte-native application table with owned markup, composable data operations, and MIT commercial use. These tools solve different jobs more than they compete feature-for-feature.',
         keywords: [
             'handsontable svelte',
             'svelte spreadsheet',
