@@ -10,4 +10,4 @@ allowBuilds:
     esbuild: true
     sharp: true
     workerd: true
-    '@humanspeak/docs-kit@https://codeload.github.com/humanspeak/docs-kit/tar.gz/19ef35386a88cb07c735cc11c26916eb67aab415': true
+    '@humanspeak/docs-kit@https://codeload.github.com/humanspeak/docs-kit/tar.gz/728b1f534ebcf10674a04839cbd987d7e000be16': true
