@@ -33,9 +33,9 @@
 
     const seoContext = getSeoContext()
     if (seoContext) {
-        seoContext.title = 'Svelte Headless Table — Build Custom Data Tables for Svelte 5'
+        seoContext.title = 'Svelte 5 Headless Table | Plugin-Based Data Tables'
         seoContext.description =
-            'A powerful, headless table library for Svelte 5 — composable sorting, filtering, pagination, grouping, selection, column resizing, sub-rows, and virtual scroll plugins. TypeScript-first, zero markup opinions.'
+            'Build custom Svelte 5 data tables with composable plugins for sorting, filtering, pagination, and more. The maintained successor to svelte-headless-table.'
         seoContext.ogTitle = 'Svelte Headless Table'
         seoContext.ogTagline = 'Headless tables for Svelte 5.'
         seoContext.ogFeatures = ['Svelte 5 Runes', 'Headless', 'Plugin Composition', 'TypeScript']
@@ -217,10 +217,10 @@
 </script>
 
 <svelte:head>
-    <title>svelte-headless-table · headless data tables for Svelte 5</title>
+    <title>Svelte 5 Headless Table | Plugin-Based Data Tables</title>
     <meta
         name="description"
-        content="A headless, plugin-composed table library for Svelte 5. {PLUGIN_COUNT} plugins for sorting, filtering, pagination, grouping, selection, column resizing, sub-rows, and virtual scroll. TypeScript-first, MIT."
+        content="Build custom Svelte 5 data tables with composable plugins for sorting, filtering, pagination, and more. The maintained successor to svelte-headless-table."
     />
 </svelte:head>
 
