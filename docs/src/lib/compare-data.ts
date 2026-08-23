@@ -297,9 +297,9 @@ export const competitors: Competitor[] = [
     {
         slug: 'vs-flowbite-svelte-datatable',
         name: 'Flowbite Svelte Datatable',
-        tagline: 'Tailwind-styled Flowbite datatable vs design-system-agnostic headless',
+        tagline: 'A ready-made Flowbite table vs complete markup and state control',
         description:
-            '@flowbite-svelte-plugins/datatable is an advanced datatable plugin for the Flowbite Svelte design system, built against Svelte 5 + Tailwind 4. @humanspeak/svelte-headless-table is design-system-agnostic — drop it into Flowbite, shadcn-svelte, bits-ui, or your own CSS without fighting class names.',
+            '@flowbite-svelte-plugins/datatable is a Svelte 5 and Tailwind 4 component built for the Flowbite Svelte design system. It provides styled table chrome and practical datatable controls with little setup. @humanspeak/svelte-headless-table owns table state but renders no UI, making it a better foundation when the application must own every element or use another design system. Both are TypeScript-first and MIT-licensed.',
         website: 'https://github.com/shinokada/flowbite-svelte-plugins',
         github: 'https://github.com/shinokada/flowbite-svelte-plugins',
         npm: '@flowbite-svelte-plugins/datatable',
@@ -327,6 +327,8 @@ export const competitors: Competitor[] = [
             { name: 'Sorting', us: true, them: true },
             { name: 'Filtering', us: true, them: true },
             { name: 'Pagination', us: true, them: true },
+            { name: 'Row Selection', us: 'addSelectedRows plugin', them: true },
+            { name: 'Prebuilt Table UI', us: false, them: 'Flowbite-styled component' },
             { name: 'Group By', us: 'addGroupBy plugin', them: 'Not documented' },
             {
                 name: 'Sub-Rows / Expansion',
@@ -336,26 +338,36 @@ export const competitors: Competitor[] = [
             { name: 'Column Resizing', us: 'addResizedColumns plugin', them: 'Not documented' },
             { name: 'Column Reordering', us: 'addColumnOrder plugin', them: 'Not documented' },
             { name: 'Virtual Scroll', us: 'addVirtualScroll plugin', them: 'Not documented' },
-            { name: 'Licence', us: 'MIT', them: 'MIT' }
+            {
+                name: 'Licence',
+                us: 'MIT',
+                them: 'MIT',
+                note: 'Licence is parity, not a differentiator.'
+            }
         ],
         prosUs: [
-            ...shared.prosUs,
-            'Bring your own design system — Flowbite, shadcn-svelte, bits-ui, or hand-rolled CSS all work',
-            'Plugin set covers the long tail (group-by, virtual scroll, column resize / reorder) Flowbite Datatable does not document'
+            'Application owns every table element and can use any design system or CSS strategy',
+            'Plugin set covers grouping, hierarchical rows, virtual scrolling, and column resize / reorder',
+            'Cell content can be an ordinary Svelte component rather than a string-producing render callback'
         ],
         prosThem: [
             'Visually consistent with the rest of a Flowbite Svelte UI out of the box',
-            'Pre-styled — no Tailwind utility classes to write yourself',
-            'Single-import experience inside Flowbite-based apps'
+            'Prebuilt pagination, search, sorting, row selection, and table controls minimise setup',
+            'Extensive simple-datatables options and render hooks for common datatable customisation',
+            'Single-component experience inside Flowbite-based apps'
         ],
-        consUs: [...shared.consUs, 'No prebuilt Flowbite-styled chrome — you write the markup'],
+        consUs: [
+            'No prebuilt chrome — you write the table markup, controls, and styles',
+            'More setup than a ready-made Flowbite component',
+            'Plugin order affects row transformations'
+        ],
         consThem: [
-            'Requires Tailwind 4 + the Flowbite Svelte design system to integrate cleanly',
-            'Visual style is tied to Flowbite — overriding the look means fighting the design system',
-            'Plugin is early-stage (v0.4.1) — feature coverage and stability are still maturing'
+            'Requires Tailwind 4 and is designed around the Flowbite Svelte visual system',
+            'Component-owned markup offers less structural control than a headless view model',
+            'No documented grouping, hierarchical rows, column resize / reorder, or virtual scrolling'
         ],
         verdict:
-            'Choose @flowbite-svelte-plugins/datatable when you are already shipping a Flowbite Svelte UI and want the datatable to match. Choose @humanspeak/svelte-headless-table when your app uses a different design system (or none), or when you need the long-tail features the Flowbite plugin does not yet ship.',
+            'Choose Flowbite Svelte Datatable when the application already uses Flowbite and a styled, low-setup table is the goal. Choose @humanspeak/svelte-headless-table when you need complete markup ownership, another design system, Svelte component renderers, grouping, hierarchical rows, column operations, or integrated virtual scrolling. Svelte 5, TypeScript, sorting, filtering, pagination, selection, and MIT licensing are shared capabilities.',
         keywords: [
             'flowbite svelte datatable',
             'flowbite-svelte-plugins',
