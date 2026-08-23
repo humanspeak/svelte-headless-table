@@ -216,9 +216,9 @@ export const competitors: Competitor[] = [
     {
         slug: 'vs-svelte-table',
         name: 'svelte-table',
-        tagline: 'Minimal sortable table vs full plugin suite',
+        tagline: 'A drop-in sortable component vs a composable table toolkit',
         description:
-            'svelte-table (by dasDaniel) is a small, actively maintained headless table component with sortable headers, filters, search, custom cell rendering, and row select / expand. @humanspeak/svelte-headless-table gives up the single-component API in exchange for plugin composition that covers the long-tail features svelte-table does not.',
+            'svelte-table by dasDaniel is a small, MIT-licensed component for sorting, filtering, searching, selecting, and expanding rows. Its last release was v0.6.5 in July 2025 and it declares no Svelte peer dependency. @humanspeak/svelte-headless-table requires more setup, but provides explicit Svelte 5 support, full markup ownership, and plugins for pagination, grouping, hierarchical data, column operations, and virtual scrolling.',
         website: 'https://github.com/dasDaniel/svelte-table',
         github: 'https://github.com/dasDaniel/svelte-table',
         npm: 'svelte-table',
@@ -226,18 +226,17 @@ export const competitors: Competitor[] = [
         approach: 'Single `<SvelteTable>` component with extensive className + render props',
         features: [
             {
-                name: 'Latest Version',
-                us: '6.0.6',
-                them: '0.6.5 (Jul 2025)'
-            },
-            {
-                name: 'Svelte 5 Native',
+                name: 'Svelte 5 Support',
                 us: true,
                 them: 'Not declared',
                 note: '`svelte-table@0.6.5` ships no `peerDependencies` field; flexibility is up to the runtime.'
             },
             { name: 'TypeScript Support', us: true, them: true },
-            { name: 'Headless Rendering', us: true, them: true },
+            {
+                name: 'Markup Ownership',
+                us: 'Application owns the complete table tree',
+                them: 'Component-owned markup with slots, renderers, and class props'
+            },
             { name: 'Sorting', us: true, them: true },
             { name: 'Column Filters', us: true, them: true },
             { name: 'Search', us: 'addTableFilter plugin', them: true },
@@ -256,27 +255,37 @@ export const competitors: Competitor[] = [
                 them: 'Components or functions'
             },
             { name: 'GitHub Stars', us: 'Smaller community', them: '~560' },
-            { name: 'Licence', us: 'MIT', them: 'MIT' }
+            {
+                name: 'Licence',
+                us: 'MIT',
+                them: 'MIT',
+                note: 'Licence is parity, not a differentiator.'
+            }
         ],
         prosUs: [
-            ...shared.prosUs,
             'Pagination, group-by, sub-rows, column resize / reorder, and virtual scroll are first-class plugins',
-            'Hidden columns are a runtime setting, not a re-render gymnastics exercise'
+            'The application owns every table element rather than styling component-owned markup through class props',
+            'Explicit Svelte 5 peer dependency and actively maintained Svelte 5 implementation'
         ],
         prosThem: [
             'Single-component API — drop in a `<SvelteTable>` and pass props',
             'Tiny bundle footprint',
-            'Actively maintained — latest release July 2025',
-            'Friendly first-time experience for simple sortable tables'
+            'Built-in sorting, filters, search, selection, and expandable content cover many small tables',
+            'Components or functions can render custom cell content'
         ],
-        consUs: [...shared.consUs, 'Not the fastest path to a "just a sortable table" prototype'],
+        consUs: [
+            'More setup and concepts than a single component',
+            'Not the fastest path to a simple sortable-table prototype',
+            'Smaller community despite the broader feature surface'
+        ],
         consThem: [
             'No pagination, group-by, sub-rows, column resize, or virtual scroll',
             'Single-component API limits markup customisation beyond `className*` props',
-            'No declared Svelte 5 peer-dependency — flexibility is implicit, not contractual'
+            'No declared Svelte 5 peer dependency — compatibility is implicit rather than contractual',
+            'No release since July 2025'
         ],
         verdict:
-            'Choose svelte-table when you want a single drop-in component for a sortable, filterable, selectable table with minimal ceremony. Choose @humanspeak/svelte-headless-table when you need pagination, group-by, sub-rows, column resize / reorder, virtual scroll, or any feature beyond what a one-component API can express.',
+            'Choose svelte-table when a tiny drop-in component with sorting, filtering, selection, and expandable content is enough and minimal setup matters most. Choose @humanspeak/svelte-headless-table when you need explicit Svelte 5 support, complete control of table markup, pagination, grouping, hierarchical rows, column resize or reorder, or virtual scrolling. TypeScript and MIT licensing are parity.',
         keywords: [
             'svelte-table',
             'dasDaniel svelte-table',
