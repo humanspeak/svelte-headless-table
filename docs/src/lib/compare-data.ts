@@ -21,28 +21,6 @@ export const ours: ComparisonOurs = {
     url: 'https://table.svelte.page'
 }
 
-/**
- * Strengths + weaknesses that apply across every comparison — saves
- * repeating the same lines under each competitor while letting each
- * page append competitor-specific bullets via spread.
- */
-const shared = {
-    prosUs: [
-        'Svelte 5 runes-native — peer-dependency is `svelte: ^5`, rebuilt for runes (not retrofitted)',
-        'Truly headless — you own the `<table>` markup and every cell',
-        'TypeScript-first with generics that carry the row type through every plugin',
-        '15 composable plugins on one `createTable` call — sorting, filtering, pagination, grouping, expansion, selection, column resize, sub-rows, virtual scroll, and more',
-        'Custom cell renderers via `createRender` — any Svelte component becomes a cell',
-        'Store-based view model — composes with whatever state library you already use',
-        'MIT — zero licence fees and no Enterprise tier'
-    ],
-    consUs: [
-        'Headless by design — you write more markup than a prebuilt styled table',
-        'Smaller community than TanStack Table or AG Grid',
-        'Plugin order matters — composition is powerful but takes a few minutes to learn'
-    ]
-}
-
 export const competitors: Competitor[] = [
     {
         slug: 'vs-tanstack-table',
