@@ -126,7 +126,14 @@ export const docsSections: NavSection[] = [
     {
         title: 'Guides',
         icon: Compass,
-        items: [{ title: 'shadcn-svelte', href: '/docs/guides/shadcn-svelte', icon: BookOpen }]
+        items: [
+            { title: 'shadcn-svelte', href: '/docs/guides/shadcn-svelte', icon: BookOpen },
+            {
+                title: 'Migrating from 0.17.x',
+                href: '/docs/guides/migrating-from-svelte-headless-table',
+                icon: BookOpen
+            }
+        ]
     }
 ]
 

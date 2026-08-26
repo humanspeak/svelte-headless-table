@@ -1,0 +1,131 @@
+---
+title: Migrating from svelte-headless-table 0.17.x
+description: Move from the original svelte-headless-table to the maintained Svelte 5 successor
+sidebar_title: Migrating from 0.17.x
+---
+
+<script>
+  import Admonition from '$lib/components/Admonition.svelte'
+  import { getSeoContext } from '@humanspeak/docs-kit'
+  const seo = getSeoContext()
+  if (seo) {
+      seo.title = 'Migrating from svelte-headless-table 0.17.x'
+      seo.description = 'Move from the unmaintained svelte-headless-table 0.17.x/0.18.x to @humanspeak/svelte-headless-table on Svelte 5. Two changes: the package name and your Svelte version.'
+      seo.ogTitle = 'Migrating from 0.17.x'
+      seo.ogTagline = 'From the original package to the Svelte 5 successor.'
+      seo.ogFeatures = ['Same API', 'Svelte 5', 'Rename Imports', '15 Plugins']
+      seo.ogSlug = 'guides-migrating'
+  }
+</script>
+
+# Migrating from svelte-headless-table 0.17.x
+
+The original [`svelte-headless-table`](https://www.npmjs.com/package/svelte-headless-table) package (bryanmylee/svelte-headless-table) is unmaintained — its last npm publish was version 0.18.3 on 2024-10-28, and it targets Svelte 3/4. `@humanspeak/svelte-headless-table` is the actively maintained successor, rebuilt for Svelte 5.
+
+The good news: the public API matches the final original releases (0.17.7 through 0.18.3). `createTable`, `createColumns`, `createViewModel`, `Subscribe`, `Render`, `createRender`, and every original plugin keep their names and signatures. For most projects the migration is two changes: the package name in your imports, and your Svelte version.
+
+<Admonition type="note">These steps apply equally to 0.17.x and 0.18.x installs of the original package, with one exception: server-side pagination changed within the original package at 0.17.7. If you use <code>addPagination({ serverSide: true })</code> on 0.17.6 or earlier, see <a href="#server-side-pagination-on-0176-or-earlier">the extra step below</a>.</Admonition>
+
+## 1. Upgrade to Svelte 5
+
+`@humanspeak/svelte-headless-table` requires Svelte 5 (peer dependency `svelte: ^5.30.0`) because the internals use runes. If your app is still on Svelte 4, follow the official [Svelte 5 migration guide](https://svelte.dev/docs/svelte/v5-migration-guide) first — `npx sv migrate svelte-5` automates most of it.
+
+Your existing table code uses Svelte stores (`writable`, `$store` subscriptions), and that keeps working in Svelte 5 — you do not need to rewrite table state as runes.
+
+## 2. Swap the package
+
+```bash
+npm uninstall svelte-headless-table
+npm install @humanspeak/svelte-headless-table
+```
+
+## 3. Rename your imports
+
+For most apps the only code change is the import specifier — including the `/plugins` entry point:
+
+```ts
+// Before (0.17.x / 0.18.x)
+import { createTable, Render, Subscribe, createRender } from 'svelte-headless-table'
+import { addSortBy, addPagination } from 'svelte-headless-table/plugins'
+
+// After
+import { createTable, Render, Subscribe, createRender } from '@humanspeak/svelte-headless-table'
+import { addSortBy, addPagination } from '@humanspeak/svelte-headless-table/plugins'
+```
+
+A project-wide find-and-replace of `'svelte-headless-table` → `'@humanspeak/svelte-headless-table` covers both entry points.
+
+Column definitions, view models, plugin configuration, and `Subscribe`/`Render` markup compile unchanged:
+
+```ts
+const table = createTable(data, {
+    sort: addSortBy(),
+    page: addPagination()
+})
+
+const columns = table.createColumns([
+    table.column({ header: 'Name', accessor: 'name' }),
+    table.column({ header: 'Age', accessor: 'age' })
+])
+
+const { headerRows, pageRows, tableAttrs, tableBodyAttrs } = table.createViewModel(columns)
+```
+
+## Server-side pagination on 0.17.6 or earlier
+
+The one API change in the 0.17.x range predates this package: original versions 0.17.0–0.17.6 configured server-side pagination with `addPagination({ serverSide: true })` and exposed a **writable** item-count store on plugin state (`serverItemsCount` up to 0.17.5, renamed `serverItemCount` in 0.17.6) that your app set after each server response. Starting with original 0.17.7 — and in this package — you create that store yourself and pass it in as `serverItemCount: Readable<number>`:
+
+```ts
+// Before (0.17.0–0.17.6)
+const table = createTable(data, {
+    page: addPagination({ serverSide: true })
+})
+const { pageIndex, pageSize, serverItemCount } = table.createViewModel(columns).pluginStates.page
+
+const res = await fetchPage($pageIndex, $pageSize)
+serverItemCount.set(res.totalItems) // plugin-state store
+
+// After (0.17.7+ and @humanspeak/svelte-headless-table)
+import { writable } from 'svelte/store'
+
+const serverItemCount = writable(0) // your own store
+const table = createTable(data, {
+    page: addPagination({ serverSide: true, serverItemCount })
+})
+const { pageIndex, pageSize } = table.createViewModel(columns).pluginStates.page
+
+const res = await fetchPage($pageIndex, $pageSize)
+serverItemCount.set(res.totalItems)
+```
+
+`pageCount`, `hasPreviousPage`, and `hasNextPage` still derive from the item count automatically. If you upgraded through 0.17.7 or 0.18.x before switching packages, you already made this change. Client-side pagination is unaffected.
+
+## 4. Verify
+
+- Type-check: `svelte-check` should pass with no new table-related errors.
+- If you use TypeScript, types now come from the same import paths — no separate `@types` package.
+- Run your table pages; sorting, filtering, pagination, and selection state behave as before.
+
+## What you gain
+
+Beyond an actively maintained package with Svelte 5 support, three plugins ship that the original never did:
+
+- <a href="/docs/plugins/add-data-export">addDataExport</a> — export table data as JSON, CSV, or plain objects
+- <a href="/docs/plugins/add-flatten">addFlatten</a> — flatten nested row structures
+- <a href="/docs/plugins/add-virtual-scroll">addVirtualScroll</a> — virtualized rendering for large datasets
+
+All 12 original plugins are here too — see the <a href="/docs/plugins/overview">plugin overview</a>.
+
+## Troubleshooting
+
+### `Cannot find module 'svelte-headless-table'`
+
+A stray import still references the old package — search for `from 'svelte-headless-table` and rename it.
+
+### Peer dependency warning on install
+
+Your `svelte` version is below `5.30.0`. Upgrade Svelte (step 1) before installing.
+
+### Both packages installed at once
+
+Nothing breaks at runtime, but two copies of the table types will confuse TypeScript. Remove the original: `npm uninstall svelte-headless-table`.
