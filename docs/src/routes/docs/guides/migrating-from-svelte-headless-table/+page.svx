@@ -24,7 +24,7 @@ The original [`svelte-headless-table`](https://www.npmjs.com/package/svelte-head
 
 The good news: the public API matches the final original releases (0.17.7 through 0.18.3). `createTable`, `createColumns`, `createViewModel`, `Subscribe`, `Render`, `createRender`, and every original plugin keep their names and signatures. For most projects the migration is two changes: the package name in your imports, and your Svelte version.
 
-<Admonition type="note">These steps apply equally to 0.17.x and 0.18.x installs of the original package, with one exception: server-side pagination changed within the original package at 0.17.7. If you use <code>addPagination({ serverSide: true })</code> on 0.17.6 or earlier, see <a href="#server-side-pagination-on-0176-or-earlier">the extra step below</a>.</Admonition>
+<Admonition type="note">These steps apply equally to 0.17.x and 0.18.x installs of the original package, with one exception: server-side pagination changed within the original package at 0.17.7. If you use <code>addPagination(&#123; serverSide: true &#125;)</code> on 0.17.6 or earlier, see <a href="#server-side-pagination-on-0176-or-earlier">the extra step below</a>.</Admonition>
 
 ## 1. Upgrade to Svelte 5
 
