@@ -1,6 +1,6 @@
 ---
-title: shadcn-svelte Integration
-description: Build data tables with shadcn-svelte UI components
+title: shadcn-svelte Data Table Tutorial
+description: Build a shadcn-svelte data table in Svelte 5, step by step
 sidebar_title: shadcn-svelte
 ---
 
@@ -8,9 +8,9 @@ sidebar_title: shadcn-svelte
   import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
   if (seo) {
-      seo.title = 'shadcn-svelte Integration - Svelte Headless Table'
-      seo.description = 'Build powerful, fully-featured data tables by combining Svelte Headless Table with shadcn-svelte UI components for sorting, filtering, pagination, and custom styling'
-      seo.ogTitle = 'shadcn-svelte Integration'
+      seo.title = 'shadcn-svelte Data Table Tutorial (Svelte 5)'
+      seo.description = 'Build a shadcn-svelte data table in Svelte 5, step by step: sorting, filtering, pagination, row selection, and column visibility — full code included.'
+      seo.ogTitle = 'shadcn-svelte Data Table'
       seo.ogTagline = 'Combine headless table logic with shadcn-svelte UI.'
       seo.ogFeatures = ['shadcn-svelte', 'Sorting', 'Filtering', 'Pagination']
       seo.ogSlug = 'guides-shadcn-svelte'

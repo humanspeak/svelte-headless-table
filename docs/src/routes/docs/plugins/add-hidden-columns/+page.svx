@@ -33,40 +33,23 @@ const table = createTable(data, {
 ```
 
 ### `initialHiddenColumnIds?: string[]`
-Initial hidden column ids.
+Initial hidden column ids. Default `[]`.
+
+```ts {3}
+const table = createTable(data, {
+  hide: addHiddenColumns({
+    initialHiddenColumnIds: ['internalId', 'createdAt'],
+  }),
+});
+```
 
 ## Column Options
 
-<Admonition type="info">Options passed into column definitions.</Admonition>
-
-```ts {7}
-const columns = table.createColumns([
-  table.column({
-    header: 'Name',
-    accessor: 'name',
-    plugins: {
-      hide: { ... },
-    },
-  }),
-]);
-```
+<Admonition type="note"><code>addHiddenColumns</code> does not accept any column options.</Admonition>
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Admonition>
-
-```svelte
-{#each $headerRows as headerRow (headerRow.id)}
-  <Subscribe rowProps={headerRow.props()} let:rowProps>
-    {rowProps.hide}
-    {#each headerRow.cells as cell (cell.id)}
-      <Subscribe props={cell.props()} let:props>
-        {props.hide}
-      </Subscribe>
-    {/each}
-  </Subscribe>
-{/each}
-```
+<Admonition type="note"><code>addHiddenColumns</code> does not extend the view model with any props.</Admonition>
 
 ## Plugin State
 
@@ -74,10 +57,44 @@ const columns = table.createColumns([
 
 ```ts {3}
 const { headerRows, rows, pluginStates } = table.createViewModel(columns);
-const { ... } = pluginStates.hide;
+const { hiddenColumnIds } = pluginStates.hide;
 ```
 
 ### `hiddenColumnIds: Writable<string[]>`
-Active hidden column ids.
+Active hidden column ids. Update this store to show or hide columns dynamically — columns whose ids are in the array are removed from the view model.
+
+```ts
+// Hide a column.
+hiddenColumnIds.update((ids) => [...ids, 'createdAt']);
+
+// Show a column.
+hiddenColumnIds.update((ids) => ids.filter((id) => id !== 'createdAt'));
+```
+
+A common pattern drives visibility with a checkbox per column:
+
+```svelte
+<script>
+    const { flatColumns, pluginStates } = table.createViewModel(columns);
+    const { hiddenColumnIds } = pluginStates.hide;
+
+    const toggle = (id, visible) => {
+        hiddenColumnIds.update((ids) =>
+            visible ? ids.filter((i) => i !== id) : [...ids, id]
+        );
+    };
+</script>
+
+{#each flatColumns as col (col.id)}
+    <label>
+        <input
+            type="checkbox"
+            checked={!$hiddenColumnIds.includes(col.id)}
+            onchange={(e) => toggle(col.id, e.currentTarget.checked)}
+        />
+        {col.header}
+    </label>
+{/each}
+```
 
 
