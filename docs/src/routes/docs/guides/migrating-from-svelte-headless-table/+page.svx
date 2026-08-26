@@ -22,9 +22,9 @@ sidebar_title: Migrating from 0.17.x
 
 The original [`svelte-headless-table`](https://www.npmjs.com/package/svelte-headless-table) package (bryanmylee/svelte-headless-table) is unmaintained — its last npm publish was version 0.18.3 on 2024-10-28, and it targets Svelte 3/4. `@humanspeak/svelte-headless-table` is the actively maintained successor, rebuilt for Svelte 5.
 
-The good news: the public API is the same. `createTable`, `createColumns`, `createViewModel`, `Subscribe`, `Render`, `createRender`, and every original plugin keep their names and signatures. For most projects the migration is two changes: the package name in your imports, and your Svelte version.
+The good news: the public API matches the final original releases (0.17.7 through 0.18.3). `createTable`, `createColumns`, `createViewModel`, `Subscribe`, `Render`, `createRender`, and every original plugin keep their names and signatures. For most projects the migration is two changes: the package name in your imports, and your Svelte version.
 
-<Admonition type="note">These steps apply equally to 0.17.x and 0.18.x installs of the original package.</Admonition>
+<Admonition type="note">These steps apply equally to 0.17.x and 0.18.x installs of the original package, with one exception: server-side pagination changed within the original package at 0.17.7. If you use <code>addPagination({ serverSide: true })</code> on 0.17.6 or earlier, see <a href="#server-side-pagination-on-0176-or-earlier">the extra step below</a>.</Admonition>
 
 ## 1. Upgrade to Svelte 5
 
@@ -41,7 +41,7 @@ npm install @humanspeak/svelte-headless-table
 
 ## 3. Rename your imports
 
-The only code change is the import specifier — including the `/plugins` entry point:
+For most apps the only code change is the import specifier — including the `/plugins` entry point:
 
 ```ts
 // Before (0.17.x / 0.18.x)
@@ -55,7 +55,7 @@ import { addSortBy, addPagination } from '@humanspeak/svelte-headless-table/plug
 
 A project-wide find-and-replace of `'svelte-headless-table` → `'@humanspeak/svelte-headless-table` covers both entry points.
 
-Everything else — column definitions, view models, plugin configuration, `Subscribe`/`Render` markup — compiles unchanged:
+Column definitions, view models, plugin configuration, and `Subscribe`/`Render` markup compile unchanged:
 
 ```ts
 const table = createTable(data, {
@@ -70,6 +70,35 @@ const columns = table.createColumns([
 
 const { headerRows, pageRows, tableAttrs, tableBodyAttrs } = table.createViewModel(columns)
 ```
+
+## Server-side pagination on 0.17.6 or earlier
+
+The one API change in the 0.17.x range predates this package: original versions 0.17.0–0.17.6 configured server-side pagination with `addPagination({ serverSide: true })` and exposed a **writable** item-count store on plugin state (`serverItemsCount` up to 0.17.5, renamed `serverItemCount` in 0.17.6) that your app set after each server response. Starting with original 0.17.7 — and in this package — you create that store yourself and pass it in as `serverItemCount: Readable<number>`:
+
+```ts
+// Before (0.17.0–0.17.6)
+const table = createTable(data, {
+    page: addPagination({ serverSide: true })
+})
+const { pageIndex, pageSize, serverItemCount } = table.createViewModel(columns).pluginStates.page
+
+const res = await fetchPage($pageIndex, $pageSize)
+serverItemCount.set(res.totalItems) // plugin-state store
+
+// After (0.17.7+ and @humanspeak/svelte-headless-table)
+import { writable } from 'svelte/store'
+
+const serverItemCount = writable(0) // your own store
+const table = createTable(data, {
+    page: addPagination({ serverSide: true, serverItemCount })
+})
+const { pageIndex, pageSize } = table.createViewModel(columns).pluginStates.page
+
+const res = await fetchPage($pageIndex, $pageSize)
+serverItemCount.set(res.totalItems)
+```
+
+`pageCount`, `hasPreviousPage`, and `hasNextPage` still derive from the item count automatically. If you upgraded through 0.17.7 or 0.18.x before switching packages, you already made this change. Client-side pagination is unaffected.
 
 ## 4. Verify
 
