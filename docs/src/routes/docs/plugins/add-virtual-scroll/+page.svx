@@ -300,7 +300,7 @@ Rows actually intersecting the viewport, with no render buffer — the range a "
 </tfoot>
 ```
 
-<Admonition type="note">The range is measured against the scroll container's viewport, which the plugin reads from <code>clientHeight</code>. An in-flow <code>position: sticky</code> <code>&lt;thead&gt;</code> is inside that box but paints over the top of it, so the first row or two of the range can be hidden behind the header. The plugin can't see your markup, so it doesn't compensate — move the header outside the scroll container if the readout must be exact.</Admonition>
+<Admonition type="note">Anything you render above the rows — an in-flow <code>&lt;thead&gt;</code>, a caption, a toolbar — shifts where row 0 begins inside the scroll container. The plugin measures that offset from the first rendered row, so this range tracks what's on screen without any configuration. A <code>position: sticky</code> header is the exception: it keeps painting over the top of the viewport after you scroll past it, so the first row of the range may sit behind it. Render the header outside the scroll container if the readout has to be exact to the pixel.</Admonition>
 
 ### `totalHeight: Readable<number>`
 Total height of all rows (for scroll container sizing).

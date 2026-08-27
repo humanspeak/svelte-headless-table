@@ -169,6 +169,36 @@ export const addVirtualScroll = <Item>({
     // otherwise keep the index it was first rendered with.
     const rowIndexById = writable(new Map<string, number>())
 
+    // Distance from the container's scroll origin to where row 0 begins.
+    // The documented markup puts `<thead>` inside the scroll container, so it
+    // is normally the header's height: without it every range is reported
+    // that far down the dataset, and a buffer smaller than the header leaves
+    // a blank strip at the top of the viewport. Measured rather than
+    // configured, so it also covers a caption, a toolbar, or anything else a
+    // caller puts above the rows.
+    const contentOffset = writable(0)
+
+    // Id of the first row currently rendered. Measuring that row is what
+    // reveals the offset, since it sits directly after the top spacer.
+    let firstRenderedRowId: string | undefined
+
+    /**
+     * The band of row space the container is showing.
+     *
+     * Row space starts at row 0; container space starts above whatever the
+     * caller rendered before the rows. While that content is still on screen
+     * it covers part of the viewport, so less of the row area is visible than
+     * the container is tall — hence the height shrinks by however far `top`
+     * sits above row 0.
+     */
+    const rowViewport = derived(
+        [scrollTop, viewportHeight, contentOffset],
+        ([$scrollTop, $viewportHeight, $contentOffset]) => {
+            const top = $scrollTop - $contentOffset
+            return { top, height: Math.max(0, $viewportHeight + Math.min(0, top)) }
+        }
+    )
+
     // Aborted whenever a newer range supersedes the one in flight, so an
     // async handler can drop a response that is no longer current.
     let rangeRequest: AbortController | undefined
@@ -250,8 +280,8 @@ export const addVirtualScroll = <Item>({
         // the *deduped* viewport, so scrolling within a row does not reach it
         // at all, and the spacers below stay put with it.
         const viewportRange = dedupedRange(
-            derived([rowIds, scrollTop, viewportHeight], ([$rowIds, $scrollTop, $viewportHeight]) =>
-                heightManager.getViewportRange($rowIds, $scrollTop, $viewportHeight)
+            derived([rowIds, rowViewport], ([$rowIds, $view]) =>
+                heightManager.getViewportRange($rowIds, $view.top, $view.height)
             )
         )
         const visibleRange = dedupedRange(
@@ -284,16 +314,14 @@ export const addVirtualScroll = <Item>({
     const createSparseGeometry = (): Geometry => {
         // `rowIds` participates so new measurements, which move the average
         // row height, re-run the geometry.
-        const layout = derived(
-            [rowIds, scrollTop, viewportHeight, datasetRows],
-            ([, $scrollTop, $viewportHeight, $datasetRows]) =>
-                heightManager.getSparseLayout(
-                    $datasetRows,
-                    $scrollTop,
-                    $viewportHeight,
-                    bufferSize,
-                    maxScrollHeight
-                )
+        const layout = derived([rowIds, rowViewport, datasetRows], ([, $view, $datasetRows]) =>
+            heightManager.getSparseLayout(
+                $datasetRows,
+                $view.top,
+                $view.height,
+                bufferSize,
+                maxScrollHeight
+            )
         )
         const visibleRange = dedupedRange(
             derived(layout, ($layout) => ({ start: $layout.start, end: $layout.end })),
@@ -372,11 +400,12 @@ export const addVirtualScroll = <Item>({
             return
         }
 
-        const $scrollTop = get(scrollTop)
-        const $viewportHeight = get(viewportHeight)
+        const $view = get(rowViewport)
         const $totalHeight = get(totalHeight)
 
-        const distanceFromBottom = $totalHeight - ($scrollTop + $viewportHeight)
+        // `totalHeight` covers the rows only, so compare against the row-space
+        // scroll position rather than the container's.
+        const distanceFromBottom = $totalHeight - ($view.top + $view.height)
 
         if (distanceFromBottom <= loadMoreThreshold) {
             loadMorePending = true
@@ -506,7 +535,7 @@ export const addVirtualScroll = <Item>({
             return
         }
 
-        const $viewportHeight = get(viewportHeight)
+        const $viewportHeight = get(rowViewport).height
 
         // Do the alignment maths in dataset coordinates, then map to the
         // container once. Sparse geometry may compress the scroll range, so
@@ -522,11 +551,11 @@ export const addVirtualScroll = <Item>({
         const currentTop = isSparse
             ? heightManager.getSparseNaturalScrollTop(
                   get(datasetRows),
-                  get(scrollTop),
+                  get(rowViewport).top,
                   $viewportHeight,
                   maxScrollHeight
               )
-            : get(scrollTop)
+            : get(rowViewport).top
 
         let targetOffset: number
         switch (align) {
@@ -561,7 +590,9 @@ export const addVirtualScroll = <Item>({
             : targetOffset
 
         scrollContainer.scrollTo({
-            top: Math.max(0, scrollPosition),
+            // Back into container space: the alignment above is in row space,
+            // which starts below whatever the caller rendered ahead of the rows.
+            top: Math.max(0, scrollPosition + get(contentOffset)),
             behavior
         })
     }
@@ -590,16 +621,39 @@ export const addVirtualScroll = <Item>({
     }
 
     /**
+     * Learn how far the rows sit below the container's scroll origin, from
+     * where the first rendered row actually landed.
+     *
+     * That row is laid out directly after the top spacer, so whatever is left
+     * once the spacer is subtracted is the content the caller put above the
+     * rows — normally an in-flow `<thead>`. Measured from the DOM because the
+     * plugin cannot see the caller's markup, and re-measured on every mount so
+     * a header that changes height corrects itself on the next scroll.
+     */
+    const measureContentOffset = (node: HTMLElement, rowId: string, rect: DOMRect) => {
+        if (scrollContainer === null || rowId !== firstRenderedRowId) {
+            return
+        }
+        const containerTop = scrollContainer.getBoundingClientRect().top
+        const rowTop = rect.top - containerTop + scrollContainer.scrollTop
+        const offset = Math.max(0, rowTop - get(topSpacerHeight))
+        if (offset !== get(contentOffset)) {
+            contentOffset.set(offset)
+        }
+    }
+
+    /**
      * Svelte action to automatically measure row height.
      * Attach to each <tr> element: <tr use:measureRowAction={row.id}>
      */
     const measureRowAction: Action<HTMLElement, string> = (node, rowId) => {
         // Measure initial height
         const measure = () => {
-            const height = node.getBoundingClientRect().height
-            if (height > 0) {
-                measureRow(rowId, height)
+            const rect = node.getBoundingClientRect()
+            if (rect.height > 0) {
+                measureRow(rowId, rect.height)
             }
+            measureContentOffset(node, rowId, rect)
         }
 
         // Measure on mount
@@ -680,14 +734,18 @@ export const addVirtualScroll = <Item>({
         return derived([syncedRows, renderRange, dataOffset], ([$rows, $range, $dataOffset]) => {
             const { start, end } = $range
             if (!isSparse) {
-                return $rows.slice(start, end)
+                const slice = $rows.slice(start, end)
+                firstRenderedRowId = slice[0]?.id
+                return slice
             }
             // `renderRange` is absolute and already clamped to the resident
             // window, so shifting it into window-local coordinates is all
             // that's left.
             const localStart = Math.min($rows.length, Math.max(0, start - $dataOffset))
             const localEnd = Math.min($rows.length, Math.max(localStart, end - $dataOffset))
-            return $rows.slice(localStart, localEnd)
+            const slice = $rows.slice(localStart, localEnd)
+            firstRenderedRowId = slice[0]?.id
+            return slice
         })
     }
 

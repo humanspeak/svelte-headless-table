@@ -1319,3 +1319,103 @@ describe('addVirtualScroll viewportRange in dense mode', () => {
         unsubscribe()
     })
 })
+
+describe('addVirtualScroll with content above the rows', () => {
+    const ROW_HEIGHT = 40
+    const HEADER_HEIGHT = 40
+    const VIEWPORT = 400
+
+    /**
+     * The documented markup puts `<thead>` inside the scroll container, so row 0
+     * begins `HEADER_HEIGHT` below the container's scroll origin. This models a
+     * container whose rows sit at that offset and reports row rects accordingly.
+     */
+    class OffsetScrollElement extends EventTarget {
+        style: Record<string, string> = {}
+        scrollTop = 0
+        scrollTo = vi.fn()
+        clientHeight = VIEWPORT
+        getBoundingClientRect() {
+            return { top: 0, height: this.clientHeight } as DOMRect
+        }
+        scroll(top: number) {
+            this.scrollTop = top
+            this.dispatchEvent(new Event('scroll'))
+        }
+    }
+
+    /** A `<tr>` laid out after the header and the current top spacer. */
+    const rowNode = (container: OffsetScrollElement, topSpacer: number) =>
+        ({
+            getBoundingClientRect: () => ({
+                top: HEADER_HEIGHT + topSpacer - container.scrollTop,
+                height: ROW_HEIGHT
+            })
+        }) as unknown as HTMLElement
+
+    function build(bufferSize: number) {
+        const data = writable(createTestData(200))
+        const table = createTable(data, {
+            virtualScroll: addVirtualScroll<TestItem>({
+                estimatedRowHeight: ROW_HEIGHT,
+                bufferSize
+            })
+        })
+        const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
+        const vm = table.createViewModel(columns)
+        const unsubscribe = vm.pageRows.subscribe(() => {})
+        const state = vm.pluginStates.virtualScroll
+        const node = new OffsetScrollElement()
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        state.virtualScroll(node as any)
+        return { vm, state, node, unsubscribe }
+    }
+
+    /** Mount the first rendered row, which is what reveals the offset. */
+    const settle = (
+        vm: ReturnType<typeof build>['vm'],
+        state: ReturnType<typeof build>['state'],
+        node: OffsetScrollElement
+    ) => {
+        const first = get(vm.pageRows)[0]
+        if (first !== undefined) {
+            state.measureRowAction(rowNode(node, get(state.topSpacerHeight)), first.id)
+        }
+    }
+
+    test('reports the rows the user can actually see, not ones shifted by the header', () => {
+        const { vm, state, node, unsubscribe } = build(5)
+
+        node.scroll(400)
+        settle(vm, state, node)
+        node.scroll(400)
+
+        // Container band [400,800] maps to row-space [360,760] once the 40px
+        // header is accounted for, i.e. rows 9-18.
+        expect(get(state.viewportRange)).toEqual({ start: 9, end: 19 })
+        unsubscribe()
+    })
+
+    test('mounts rows covering the viewport even with no buffer to absorb the shift', () => {
+        const { vm, state, node, unsubscribe } = build(0)
+
+        node.scroll(400)
+        settle(vm, state, node)
+        node.scroll(400)
+
+        const visible = get(state.visibleRange)
+        // Row 9 is the top row on screen; without the offset it is left unmounted
+        // and a header-sized blank strip appears.
+        expect(visible.start).toBeLessThanOrEqual(9)
+        expect(get(state.topSpacerHeight) + HEADER_HEIGHT).toBeLessThanOrEqual(node.scrollTop)
+        unsubscribe()
+    })
+
+    test('is a no-op when the rows start at the container origin', () => {
+        const { state, node, unsubscribe } = build(5)
+        node.scroll(400)
+        // No row measured, so no offset is known: the plain mapping still holds.
+        expect(get(state.viewportRange)).toEqual({ start: 10, end: 20 })
+        unsubscribe()
+    })
+})
