@@ -290,30 +290,6 @@ describe('HeightManager', () => {
         })
     })
 
-    describe('getIndexAtOffset', () => {
-        const rowIds = ['row-0', 'row-1', 'row-2', 'row-3', 'row-4']
-
-        beforeEach(() => {
-            rowIds.forEach((id) => manager.setHeight(id, 40))
-        })
-
-        test('returns 0 for offset 0', () => {
-            expect(manager.getIndexAtOffset(rowIds, 0)).toBe(0)
-        })
-
-        test('returns correct index for middle offset', () => {
-            expect(manager.getIndexAtOffset(rowIds, 80)).toBe(2) // 80/40 = 2
-        })
-
-        test('returns correct index for offset within row', () => {
-            expect(manager.getIndexAtOffset(rowIds, 50)).toBe(1) // within row 1
-        })
-
-        test('returns last index for offset past end', () => {
-            expect(manager.getIndexAtOffset(rowIds, 300)).toBe(4)
-        })
-    })
-
     describe('clear', () => {
         test('removes all measurements', () => {
             manager.setHeight('row-0', 40)
@@ -361,6 +337,18 @@ describe('HeightManager', () => {
             const layout = manager.getSparseLayout(4_000_000, 0, 500, 10, 16_000_000)
             expect(layout.ratio).toBeGreaterThan(9.9)
             expect(layout.ratio).toBeLessThan(10.1)
+        })
+
+        test('reports nothing visible when rows have no height, as dense does', () => {
+            // Reachable via `getRowHeight: () => 0` or `estimatedRowHeight: 0`,
+            // which poison the running average. Dense answers "0 rows"; sparse
+            // must not answer "all of them" for the same table.
+            const zero = new HeightManager(0)
+            const dense = zero.getViewportRange(['a', 'b', 'c'], 0, 400)
+            expect(dense.end - dense.start).toBe(0)
+
+            const layout = zero.getSparseLayout(100_000, 0, 400, 5, 16_000_000)
+            expect(layout.viewportEnd - layout.anchorIndex).toBe(0)
         })
 
         describe('below the height cap', () => {

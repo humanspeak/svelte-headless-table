@@ -338,7 +338,11 @@ export class HeightManager {
                 totalHeight: total === 0 ? 0 : Math.max(0, maxScrollHeight),
                 start: 0,
                 end: total,
-                viewportEnd: total,
+                // Rows with no height occupy none of the viewport, so nothing
+                // is visible — the same answer dense mode gives. `end` still
+                // spans the dataset because the render range has no positions
+                // to work from and `renderRange` clamps it to resident rows.
+                viewportEnd: 0,
                 anchorIndex: 0,
                 anchorOffset: 0,
                 rowHeight,
@@ -455,28 +459,6 @@ export class HeightManager {
             viewportHeight,
             maxScrollHeight
         )
-    }
-
-    /**
-     * Find the row index at a given scroll position.
-     *
-     * @param rowIds - Array of row IDs in order.
-     * @param scrollTop - The scroll position to find.
-     * @returns The index of the row at that position.
-     */
-    getIndexAtOffset(rowIds: string[], scrollTop: number): number {
-        const avgHeight = this.getAverageHeight()
-        let offset = 0
-
-        for (let i = 0; i < rowIds.length; i++) {
-            const height = this.heightCache.get(rowIds[i]) ?? avgHeight
-            if (offset + height > scrollTop) {
-                return i
-            }
-            offset += height
-        }
-
-        return Math.max(0, rowIds.length - 1)
     }
 
     /**
