@@ -184,6 +184,20 @@ export interface CreateViewModelOptions<Item> {
     /** Optional function to generate a unique ID for each data item. */
     /* trunk-ignore(eslint/no-unused-vars) */
     rowDataId?: (item: Item, index: number) => string
+    /**
+     * Opt into reusing the previously built view model.
+     *
+     * Building a view model instantiates every plugin, so a caller that
+     * rebuilds on each reactive pass — a derived column array with a new
+     * identity but the same columns in it — loses plugin state such as the
+     * current page index or sort order. Passing the same `reuseKey` as the
+     * previous call declares the columns unchanged and returns that call's view
+     * model instead, state intact. A different key, or no key, builds fresh.
+     *
+     * Honored by `Table#createViewModel` only; the standalone `createViewModel`
+     * function has nowhere to cache and ignores it.
+     */
+    reuseKey?: string
 }
 
 /**

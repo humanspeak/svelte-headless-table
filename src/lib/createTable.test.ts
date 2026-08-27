@@ -635,6 +635,70 @@ describe('Table.createViewModel method', () => {
             expect(rows.every((r) => r.dataId === 'same-id')).toBe(true)
         })
     })
+
+    describe('reuseKey', () => {
+        it('the same reuseKey returns the same view model object', () => {
+            const data = writable<User[]>(sampleData)
+            const table = createTable(data)
+            const makeColumns = () =>
+                table.createColumns([table.column({ header: 'First', accessor: 'firstName' })])
+
+            const first = table.createViewModel(makeColumns(), { reuseKey: 'cols' })
+            const second = table.createViewModel(makeColumns(), { reuseKey: 'cols' })
+
+            expect(second).toBe(first)
+        })
+
+        it('no reuseKey always builds a new view model', () => {
+            const data = writable<User[]>(sampleData)
+            const table = createTable(data)
+            const makeColumns = () =>
+                table.createColumns([table.column({ header: 'First', accessor: 'firstName' })])
+
+            const first = table.createViewModel(makeColumns())
+            const second = table.createViewModel(makeColumns())
+
+            expect(second).not.toBe(first)
+        })
+
+        it('a reuseKey with different column ids rebuilds and warns', () => {
+            const data = writable<User[]>(sampleData)
+            const table = createTable(data)
+            const firstColumns = table.createColumns([
+                table.column({ header: 'First', accessor: 'firstName' })
+            ])
+            const secondColumns = table.createColumns([
+                table.column({ header: 'First', accessor: 'firstName' }),
+                table.column({ header: 'Last', accessor: 'lastName' })
+            ])
+            const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+            const first = table.createViewModel(firstColumns, { reuseKey: 'cols' })
+            const second = table.createViewModel(secondColumns, { reuseKey: 'cols' })
+
+            expect(second).not.toBe(first)
+            expect(warn).toHaveBeenCalledWith(expect.stringContaining('reuseKey'))
+            warn.mockRestore()
+        })
+
+        it('changing rowDataId with the same reuseKey rebuilds', () => {
+            const data = writable<User[]>(sampleData)
+            const table = createTable(data)
+            const makeColumns = () =>
+                table.createColumns([table.column({ header: 'First', accessor: 'firstName' })])
+
+            const first = table.createViewModel(makeColumns(), {
+                reuseKey: 'cols',
+                rowDataId: (item) => item.firstName
+            })
+            const second = table.createViewModel(makeColumns(), {
+                reuseKey: 'cols',
+                rowDataId: (item) => item.lastName
+            })
+
+            expect(second).not.toBe(first)
+        })
+    })
 })
 
 describe('Column type guards', () => {

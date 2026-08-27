@@ -44,6 +44,20 @@ export class Table<Item, Plugins extends AnyPlugins = AnyPlugins> {
     plugins: Plugins
 
     /**
+     * The view model returned by the last `createViewModel` call that carried a
+     * `reuseKey`, with the inputs it was built from. One slot rather than a map:
+     * a table renders one view model at a time, and keeping every key alive
+     * would pin an unbounded number of plugin instances for the life of the
+     * table.
+     */
+    private cachedViewModel?: {
+        key: string
+        columnIds: string[]
+        rowDataId: CreateViewModelOptions<Item>['rowDataId']
+        viewModel: TableViewModel<Item, Plugins>
+    }
+
+    /**
      * Creates a new Table instance.
      *
      * @param data - A Svelte store containing the table data.
@@ -147,6 +161,7 @@ export class Table<Item, Plugins extends AnyPlugins = AnyPlugins> {
     /**
      * Creates a reactive view model from the table and columns.
      * The view model provides all the data needed to render the table.
+     * Pass `options.reuseKey` to reuse the previous compatible view model.
      *
      * @param columns - The column definitions.
      * @param options - Optional configuration for the view model.
@@ -156,7 +171,32 @@ export class Table<Item, Plugins extends AnyPlugins = AnyPlugins> {
         columns: Column<Item, Plugins>[],
         options?: CreateViewModelOptions<Item>
     ): TableViewModel<Item, Plugins> {
-        return createViewModel(this, columns, options)
+        const { reuseKey, rowDataId } = options ?? {}
+        if (reuseKey === undefined) {
+            return createViewModel(this, columns, options)
+        }
+
+        const columnIds = getFlatColumnIds(columns)
+        const cached = this.cachedViewModel
+        if (cached?.key === reuseKey && cached.rowDataId === rowDataId) {
+            if (
+                cached.columnIds.length === columnIds.length &&
+                cached.columnIds.every((id, i) => id === columnIds[i])
+            ) {
+                return cached.viewModel
+            }
+            // The key promises the columns are unchanged and they are not.
+            // Rebuilding is the safe reading — returning the cached model here
+            // would render the previous columns.
+            console.warn(
+                'The `reuseKey` passed to `createViewModel` matched the previous call but the columns changed. ' +
+                    'Rebuilding. Give each distinct set of columns its own `reuseKey`.'
+            )
+        }
+
+        const viewModel = createViewModel(this, columns, options)
+        this.cachedViewModel = { key: reuseKey, columnIds, rowDataId, viewModel }
+        return viewModel
     }
 }
 
@@ -183,8 +223,7 @@ export class Table<Item, Plugins extends AnyPlugins = AnyPlugins> {
  */
 export const createTable = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     data: ReadOrWritable<Item[]>,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    plugins: Plugins = {} as any
+    plugins: Plugins = {} as Plugins
 ): Table<Item, Plugins> => {
     return new Table(data, plugins)
 }

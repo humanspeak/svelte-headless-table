@@ -52,4 +52,13 @@ Defines a custom <a href="/docs/api/body-row#dataid-string">`dataId`</a> for eac
 
 _Defaults to the item index_.
 
+#### `options.reuseKey?: string`
 
+Opts into reusing the previous view model when a derived column array is rebuilt with the same columns. Reusing the view model preserves plugin state such as the current page index or sort order.
+
+```ts
+const columns = table.createColumns(...);
+const viewModel = table.createViewModel(columns, { reuseKey: 'visible-columns' });
+```
+
+Pass the same key while the columns are unchanged. A different key, or omitting `reuseKey`, builds a fresh view model.
