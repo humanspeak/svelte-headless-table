@@ -2,7 +2,7 @@ import type { Action } from 'svelte/action'
 import { derived, get, readable, writable, type Readable, type Writable } from 'svelte/store'
 import type { BodyRow } from '../bodyRows.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
-import { HeightManager } from '../utils/HeightManager.js'
+import { HeightManager, type SparseLayout } from '../utils/HeightManager.js'
 import type {
     ScrollToIndexOptions,
     VirtualScrollConfig,
@@ -19,7 +19,13 @@ export type { ScrollToIndexOptions, VirtualScrollConfig, VirtualScrollState, Vis
 const DEFAULTS = {
     estimatedRowHeight: 40,
     bufferSize: 10,
-    loadMoreThreshold: 200
+    loadMoreThreshold: 200,
+    /**
+     * Browsers cap element height — ~16,777,216px in Chrome and Safari. Sizing
+     * a sparse container beyond that silently makes the tail of the dataset
+     * unreachable, so stay comfortably under it and compress instead.
+     */
+    maxScrollHeight: 16_000_000
 } as const
 
 /**
@@ -90,7 +96,8 @@ export const addVirtualScroll =
         getRowHeight,
         totalRows: totalRowsConfig,
         dataOffset: dataOffsetConfig,
-        onRangeChange
+        onRangeChange,
+        maxScrollHeight = DEFAULTS.maxScrollHeight
     }: VirtualScrollConfig<Item> = {}): TablePlugin<
         Item,
         VirtualScrollState<Item>,
@@ -135,6 +142,12 @@ export const addVirtualScroll =
         // Cache for row lookup (set by derivePageRows)
         let allRowsCache: BodyRow<Item>[] = []
 
+        // Position of each row within the current data window, by row ID. Kept
+        // as a store so `virtualIndex` stays reactive: rows are keyed by ID in
+        // the template, so a row reused across two different windows would
+        // otherwise keep the index it was first rendered with.
+        const rowIndexById = writable(new Map<string, number>())
+
         /**
          * Report a new visible range to the caller. Deferred to a microtask so
          * that handlers which update `data` / `dataOffset` don't write to
@@ -147,20 +160,31 @@ export const addVirtualScroll =
             queueMicrotask(() => onRangeChange(range))
         }
 
+        // Sparse layout for the current scroll position: container height, the
+        // absolute range to render, and the anchor that positions it.
+        // `rowIds` participates so that new measurements (which change the
+        // average row height) re-run the geometry.
+        const sparseLayout: Readable<SparseLayout> = derived(
+            [rowIds, scrollTop, viewportHeight, datasetRows],
+            ([, $scrollTop, $viewportHeight, $datasetRows]) =>
+                heightManager.getSparseLayout(
+                    $datasetRows,
+                    $scrollTop,
+                    $viewportHeight,
+                    bufferSize,
+                    maxScrollHeight
+                )
+        )
+
         // Visible range calculation.
         // Return the same object reference when the range hasn't changed to avoid
         // unnecessary downstream store updates (spacer heights, rendered rows).
         let currentRange: VisibleRange = { start: 0, end: 0 }
         const visibleRange: Readable<VisibleRange> = derived(
-            [rowIds, scrollTop, viewportHeight, datasetRows],
-            ([$rowIds, $scrollTop, $viewportHeight, $datasetRows], set) => {
+            [rowIds, scrollTop, viewportHeight, sparseLayout],
+            ([$rowIds, $scrollTop, $viewportHeight, $layout], set) => {
                 const range = isSparse
-                    ? heightManager.getSparseVisibleRange(
-                          $datasetRows,
-                          $scrollTop,
-                          $viewportHeight,
-                          bufferSize
-                      )
+                    ? { start: $layout.start, end: $layout.end }
                     : heightManager.getVisibleRange(
                           $rowIds,
                           $scrollTop,
@@ -181,8 +205,8 @@ export const addVirtualScroll =
         // range can extend past the resident window; spacer heights must follow
         // what is really in the DOM or the scroll container mis-sizes.
         const renderRange: Readable<VisibleRange> = derived(
-            [visibleRange, rowIds, dataOffset, datasetRows],
-            ([$range, $rowIds, $dataOffset, $datasetRows]) => {
+            [visibleRange, rowIds, dataOffset],
+            ([$range, $rowIds, $dataOffset]) => {
                 if (!isSparse) {
                     return $range
                 }
@@ -191,9 +215,8 @@ export const addVirtualScroll =
                 const end = Math.max(start, Math.min($range.end, windowEnd))
                 if (end <= start) {
                     // Nothing resident for this range yet. Collapse to a
-                    // zero-width slice so the spacers still sum to totalHeight.
-                    const collapsed = Math.max(0, Math.min($range.start, $datasetRows))
-                    return { start: collapsed, end: collapsed }
+                    // zero-width slice anchored at the range start.
+                    return { start: $range.start, end: $range.start }
                 }
                 return { start, end }
             }
@@ -201,32 +224,37 @@ export const addVirtualScroll =
 
         // Total height of all rows
         const totalHeight: Readable<number> = derived(
-            [rowIds, datasetRows],
-            ([$rowIds, $datasetRows]) => {
-                return isSparse
-                    ? heightManager.getSparseTotalHeight($datasetRows)
-                    : heightManager.getTotalHeight($rowIds)
+            [rowIds, sparseLayout],
+            ([$rowIds, $layout]) => {
+                return isSparse ? $layout.totalHeight : heightManager.getTotalHeight($rowIds)
             }
         )
 
-        // Spacer heights
-        const offsetForIndex = (rowIdList: string[], index: number): number =>
-            isSparse
-                ? heightManager.getSparseOffsetForIndex(index)
-                : heightManager.getOffsetForIndex(rowIdList, index)
-
+        // Spacer heights. In sparse mode rows are placed relative to the anchor
+        // row, so the block around the viewport lays out at natural scale even
+        // when the overall scroll range is compressed.
         const topSpacerHeight: Readable<number> = derived(
-            [rowIds, renderRange],
-            ([$rowIds, $range]) => {
-                return offsetForIndex($rowIds, $range.start)
+            [rowIds, renderRange, sparseLayout],
+            ([$rowIds, $range, $layout]) => {
+                if (!isSparse) {
+                    return heightManager.getOffsetForIndex($rowIds, $range.start)
+                }
+                return Math.max(
+                    0,
+                    $layout.anchorOffset + ($range.start - $layout.anchorIndex) * $layout.rowHeight
+                )
             }
         )
 
         const bottomSpacerHeight: Readable<number> = derived(
-            [rowIds, renderRange, totalHeight],
-            ([$rowIds, $range, $total]) => {
-                const endOffset = offsetForIndex($rowIds, $range.end)
-                return Math.max(0, $total - endOffset)
+            [rowIds, renderRange, totalHeight, topSpacerHeight, sparseLayout],
+            ([$rowIds, $range, $total, $top, $layout]) => {
+                if (!isSparse) {
+                    const endOffset = heightManager.getOffsetForIndex($rowIds, $range.end)
+                    return Math.max(0, $total - endOffset)
+                }
+                const renderedHeight = ($range.end - $range.start) * $layout.rowHeight
+                return Math.max(0, $total - $top - renderedHeight)
             }
         )
 
@@ -341,13 +369,18 @@ export const addVirtualScroll =
                 return
             }
 
+            const $viewportHeight = get(viewportHeight)
             const targetOffset = isSparse
-                ? heightManager.getSparseOffsetForIndex(index)
+                ? heightManager.getSparseScrollTopForIndex(
+                      get(datasetRows),
+                      index,
+                      $viewportHeight,
+                      maxScrollHeight
+                  )
                 : heightManager.getOffsetForIndex($rowIds, index)
             const rowHeight = isSparse
                 ? heightManager.getAverageHeight()
                 : heightManager.getHeight($rowIds[index])
-            const $viewportHeight = get(viewportHeight)
 
             let scrollPosition: number
             switch (align) {
@@ -473,6 +506,7 @@ export const addVirtualScroll =
             const syncedRows = derived(rows, ($rows) => {
                 // Cache rows for lookup in measureRow and hooks
                 allRowsCache = $rows
+                rowIndexById.set(new Map($rows.map((r, i) => [r.id, i])))
 
                 // Extract row IDs and update the store (only if changed)
                 const ids = $rows.map((r) => r.id)
@@ -504,16 +538,17 @@ export const addVirtualScroll =
         // Hooks to add virtual index props to rows
         const hooks = {
             'tbody.tr': (row: BodyRow<Item>) => {
-                const localIndex = allRowsCache.findIndex((r) => r.id === row.id)
-                // In sparse mode the rendered rows are a window into the
-                // dataset, so report the absolute index.
-                const offset = isSparse ? get(dataOffset) : 0
-
                 return {
-                    props: readable({
-                        virtualIndex: localIndex >= 0 ? localIndex + offset : offset,
-                        isVirtual: true
-                    } as VirtualScrollRowProps)
+                    // In sparse mode the rendered rows are a window into the
+                    // dataset, so report the absolute index.
+                    props: derived([rowIndexById, dataOffset], ([$rowIndexById, $dataOffset]) => {
+                        const localIndex = $rowIndexById.get(row.id)
+                        const offset = isSparse ? $dataOffset : 0
+                        return {
+                            virtualIndex: localIndex !== undefined ? localIndex + offset : offset,
+                            isVirtual: true
+                        } as VirtualScrollRowProps
+                    })
                 }
             }
         }

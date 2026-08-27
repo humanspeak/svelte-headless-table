@@ -171,11 +171,11 @@ The rendered markup is identical to the basic example — spacer rows, `use:virt
 
 ### Browser scroll-height ceiling
 
-Sparse mode sizes the scroll container to `totalRows × rowHeight`, and browsers cap how tall an element can be — roughly **16,777,216px** in Chrome and Safari, with other engines varying. At 32px rows that is about **520,000 rows**.
+Browsers cap how tall an element can be — roughly **16,777,216px** in Chrome and Safari, with other engines varying. At 32px rows a naively-sized container would hit that wall at ~520,000 rows, and everything past it would be unreachable: the scrollbar bottoms out, and `scrollToIndex` doesn't help because the browser clamps `scrollTo` to the element's real height too.
 
-Rows past that point are **not reachable**, by any route. The scrollbar bottoms out early, and `scrollToIndex` doesn't get around it either: it computes the correct pixel offset, but the browser clamps any `scrollTo` beyond the element's real height. Asking for row 2,000,000 in a 4,000,000-row table lands you at row ~467,000 with no error.
+Sparse mode handles this for you. The container is sized to at most `maxScrollHeight` (default `16_000_000`), and when the dataset is larger the scroll position is mapped onto it proportionally. Rows still render at their natural height and lay out 1:1 around the viewport, so there is no drift or jitter — the mapping only decides which row anchors the top of the screen.
 
-The plugin does not compress the scroll range to work around this. To stay under the ceiling, either use a smaller row height (16px rows buy ~1,000,000 rows), or partition the dataset so each view fits — filter by date range, first letter, or category, and let the user pick a partition before scrolling within it.
+The tradeoff is scroll *travel*. Over a 4,000,000-row dataset at 32px, the range is compressed ~8×, so one wheel notch covers ~24 rows instead of ~3. Datasets that fit under the cap are unaffected: the mapping is the identity and nothing changes.
 
 A few things to know:
 
@@ -217,6 +217,9 @@ Total number of rows in the full dataset, independent of how many are loaded. Su
 
 ### `dataOffset?: Readable<number> | number`
 Default `0`. Absolute index of the first row held in the table's `data` store. Sparse mode only — keep it in sync with `data` whenever the resident window moves.
+
+### `maxScrollHeight?: number`
+Default `16_000_000`. Largest height, in pixels, to give the scroll container. Sparse mode only. When `totalRows × rowHeight` exceeds this, the scroll range is compressed onto it so the tail of the dataset stays reachable — see [the scroll-height ceiling](#browser-scroll-height-ceiling).
 
 ### `onRangeChange?: (range: { start: number; end: number }) => void`
 Fired whenever the visible range changes, so a caller can fetch the pages intersecting it and evict the ones that have scrolled away. In sparse mode the range is in absolute dataset indices. Invoked on a microtask, so it is safe to update stores from within it.

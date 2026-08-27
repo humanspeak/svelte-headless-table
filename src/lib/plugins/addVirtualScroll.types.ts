@@ -83,6 +83,24 @@ export interface VirtualScrollConfig<Item> {
      * microtask, so it is safe to update stores from within it.
      */
     onRangeChange?: (_range: VisibleRange) => void
+
+    /**
+     * Largest height, in pixels, to give the scroll container.
+     *
+     * Sparse mode only. Browsers cap element height — ~16,777,216px in Chrome
+     * and Safari — and a container sized past the cap makes the tail of the
+     * dataset unreachable by dragging *and* by `scrollToIndex`, which the
+     * browser clamps. When `totalRows × rowHeight` exceeds this value the
+     * scroll range is compressed onto it instead.
+     *
+     * Rows still render at natural height and lay out 1:1 around the viewport;
+     * the compression only affects how far a given amount of scrolling travels,
+     * so a wheel notch covers proportionally more rows. Datasets that fit under
+     * the cap are unaffected.
+     *
+     * @default 16_000_000
+     */
+    maxScrollHeight?: number
 }
 
 /**
