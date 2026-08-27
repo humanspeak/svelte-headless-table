@@ -157,149 +157,144 @@ export const addVirtualScroll =
         }
 
         /**
-         * Geometry: container height, the range to render, and the spacer
-         * heights that position it. Dense and sparse are separate strategies,
-         * so the store graph is built once for the chosen one rather than
-         * branching on every scroll event — a dense table must not pay for
-         * sparse geometry it never reads.
+         * Geometry: the range to render, the container height, and the spacer
+         * heights that position it.
          *
-         * The four values are only meaningful when mutually consistent, so
-         * they are produced together by a single derivation.
+         * Dense and sparse are separate strategies with very different cost
+         * profiles, so each builds its own stores rather than one store graph
+         * branching on every scroll event.
+         *
+         * Dense offsets are O(rows) walks over measured heights, so they must
+         * stay memoized behind `rowIds` and a deduped `visibleRange` — pulling
+         * them onto `scrollTop` makes every scroll event walk the whole table.
+         * Sparse geometry is uniform-height arithmetic, O(1), so it can hang
+         * off the scroll position directly.
          */
         interface Geometry {
-            totalHeight: number
-            /** Absolute range requested by the viewport, before residency. */
-            range: VisibleRange
+            visibleRange: Readable<VisibleRange>
             /** Absolute range actually rendered, clamped to resident rows. */
-            renderRange: VisibleRange
-            topSpacer: number
-            bottomSpacer: number
-        }
-
-        // The visible range is reported to `onRangeChange` from here rather
-        // than from `visibleRange`, so the callback fires whenever any geometry
-        // consumer is subscribed — not only when something happens to read
-        // `visibleRange`. Returns a stable reference while the range is
-        // unchanged so downstream dedup stays cheap.
-        let currentRange: VisibleRange = { start: 0, end: 0 }
-        const trackRange = (range: VisibleRange): VisibleRange => {
-            if (range.start === currentRange.start && range.end === currentRange.end) {
-                return currentRange
-            }
-            currentRange = range
-            notifyRangeChange(range)
-            return range
-        }
-
-        const EMPTY_GEOMETRY: Geometry = {
-            totalHeight: 0,
-            range: { start: 0, end: 0 },
-            renderRange: { start: 0, end: 0 },
-            topSpacer: 0,
-            bottomSpacer: 0
+            renderRange: Readable<VisibleRange>
+            totalHeight: Readable<number>
+            topSpacerHeight: Readable<number>
+            bottomSpacerHeight: Readable<number>
         }
 
         /**
-         * Dense geometry: every row is resident, so the range is the render
-         * range and offsets come from the measured per-row heights.
-         *
-         * `rowIds` carries the measurement signal — `measureRow` touches it
-         * when a height changes.
+         * Emit a range only when it actually changes, and report it to the
+         * caller. `renderRange` and the spacers hang off the result, so the
+         * expensive dense derivations stay put while scrolling within a row.
          */
-        const denseGeometry: Readable<Geometry> = derived(
-            [rowIds, scrollTop, viewportHeight],
-            ([$rowIds, $scrollTop, $viewportHeight]) => {
-                const range = heightManager.getVisibleRange(
-                    $rowIds,
-                    $scrollTop,
-                    $viewportHeight,
-                    bufferSize
+        const trackedRange = (source: Readable<VisibleRange>): Readable<VisibleRange> => {
+            let currentRange: VisibleRange = { start: 0, end: 0 }
+            return derived(
+                source,
+                ($range, set) => {
+                    if ($range.start === currentRange.start && $range.end === currentRange.end) {
+                        return
+                    }
+                    currentRange = $range
+                    set($range)
+                    notifyRangeChange($range)
+                },
+                currentRange
+            )
+        }
+
+        const createDenseGeometry = (): Geometry => {
+            const visibleRange = trackedRange(
+                derived(
+                    [rowIds, scrollTop, viewportHeight],
+                    ([$rowIds, $scrollTop, $viewportHeight]) =>
+                        heightManager.getVisibleRange(
+                            $rowIds,
+                            $scrollTop,
+                            $viewportHeight,
+                            bufferSize
+                        )
                 )
-                const totalHeight = heightManager.getTotalHeight($rowIds)
-                const topSpacer = heightManager.getOffsetForIndex($rowIds, range.start)
-                const endOffset = heightManager.getOffsetForIndex($rowIds, range.end)
-                const tracked = trackRange(range)
-                return {
-                    totalHeight,
-                    range: tracked,
-                    renderRange: tracked,
-                    topSpacer,
-                    bottomSpacer: Math.max(0, totalHeight - endOffset)
+            )
+            const totalHeight = derived(rowIds, ($rowIds) => heightManager.getTotalHeight($rowIds))
+
+            return {
+                visibleRange,
+                // Every row is resident, so nothing is clamped away.
+                renderRange: visibleRange,
+                totalHeight,
+                topSpacerHeight: derived([rowIds, visibleRange], ([$rowIds, $range]) =>
+                    heightManager.getOffsetForIndex($rowIds, $range.start)
+                ),
+                bottomSpacerHeight: derived(
+                    [rowIds, visibleRange, totalHeight],
+                    ([$rowIds, $range, $total]) =>
+                        Math.max(0, $total - heightManager.getOffsetForIndex($rowIds, $range.end))
+                )
+            }
+        }
+
+        const createSparseGeometry = (): Geometry => {
+            // `rowIds` participates so new measurements, which move the average
+            // row height, re-run the geometry.
+            const layout = derived(
+                [rowIds, scrollTop, viewportHeight, datasetRows],
+                ([, $scrollTop, $viewportHeight, $datasetRows]) =>
+                    heightManager.getSparseLayout(
+                        $datasetRows,
+                        $scrollTop,
+                        $viewportHeight,
+                        bufferSize,
+                        maxScrollHeight
+                    )
+            )
+            const visibleRange = trackedRange(
+                derived(layout, ($layout) => ({ start: $layout.start, end: $layout.end }))
+            )
+
+            // The visible range is absolute and may extend past the resident
+            // window. Intersect once here; `derivePageRows` reuses the result so
+            // the spacers and the DOM can't disagree.
+            const renderRange = derived(
+                [visibleRange, rowIds, dataOffset],
+                ([$range, $rowIds, $dataOffset]) => {
+                    const windowEnd = $dataOffset + $rowIds.length
+                    const start = Math.min(Math.max($range.start, $dataOffset), windowEnd)
+                    const end = Math.min($range.end, windowEnd)
+                    // Nothing resident yet: collapse to a zero-width slice where
+                    // the user is looking, not at the window edge, so the
+                    // spacers still sum to the full height.
+                    return end > start ? { start, end } : { start: $range.start, end: $range.start }
                 }
-            }
-        )
+            )
 
-        /**
-         * Sparse geometry: the visible range is absolute and may extend past
-         * the resident window, so the rendered range is the intersection with
-         * it — computed once here, and reused by `derivePageRows` so the
-         * spacers and the DOM can't disagree.
-         *
-         * Rows are placed relative to the anchor row, so the block around the
-         * viewport lays out at natural scale even when the overall scroll range
-         * is compressed.
-         */
-        const sparseGeometry: Readable<Geometry> = derived(
-            [rowIds, scrollTop, viewportHeight, datasetRows, dataOffset],
-            ([$rowIds, $scrollTop, $viewportHeight, $datasetRows, $dataOffset]) => {
-                const layout = heightManager.getSparseLayout(
-                    $datasetRows,
-                    $scrollTop,
-                    $viewportHeight,
-                    bufferSize,
-                    maxScrollHeight
-                )
-                const range = trackRange({ start: layout.start, end: layout.end })
-
-                const windowEnd = $dataOffset + $rowIds.length
-                const start = Math.min(Math.max(range.start, $dataOffset), windowEnd)
-                const end = Math.min(range.end, windowEnd)
-                // Nothing resident for this range yet: collapse to a zero-width
-                // slice anchored where the user is looking, not at the window
-                // edge, so the spacers still sum to the full height.
-                const renderRange =
-                    end > start ? { start, end } : { start: range.start, end: range.start }
-
-                const topSpacer = Math.max(
+            // Rows are placed relative to the anchor row, so the block around
+            // the viewport lays out at natural scale even when the overall
+            // scroll range is compressed.
+            const topSpacerHeight = derived([renderRange, layout], ([$range, $layout]) =>
+                Math.max(
                     0,
-                    layout.anchorOffset +
-                        (renderRange.start - layout.anchorIndex) * layout.rowHeight
+                    $layout.anchorOffset + ($range.start - $layout.anchorIndex) * $layout.rowHeight
                 )
-                const renderedHeight = (renderRange.end - renderRange.start) * layout.rowHeight
-                return {
-                    totalHeight: layout.totalHeight,
-                    range,
-                    renderRange,
-                    topSpacer,
-                    bottomSpacer: Math.max(0, layout.totalHeight - topSpacer - renderedHeight)
-                }
+            )
+
+            return {
+                visibleRange,
+                renderRange,
+                totalHeight: derived(layout, ($layout) => $layout.totalHeight),
+                topSpacerHeight,
+                bottomSpacerHeight: derived(
+                    [renderRange, layout, topSpacerHeight],
+                    ([$range, $layout, $top]) =>
+                        Math.max(
+                            0,
+                            $layout.totalHeight -
+                                $top -
+                                ($range.end - $range.start) * $layout.rowHeight
+                        )
+                )
             }
-        )
+        }
 
-        const geometry = isSparse ? sparseGeometry : denseGeometry
-
-        // Suppress no-op emissions so consumers don't churn on every scroll
-        // pixel; `trackRange` already gives us a stable reference to compare.
-        let lastEmittedRange: VisibleRange = EMPTY_GEOMETRY.range
-        const visibleRange: Readable<VisibleRange> = derived(
-            geometry,
-            ($geometry, set) => {
-                if ($geometry.range === lastEmittedRange) {
-                    return
-                }
-                lastEmittedRange = $geometry.range
-                set($geometry.range)
-            },
-            lastEmittedRange
-        )
-
-        const renderRange: Readable<VisibleRange> = derived(
-            geometry,
-            ($geometry) => $geometry.renderRange
-        )
-        const totalHeight: Readable<number> = derived(geometry, ($g) => $g.totalHeight)
-        const topSpacerHeight: Readable<number> = derived(geometry, ($g) => $g.topSpacer)
-        const bottomSpacerHeight: Readable<number> = derived(geometry, ($g) => $g.bottomSpacer)
+        const { visibleRange, renderRange, totalHeight, topSpacerHeight, bottomSpacerHeight } =
+            isSparse ? createSparseGeometry() : createDenseGeometry()
 
         // Total and rendered row counts
         const totalRows: Readable<number> = isSparse
@@ -573,9 +568,9 @@ export const addVirtualScroll =
             })
 
             return derived(
-                [syncedRows, geometry, dataOffset],
-                ([$rows, $geometry, $dataOffset]) => {
-                    const { start, end } = $geometry.renderRange
+                [syncedRows, renderRange, dataOffset],
+                ([$rows, $range, $dataOffset]) => {
+                    const { start, end } = $range
                     if (!isSparse) {
                         return $rows.slice(start, end)
                     }

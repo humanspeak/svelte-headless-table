@@ -358,6 +358,109 @@ describe('addVirtualScroll', () => {
     })
 })
 
+describe('addVirtualScroll dense mode geometry cost', () => {
+    /**
+     * Dense offsets are O(rows) walks over measured heights. If they get pulled
+     * onto `scrollTop`, every scroll event walks the whole table and a jump into
+     * a large dataset churns for seconds. These assert the memoization that
+     * keeps that from happening — they are cheap proxies for a perf guard.
+     */
+    class FakeScrollElement extends EventTarget {
+        style: Record<string, string> = {}
+        scrollTop = 0
+        scrollTo = vi.fn()
+        clientHeight: number
+        constructor(clientHeight: number) {
+            super()
+            this.clientHeight = clientHeight
+        }
+        scroll(top: number) {
+            this.scrollTop = top
+            this.dispatchEvent(new Event('scroll'))
+        }
+    }
+
+    beforeAll(() => {
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        ;(globalThis as any).ResizeObserver = class {
+            observe() {}
+            unobserve() {}
+            disconnect() {}
+        }
+    })
+
+    function createDenseTable(rowCount: number) {
+        const data = writable(createTestData(rowCount))
+        const table = createTable(data, {
+            virtualScroll: addVirtualScroll<TestItem>({ estimatedRowHeight: 40, bufferSize: 5 })
+        })
+        const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
+        const vm = table.createViewModel(columns)
+        const unsubscribe = vm.pageRows.subscribe(() => {})
+        const state = vm.pluginStates.virtualScroll
+        const node = new FakeScrollElement(400)
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        state.virtualScroll(node as any)
+        return { data, vm, state, node, unsubscribe }
+    }
+
+    test('totalHeight does not recompute while scrolling', () => {
+        const { state, node, unsubscribe } = createDenseTable(100_000)
+        let emissions = 0
+        const stop = state.totalHeight.subscribe(() => {
+            emissions++
+        })
+        const afterSubscribe = emissions
+
+        node.scroll(1_000_000)
+        node.scroll(2_000_000)
+        node.scroll(2_000_040)
+
+        // Row heights did not change, so neither did the total.
+        expect(emissions).toBe(afterSubscribe)
+        stop()
+        unsubscribe()
+    })
+
+    test('spacer heights do not recompute for scrolls within the same range', () => {
+        const { state, node, unsubscribe } = createDenseTable(100_000)
+        node.scroll(2_000_010)
+
+        let topEmissions = 0
+        let bottomEmissions = 0
+        const stopTop = state.topSpacerHeight.subscribe(() => {
+            topEmissions++
+        })
+        const stopBottom = state.bottomSpacerHeight.subscribe(() => {
+            bottomEmissions++
+        })
+        const top = topEmissions
+        const bottom = bottomEmissions
+
+        // A sub-row scroll that lands on the same visible range.
+        node.scroll(2_000_015)
+
+        expect(get(state.visibleRange)).toEqual({ start: 49_995, end: 50_011 })
+        expect(topEmissions).toBe(top)
+        expect(bottomEmissions).toBe(bottom)
+        stopTop()
+        stopBottom()
+        unsubscribe()
+    })
+
+    test('jumping deep into a large table lands on the right rows', () => {
+        const { vm, state, node, unsubscribe } = createDenseTable(100_000)
+
+        node.scroll(50_000 * 40)
+
+        expect(get(state.visibleRange)).toEqual({ start: 49_995, end: 50_010 })
+        expect(get(state.totalHeight)).toBe(100_000 * 40)
+        expect(get(state.topSpacerHeight)).toBe(49_995 * 40)
+        expect(get(vm.pageRows)).toHaveLength(15)
+        unsubscribe()
+    })
+})
+
 describe('addVirtualScroll sparse mode', () => {
     const ROW_HEIGHT = 32
     const PAGE_SIZE = 500
