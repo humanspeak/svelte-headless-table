@@ -15,6 +15,44 @@ function createTestData(count: number): TestItem[] {
     }))
 }
 
+/**
+ * Minimal stand-in for the scroll container. The suite runs without a DOM, so
+ * the action needs an EventTarget with the handful of properties it touches.
+ */
+class FakeScrollElement extends EventTarget {
+    style: Record<string, string> = {}
+    scrollTop = 0
+    scrollTo = vi.fn()
+    clientHeight: number
+    constructor(clientHeight: number) {
+        super()
+        this.clientHeight = clientHeight
+    }
+    scroll(top: number) {
+        this.scrollTop = top
+        this.dispatchEvent(new Event('scroll'))
+    }
+}
+
+beforeAll(() => {
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+    ;(globalThis as any).ResizeObserver = class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+    }
+})
+
+/** Attach the scroll action to `node`, returning it with its destroy callback. */
+function attachScrollAction(
+    state: { virtualScroll: (_node: HTMLElement) => unknown },
+    node: FakeScrollElement
+) {
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+    const ret = state.virtualScroll(node as any) as { destroy?: () => void } | undefined
+    return { node, destroy: () => ret?.destroy?.() }
+}
+
 describe('addVirtualScroll', () => {
     test('exposes required state stores', () => {
         const data = writable(createTestData(50))
@@ -365,30 +403,6 @@ describe('addVirtualScroll dense mode geometry cost', () => {
      * a large dataset churns for seconds. These assert the memoization that
      * keeps that from happening — they are cheap proxies for a perf guard.
      */
-    class FakeScrollElement extends EventTarget {
-        style: Record<string, string> = {}
-        scrollTop = 0
-        scrollTo = vi.fn()
-        clientHeight: number
-        constructor(clientHeight: number) {
-            super()
-            this.clientHeight = clientHeight
-        }
-        scroll(top: number) {
-            this.scrollTop = top
-            this.dispatchEvent(new Event('scroll'))
-        }
-    }
-
-    beforeAll(() => {
-        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-        ;(globalThis as any).ResizeObserver = class {
-            observe() {}
-            unobserve() {}
-            disconnect() {}
-        }
-    })
-
     function createDenseTable(rowCount: number) {
         const data = writable(createTestData(rowCount))
         const table = createTable(data, {
@@ -471,35 +485,6 @@ describe('addVirtualScroll sparse mode', () => {
     const HUGE_TOTAL = 4_000_000
     const CAP = 16_000_000
 
-    /**
-     * Minimal stand-in for the scroll container. The suite runs without a DOM,
-     * so the action needs an EventTarget with the handful of properties it
-     * touches.
-     */
-    class FakeScrollElement extends EventTarget {
-        style: Record<string, string> = {}
-        scrollTop = 0
-        scrollTo = vi.fn()
-        clientHeight: number
-        constructor(clientHeight: number) {
-            super()
-            this.clientHeight = clientHeight
-        }
-        scroll(top: number) {
-            this.scrollTop = top
-            this.dispatchEvent(new Event('scroll'))
-        }
-    }
-
-    beforeAll(() => {
-        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-        ;(globalThis as any).ResizeObserver = class {
-            observe() {}
-            unobserve() {}
-            disconnect() {}
-        }
-    })
-
     /** Build a sparse-mode table over a window of `PAGE_SIZE` rows. */
     function createSparseTable({
         offset = OFFSET,
@@ -537,12 +522,8 @@ describe('addVirtualScroll sparse mode', () => {
     }
 
     /** Attach the scroll action to a fake container with a 10-row viewport. */
-    function attach(state: ReturnType<typeof createSparseTable>['state']) {
-        const node = new FakeScrollElement(10 * ROW_HEIGHT)
-        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-        state.virtualScroll(node as any)
-        return node
-    }
+    const attach = (state: ReturnType<typeof createSparseTable>['state']) =>
+        attachScrollAction(state, new FakeScrollElement(10 * ROW_HEIGHT)).node
 
     /** Flush the microtask that `onRangeChange` is deferred onto. */
     const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
@@ -949,52 +930,22 @@ describe('addVirtualScroll sparse mode', () => {
 
 describe('addVirtualScroll survives a view model rebuild', () => {
     /**
-     * `createViewModel` instantiates every plugin, so a consumer whose column
-     * array is derived — a new array identity per pass — mints a fresh plugin
-     * instance on each rebuild. Svelte actions bind at mount and ignore a
-     * changed function identity, so the container stays wired to the *old*
-     * instance while the rendered view reads the new one: `scrollContainer` is
-     * null, `viewportHeight` is 0, and only the buffer renders.
-     *
-     * These assert that container-bound and geometry state lives in the config
-     * closure, shared across rebuilds, so the binding and the user's scroll
-     * position survive.
+     * Container-bound and geometry state lives in the config closure, shared
+     * across rebuilds. Without that, a rebuild leaves the mounted node wired to
+     * a discarded instance whose `viewportHeight` is 0, and only the buffer
+     * renders.
      */
     const ROW_HEIGHT = 40
     const ROW_COUNT = 1_000
     const VIEWPORT = 400
-
-    class FakeScrollElement extends EventTarget {
-        style: Record<string, string> = {}
-        scrollTop = 0
-        scrollTo = vi.fn()
-        clientHeight: number
-        constructor(clientHeight: number) {
-            super()
-            this.clientHeight = clientHeight
-        }
-        scroll(top: number) {
-            this.scrollTop = top
-            this.dispatchEvent(new Event('scroll'))
-        }
-    }
-
-    beforeAll(() => {
-        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-        ;(globalThis as any).ResizeObserver = class {
-            observe() {}
-            unobserve() {}
-            disconnect() {}
-        }
-    })
 
     /**
      * A table whose columns are rebuilt on demand. `buildViewModel` stands in
      * for a `$derived` consumer: same column shape every time, new array
      * identity every time.
      */
-    function createRebuildableTable(rowCount = ROW_COUNT) {
-        const data = writable(createTestData(rowCount))
+    function createRebuildableTable() {
+        const data = writable(createTestData(ROW_COUNT))
         const table = createTable(data, {
             virtualScroll: addVirtualScroll<TestItem>({
                 estimatedRowHeight: ROW_HEIGHT,
@@ -1011,18 +962,12 @@ describe('addVirtualScroll survives a view model rebuild', () => {
             return vm
         }
         const cleanup = () => teardowns.forEach((stop) => stop())
-        return { data, table, buildViewModel, cleanup }
+        return { buildViewModel, cleanup }
     }
 
-    /** Attach the scroll action, returning the node and its destroy callback. */
-    function attach(
-        state: { virtualScroll: (_node: HTMLElement) => unknown },
-        node = new FakeScrollElement(VIEWPORT)
-    ) {
-        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-        const ret = state.virtualScroll(node as any) as { destroy?: () => void } | undefined
-        return { node, destroy: () => ret?.destroy?.() }
-    }
+    /** Attach the scroll action to a fresh container of the standard height. */
+    const attach = (state: { virtualScroll: (_node: HTMLElement) => unknown }) =>
+        attachScrollAction(state, new FakeScrollElement(VIEWPORT))
 
     test('the scroll action keeps its identity across a rebuild', () => {
         const { buildViewModel, cleanup } = createRebuildableTable()

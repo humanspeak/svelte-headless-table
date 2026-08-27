@@ -373,6 +373,18 @@ export const addVirtualScroll = <Item>({
     const virtualScroll: Action<HTMLElement> = (node) => {
         scrollContainer = node
 
+        // Disable overflow-anchor to prevent the browser from adjusting
+        // scrollTop when spacer heights change. Without this, a feedback
+        // loop occurs: spacer change → browser adjusts scrollTop → scroll
+        // event → new visible range → spacer change → cascades to bottom.
+        // Written before the layout read below so the browser settles once.
+        node.style.overflowAnchor = 'none'
+
+        // Viewport height first: the geometry chain is derived from it, and
+        // restoring scroll while it is still 0 would walk the whole table
+        // against a zero-height viewport only to redo it a line later.
+        viewportHeight.set(node.clientHeight)
+
         // Scroll position now outlives the node, so a remount hands us a
         // fresh container sitting at 0 while `scrollTop` still holds where
         // the user was. Put the node back rather than letting the two
@@ -384,16 +396,6 @@ export const addVirtualScroll = <Item>({
             node.scrollTop = retainedScrollTop
             scrollTop.set(node.scrollTop)
         }
-
-        // Disable overflow-anchor to prevent the browser from adjusting
-        // scrollTop when spacer heights change. Without this, a feedback
-        // loop occurs: spacer change → browser adjusts scrollTop → scroll
-        // event → new visible range → spacer change → cascades to bottom.
-        node.style.overflowAnchor = 'none'
-
-        // Set initial viewport height
-        const initialHeight = node.clientHeight
-        viewportHeight.set(initialHeight)
 
         // Create ResizeObserver to track viewport size changes
         const resizeObserver = new ResizeObserver((entries) => {
@@ -411,15 +413,20 @@ export const addVirtualScroll = <Item>({
 
         return {
             destroy() {
-                // Drop what belongs to this node and nothing else. Scroll
-                // position, viewport height and measured heights belong to
-                // the plugin and are what the next mount restores from.
+                // Scroll position, viewport height and measured heights are
+                // plugin-scoped and survive — they are what the next mount
+                // restores from. Everything below belongs to this node.
                 scrollContainer = null
                 node.removeEventListener('scroll', handleScroll)
                 resizeObserver.disconnect()
                 // Let callers cancel work for a table that is going away.
                 rangeRequest?.abort()
                 rangeRequest = undefined
+                // Only read by `measureRow`, which cannot fire without a
+                // mounted container, and rebuilt by `syncedRows` on the way
+                // back in. Holding it would pin every row and cell for the
+                // life of the plugin.
+                allRowsCache = []
             }
         }
     }
@@ -669,9 +676,8 @@ export const addVirtualScroll = <Item>({
         boundData = data
     }
 
-    // One instance, reused by every view model this plugin is handed to.
-    // Rebuilding it here is what used to strand the mounted container on a
-    // dead closure.
+    // Rebuilding this per view model is what used to strand the mounted
+    // container on a dead closure.
     const instance = {
         pluginState,
         derivePageRows,

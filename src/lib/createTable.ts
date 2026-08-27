@@ -18,7 +18,7 @@ import {
     type TableViewModel
 } from '$lib/createViewModel.js'
 import type { AnyPlugins } from '$lib/types/TablePlugin.js'
-import { getDuplicates } from '$lib/utils/array.js'
+import { arrayEquals, getDuplicates } from '$lib/utils/array.js'
 import type { ReadOrWritable } from '$lib/utils/store.js'
 
 /**
@@ -44,11 +44,9 @@ export class Table<Item, Plugins extends AnyPlugins = AnyPlugins> {
     plugins: Plugins
 
     /**
-     * The view model returned by the last `createViewModel` call that carried a
-     * `reuseKey`, with the inputs it was built from. One slot rather than a map:
-     * a table renders one view model at a time, and keeping every key alive
-     * would pin an unbounded number of plugin instances for the life of the
-     * table.
+     * The last view model built with a `reuseKey`, and the inputs it was built
+     * from. One slot rather than a map: keeping every key alive would pin an
+     * unbounded number of plugin instances for the life of the table.
      */
     private cachedViewModel?: {
         key: string
@@ -179,10 +177,7 @@ export class Table<Item, Plugins extends AnyPlugins = AnyPlugins> {
         const columnIds = getFlatColumnIds(columns)
         const cached = this.cachedViewModel
         if (cached?.key === reuseKey && cached.rowDataId === rowDataId) {
-            if (
-                cached.columnIds.length === columnIds.length &&
-                cached.columnIds.every((id, i) => id === columnIds[i])
-            ) {
+            if (arrayEquals(cached.columnIds, columnIds)) {
                 return cached.viewModel
             }
             // The key promises the columns are unchanged and they are not.
@@ -190,7 +185,7 @@ export class Table<Item, Plugins extends AnyPlugins = AnyPlugins> {
             // would render the previous columns.
             console.warn(
                 'The `reuseKey` passed to `createViewModel` matched the previous call but the columns changed. ' +
-                    'Rebuilding. Give each distinct set of columns its own `reuseKey`.'
+                    'Rebuilding, so plugin state was not preserved. A `reuseKey` should change whenever the columns do.'
             )
         }
 

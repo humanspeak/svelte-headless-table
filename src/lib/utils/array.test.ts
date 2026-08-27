@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getDistinct, getDuplicates } from './array.js'
+import { arrayEquals, getDistinct, getDuplicates } from './array.js'
 
 describe('getDistinct', () => {
     describe('positive cases', () => {
@@ -335,6 +335,36 @@ describe('getDuplicates', () => {
 
             expect(actual).toStrictEqual(['duplicate'])
             expect(duration).toBeLessThan(100)
+        })
+    })
+})
+
+describe('arrayEquals', () => {
+    describe('positive cases', () => {
+        it('matches equal arrays of the same order', () => {
+            expect(arrayEquals(['a', 'b', 'c'], ['a', 'b', 'c'])).toBe(true)
+        })
+
+        it('matches two empty arrays', () => {
+            expect(arrayEquals([], [])).toBe(true)
+        })
+    })
+
+    describe('negative cases', () => {
+        it('rejects the same elements in a different order', () => {
+            expect(arrayEquals(['a', 'b'], ['b', 'a'])).toBe(false)
+        })
+
+        it('rejects a prefix of a longer array', () => {
+            expect(arrayEquals(['a'], ['a', 'b'])).toBe(false)
+        })
+    })
+
+    describe('edge cases', () => {
+        it('compares objects by identity, not structure', () => {
+            const shared = { id: 'a' }
+            expect(arrayEquals([shared], [shared])).toBe(true)
+            expect(arrayEquals([{ id: 'a' }], [{ id: 'a' }])).toBe(false)
         })
     })
 })

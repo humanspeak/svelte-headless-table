@@ -33,3 +33,21 @@ export const getDuplicates = <T>(items: T[]): T[] => {
         .filter(([, count]) => count !== 1)
         .map(([key]) => key)
 }
+
+/**
+ * Determines whether two arrays hold the same elements in the same order,
+ * compared by identity.
+ *
+ * @template T - The type of elements in the arrays.
+ * @param a - The first array.
+ * @param b - The second array.
+ * @returns True when both arrays have equal length and identical elements.
+ * @example
+ * ```typescript
+ * arrayEquals(['a', 'b'], ['a', 'b']) // Returns true
+ * arrayEquals(['a', 'b'], ['b', 'a']) // Returns false
+ * ```
+ */
+export const arrayEquals = <T>(a: T[], b: T[]): boolean => {
+    return a.length === b.length && a.every((item, index) => item === b[index])
+}

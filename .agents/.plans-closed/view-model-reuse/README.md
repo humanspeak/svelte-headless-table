@@ -66,11 +66,25 @@ Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJE
   closures and components is unsound. An explicit key is a smaller win — it
   demotes a consumer-side column-comparison guard to a key expression rather
   than deleting it — but it is honest about who is making the promise.
-- **Hoisting state in the remaining stateful plugins, Track-A style.** Rejected
-  as a general fix: six of them consume their per-view-model init argument, so
-  it is a real per-plugin refactor each, not the mechanical indentation change
-  it was for `addVirtualScroll`. Reuse at the `Table` level covers all of them
-  at once.
+- **Hoisting state in the remaining stateful plugins, Track-A style.** Rejected,
+  but not for the reason first recorded here. The original wording said six
+  plugins "consume their per-view-model init argument" and implied that blocked
+  hoisting. A later review checked all six and found the distinction that
+  wording blurred: `columnOptions` / `tableState` are consumed by each plugin's
+  derives and hooks, never by its state stores, which are built from config
+  alone (`createSortKeysStore(initialSortKeys)`, `arraySetStore(initialGroupByIds)`,
+  and so on). A state-only hoist is therefore feasible for all of them.
+
+    The real reason to prefer reuse: hoisting changes reset semantics for every
+    existing consumer, silently and without opt-out — a caller who rebuilds
+    deliberately to clear sort or pagination would stop getting a reset with no
+    compile error and no runtime signal. `reuseKey` is opt-in, so nobody's
+    behavior changes until they ask for it. Hoisting remains available later if a
+    plugin's state proves worth preserving unconditionally, and `addVirtualScroll`
+    is the case where it was: its breakage is a dead DOM binding, which no
+    view-model cache can reach, because a genuine column change still rebuilds and
+    Svelte action identity is not reactive.
+
 - **A keyed map instead of a single cache slot.** Rejected: it would pin plugin
   instances for every key ever seen for the life of the `Table`. The cost is
   that alternating between two keys rebuilds every time; that is a silent loss

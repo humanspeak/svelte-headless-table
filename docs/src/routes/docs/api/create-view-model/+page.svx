@@ -54,11 +54,13 @@ _Defaults to the item index_.
 
 #### `options.reuseKey?: string`
 
-Opts into reusing the previous view model when a derived column array is rebuilt with the same columns. Reusing the view model preserves plugin state such as the current page index or sort order.
+Opts into reusing the previous view model instead of building a new one. Building a view model instantiates every plugin, so a component that rebuilds on each reactive pass — a derived column array with a new identity but the same columns in it — otherwise loses plugin state such as the current page index or sort order.
 
 ```ts
-const columns = table.createColumns(...);
-const viewModel = table.createViewModel(columns, { reuseKey: 'visible-columns' });
+const columns = $derived(table.createColumns(...));
+const viewModel = $derived(table.createViewModel(columns, { reuseKey: 'main' }));
 ```
 
-Pass the same key while the columns are unchanged. A different key, or omitting `reuseKey`, builds a fresh view model.
+The view model is reused when the key, the column ids and `rowDataId` all match the previous call. A different key, changed columns, or omitting `reuseKey` builds fresh.
+
+Only the most recently built view model is kept, so the key identifies the current table rather than naming one of several — alternating between two keys rebuilds on every pass. The cache also lives on the `Table`, so reuse only helps when the `createTable` call itself is stable and only the columns are derived.
