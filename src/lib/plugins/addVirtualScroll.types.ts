@@ -169,8 +169,40 @@ export interface VirtualScrollState<Item> {
 
     /**
      * Range of currently visible row indices.
+     *
+     * Padded by `bufferSize` on both ends: this is what the plugin mounts, not
+     * what the user sees. For a "rows N–M of T" readout use
+     * {@link VirtualScrollState.viewportRange}.
      */
     visibleRange: Readable<VisibleRange>
+
+    /**
+     * Rows actually intersecting the viewport, with no render buffer.
+     *
+     * `visibleRange` is padded by `bufferSize` because it decides what gets
+     * mounted; this answers the different question of what the user is looking
+     * at — the range a footer tally, a scroll-progress readout or a "jump to
+     * row" indicator should report.
+     *
+     * In sparse mode these are absolute indices into the full dataset, and the
+     * compression the plugin applies above `maxScrollHeight` is already undone,
+     * so consumers never re-derive that mapping themselves.
+     *
+     * Anything the caller renders above the rows — an in-flow `<thead>`, a
+     * caption, a toolbar — shifts where row 0 begins inside the scroll
+     * container. The plugin measures that offset from the first rendered row
+     * and accounts for it, so this range tracks the rows on screen rather than
+     * the raw scroll position.
+     *
+     * A `position: sticky` header keeps its in-flow space but goes on covering
+     * the top of the viewport, hiding rows underneath it. Attach
+     * {@link VirtualScrollState.measureHeaderAction} to it and those rows are
+     * excluded from this range too.
+     *
+     * `end` is exclusive, so a range of `{ start: 0, end: 10 }` means rows 1–10
+     * of a 1-based readout.
+     */
+    viewportRange: Readable<VisibleRange>
 
     /**
      * Total height of all rows (for scroll container sizing).
@@ -220,6 +252,24 @@ export interface VirtualScrollState<Item> {
      * Usage: <tr use:measureRowAction={row.id}>
      */
     measureRowAction: Action<HTMLElement, string>
+
+    /**
+     * Svelte action for content that paints over the top of the viewport —
+     * in practice a `position: sticky` `<thead>`.
+     *
+     * Usage: `<thead class="sticky top-0" use:measureHeaderAction>`
+     *
+     * A sticky header keeps the space it occupies in the document, so the
+     * plugin already knows where the rows begin, but it also goes on covering
+     * the top of the viewport at every scroll position. Without this the rows
+     * underneath it are still counted as visible, and
+     * {@link VirtualScrollState.viewportRange} names rows the user cannot see.
+     *
+     * Only needed for content that overlays the rows. A header that scrolls
+     * away with them is measured automatically; attaching this to one is
+     * harmless, since it reports no overlap once out of view.
+     */
+    measureHeaderAction: Action<HTMLElement>
 
     /**
      * Total number of rows (before virtualization).

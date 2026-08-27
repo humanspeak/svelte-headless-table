@@ -169,6 +169,73 @@ export const addVirtualScroll = <Item>({
     // otherwise keep the index it was first rendered with.
     const rowIndexById = writable(new Map<string, number>())
 
+    // Distance from the container's scroll origin to where row 0 begins.
+    // The documented markup puts `<thead>` inside the scroll container, so it
+    // is normally the header's height: without it every range is reported
+    // that far down the dataset, and a buffer smaller than the header leaves
+    // a blank strip at the top of the viewport. Measured rather than
+    // configured, so it also covers a caption, a toolbar, or anything else a
+    // caller puts above the rows.
+    const contentOffset = writable(0)
+
+    // Id of the first row currently rendered. Measuring that row is what
+    // reveals the offset, since it sits directly after the top spacer.
+    let firstRenderedRowId: string | undefined
+
+    // How much of the viewport's top edge is currently painted over by the
+    // header. Zero unless `measureHeaderAction` is attached: an in-flow header
+    // needs no such correction, because it scrolls away and `contentOffset`
+    // already accounts for the space it occupies.
+    const headerOverlap = writable(0)
+
+    // The element the caller declared as overlaying the rows, if any.
+    let headerNode: HTMLElement | null = null
+
+    /**
+     * The band of row space the container is showing.
+     *
+     * Two different things sit between the container's scroll origin and the
+     * first row the user can see, and they are not the same measurement:
+     *
+     * `contentOffset` is layout — how far down the *document* the rows begin,
+     * because a header occupies space in the flow. It shifts the whole band.
+     *
+     * `headerOverlap` is paint — how much of the *viewport* the header is
+     * covering right now. A `position: sticky` header keeps its in-flow space
+     * (so `contentOffset` is unchanged) yet goes on hiding the top of the
+     * viewport at every scroll position, so it eats into the band from the top
+     * only. An in-flow header reports zero here once it has scrolled away,
+     * which is exactly right.
+     */
+    const rowViewport = derived(
+        [scrollTop, viewportHeight, contentOffset, headerOverlap],
+        ([$scrollTop, $viewportHeight, $contentOffset, $headerOverlap]) => {
+            const top = $scrollTop + $headerOverlap - $contentOffset
+            const bottom = $scrollTop + $viewportHeight - $contentOffset
+            // `getViewportRange` floors the top at 0, so measure the height
+            // from wherever the band actually starts.
+            return { top, height: Math.max(0, bottom - Math.max(0, top)) }
+        }
+    )
+
+    /**
+     * Re-read how far the header currently reaches into the viewport.
+     *
+     * Cheap enough for the scroll path: one rect per element, and only when a
+     * header has been declared. Sticky elements move relative to the container
+     * on every scroll, so there is no cheaper signal to hang this off.
+     */
+    const measureHeaderOverlap = () => {
+        if (headerNode === null || scrollContainer === null) {
+            return
+        }
+        const containerTop = scrollContainer.getBoundingClientRect().top
+        const overlap = Math.max(0, headerNode.getBoundingClientRect().bottom - containerTop)
+        if (overlap !== get(headerOverlap)) {
+            headerOverlap.set(overlap)
+        }
+    }
+
     // Aborted whenever a newer range supersedes the one in flight, so an
     // async handler can drop a response that is no longer current.
     let rangeRequest: AbortController | undefined
@@ -212,17 +279,22 @@ export const addVirtualScroll = <Item>({
         visibleRange: Readable<VisibleRange>
         /** Absolute range actually rendered, clamped to resident rows. */
         renderRange: Readable<VisibleRange>
+        /** Absolute range intersecting the viewport, buffer excluded. */
+        viewportRange: Readable<VisibleRange>
         totalHeight: Readable<number>
         topSpacerHeight: Readable<number>
         bottomSpacerHeight: Readable<number>
     }
 
     /**
-     * Emit a range only when it actually changes, and report it to the
-     * caller. `renderRange` and the spacers hang off the result, so the
+     * Emit a range only when it actually changes, optionally reporting it
+     * onward. `renderRange` and the spacers hang off the result, so the
      * expensive dense derivations stay put while scrolling within a row.
      */
-    const trackedRange = (source: Readable<VisibleRange>): Readable<VisibleRange> => {
+    const dedupedRange = (
+        source: Readable<VisibleRange>,
+        onChange?: (_range: VisibleRange) => void
+    ): Readable<VisibleRange> => {
         let currentRange: VisibleRange = { start: 0, end: 0 }
         return derived(
             source,
@@ -232,17 +304,30 @@ export const addVirtualScroll = <Item>({
                 }
                 currentRange = $range
                 set($range)
-                notifyRangeChange($range)
+                onChange?.($range)
             },
             currentRange
         )
     }
 
     const createDenseGeometry = (): Geometry => {
-        const visibleRange = trackedRange(
-            derived([rowIds, scrollTop, viewportHeight], ([$rowIds, $scrollTop, $viewportHeight]) =>
-                heightManager.getVisibleRange($rowIds, $scrollTop, $viewportHeight, bufferSize)
+        // One O(rows) walk per scroll event, and the mounted range is the
+        // viewport range padded — so containment is a property of the store
+        // graph rather than of two calculations agreeing. Padding hangs off
+        // the *deduped* viewport, so scrolling within a row does not reach it
+        // at all, and the spacers below stay put with it.
+        const viewportRange = dedupedRange(
+            derived([rowIds, rowViewport], ([$rowIds, $view]) =>
+                heightManager.getViewportRange($rowIds, $view.top, $view.height)
             )
+        )
+        const visibleRange = dedupedRange(
+            // `rowIds` stays a direct dependency: appending rows widens the
+            // clamp even when the viewport itself has not moved.
+            derived([viewportRange, rowIds], ([$viewport, $rowIds]) =>
+                heightManager.bufferRange($viewport, $rowIds.length, bufferSize)
+            ),
+            notifyRangeChange
         )
         const totalHeight = derived(rowIds, ($rowIds) => heightManager.getTotalHeight($rowIds))
 
@@ -250,6 +335,7 @@ export const addVirtualScroll = <Item>({
             visibleRange,
             // Every row is resident, so nothing is clamped away.
             renderRange: visibleRange,
+            viewportRange,
             totalHeight,
             topSpacerHeight: derived([rowIds, visibleRange], ([$rowIds, $range]) =>
                 heightManager.getOffsetForIndex($rowIds, $range.start)
@@ -265,19 +351,18 @@ export const addVirtualScroll = <Item>({
     const createSparseGeometry = (): Geometry => {
         // `rowIds` participates so new measurements, which move the average
         // row height, re-run the geometry.
-        const layout = derived(
-            [rowIds, scrollTop, viewportHeight, datasetRows],
-            ([, $scrollTop, $viewportHeight, $datasetRows]) =>
-                heightManager.getSparseLayout(
-                    $datasetRows,
-                    $scrollTop,
-                    $viewportHeight,
-                    bufferSize,
-                    maxScrollHeight
-                )
+        const layout = derived([rowIds, rowViewport, datasetRows], ([, $view, $datasetRows]) =>
+            heightManager.getSparseLayout(
+                $datasetRows,
+                $view.top,
+                $view.height,
+                bufferSize,
+                maxScrollHeight
+            )
         )
-        const visibleRange = trackedRange(
-            derived(layout, ($layout) => ({ start: $layout.start, end: $layout.end }))
+        const visibleRange = dedupedRange(
+            derived(layout, ($layout) => ({ start: $layout.start, end: $layout.end })),
+            notifyRangeChange
         )
 
         // The visible range is absolute and may extend past the resident
@@ -309,6 +394,10 @@ export const addVirtualScroll = <Item>({
         return {
             visibleRange,
             renderRange,
+            // Already absolute and already decompressed — `layout` computed it
+            // from the same anchor that positions the rendered block, so this
+            // cannot drift from what is on screen.
+            viewportRange: dedupedRange(derived(layout, ($layout) => $layout.viewport)),
             totalHeight: derived(layout, ($layout) => $layout.totalHeight),
             topSpacerHeight,
             bottomSpacerHeight: derived(
@@ -322,9 +411,14 @@ export const addVirtualScroll = <Item>({
         }
     }
 
-    const { visibleRange, renderRange, totalHeight, topSpacerHeight, bottomSpacerHeight } = isSparse
-        ? createSparseGeometry()
-        : createDenseGeometry()
+    const {
+        visibleRange,
+        renderRange,
+        viewportRange,
+        totalHeight,
+        topSpacerHeight,
+        bottomSpacerHeight
+    } = isSparse ? createSparseGeometry() : createDenseGeometry()
 
     // Total and rendered row counts
     const totalRows: Readable<number> = isSparse
@@ -343,11 +437,12 @@ export const addVirtualScroll = <Item>({
             return
         }
 
-        const $scrollTop = get(scrollTop)
-        const $viewportHeight = get(viewportHeight)
+        const $view = get(rowViewport)
         const $totalHeight = get(totalHeight)
 
-        const distanceFromBottom = $totalHeight - ($scrollTop + $viewportHeight)
+        // `totalHeight` covers the rows only, so compare against the row-space
+        // scroll position rather than the container's.
+        const distanceFromBottom = $totalHeight - ($view.top + $view.height)
 
         if (distanceFromBottom <= loadMoreThreshold) {
             loadMorePending = true
@@ -376,6 +471,7 @@ export const addVirtualScroll = <Item>({
         const target = event.target as HTMLElement
         scrollTop.set(target.scrollTop)
 
+        measureHeaderOverlap()
         checkLoadMore()
     }
 
@@ -477,7 +573,7 @@ export const addVirtualScroll = <Item>({
             return
         }
 
-        const $viewportHeight = get(viewportHeight)
+        const $viewportHeight = get(rowViewport).height
 
         // Do the alignment maths in dataset coordinates, then map to the
         // container once. Sparse geometry may compress the scroll range, so
@@ -493,11 +589,11 @@ export const addVirtualScroll = <Item>({
         const currentTop = isSparse
             ? heightManager.getSparseNaturalScrollTop(
                   get(datasetRows),
-                  get(scrollTop),
+                  get(rowViewport).top,
                   $viewportHeight,
                   maxScrollHeight
               )
-            : get(scrollTop)
+            : get(rowViewport).top
 
         let targetOffset: number
         switch (align) {
@@ -532,9 +628,47 @@ export const addVirtualScroll = <Item>({
             : targetOffset
 
         scrollContainer.scrollTo({
-            top: Math.max(0, scrollPosition),
+            // Back into container space: the alignment above is in row space,
+            // which starts below whatever the caller rendered ahead of the
+            // rows. Backing out the overlap too keeps the target row clear of a
+            // sticky header rather than parked underneath it.
+            top: Math.max(0, scrollPosition + get(contentOffset) - get(headerOverlap)),
             behavior
         })
+    }
+
+    /**
+     * Svelte action for content that paints over the top of the viewport —
+     * in practice a `position: sticky` `<thead>`.
+     *
+     * Only needed for content that *overlays* the rows. A header that scrolls
+     * away with them needs nothing: the plugin already measures the space it
+     * occupies. Attaching this to one is harmless, since it reports no overlap
+     * once it has scrolled out of view.
+     *
+     * Usage: `<thead class="sticky top-0" use:measureHeaderAction>`
+     */
+    const measureHeaderAction: Action<HTMLElement> = (node) => {
+        headerNode = node
+        measureHeaderOverlap()
+
+        // A header that grows — a filter row appearing, text wrapping — changes
+        // how much it covers without any scrolling to trigger a re-read.
+        const resizeObserver = new ResizeObserver(() => {
+            measureHeaderOverlap()
+        })
+        resizeObserver.observe(node)
+
+        return {
+            destroy() {
+                resizeObserver.disconnect()
+                if (headerNode !== node) {
+                    return
+                }
+                headerNode = null
+                headerOverlap.set(0)
+            }
+        }
     }
 
     /**
@@ -561,16 +695,39 @@ export const addVirtualScroll = <Item>({
     }
 
     /**
+     * Learn how far the rows sit below the container's scroll origin, from
+     * where the first rendered row actually landed.
+     *
+     * That row is laid out directly after the top spacer, so whatever is left
+     * once the spacer is subtracted is the content the caller put above the
+     * rows — normally an in-flow `<thead>`. Measured from the DOM because the
+     * plugin cannot see the caller's markup, and re-measured on every mount so
+     * a header that changes height corrects itself on the next scroll.
+     */
+    const measureContentOffset = (node: HTMLElement, rowId: string, rect: DOMRect) => {
+        if (scrollContainer === null || rowId !== firstRenderedRowId) {
+            return
+        }
+        const containerTop = scrollContainer.getBoundingClientRect().top
+        const rowTop = rect.top - containerTop + scrollContainer.scrollTop
+        const offset = Math.max(0, rowTop - get(topSpacerHeight))
+        if (offset !== get(contentOffset)) {
+            contentOffset.set(offset)
+        }
+    }
+
+    /**
      * Svelte action to automatically measure row height.
      * Attach to each <tr> element: <tr use:measureRowAction={row.id}>
      */
     const measureRowAction: Action<HTMLElement, string> = (node, rowId) => {
         // Measure initial height
         const measure = () => {
-            const height = node.getBoundingClientRect().height
-            if (height > 0) {
-                measureRow(rowId, height)
+            const rect = node.getBoundingClientRect()
+            if (rect.height > 0) {
+                measureRow(rowId, rect.height)
             }
+            measureContentOffset(node, rowId, rect)
         }
 
         // Measure on mount
@@ -598,6 +755,7 @@ export const addVirtualScroll = <Item>({
         scrollTop: { subscribe: scrollTop.subscribe },
         viewportHeight: { subscribe: viewportHeight.subscribe },
         visibleRange,
+        viewportRange,
         totalHeight,
         topSpacerHeight,
         bottomSpacerHeight,
@@ -607,6 +765,7 @@ export const addVirtualScroll = <Item>({
         scrollToIndex,
         measureRow,
         measureRowAction,
+        measureHeaderAction,
         totalRows,
         renderedRows,
         dataOffset
@@ -650,14 +809,18 @@ export const addVirtualScroll = <Item>({
         return derived([syncedRows, renderRange, dataOffset], ([$rows, $range, $dataOffset]) => {
             const { start, end } = $range
             if (!isSparse) {
-                return $rows.slice(start, end)
+                const slice = $rows.slice(start, end)
+                firstRenderedRowId = slice[0]?.id
+                return slice
             }
             // `renderRange` is absolute and already clamped to the resident
             // window, so shifting it into window-local coordinates is all
             // that's left.
             const localStart = Math.min($rows.length, Math.max(0, start - $dataOffset))
             const localEnd = Math.min($rows.length, Math.max(localStart, end - $dataOffset))
-            return $rows.slice(localStart, localEnd)
+            const slice = $rows.slice(localStart, localEnd)
+            firstRenderedRowId = slice[0]?.id
+            return slice
         })
     }
 
