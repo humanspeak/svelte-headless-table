@@ -171,7 +171,7 @@ The rendered markup is identical to the basic example — spacer rows, `use:virt
 
 ### Browser scroll-height ceiling
 
-Sparse mode sizes the scroll container to `totalRows × rowHeight`, and browsers cap how tall an element can be — roughly **16,777,216px** in Chrome and Safari, ~33,554,432px in Firefox. At 32px rows that is about **520,000 rows** of addressable scrolling in Chrome; past that the scrollbar bottoms out early and the remaining rows are only reachable via `scrollToIndex`.
+Sparse mode sizes the scroll container to `totalRows × rowHeight`, and browsers cap how tall an element can be — roughly **16,777,216px** in Chrome and Safari, with other engines varying. At 32px rows that is about **520,000 rows** of addressable scrolling in Chrome; past that the scrollbar bottoms out early and the remaining rows are only reachable via `scrollToIndex`.
 
 The plugin does not compress the scroll range to work around this. If your dataset is larger than the ceiling, either raise the effective row height, pair sparse mode with a coarse jump control (a "go to row" input calling `scrollToIndex`, or a date/alphabet index), or page the dataset into segments that each fit under the cap.
 
