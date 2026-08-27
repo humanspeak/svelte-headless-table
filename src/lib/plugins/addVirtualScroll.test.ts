@@ -946,3 +946,209 @@ describe('addVirtualScroll sparse mode', () => {
         unsubscribe()
     })
 })
+
+describe('addVirtualScroll survives a view model rebuild', () => {
+    /**
+     * `createViewModel` instantiates every plugin, so a consumer whose column
+     * array is derived — a new array identity per pass — mints a fresh plugin
+     * instance on each rebuild. Svelte actions bind at mount and ignore a
+     * changed function identity, so the container stays wired to the *old*
+     * instance while the rendered view reads the new one: `scrollContainer` is
+     * null, `viewportHeight` is 0, and only the buffer renders.
+     *
+     * These assert that container-bound and geometry state lives in the config
+     * closure, shared across rebuilds, so the binding and the user's scroll
+     * position survive.
+     */
+    const ROW_HEIGHT = 40
+    const ROW_COUNT = 1_000
+    const VIEWPORT = 400
+
+    class FakeScrollElement extends EventTarget {
+        style: Record<string, string> = {}
+        scrollTop = 0
+        scrollTo = vi.fn()
+        clientHeight: number
+        constructor(clientHeight: number) {
+            super()
+            this.clientHeight = clientHeight
+        }
+        scroll(top: number) {
+            this.scrollTop = top
+            this.dispatchEvent(new Event('scroll'))
+        }
+    }
+
+    beforeAll(() => {
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        ;(globalThis as any).ResizeObserver = class {
+            observe() {}
+            unobserve() {}
+            disconnect() {}
+        }
+    })
+
+    /**
+     * A table whose columns are rebuilt on demand. `buildViewModel` stands in
+     * for a `$derived` consumer: same column shape every time, new array
+     * identity every time.
+     */
+    function createRebuildableTable(rowCount = ROW_COUNT) {
+        const data = writable(createTestData(rowCount))
+        const table = createTable(data, {
+            virtualScroll: addVirtualScroll<TestItem>({
+                estimatedRowHeight: ROW_HEIGHT,
+                bufferSize: 5
+            })
+        })
+        const teardowns: (() => void)[] = []
+        const buildViewModel = () => {
+            const columns = table.createColumns([
+                table.column({ accessor: 'name', header: 'Name' })
+            ])
+            const vm = table.createViewModel(columns)
+            teardowns.push(vm.pageRows.subscribe(() => {}))
+            return vm
+        }
+        const cleanup = () => teardowns.forEach((stop) => stop())
+        return { data, table, buildViewModel, cleanup }
+    }
+
+    /** Attach the scroll action, returning the node and its destroy callback. */
+    function attach(
+        state: { virtualScroll: (_node: HTMLElement) => unknown },
+        node = new FakeScrollElement(VIEWPORT)
+    ) {
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        const ret = state.virtualScroll(node as any) as { destroy?: () => void } | undefined
+        return { node, destroy: () => ret?.destroy?.() }
+    }
+
+    test('the scroll action keeps its identity across a rebuild', () => {
+        const { buildViewModel, cleanup } = createRebuildableTable()
+        const first = buildViewModel().pluginStates.virtualScroll.virtualScroll
+        const second = buildViewModel().pluginStates.virtualScroll.virtualScroll
+
+        // A changed identity is a silent no-op for `use:`, which is what leaves
+        // the DOM node bound to an instance nothing reads any more.
+        expect(second).toBe(first)
+        cleanup()
+    })
+
+    test('viewport height survives a rebuild', () => {
+        const { buildViewModel, cleanup } = createRebuildableTable()
+        const before = buildViewModel().pluginStates.virtualScroll
+        attach(before)
+        expect(get(before.viewportHeight)).toBe(VIEWPORT)
+
+        const after = buildViewModel().pluginStates.virtualScroll
+
+        // A zero-height viewport collapses the visible range to the buffer.
+        expect(get(after.viewportHeight)).toBe(VIEWPORT)
+        cleanup()
+    })
+
+    test('scroll position survives a rebuild', () => {
+        const { buildViewModel, cleanup } = createRebuildableTable()
+        const before = buildViewModel().pluginStates.virtualScroll
+        const { node } = attach(before)
+        node.scroll(4_000)
+        expect(get(before.scrollTop)).toBe(4_000)
+
+        const after = buildViewModel().pluginStates.virtualScroll
+
+        expect(get(after.scrollTop)).toBe(4_000)
+        cleanup()
+    })
+
+    test('the rebuilt view model renders the scrolled range, not just the buffer', () => {
+        const { buildViewModel, cleanup } = createRebuildableTable()
+        const before = buildViewModel().pluginStates.virtualScroll
+        const { node } = attach(before)
+        node.scroll(4_000)
+        const range = get(before.visibleRange)
+        expect(range.start).toBeGreaterThan(0)
+
+        const afterVm = buildViewModel()
+        const after = afterVm.pluginStates.virtualScroll
+        get(afterVm.pageRows)
+
+        expect(get(after.visibleRange)).toEqual(range)
+        cleanup()
+    })
+
+    test('measured row heights survive a rebuild', () => {
+        const { buildViewModel, cleanup } = createRebuildableTable()
+        const beforeVm = buildViewModel()
+        const before = beforeVm.pluginStates.virtualScroll
+        get(beforeVm.pageRows)
+        const estimatedTotal = get(before.totalHeight)
+        // One row measures taller than the estimate. Unmeasured rows fall back
+        // to the average of what has been measured, so this moves the total.
+        before.measureRow('0', ROW_HEIGHT + 60)
+        const measuredTotal = get(before.totalHeight)
+        expect(measuredTotal).not.toBe(estimatedTotal)
+
+        const afterVm = buildViewModel()
+        get(afterVm.pageRows)
+
+        // Heights are keyed by row id, so a rebuild over the same rows must not
+        // send the table back to `estimatedRowHeight` and visibly resettle.
+        expect(get(afterVm.pluginStates.virtualScroll.totalHeight)).toBe(measuredTotal)
+        cleanup()
+    })
+
+    test('re-attaching the action restores the scroll position onto the new node', () => {
+        const { buildViewModel, cleanup } = createRebuildableTable()
+        const state = buildViewModel().pluginStates.virtualScroll
+        const first = attach(state)
+        first.node.scroll(4_000)
+        first.destroy()
+
+        // A remount for any other reason now hands the plugin a node at 0 while
+        // the retained `scrollTop` says 4000. The action has to reconcile them.
+        const second = attach(state)
+
+        expect(second.node.scrollTop).toBe(4_000)
+        expect(get(state.scrollTop)).toBe(4_000)
+        cleanup()
+    })
+
+    test('one plugin result drives one table', () => {
+        // The documented contract: geometry lives in the config closure, so two
+        // tables built from the same `addVirtualScroll(...)` share scroll state.
+        const plugin = addVirtualScroll<TestItem>({ estimatedRowHeight: ROW_HEIGHT })
+        const build = () => {
+            const table = createTable(writable(createTestData(ROW_COUNT)), {
+                virtualScroll: plugin
+            })
+            const columns = table.createColumns([
+                table.column({ accessor: 'name', header: 'Name' })
+            ])
+            return table.createViewModel(columns).pluginStates.virtualScroll
+        }
+        const one = build()
+        const two = build()
+
+        expect(two.virtualScroll).toBe(one.virtualScroll)
+    })
+
+    test('destroying the action retains geometry for the next mount', () => {
+        const { buildViewModel, cleanup } = createRebuildableTable()
+        const vm = buildViewModel()
+        const state = vm.pluginStates.virtualScroll
+        const { node, destroy } = attach(state)
+        node.scroll(4_000)
+        get(vm.pageRows)
+        state.measureRow('0', ROW_HEIGHT + 60)
+        const measuredTotal = get(state.totalHeight)
+
+        destroy()
+
+        // Unmount tears down listeners and cancels in-flight work; it must not
+        // discard the state a remount is supposed to pick back up.
+        expect(get(state.scrollTop)).toBe(4_000)
+        expect(get(state.totalHeight)).toBe(measuredTotal)
+        cleanup()
+    })
+})
