@@ -337,3 +337,15 @@ test('string and number default sorting', () => {
     const values = rows.map((it) => it.isData() && it.original.value)
     expect(values).toStrictEqual([10, 20, 30])
 })
+
+test('sort keys survive a rebuild when reuseKey is unchanged', () => {
+    const table = createTable(data, { sort: addSortBy() })
+    const makeColumns = () =>
+        table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
+    const first = table.createViewModel(makeColumns(), { reuseKey: 'cols' })
+    first.pluginStates.sort.sortKeys.set([{ id: 'name', order: 'desc' }])
+
+    const second = table.createViewModel(makeColumns(), { reuseKey: 'cols' })
+
+    expect(get(second.pluginStates.sort.sortKeys)).toStrictEqual([{ id: 'name', order: 'desc' }])
+})

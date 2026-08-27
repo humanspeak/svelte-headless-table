@@ -15,6 +15,44 @@ function createTestData(count: number): TestItem[] {
     }))
 }
 
+/**
+ * Minimal stand-in for the scroll container. The suite runs without a DOM, so
+ * the action needs an EventTarget with the handful of properties it touches.
+ */
+class FakeScrollElement extends EventTarget {
+    style: Record<string, string> = {}
+    scrollTop = 0
+    scrollTo = vi.fn()
+    clientHeight: number
+    constructor(clientHeight: number) {
+        super()
+        this.clientHeight = clientHeight
+    }
+    scroll(top: number) {
+        this.scrollTop = top
+        this.dispatchEvent(new Event('scroll'))
+    }
+}
+
+beforeAll(() => {
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+    ;(globalThis as any).ResizeObserver = class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+    }
+})
+
+/** Attach the scroll action to `node`, returning it with its destroy callback. */
+function attachScrollAction(
+    state: { virtualScroll: (_node: HTMLElement) => unknown },
+    node: FakeScrollElement
+) {
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+    const ret = state.virtualScroll(node as any) as { destroy?: () => void } | undefined
+    return { node, destroy: () => ret?.destroy?.() }
+}
+
 describe('addVirtualScroll', () => {
     test('exposes required state stores', () => {
         const data = writable(createTestData(50))
@@ -365,30 +403,6 @@ describe('addVirtualScroll dense mode geometry cost', () => {
      * a large dataset churns for seconds. These assert the memoization that
      * keeps that from happening — they are cheap proxies for a perf guard.
      */
-    class FakeScrollElement extends EventTarget {
-        style: Record<string, string> = {}
-        scrollTop = 0
-        scrollTo = vi.fn()
-        clientHeight: number
-        constructor(clientHeight: number) {
-            super()
-            this.clientHeight = clientHeight
-        }
-        scroll(top: number) {
-            this.scrollTop = top
-            this.dispatchEvent(new Event('scroll'))
-        }
-    }
-
-    beforeAll(() => {
-        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-        ;(globalThis as any).ResizeObserver = class {
-            observe() {}
-            unobserve() {}
-            disconnect() {}
-        }
-    })
-
     function createDenseTable(rowCount: number) {
         const data = writable(createTestData(rowCount))
         const table = createTable(data, {
@@ -471,35 +485,6 @@ describe('addVirtualScroll sparse mode', () => {
     const HUGE_TOTAL = 4_000_000
     const CAP = 16_000_000
 
-    /**
-     * Minimal stand-in for the scroll container. The suite runs without a DOM,
-     * so the action needs an EventTarget with the handful of properties it
-     * touches.
-     */
-    class FakeScrollElement extends EventTarget {
-        style: Record<string, string> = {}
-        scrollTop = 0
-        scrollTo = vi.fn()
-        clientHeight: number
-        constructor(clientHeight: number) {
-            super()
-            this.clientHeight = clientHeight
-        }
-        scroll(top: number) {
-            this.scrollTop = top
-            this.dispatchEvent(new Event('scroll'))
-        }
-    }
-
-    beforeAll(() => {
-        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-        ;(globalThis as any).ResizeObserver = class {
-            observe() {}
-            unobserve() {}
-            disconnect() {}
-        }
-    })
-
     /** Build a sparse-mode table over a window of `PAGE_SIZE` rows. */
     function createSparseTable({
         offset = OFFSET,
@@ -537,12 +522,8 @@ describe('addVirtualScroll sparse mode', () => {
     }
 
     /** Attach the scroll action to a fake container with a 10-row viewport. */
-    function attach(state: ReturnType<typeof createSparseTable>['state']) {
-        const node = new FakeScrollElement(10 * ROW_HEIGHT)
-        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-        state.virtualScroll(node as any)
-        return node
-    }
+    const attach = (state: ReturnType<typeof createSparseTable>['state']) =>
+        attachScrollAction(state, new FakeScrollElement(10 * ROW_HEIGHT)).node
 
     /** Flush the microtask that `onRangeChange` is deferred onto. */
     const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
@@ -944,5 +925,266 @@ describe('addVirtualScroll sparse mode', () => {
         )
         expect(get(vm.pluginStates.virtualScroll.dataOffset)).toBe(0)
         unsubscribe()
+    })
+})
+
+describe('addVirtualScroll survives a view model rebuild', () => {
+    /**
+     * Container-bound and geometry state lives in the config closure, shared
+     * across rebuilds. Without that, a rebuild leaves the mounted node wired to
+     * a discarded instance whose `viewportHeight` is 0, and only the buffer
+     * renders.
+     */
+    const ROW_HEIGHT = 40
+    const ROW_COUNT = 1_000
+    const VIEWPORT = 400
+
+    /**
+     * A table whose columns are rebuilt on demand. `buildViewModel` stands in
+     * for a `$derived` consumer: same column shape every time, new array
+     * identity every time.
+     */
+    function createRebuildableTable() {
+        const data = writable(createTestData(ROW_COUNT))
+        const table = createTable(data, {
+            virtualScroll: addVirtualScroll<TestItem>({
+                estimatedRowHeight: ROW_HEIGHT,
+                bufferSize: 5
+            })
+        })
+        const teardowns: (() => void)[] = []
+        const buildViewModel = () => {
+            const columns = table.createColumns([
+                table.column({ accessor: 'name', header: 'Name' })
+            ])
+            const vm = table.createViewModel(columns)
+            teardowns.push(vm.pageRows.subscribe(() => {}))
+            return vm
+        }
+        const cleanup = () => teardowns.forEach((stop) => stop())
+        return { buildViewModel, cleanup }
+    }
+
+    /** Attach the scroll action to a fresh container of the standard height. */
+    const attach = (state: { virtualScroll: (_node: HTMLElement) => unknown }) =>
+        attachScrollAction(state, new FakeScrollElement(VIEWPORT))
+
+    test('the scroll action keeps its identity across a rebuild', () => {
+        const { buildViewModel, cleanup } = createRebuildableTable()
+        const first = buildViewModel().pluginStates.virtualScroll.virtualScroll
+        const second = buildViewModel().pluginStates.virtualScroll.virtualScroll
+
+        // A changed identity is a silent no-op for `use:`, which is what leaves
+        // the DOM node bound to an instance nothing reads any more.
+        expect(second).toBe(first)
+        cleanup()
+    })
+
+    test('viewport height survives a rebuild', () => {
+        const { buildViewModel, cleanup } = createRebuildableTable()
+        const before = buildViewModel().pluginStates.virtualScroll
+        attach(before)
+        expect(get(before.viewportHeight)).toBe(VIEWPORT)
+
+        const after = buildViewModel().pluginStates.virtualScroll
+
+        // A zero-height viewport collapses the visible range to the buffer.
+        expect(get(after.viewportHeight)).toBe(VIEWPORT)
+        cleanup()
+    })
+
+    test('scroll position survives a rebuild', () => {
+        const { buildViewModel, cleanup } = createRebuildableTable()
+        const before = buildViewModel().pluginStates.virtualScroll
+        const { node } = attach(before)
+        node.scroll(4_000)
+        expect(get(before.scrollTop)).toBe(4_000)
+
+        const after = buildViewModel().pluginStates.virtualScroll
+
+        expect(get(after.scrollTop)).toBe(4_000)
+        cleanup()
+    })
+
+    test('the rebuilt view model renders the scrolled range, not just the buffer', () => {
+        const { buildViewModel, cleanup } = createRebuildableTable()
+        const before = buildViewModel().pluginStates.virtualScroll
+        const { node } = attach(before)
+        node.scroll(4_000)
+        const range = get(before.visibleRange)
+        expect(range.start).toBeGreaterThan(0)
+
+        const afterVm = buildViewModel()
+        const after = afterVm.pluginStates.virtualScroll
+        get(afterVm.pageRows)
+
+        expect(get(after.visibleRange)).toEqual(range)
+        cleanup()
+    })
+
+    test('measured row heights survive a rebuild', () => {
+        const { buildViewModel, cleanup } = createRebuildableTable()
+        const beforeVm = buildViewModel()
+        const before = beforeVm.pluginStates.virtualScroll
+        get(beforeVm.pageRows)
+        const estimatedTotal = get(before.totalHeight)
+        // One row measures taller than the estimate. Unmeasured rows fall back
+        // to the average of what has been measured, so this moves the total.
+        before.measureRow('0', ROW_HEIGHT + 60)
+        const measuredTotal = get(before.totalHeight)
+        expect(measuredTotal).not.toBe(estimatedTotal)
+
+        const afterVm = buildViewModel()
+        get(afterVm.pageRows)
+
+        // Heights are keyed by row id, so a rebuild over the same rows must not
+        // send the table back to `estimatedRowHeight` and visibly resettle.
+        expect(get(afterVm.pluginStates.virtualScroll.totalHeight)).toBe(measuredTotal)
+        cleanup()
+    })
+
+    test('re-attaching the action restores the scroll position onto the new node', () => {
+        const { buildViewModel, cleanup } = createRebuildableTable()
+        const state = buildViewModel().pluginStates.virtualScroll
+        const first = attach(state)
+        first.node.scroll(4_000)
+        first.destroy()
+
+        // A remount for any other reason now hands the plugin a node at 0 while
+        // the retained `scrollTop` says 4000. The action has to reconcile them.
+        const second = attach(state)
+
+        expect(second.node.scrollTop).toBe(4_000)
+        expect(get(state.scrollTop)).toBe(4_000)
+        cleanup()
+    })
+
+    test('one plugin result drives one table', () => {
+        // The documented contract: geometry lives in the config closure, so two
+        // tables built from the same `addVirtualScroll(...)` share scroll state.
+        const plugin = addVirtualScroll<TestItem>({ estimatedRowHeight: ROW_HEIGHT })
+        const build = () => {
+            const table = createTable(writable(createTestData(ROW_COUNT)), {
+                virtualScroll: plugin
+            })
+            const columns = table.createColumns([
+                table.column({ accessor: 'name', header: 'Name' })
+            ])
+            return table.createViewModel(columns).pluginStates.virtualScroll
+        }
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+        const one = build()
+        const two = build()
+
+        expect(two.virtualScroll).toBe(one.virtualScroll)
+        // Sharing is silent otherwise, so the second table gets a warning.
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('more than one table'))
+        warn.mockRestore()
+    })
+
+    test('destroying the action retains geometry for the next mount', () => {
+        const { buildViewModel, cleanup } = createRebuildableTable()
+        const vm = buildViewModel()
+        const state = vm.pluginStates.virtualScroll
+        const { node, destroy } = attach(state)
+        node.scroll(4_000)
+        get(vm.pageRows)
+        state.measureRow('0', ROW_HEIGHT + 60)
+        const measuredTotal = get(state.totalHeight)
+
+        destroy()
+
+        // Unmount tears down listeners and cancels in-flight work; it must not
+        // discard the state a remount is supposed to pick back up.
+        expect(get(state.scrollTop)).toBe(4_000)
+        expect(get(state.totalHeight)).toBe(measuredTotal)
+        cleanup()
+    })
+})
+
+describe('addVirtualScroll container lifecycle', () => {
+    /**
+     * The container binding and in-flight work are plugin-scoped now, so
+     * teardown has to prove it owns them before clearing. Svelte defers a
+     * block's destroy behind an out transition, which routinely lands an
+     * outgoing node's teardown after its replacement has already mounted.
+     */
+    const ROW_HEIGHT = 40
+    const VIEWPORT = 400
+
+    function createScrollTable(data = writable(createTestData(1_000))) {
+        const table = createTable(data, {
+            virtualScroll: addVirtualScroll<TestItem>({
+                estimatedRowHeight: ROW_HEIGHT,
+                bufferSize: 5
+            })
+        })
+        const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
+        const vm = table.createViewModel(columns)
+        const stop = vm.pageRows.subscribe(() => {})
+        return { state: vm.pluginStates.virtualScroll, stop }
+    }
+
+    const mount = (state: { virtualScroll: (_node: HTMLElement) => unknown }) =>
+        attachScrollAction(state, new FakeScrollElement(VIEWPORT))
+
+    test('a superseded container does not lose the binding to a late teardown', () => {
+        const { state, stop } = createScrollTable()
+        const outgoing = mount(state)
+        // The replacement mounts before the outgoing node's transition ends.
+        const incoming = mount(state)
+
+        outgoing.destroy()
+        state.scrollToIndex(500, { align: 'start' })
+
+        expect(incoming.node.scrollTo).toHaveBeenCalled()
+        expect(outgoing.node.scrollTo).not.toHaveBeenCalled()
+        stop()
+    })
+
+    test('the binding falls back to a container that is still mounted', () => {
+        const { state, stop } = createScrollTable()
+        const first = mount(state)
+        const second = mount(state)
+
+        second.destroy()
+        state.scrollToIndex(500, { align: 'start' })
+
+        expect(first.node.scrollTo).toHaveBeenCalled()
+        stop()
+    })
+
+    test('tearing down the last container leaves the plugin driving nothing', () => {
+        const { state, stop } = createScrollTable()
+        const only = mount(state)
+
+        only.destroy()
+        state.scrollToIndex(500, { align: 'start' })
+
+        expect(only.node.scrollTo).not.toHaveBeenCalled()
+        stop()
+    })
+
+    test('two tables over one data store scroll independently', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+        const data = writable(createTestData(1_000))
+        const left = createScrollTable(data)
+        const right = createScrollTable(data)
+        const leftContainer = mount(left.state)
+        mount(right.state)
+
+        leftContainer.node.scroll(4_000)
+
+        // Two views of one dataset is the supported shape for concurrent
+        // scrolling: separate `addVirtualScroll()` results, so separate
+        // geometry. The shared-instance warning is for one result driving two
+        // tables, which this is not.
+        expect(get(left.state.scrollTop)).toBe(4_000)
+        expect(get(right.state.scrollTop)).toBe(0)
+        expect(warn).not.toHaveBeenCalled()
+
+        warn.mockRestore()
+        left.stop()
+        right.stop()
     })
 })

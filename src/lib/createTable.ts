@@ -18,7 +18,7 @@ import {
     type TableViewModel
 } from '$lib/createViewModel.js'
 import type { AnyPlugins } from '$lib/types/TablePlugin.js'
-import { getDuplicates } from '$lib/utils/array.js'
+import { arrayEquals, getDuplicates } from '$lib/utils/array.js'
 import type { ReadOrWritable } from '$lib/utils/store.js'
 
 /**
@@ -42,6 +42,18 @@ export class Table<Item, Plugins extends AnyPlugins = AnyPlugins> {
     data: ReadOrWritable<Item[]>
     /** The plugins configuration object. */
     plugins: Plugins
+
+    /**
+     * The last view model built with a `reuseKey`, and the inputs it was built
+     * from. One slot rather than a map: keeping every key alive would pin an
+     * unbounded number of plugin instances for the life of the table.
+     */
+    private cachedViewModel?: {
+        key: string
+        columnIds: string[]
+        rowDataId: CreateViewModelOptions<Item>['rowDataId']
+        viewModel: TableViewModel<Item, Plugins>
+    }
 
     /**
      * Creates a new Table instance.
@@ -147,6 +159,7 @@ export class Table<Item, Plugins extends AnyPlugins = AnyPlugins> {
     /**
      * Creates a reactive view model from the table and columns.
      * The view model provides all the data needed to render the table.
+     * Pass `options.reuseKey` to reuse the previous compatible view model.
      *
      * @param columns - The column definitions.
      * @param options - Optional configuration for the view model.
@@ -156,7 +169,29 @@ export class Table<Item, Plugins extends AnyPlugins = AnyPlugins> {
         columns: Column<Item, Plugins>[],
         options?: CreateViewModelOptions<Item>
     ): TableViewModel<Item, Plugins> {
-        return createViewModel(this, columns, options)
+        const { reuseKey, rowDataId } = options ?? {}
+        if (reuseKey === undefined) {
+            return createViewModel(this, columns, options)
+        }
+
+        const columnIds = getFlatColumnIds(columns)
+        const cached = this.cachedViewModel
+        if (cached?.key === reuseKey && cached.rowDataId === rowDataId) {
+            if (arrayEquals(cached.columnIds, columnIds)) {
+                return cached.viewModel
+            }
+            // The key promises the columns are unchanged and they are not.
+            // Rebuilding is the safe reading — returning the cached model here
+            // would render the previous columns.
+            console.warn(
+                'The `reuseKey` passed to `createViewModel` matched the previous call but the columns changed. ' +
+                    'Rebuilding, so plugin state was not preserved. A `reuseKey` should change whenever the columns do.'
+            )
+        }
+
+        const viewModel = createViewModel(this, columns, options)
+        this.cachedViewModel = { key: reuseKey, columnIds, rowDataId, viewModel }
+        return viewModel
     }
 }
 
@@ -183,8 +218,7 @@ export class Table<Item, Plugins extends AnyPlugins = AnyPlugins> {
  */
 export const createTable = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     data: ReadOrWritable<Item[]>,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    plugins: Plugins = {} as any
+    plugins: Plugins = {} as Plugins
 ): Table<Item, Plugins> => {
     return new Table(data, plugins)
 }

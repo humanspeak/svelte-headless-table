@@ -189,3 +189,42 @@ test('pageIndex clamped on pageSize increase', () => {
     get(vm.pluginStates.page.pageCount)
     expect(get(vm.pluginStates.page.pageIndex)).toBe(0)
 })
+
+test('pageIndex survives a rebuild when reuseKey is unchanged', () => {
+    const data = readable(createItems(50))
+    const table = createTable(data, { page: addPagination() })
+    const makeColumns = () =>
+        table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
+    const first = table.createViewModel(makeColumns(), { reuseKey: 'cols' })
+    first.pluginStates.page.pageIndex.set(3)
+
+    const second = table.createViewModel(makeColumns(), { reuseKey: 'cols' })
+
+    expect(get(second.pluginStates.page.pageIndex)).toBe(3)
+})
+
+test('pageIndex resets on a rebuild without reuseKey', () => {
+    const data = readable(createItems(50))
+    const table = createTable(data, { page: addPagination() })
+    const makeColumns = () =>
+        table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
+    const first = table.createViewModel(makeColumns())
+    first.pluginStates.page.pageIndex.set(3)
+
+    const second = table.createViewModel(makeColumns())
+
+    expect(get(second.pluginStates.page.pageIndex)).toBe(0)
+})
+
+test('a different reuseKey rebuilds', () => {
+    const data = readable(createItems(50))
+    const table = createTable(data, { page: addPagination() })
+    const makeColumns = () =>
+        table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
+    const first = table.createViewModel(makeColumns(), { reuseKey: 'cols' })
+    first.pluginStates.page.pageIndex.set(3)
+
+    const second = table.createViewModel(makeColumns(), { reuseKey: 'other' })
+
+    expect(get(second.pluginStates.page.pageIndex)).toBe(0)
+})

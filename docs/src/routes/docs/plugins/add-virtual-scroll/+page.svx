@@ -189,6 +189,29 @@ A few things to know:
 - **It is safe to update stores from `onRangeChange`.** The callback is deferred to a microtask, so it never writes to a store mid-derivation.
 - **Keep `dataOffset` and `data` in sync.** A stale offset shifts every rendered row.
 
+## One instance per table
+
+Scroll position, viewport height and the measured-row-height cache live in the closure `addVirtualScroll()` returns, so they survive a view model rebuild. A component whose columns are derived rebuilds its view model on every reactive pass; without this, each rebuild would hand the mounted container to a discarded instance and the table would stop responding to scrolling.
+
+The tradeoff is that one result drives one rendered table. Construct it inline, per table:
+
+```ts
+// Correct — each table gets its own geometry.
+const table = createTable(data, { virtualScroll: addVirtualScroll({ ... }) });
+```
+
+Hoisting a single result to module scope and passing it to two `createTable` calls makes both tables share a scroll position and a height cache. That warns in the console.
+
+To scroll two views of the same data independently, give each its own table over the same `data` store:
+
+```ts
+const data = writable(items);
+const left = createTable(data, { virtualScroll: addVirtualScroll({ ... }) });
+const right = createTable(data, { virtualScroll: addVirtualScroll({ ... }) });
+```
+
+<Admonition type="warning">Two view models built from a <em>single</em> table share one scroll position. A rebuild and a second concurrent view look the same from inside the plugin — both are another <code>createViewModel</code> call while a container is mounted — so use two tables when you need two independent viewports.</Admonition>
+
 ## Options
 
 <Admonition type="info">Options passed into <code>addVirtualScroll</code>.</Admonition>
