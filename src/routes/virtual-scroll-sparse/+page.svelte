@@ -105,6 +105,8 @@
             bufferSize: 10,
             totalRows: datasetRows,
             dataOffset,
+            // Synchronous here, so the signal is moot — a real endpoint should
+            // pass it to fetch and re-check `signal.aborted` before publishing.
             onRangeChange: ({ start, end }) => loadRange(start, end)
         })
     })

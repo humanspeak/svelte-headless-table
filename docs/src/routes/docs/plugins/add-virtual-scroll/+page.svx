@@ -155,9 +155,13 @@ const table = createTable(data, {
     estimatedRowHeight: 32,
     totalRows,
     dataOffset,
-    onRangeChange: async ({ start, end }) => {
+    onRangeChange: async ({ start, end }, { signal }) => {
       // Fetch just the pages intersecting the range, and drop the rest.
-      const { rows, offset } = await fetchWindow(start, end);
+      const { rows, offset } = await fetchWindow(start, end, { signal });
+      // The range moves faster than a round trip. Without this check a slow
+      // early response can land after a fast later one and republish a window
+      // the user has already scrolled away from.
+      if (signal.aborted) return;
       dataOffset.set(offset);
       data.set(rows);
     }
@@ -181,6 +185,7 @@ A few things to know:
 
 - **Row heights are uniform in sparse mode.** Rows outside the resident window can't be measured, so geometry uses the running average of the measured ones. Measurements still refine that average; `getRowHeight` feeds it but doesn't position individual rows.
 - **`onRangeChange` fires more than once during startup** as the viewport is measured. Debounce or de-duplicate in the handler if your fetch is expensive.
+- **Async handlers must respect `signal`.** It is aborted as soon as a newer range supersedes the one being served, and when the scroll container is destroyed. Pass it to `fetch` to cancel the request, and re-check `signal.aborted` before writing to `data` / `dataOffset` — otherwise out-of-order responses will republish a stale window.
 - **It is safe to update stores from `onRangeChange`.** The callback is deferred to a microtask, so it never writes to a store mid-derivation.
 - **Keep `dataOffset` and `data` in sync.** A stale offset shifts every rendered row.
 
@@ -221,8 +226,10 @@ Default `0`. Absolute index of the first row held in the table's `data` store. S
 ### `maxScrollHeight?: number`
 Default `16_000_000`. Largest height, in pixels, to give the scroll container. Sparse mode only. When `totalRows × rowHeight` exceeds this, the scroll range is compressed onto it so the tail of the dataset stays reachable — see [the scroll-height ceiling](#browser-scroll-height-ceiling).
 
-### `onRangeChange?: (range: { start: number; end: number }) => void`
+### `onRangeChange?: (range: { start: number; end: number }, context: { signal: AbortSignal }) => void`
 Fired whenever the visible range changes, so a caller can fetch the pages intersecting it and evict the ones that have scrolled away. In sparse mode the range is in absolute dataset indices. Invoked on a microtask, so it is safe to update stores from within it.
+
+`context.signal` is aborted as soon as a newer range supersedes this one, or when the scroll container is destroyed. Async handlers should pass it to `fetch` and re-check `signal.aborted` before publishing results.
 
 ## Plugin State
 
@@ -246,7 +253,7 @@ Height of the bottom spacer element in pixels.
 Svelte action to attach to each row for automatic height measurement. Usage: `<tr use:measureRowAction={row.id}>`.
 
 ### `scrollToIndex: (index: number, options?) => void`
-Scroll to a specific row index programmatically. In sparse mode the index is absolute and may point outside the resident window.
+Scroll to a specific row index programmatically. In sparse mode the index is absolute and may point outside the resident window, and every `align` mode accounts for any scroll-range compression.
 
 ```ts
 // Scroll options

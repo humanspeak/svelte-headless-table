@@ -325,8 +325,61 @@ export class HeightManager {
     }
 
     /**
+     * Map a container scroll position onto dataset (natural) coordinates.
+     *
+     * Above the height cap the container is smaller than the dataset it
+     * represents, so container pixels and dataset pixels are different units.
+     * Alignment maths must pick one and stay in it.
+     *
+     * @param totalRows - Total number of rows in the dataset.
+     * @param scrollTop - Scroll position in container pixels.
+     * @param viewportHeight - Height of the visible area.
+     * @param maxScrollHeight - Largest container height to produce.
+     * @returns The equivalent offset in dataset pixels.
+     */
+    getSparseNaturalScrollTop(
+        totalRows: number,
+        scrollTop: number,
+        viewportHeight: number,
+        maxScrollHeight: number
+    ): number {
+        const { scrollableDisplay, ratio } = this.getSparseMetrics(
+            totalRows,
+            viewportHeight,
+            maxScrollHeight
+        )
+        return Math.min(Math.max(0, scrollTop), scrollableDisplay) * ratio
+    }
+
+    /**
+     * Map a dataset (natural) offset onto a container scroll position — the
+     * inverse of {@link getSparseNaturalScrollTop}.
+     *
+     * @param totalRows - Total number of rows in the dataset.
+     * @param naturalOffset - Target offset in dataset pixels.
+     * @param viewportHeight - Height of the visible area.
+     * @param maxScrollHeight - Largest container height to produce.
+     * @returns The scroll position in container pixels.
+     */
+    getSparseScrollTopForOffset(
+        totalRows: number,
+        naturalOffset: number,
+        viewportHeight: number,
+        maxScrollHeight: number
+    ): number {
+        const { total, rowHeight, scrollableNatural, scrollableDisplay, ratio } =
+            this.getSparseMetrics(totalRows, viewportHeight, maxScrollHeight)
+
+        if (total === 0 || rowHeight <= 0 || scrollableNatural <= 0) {
+            return 0
+        }
+
+        return Math.min(scrollableDisplay, Math.max(0, naturalOffset) / ratio)
+    }
+
+    /**
      * Container scroll position that puts an absolute row index at the top of
-     * the viewport — the inverse of {@link getSparseLayout}'s mapping.
+     * the viewport.
      *
      * @param totalRows - Total number of rows in the dataset.
      * @param index - Absolute index of the target row.
@@ -340,14 +393,13 @@ export class HeightManager {
         viewportHeight: number,
         maxScrollHeight: number
     ): number {
-        const { total, rowHeight, scrollableNatural, scrollableDisplay, ratio } =
-            this.getSparseMetrics(totalRows, viewportHeight, maxScrollHeight)
-
-        if (total === 0 || rowHeight <= 0 || scrollableNatural <= 0) {
-            return 0
-        }
-
-        return Math.min(scrollableDisplay, (Math.max(0, index) * rowHeight) / ratio)
+        const { rowHeight } = this.getSparseMetrics(totalRows, viewportHeight, maxScrollHeight)
+        return this.getSparseScrollTopForOffset(
+            totalRows,
+            Math.max(0, index) * rowHeight,
+            viewportHeight,
+            maxScrollHeight
+        )
     }
 
     /**

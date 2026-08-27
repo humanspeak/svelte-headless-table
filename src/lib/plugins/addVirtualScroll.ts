@@ -144,16 +144,29 @@ export const addVirtualScroll =
         // otherwise keep the index it was first rendered with.
         const rowIndexById = writable(new Map<string, number>())
 
+        // Aborted whenever a newer range supersedes the one in flight, so an
+        // async handler can drop a response that is no longer current.
+        let rangeRequest: AbortController | undefined
+
         /**
          * Report a new visible range to the caller. Deferred to a microtask so
          * that handlers which update `data` / `dataOffset` don't write to
-         * stores from inside a store derivation.
+         * stores from inside a store derivation — which also coalesces several
+         * range changes landing in the same tick down to the last one.
          */
         const notifyRangeChange = (range: VisibleRange) => {
             if (onRangeChange === undefined) {
                 return
             }
-            queueMicrotask(() => onRangeChange(range))
+            rangeRequest?.abort()
+            const request = new AbortController()
+            rangeRequest = request
+            queueMicrotask(() => {
+                if (request.signal.aborted) {
+                    return
+                }
+                onRangeChange(range, { signal: request.signal })
+            })
         }
 
         /**
@@ -384,6 +397,9 @@ export const addVirtualScroll =
                     scrollContainer = null
                     node.removeEventListener('scroll', handleScroll)
                     resizeObserver.disconnect()
+                    // Let callers cancel work for a table that is going away.
+                    rangeRequest?.abort()
+                    rangeRequest = undefined
                 }
             }
         }
@@ -407,49 +423,58 @@ export const addVirtualScroll =
             }
 
             const $viewportHeight = get(viewportHeight)
-            const targetOffset = isSparse
-                ? heightManager.getSparseScrollTopForIndex(
-                      get(datasetRows),
-                      index,
-                      $viewportHeight,
-                      maxScrollHeight
-                  )
-                : heightManager.getOffsetForIndex($rowIds, index)
+
+            // Do the alignment maths in dataset coordinates, then map to the
+            // container once. Sparse geometry may compress the scroll range, so
+            // offsetting an already-compressed position by natural row and
+            // viewport heights would land far from the requested row — at 8x
+            // compression, centring would overshoot by dozens of rows.
             const rowHeight = isSparse
                 ? heightManager.getAverageHeight()
                 : heightManager.getHeight($rowIds[index])
+            const rowStart = isSparse
+                ? index * rowHeight
+                : heightManager.getOffsetForIndex($rowIds, index)
+            const currentTop = isSparse
+                ? heightManager.getSparseNaturalScrollTop(
+                      get(datasetRows),
+                      get(scrollTop),
+                      $viewportHeight,
+                      maxScrollHeight
+                  )
+                : get(scrollTop)
 
-            let scrollPosition: number
+            let targetOffset: number
             switch (align) {
                 case 'center':
-                    scrollPosition = targetOffset - ($viewportHeight - rowHeight) / 2
+                    targetOffset = rowStart - ($viewportHeight - rowHeight) / 2
                     break
                 case 'end':
-                    scrollPosition = targetOffset - $viewportHeight + rowHeight
+                    targetOffset = rowStart - $viewportHeight + rowHeight
                     break
                 case 'auto': {
-                    // Check if already visible
-                    const $scrollTop = get(scrollTop)
-                    const visibleStart = $scrollTop
-                    const visibleEnd = $scrollTop + $viewportHeight
-                    const rowStart = targetOffset
-                    const rowEnd = targetOffset + rowHeight
-
-                    if (rowStart >= visibleStart && rowEnd <= visibleEnd) {
+                    const rowEnd = rowStart + rowHeight
+                    if (rowStart >= currentTop && rowEnd <= currentTop + $viewportHeight) {
                         // Already fully visible
                         return
-                    } else if (rowStart < visibleStart) {
-                        scrollPosition = rowStart
-                    } else {
-                        scrollPosition = rowEnd - $viewportHeight
                     }
+                    targetOffset = rowStart < currentTop ? rowStart : rowEnd - $viewportHeight
                     break
                 }
                 case 'start':
                 default:
-                    scrollPosition = targetOffset
+                    targetOffset = rowStart
                     break
             }
+
+            const scrollPosition = isSparse
+                ? heightManager.getSparseScrollTopForOffset(
+                      get(datasetRows),
+                      targetOffset,
+                      $viewportHeight,
+                      maxScrollHeight
+                  )
+                : targetOffset
 
             scrollContainer.scrollTo({
                 top: Math.max(0, scrollPosition),

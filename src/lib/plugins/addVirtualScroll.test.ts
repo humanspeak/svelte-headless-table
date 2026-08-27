@@ -512,7 +512,10 @@ describe('addVirtualScroll sparse mode', () => {
         total?: number | ReturnType<typeof writable<number>>
         bufferSize?: number
         maxScrollHeight?: number
-        onRangeChange?: (_range: { start: number; end: number }) => void
+        onRangeChange?: (
+            _range: { start: number; end: number },
+            _context: { signal: AbortSignal }
+        ) => void
     } = {}) {
         const dataOffset = writable(offset)
         const data = writable(createTestData(PAGE_SIZE))
@@ -744,6 +747,64 @@ describe('addVirtualScroll sparse mode', () => {
             unsubscribe()
         })
 
+        test.each(['start', 'center', 'end', 'auto'] as const)(
+            'scrollToIndex(%s) brings the row into view',
+            (align) => {
+                const { state, unsubscribe } = createSparseTable({ total: HUGE_TOTAL })
+                const node = attach(state)
+
+                state.scrollToIndex(2_000_000, { align })
+
+                const [{ top }] = node.scrollTo.mock.calls[0]
+                expect(top).toBeLessThanOrEqual(CAP - node.clientHeight)
+
+                node.scroll(top)
+                const { start, end } = get(state.visibleRange)
+                expect(start).toBeLessThanOrEqual(2_000_000)
+                expect(end).toBeGreaterThan(2_000_000)
+                unsubscribe()
+            }
+        )
+
+        test('alignment offsets are applied in dataset coordinates, not container ones', () => {
+            // The container is ~8x smaller than the dataset it represents, so a
+            // viewport-sized alignment offset is ~8x smaller in container
+            // pixels. Applying the raw natural offset would overshoot by dozens
+            // of rows and push the requested row off screen entirely.
+            const tops: Record<string, number> = {}
+            for (const align of ['start', 'center', 'end'] as const) {
+                const { state, unsubscribe } = createSparseTable({ total: HUGE_TOTAL })
+                const node = attach(state)
+                state.scrollToIndex(2_000_000, { align })
+                tops[align] = node.scrollTo.mock.calls[0][0].top
+                unsubscribe()
+            }
+
+            expect(tops.end).toBeLessThan(tops.center)
+            expect(tops.center).toBeLessThan(tops.start)
+
+            // Half a viewport in dataset pixels is (320 - 32) / 2 = 144, which
+            // is ~18 container pixels once compressed. Uncompressed it would be
+            // the full 144.
+            const centreShift = tops.start - tops.center
+            expect(centreShift).toBeGreaterThan(5)
+            expect(centreShift).toBeLessThan(50)
+        })
+
+        test('scrollToIndex(auto) is a no-op for a row already in view', () => {
+            const { state, unsubscribe } = createSparseTable({ total: HUGE_TOTAL })
+            const node = attach(state)
+
+            node.scroll((CAP - node.clientHeight) / 2)
+            const { start, end } = get(state.visibleRange)
+            const alreadyVisible = Math.floor((start + end) / 2)
+
+            state.scrollToIndex(alreadyVisible, { align: 'auto' })
+
+            expect(node.scrollTo).not.toHaveBeenCalled()
+            unsubscribe()
+        })
+
         test('spacers sum to the capped height', () => {
             const { vm, state, dataOffset, data, unsubscribe } = createSparseTable({
                 total: HUGE_TOTAL
@@ -794,7 +855,10 @@ describe('addVirtualScroll sparse mode', () => {
         node.scroll(70_000 * ROW_HEIGHT)
         await flush()
 
-        expect(onRangeChange).toHaveBeenCalledWith({ start: 69_998, end: 70_012 })
+        expect(onRangeChange).toHaveBeenCalledWith(
+            { start: 69_998, end: 70_012 },
+            expect.objectContaining({ signal: expect.any(AbortSignal) })
+        )
         unsubscribe()
     })
 
@@ -815,6 +879,49 @@ describe('addVirtualScroll sparse mode', () => {
         unsubscribe()
     })
 
+    test('supersedes the in-flight range request when the range moves again', async () => {
+        const signals: AbortSignal[] = []
+        const onRangeChange = vi.fn((_range, context: { signal: AbortSignal }) => {
+            signals.push(context.signal)
+        })
+        const { state, unsubscribe } = createSparseTable({ onRangeChange })
+        const node = attach(state)
+
+        node.scroll(70_000 * ROW_HEIGHT)
+        await flush()
+        node.scroll(90_000 * ROW_HEIGHT)
+        await flush()
+
+        expect(signals.length).toBeGreaterThanOrEqual(2)
+        // Everything but the newest request is abandoned, so a slow early fetch
+        // cannot land after a fast later one and republish a stale window.
+        for (const signal of signals.slice(0, -1)) {
+            expect(signal.aborted).toBe(true)
+        }
+        expect(signals[signals.length - 1].aborted).toBe(false)
+        unsubscribe()
+    })
+
+    test('abandons the in-flight range request when the container is destroyed', async () => {
+        const signals: AbortSignal[] = []
+        const onRangeChange = vi.fn((_range, context: { signal: AbortSignal }) => {
+            signals.push(context.signal)
+        })
+        const { state, unsubscribe } = createSparseTable({ onRangeChange })
+        const node = new FakeScrollElement(10 * ROW_HEIGHT)
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        const action = state.virtualScroll(node as any)
+
+        node.scroll(70_000 * ROW_HEIGHT)
+        await flush()
+        expect(signals[signals.length - 1].aborted).toBe(false)
+
+        action?.destroy?.()
+
+        expect(signals[signals.length - 1].aborted).toBe(true)
+        unsubscribe()
+    })
+
     test('dense mode still reports data-relative ranges to onRangeChange', async () => {
         const onRangeChange = vi.fn()
         const data = writable(createTestData(50))
@@ -831,7 +938,10 @@ describe('addVirtualScroll sparse mode', () => {
 
         await flush()
 
-        expect(onRangeChange).toHaveBeenCalledWith({ start: 0, end: 5 })
+        expect(onRangeChange).toHaveBeenCalledWith(
+            { start: 0, end: 5 },
+            expect.objectContaining({ signal: expect.any(AbortSignal) })
+        )
         expect(get(vm.pluginStates.virtualScroll.dataOffset)).toBe(0)
         unsubscribe()
     })

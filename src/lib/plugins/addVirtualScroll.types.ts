@@ -86,8 +86,12 @@ export interface VirtualScrollConfig<Item> {
      *
      * In sparse mode the range is in absolute dataset indices. Invoked on a
      * microtask, so it is safe to update stores from within it.
+     *
+     * The range moves faster than a network round trip, so an async handler
+     * must not assume it is still current when its fetch resolves — see
+     * {@link RangeChangeContext.signal}.
      */
-    onRangeChange?: (_range: VisibleRange) => void
+    onRangeChange?: (_range: VisibleRange, _context: RangeChangeContext) => void
 
     /**
      * Largest height, in pixels, to give the scroll container.
@@ -106,6 +110,23 @@ export interface VirtualScrollConfig<Item> {
      * @default 16_000_000
      */
     maxScrollHeight?: number
+}
+
+/**
+ * Second argument to
+ * {@link VirtualScrollConfig.onRangeChange}.
+ */
+export interface RangeChangeContext {
+    /**
+     * Aborted as soon as a newer range supersedes this one.
+     *
+     * Rapid scrolling starts more range changes than can be served in order, so
+     * without this a slow early response can land after a fast later one and
+     * replace the current window with rows for a range the user has left. Pass
+     * it to `fetch` to cancel the request, and re-check `signal.aborted` before
+     * writing to `data` / `dataOffset`.
+     */
+    signal: AbortSignal
 }
 
 /**
