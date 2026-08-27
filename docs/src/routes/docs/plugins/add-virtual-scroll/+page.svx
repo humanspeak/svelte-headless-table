@@ -300,7 +300,18 @@ Rows actually intersecting the viewport, with no render buffer — the range a "
 </tfoot>
 ```
 
-<Admonition type="note">Anything you render above the rows — an in-flow <code>&lt;thead&gt;</code>, a caption, a toolbar — shifts where row 0 begins inside the scroll container. The plugin measures that offset from the first rendered row, so this range tracks what's on screen without any configuration. A <code>position: sticky</code> header is the exception: it keeps painting over the top of the viewport after you scroll past it, so the first row of the range may sit behind it. Render the header outside the scroll container if the readout has to be exact to the pixel.</Admonition>
+<Admonition type="note">Anything you render above the rows — an in-flow <code>&lt;thead&gt;</code>, a caption, a toolbar — shifts where row 0 begins inside the scroll container. The plugin measures that offset from the first rendered row, so this range tracks what's on screen with no configuration. A <code>position: sticky</code> header additionally <em>covers</em> the top of the viewport at every scroll position; add <code>use:measureHeaderAction</code> to it so the rows underneath are excluded too.</Admonition>
+
+### `measureHeaderAction: Action<HTMLElement>`
+Attach to content that paints over the top of the viewport — in practice a `position: sticky` `<thead>`.
+
+```svelte
+<thead class="sticky top-0 z-10" use:measureHeaderAction>
+```
+
+A sticky header keeps the space it occupies in the document, so the plugin already knows where the rows start, but it also goes on hiding the top of the viewport as you scroll. Without this, the rows behind it are still counted as visible and `viewportRange` names rows the user can't see — and `scrollToIndex` parks its target underneath the header instead of below it.
+
+You don't need it for a header that scrolls away with the rows; that case is measured automatically. Attaching it to one anyway is harmless, since it reports no overlap once it's out of view.
 
 ### `totalHeight: Readable<number>`
 Total height of all rows (for scroll container sizing).

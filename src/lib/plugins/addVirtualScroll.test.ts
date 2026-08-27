@@ -1449,3 +1449,138 @@ describe('addVirtualScroll with content above the rows', () => {
         unsubscribe()
     })
 })
+
+describe('addVirtualScroll with a sticky header', () => {
+    const ROW_HEIGHT = 40
+    const HEADER_HEIGHT = 40
+    const VIEWPORT = 400
+
+    /**
+     * A `position: sticky` header keeps its in-flow space — rows still begin at
+     * HEADER_HEIGHT — but it also paints over the top of the viewport after you
+     * scroll past it, hiding the rows underneath.
+     */
+    class StickyContainer extends EventTarget {
+        style: Record<string, string> = {}
+        scrollTop = 0
+        scrollTo = vi.fn()
+        clientHeight = VIEWPORT
+        getBoundingClientRect() {
+            return { top: 0, height: this.clientHeight } as DOMRect
+        }
+        scroll(top: number) {
+            this.scrollTop = top
+            this.dispatchEvent(new Event('scroll'))
+        }
+    }
+
+    /** Pinned to the top of the container at every scroll position. */
+    const stickyHeaderNode = () =>
+        ({
+            getBoundingClientRect: () => ({ top: 0, bottom: HEADER_HEIGHT, height: HEADER_HEIGHT })
+        }) as unknown as HTMLElement
+
+    const rowNode = (container: StickyContainer, topSpacer: number) =>
+        ({
+            getBoundingClientRect: () => ({
+                top: HEADER_HEIGHT + topSpacer - container.scrollTop,
+                height: ROW_HEIGHT
+            })
+        }) as unknown as HTMLElement
+
+    /** An in-flow header scrolls away, so its overlap falls to zero. */
+    const inFlowHeaderNode = (container: StickyContainer) =>
+        ({
+            getBoundingClientRect: () => ({
+                top: -container.scrollTop,
+                bottom: HEADER_HEIGHT - container.scrollTop,
+                height: HEADER_HEIGHT
+            })
+        }) as unknown as HTMLElement
+
+    function build() {
+        const data = writable(createTestData(300))
+        const table = createTable(data, {
+            virtualScroll: addVirtualScroll<TestItem>({
+                estimatedRowHeight: ROW_HEIGHT,
+                bufferSize: 5
+            })
+        })
+        const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
+        const vm = table.createViewModel(columns)
+        const unsubscribe = vm.pageRows.subscribe(() => {})
+        const state = vm.pluginStates.virtualScroll
+        const node = new StickyContainer()
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        state.virtualScroll(node as any)
+        return { vm, state, node, unsubscribe }
+    }
+
+    const settle = (
+        vm: ReturnType<typeof build>['vm'],
+        state: ReturnType<typeof build>['state'],
+        node: StickyContainer,
+        top: number
+    ) => {
+        node.scroll(top)
+        const first = get(vm.pageRows)[0]
+        if (first !== undefined) {
+            state.measureRowAction(rowNode(node, get(state.topSpacerHeight)), first.id)
+        }
+        node.scroll(top)
+    }
+
+    test('is harmless on a header that scrolls away with the rows', () => {
+        const { vm, state, node, unsubscribe } = build()
+        state.measureHeaderAction(inFlowHeaderNode(node))
+
+        settle(vm, state, node, 400)
+
+        // Identical to leaving the action off: the header is long gone by here.
+        expect(get(state.viewportRange)).toEqual({ start: 9, end: 19 })
+        unsubscribe()
+    })
+
+    test('scrollToIndex clears the header instead of parking the row behind it', () => {
+        const { vm, state, node, unsubscribe } = build()
+        state.measureHeaderAction(stickyHeaderNode())
+        settle(vm, state, node, 400)
+
+        state.scrollToIndex(20, { align: 'start' })
+
+        // Row 20 sits at container 40 + 800; landing there would hide it under
+        // the header, so the target backs off by the header's height.
+        expect(node.scrollTo).toHaveBeenCalledWith(
+            expect.objectContaining({ top: 40 + 20 * ROW_HEIGHT - HEADER_HEIGHT })
+        )
+        unsubscribe()
+    })
+
+    test('excludes rows hidden behind the header', () => {
+        const data = writable(createTestData(300))
+        const table = createTable(data, {
+            virtualScroll: addVirtualScroll<TestItem>({
+                estimatedRowHeight: ROW_HEIGHT,
+                bufferSize: 5
+            })
+        })
+        const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
+        const vm = table.createViewModel(columns)
+        const unsubscribe = vm.pageRows.subscribe(() => {})
+        const state = vm.pluginStates.virtualScroll
+        const node = new StickyContainer()
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        state.virtualScroll(node as any)
+        state.measureHeaderAction(stickyHeaderNode())
+
+        node.scroll(400)
+        const first = get(vm.pageRows)[0]
+        state.measureRowAction(rowNode(node, get(state.topSpacerHeight)), first.id)
+        node.scroll(400)
+
+        // Container band [400,800]; the header covers [400,440], so the rows on
+        // screen occupy [440,800] — row space [400,760], i.e. rows 10-18.
+        expect(get(state.viewportRange)).toEqual({ start: 10, end: 19 })
+        unsubscribe()
+    })
+})

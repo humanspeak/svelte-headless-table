@@ -182,22 +182,59 @@ export const addVirtualScroll = <Item>({
     // reveals the offset, since it sits directly after the top spacer.
     let firstRenderedRowId: string | undefined
 
+    // How much of the viewport's top edge is currently painted over by the
+    // header. Zero unless `measureHeaderAction` is attached: an in-flow header
+    // needs no such correction, because it scrolls away and `contentOffset`
+    // already accounts for the space it occupies.
+    const headerOverlap = writable(0)
+
+    // The element the caller declared as overlaying the rows, if any.
+    let headerNode: HTMLElement | null = null
+
     /**
      * The band of row space the container is showing.
      *
-     * Row space starts at row 0; container space starts above whatever the
-     * caller rendered before the rows. While that content is still on screen
-     * it covers part of the viewport, so less of the row area is visible than
-     * the container is tall — hence the height shrinks by however far `top`
-     * sits above row 0.
+     * Two different things sit between the container's scroll origin and the
+     * first row the user can see, and they are not the same measurement:
+     *
+     * `contentOffset` is layout — how far down the *document* the rows begin,
+     * because a header occupies space in the flow. It shifts the whole band.
+     *
+     * `headerOverlap` is paint — how much of the *viewport* the header is
+     * covering right now. A `position: sticky` header keeps its in-flow space
+     * (so `contentOffset` is unchanged) yet goes on hiding the top of the
+     * viewport at every scroll position, so it eats into the band from the top
+     * only. An in-flow header reports zero here once it has scrolled away,
+     * which is exactly right.
      */
     const rowViewport = derived(
-        [scrollTop, viewportHeight, contentOffset],
-        ([$scrollTop, $viewportHeight, $contentOffset]) => {
-            const top = $scrollTop - $contentOffset
-            return { top, height: Math.max(0, $viewportHeight + Math.min(0, top)) }
+        [scrollTop, viewportHeight, contentOffset, headerOverlap],
+        ([$scrollTop, $viewportHeight, $contentOffset, $headerOverlap]) => {
+            const top = $scrollTop + $headerOverlap - $contentOffset
+            const bottom = $scrollTop + $viewportHeight - $contentOffset
+            // `getViewportRange` floors the top at 0, so measure the height
+            // from wherever the band actually starts.
+            return { top, height: Math.max(0, bottom - Math.max(0, top)) }
         }
     )
+
+    /**
+     * Re-read how far the header currently reaches into the viewport.
+     *
+     * Cheap enough for the scroll path: one rect per element, and only when a
+     * header has been declared. Sticky elements move relative to the container
+     * on every scroll, so there is no cheaper signal to hang this off.
+     */
+    const measureHeaderOverlap = () => {
+        if (headerNode === null || scrollContainer === null) {
+            return
+        }
+        const containerTop = scrollContainer.getBoundingClientRect().top
+        const overlap = Math.max(0, headerNode.getBoundingClientRect().bottom - containerTop)
+        if (overlap !== get(headerOverlap)) {
+            headerOverlap.set(overlap)
+        }
+    }
 
     // Aborted whenever a newer range supersedes the one in flight, so an
     // async handler can drop a response that is no longer current.
@@ -434,6 +471,7 @@ export const addVirtualScroll = <Item>({
         const target = event.target as HTMLElement
         scrollTop.set(target.scrollTop)
 
+        measureHeaderOverlap()
         checkLoadMore()
     }
 
@@ -591,10 +629,46 @@ export const addVirtualScroll = <Item>({
 
         scrollContainer.scrollTo({
             // Back into container space: the alignment above is in row space,
-            // which starts below whatever the caller rendered ahead of the rows.
-            top: Math.max(0, scrollPosition + get(contentOffset)),
+            // which starts below whatever the caller rendered ahead of the
+            // rows. Backing out the overlap too keeps the target row clear of a
+            // sticky header rather than parked underneath it.
+            top: Math.max(0, scrollPosition + get(contentOffset) - get(headerOverlap)),
             behavior
         })
+    }
+
+    /**
+     * Svelte action for content that paints over the top of the viewport —
+     * in practice a `position: sticky` `<thead>`.
+     *
+     * Only needed for content that *overlays* the rows. A header that scrolls
+     * away with them needs nothing: the plugin already measures the space it
+     * occupies. Attaching this to one is harmless, since it reports no overlap
+     * once it has scrolled out of view.
+     *
+     * Usage: `<thead class="sticky top-0" use:measureHeaderAction>`
+     */
+    const measureHeaderAction: Action<HTMLElement> = (node) => {
+        headerNode = node
+        measureHeaderOverlap()
+
+        // A header that grows — a filter row appearing, text wrapping — changes
+        // how much it covers without any scrolling to trigger a re-read.
+        const resizeObserver = new ResizeObserver(() => {
+            measureHeaderOverlap()
+        })
+        resizeObserver.observe(node)
+
+        return {
+            destroy() {
+                resizeObserver.disconnect()
+                if (headerNode !== node) {
+                    return
+                }
+                headerNode = null
+                headerOverlap.set(0)
+            }
+        }
     }
 
     /**
@@ -691,6 +765,7 @@ export const addVirtualScroll = <Item>({
         scrollToIndex,
         measureRow,
         measureRowAction,
+        measureHeaderAction,
         totalRows,
         renderedRows,
         dataOffset
