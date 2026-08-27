@@ -1,6 +1,23 @@
 import { beforeEach, describe, expect, test } from 'vitest'
 import { HeightManager } from './HeightManager.js'
 
+/**
+ * Compose the two primitives the way `createDenseGeometry` does, so these
+ * tests exercise the composition the plugin actually runs.
+ */
+const visibleRange = (
+    manager: HeightManager,
+    rowIds: string[],
+    scrollTop: number,
+    viewportHeight: number,
+    bufferSize: number
+) =>
+    manager.bufferRange(
+        manager.getViewportRange(rowIds, scrollTop, viewportHeight),
+        rowIds.length,
+        bufferSize
+    )
+
 describe('HeightManager', () => {
     let manager: HeightManager
 
@@ -129,7 +146,7 @@ describe('HeightManager', () => {
         })
     })
 
-    describe('getVisibleRange', () => {
+    describe('the mounted range', () => {
         const rowIds = ['row-0', 'row-1', 'row-2', 'row-3', 'row-4']
 
         beforeEach(() => {
@@ -138,13 +155,13 @@ describe('HeightManager', () => {
         })
 
         test('returns full range for empty rows', () => {
-            const range = manager.getVisibleRange([], 0, 100, 0)
+            const range = visibleRange(manager, [], 0, 100, 0)
             expect(range).toEqual({ start: 0, end: 0 })
         })
 
         test('returns visible range without buffer', () => {
             // viewport shows rows at y=0 to y=80 (2 rows)
-            const range = manager.getVisibleRange(rowIds, 0, 80, 0)
+            const range = visibleRange(manager, rowIds, 0, 80, 0)
             expect(range.start).toBe(0)
             expect(range.end).toBe(2)
         })
@@ -152,7 +169,7 @@ describe('HeightManager', () => {
         test('includes buffer rows', () => {
             // viewport shows rows at y=40 to y=120 (2 rows: 1 and 2)
             // with buffer of 1, should include row 0
-            const range = manager.getVisibleRange(rowIds, 40, 80, 1)
+            const range = visibleRange(manager, rowIds, 40, 80, 1)
             expect(range.start).toBe(0) // 1 - buffer(1) = 0
             // End depends on the algorithm - we add buffer after finding the end
             expect(range.end).toBeGreaterThanOrEqual(3)
@@ -161,23 +178,23 @@ describe('HeightManager', () => {
 
         test('handles scroll to middle', () => {
             // viewport shows rows starting at y=80 (row 2)
-            const range = manager.getVisibleRange(rowIds, 80, 80, 0)
+            const range = visibleRange(manager, rowIds, 80, 80, 0)
             expect(range.start).toBe(2)
             expect(range.end).toBe(4)
         })
 
         test('clamps to valid range', () => {
             // Try to scroll past the end
-            const range = manager.getVisibleRange(rowIds, 200, 80, 2)
+            const range = visibleRange(manager, rowIds, 200, 80, 2)
             expect(range.start).toBeLessThanOrEqual(rowIds.length)
             expect(range.end).toBeLessThanOrEqual(rowIds.length)
         })
     })
 
-    describe('getVisibleRange with variable row heights', () => {
+    describe('the mounted range with variable row heights', () => {
         /**
-         * A tall row inside the buffer makes the two coordinate systems in the
-         * old two-loop scan diverge far enough to be unmistakable. Heights are
+         * A tall row inside the buffer separates "rows the viewport touches"
+         * from "rows above the viewport" by an unmistakable margin. Heights are
          * [10, 1000, 10, 10, ...], so at scrollTop 1010 the viewport sits just
          * past the tall row and covers ten short ones.
          */
@@ -187,25 +204,18 @@ describe('HeightManager', () => {
             rowIds.forEach((id, i) => manager.setHeight(id, i === 1 ? 1000 : 10))
         })
 
-        test('mounts every row the viewport touches', () => {
-            // Rows 2-11 span y=1010..1110, exactly the viewport.
+        test('mounts every row the viewport touches, buffered on both sides', () => {
+            // Rows 2-11 span y=1010..1110, exactly the viewport. Mounting any
+            // fewer leaves the bottom of the viewport blank; the buffer has to
+            // land below as well as above.
             expect(manager.getViewportRange(rowIds, 1010, 100)).toEqual({ start: 2, end: 12 })
-
-            const visible = manager.getVisibleRange(rowIds, 1010, 100, 1)
-            // Anything less leaves the bottom of the viewport blank.
-            expect(visible.start).toBeLessThanOrEqual(2)
-            expect(visible.end).toBeGreaterThanOrEqual(12)
-        })
-
-        test('applies the buffer below the viewport, not just above', () => {
-            const visible = manager.getVisibleRange(rowIds, 1010, 100, 1)
-            expect(visible).toEqual({ start: 1, end: 13 })
+            expect(visibleRange(manager, rowIds, 1010, 100, 1)).toEqual({ start: 1, end: 13 })
         })
 
         test('a larger buffer never renders fewer rows', () => {
-            let previous = manager.getVisibleRange(rowIds, 1010, 100, 0)
+            let previous = visibleRange(manager, rowIds, 1010, 100, 0)
             for (const bufferSize of [1, 2, 3, 5, 8]) {
-                const current = manager.getVisibleRange(rowIds, 1010, 100, bufferSize)
+                const current = visibleRange(manager, rowIds, 1010, 100, bufferSize)
                 expect(current.start).toBeLessThanOrEqual(previous.start)
                 expect(current.end).toBeGreaterThanOrEqual(previous.end)
                 previous = current
@@ -215,7 +225,7 @@ describe('HeightManager', () => {
         test('always contains the viewport range as it scrolls', () => {
             for (let scrollTop = 0; scrollTop <= 1200; scrollTop += 7) {
                 const viewport = manager.getViewportRange(rowIds, scrollTop, 100)
-                const visible = manager.getVisibleRange(rowIds, scrollTop, 100, 2)
+                const visible = visibleRange(manager, rowIds, scrollTop, 100, 2)
                 if (viewport.end === viewport.start) {
                     continue
                 }
@@ -233,60 +243,24 @@ describe('HeightManager', () => {
             rowIds.forEach((id) => manager.setHeight(id, 40))
         })
 
-        test('returns an empty range for no rows', () => {
-            expect(manager.getViewportRange([], 0, 100)).toEqual({ start: 0, end: 0 })
+        test.each([
+            ['no rows at all', [], 0, 100, { start: 0, end: 0 }],
+            ['the rows the viewport covers', rowIds, 0, 80, { start: 0, end: 2 }],
+            ['a partially clipped row at either edge', rowIds, 20, 80, { start: 0, end: 3 }],
+            ['every row when the viewport is taller', rowIds, 0, 1000, { start: 0, end: 5 }],
+            ['nothing past the end of the content', rowIds, 400, 80, { start: 5, end: 5 }],
+            ['nothing for a zero-height viewport', rowIds, 0, 0, { start: 0, end: 0 }],
+            ['a negative scroll position as the top', rowIds, -50, 80, { start: 0, end: 2 }]
+        ])('reports %s', (_label, ids, scrollTop, height, expected) => {
+            expect(
+                manager.getViewportRange(ids as string[], scrollTop as number, height as number)
+            ).toEqual(expected)
         })
 
-        test('reports the rows the viewport covers', () => {
-            // y=0 to y=80 is rows 0 and 1.
-            expect(manager.getViewportRange(rowIds, 0, 80)).toEqual({ start: 0, end: 2 })
-        })
-
-        test('adds no buffer, unlike getVisibleRange', () => {
-            // Same scroll position that getVisibleRange pads out to row 0.
+        test('adds no buffer, unlike the range that gets mounted', () => {
             expect(manager.getViewportRange(rowIds, 40, 80)).toEqual({ start: 1, end: 3 })
-            expect(manager.getVisibleRange(rowIds, 40, 80, 1).start).toBe(0)
-        })
-
-        test('counts a partially visible row at either edge', () => {
-            // y=20 to y=100 clips row 0 at the top and row 2 at the bottom.
-            expect(manager.getViewportRange(rowIds, 20, 80)).toEqual({ start: 0, end: 3 })
-        })
-
-        test('covers every row when the viewport is taller than the content', () => {
-            expect(manager.getViewportRange(rowIds, 0, 1000)).toEqual({ start: 0, end: 5 })
-        })
-
-        test('collapses to an empty range past the end of the content', () => {
-            const range = manager.getViewportRange(rowIds, 400, 80)
-            expect(range.end).toBe(range.start)
-            expect(range.start).toBeLessThanOrEqual(rowIds.length)
-        })
-
-        test('collapses rather than inverting for a zero-height viewport', () => {
-            const range = manager.getViewportRange(rowIds, 0, 0)
-            expect(range.start).toBeLessThanOrEqual(range.end)
-            expect(range).toEqual({ start: 0, end: 0 })
-        })
-
-        test('treats a negative scroll position as the top', () => {
-            expect(manager.getViewportRange(rowIds, -50, 80)).toEqual({ start: 0, end: 2 })
-        })
-
-        test('never names a row outside the buffered range that gets mounted', () => {
-            // Past the end of the content (200px of rows) the range collapses to
-            // empty, which names no rows at all — the subset claim only has to
-            // hold while there is something on screen.
-            for (const scrollTop of [0, 20, 40, 100, 160, 199, 200, 240, 400]) {
-                const viewport = manager.getViewportRange(rowIds, scrollTop, 80)
-                const visible = manager.getVisibleRange(rowIds, scrollTop, 80, 2)
-                if (viewport.end === viewport.start) {
-                    expect(viewport).toEqual({ start: rowIds.length, end: rowIds.length })
-                    continue
-                }
-                expect(viewport.start).toBeGreaterThanOrEqual(visible.start)
-                expect(viewport.end).toBeLessThanOrEqual(visible.end)
-            }
+            // Same scroll position, padded out on both ends.
+            expect(visibleRange(manager, rowIds, 40, 80, 1)).toEqual({ start: 0, end: 4 })
         })
     })
 
@@ -348,7 +322,7 @@ describe('HeightManager', () => {
             expect(dense.end - dense.start).toBe(0)
 
             const layout = zero.getSparseLayout(100_000, 0, 400, 5, 16_000_000)
-            expect(layout.viewportEnd - layout.anchorIndex).toBe(0)
+            expect(layout.viewport.end - layout.viewport.start).toBe(0)
         })
 
         describe('below the height cap', () => {
@@ -364,7 +338,7 @@ describe('HeightManager', () => {
                 expect(layout.start).toBe(998)
                 expect(layout.end).toBe(1_012)
                 // ...the viewport range is exactly the 10 rows on screen.
-                expect(layout.viewportEnd).toBe(1_010)
+                expect(layout.viewport.end).toBe(1_010)
             })
 
             test('does not buffer above the top of the dataset', () => {
@@ -381,7 +355,12 @@ describe('HeightManager', () => {
 
             test('handles an empty dataset', () => {
                 const layout = manager.getSparseLayout(0, 0, 400, 5, CAP)
-                expect(layout).toMatchObject({ totalHeight: 0, start: 0, end: 0, viewportEnd: 0 })
+                expect(layout).toMatchObject({
+                    totalHeight: 0,
+                    start: 0,
+                    end: 0,
+                    viewport: { start: 0, end: 0 }
+                })
             })
 
             test('scroll position for an index is its natural offset', () => {
@@ -393,7 +372,7 @@ describe('HeightManager', () => {
                 const scrollTop = 100_000 * 40 - viewport
                 const layout = manager.getSparseLayout(100_000, scrollTop, viewport, 2, CAP)
                 // `end` is exclusive, so the final row is included only here.
-                expect(layout.viewportEnd).toBe(100_000)
+                expect(layout.viewport.end).toBe(100_000)
             })
         })
 
@@ -415,15 +394,15 @@ describe('HeightManager', () => {
                 // here, so `anchorIndex` can land a row early to float error;
                 // `rowsBelow` is derived from `anchorOffset`, which slips with
                 // it, so the end stays exact.
-                expect(layout.viewportEnd).toBe(TOTAL)
+                expect(layout.viewport.end).toBe(TOTAL)
             })
 
             test('the viewport range stays inside the render range while scrolling', () => {
                 for (const scrollTop of [0, 1, 5_000, CAP / 2, CAP - 500]) {
                     const layout = manager.getSparseLayout(TOTAL, scrollTop, 500, 10, CAP)
-                    expect(layout.anchorIndex).toBeGreaterThanOrEqual(layout.start)
-                    expect(layout.viewportEnd).toBeLessThanOrEqual(layout.end)
-                    expect(layout.anchorIndex).toBeLessThan(layout.viewportEnd)
+                    expect(layout.viewport.start).toBeGreaterThanOrEqual(layout.start)
+                    expect(layout.viewport.end).toBeLessThanOrEqual(layout.end)
+                    expect(layout.viewport.start).toBeLessThan(layout.viewport.end)
                 }
             })
 

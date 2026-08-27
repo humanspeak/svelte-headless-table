@@ -244,28 +244,22 @@ export const addVirtualScroll = <Item>({
     }
 
     const createDenseGeometry = (): Geometry => {
-        // One O(rows) walk per scroll event feeding both ranges, the way sparse
-        // mode hangs everything off `layout`. The buffered range is the
-        // viewport range padded, so what gets mounted always contains what is
-        // on screen — and the walk is not repeated to recover one from the
-        // other. Each range dedupes independently below, so `visibleRange`
-        // still holds still through sub-row scrolls and the spacers with it.
-        const scan = derived(
-            [rowIds, scrollTop, viewportHeight],
-            ([$rowIds, $scrollTop, $viewportHeight]) => {
-                const viewport = heightManager.getViewportRange(
-                    $rowIds,
-                    $scrollTop,
-                    $viewportHeight
-                )
-                return {
-                    viewport,
-                    visible: heightManager.bufferRange(viewport, $rowIds.length, bufferSize)
-                }
-            }
+        // One O(rows) walk per scroll event, and the mounted range is the
+        // viewport range padded — so containment is a property of the store
+        // graph rather than of two calculations agreeing. Padding hangs off
+        // the *deduped* viewport, so scrolling within a row does not reach it
+        // at all, and the spacers below stay put with it.
+        const viewportRange = dedupedRange(
+            derived([rowIds, scrollTop, viewportHeight], ([$rowIds, $scrollTop, $viewportHeight]) =>
+                heightManager.getViewportRange($rowIds, $scrollTop, $viewportHeight)
+            )
         )
         const visibleRange = dedupedRange(
-            derived(scan, ($scan) => $scan.visible),
+            // `rowIds` stays a direct dependency: appending rows widens the
+            // clamp even when the viewport itself has not moved.
+            derived([viewportRange, rowIds], ([$viewport, $rowIds]) =>
+                heightManager.bufferRange($viewport, $rowIds.length, bufferSize)
+            ),
             notifyRangeChange
         )
         const totalHeight = derived(rowIds, ($rowIds) => heightManager.getTotalHeight($rowIds))
@@ -274,7 +268,7 @@ export const addVirtualScroll = <Item>({
             visibleRange,
             // Every row is resident, so nothing is clamped away.
             renderRange: visibleRange,
-            viewportRange: dedupedRange(derived(scan, ($scan) => $scan.viewport)),
+            viewportRange,
             totalHeight,
             topSpacerHeight: derived([rowIds, visibleRange], ([$rowIds, $range]) =>
                 heightManager.getOffsetForIndex($rowIds, $range.start)
@@ -338,12 +332,7 @@ export const addVirtualScroll = <Item>({
             // Already absolute and already decompressed — `layout` computed it
             // from the same anchor that positions the rendered block, so this
             // cannot drift from what is on screen.
-            viewportRange: dedupedRange(
-                derived(layout, ($layout) => ({
-                    start: $layout.anchorIndex,
-                    end: $layout.viewportEnd
-                }))
-            ),
+            viewportRange: dedupedRange(derived(layout, ($layout) => $layout.viewport)),
             totalHeight: derived(layout, ($layout) => $layout.totalHeight),
             topSpacerHeight,
             bottomSpacerHeight: derived(

@@ -192,9 +192,8 @@ export interface VirtualScrollState<Item> {
      * the plugin reads from `clientHeight`. An in-flow `position: sticky`
      * `<thead>` is inside that box but paints over the top of it, so the first
      * row or two of this range can be hidden behind the header. The plugin
-     * cannot see the caller's markup, so it does not compensate: move the
-     * header outside the scroll container if the readout must be exact, or
-     * advance `start` by the header's height in rows.
+     * cannot see the caller's markup, so it does not compensate — move the
+     * header outside the scroll container if the readout must be exact.
      *
      * `end` is exclusive, so a range of `{ start: 0, end: 10 }` means rows 1–10
      * of a 1-based readout.

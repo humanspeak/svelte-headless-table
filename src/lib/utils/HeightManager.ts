@@ -1,4 +1,15 @@
 /**
+ * A half-open range of row indices: `start` inclusive, `end` exclusive.
+ *
+ * Structurally identical to `VisibleRange` in the plugin's public types, but
+ * declared here so `utils/` does not have to import from `plugins/`.
+ */
+export interface RowRange {
+    start: number
+    end: number
+}
+
+/**
  * Sparse scroll layout for the current scroll position.
  * See {@link HeightManager.getSparseLayout}.
  */
@@ -9,12 +20,8 @@ export interface SparseLayout {
     start: number
     /** Absolute index one past the last row to render (buffer included). */
     end: number
-    /**
-     * Absolute index one past the last row intersecting the viewport, buffer
-     * excluded. The range opens at {@link SparseLayout.anchorIndex}, which is
-     * by definition the first row the viewport touches.
-     */
-    viewportEnd: number
+    /** Absolute range intersecting the viewport, buffer excluded. */
+    viewport: RowRange
     /** Absolute index of the row anchoring the top of the viewport. */
     anchorIndex: number
     /** Container-space offset at which `anchorIndex` begins. */
@@ -169,19 +176,15 @@ export class HeightManager {
     /**
      * Pad a viewport range with the render buffer, clamped to the row list.
      *
-     * Split out so the buffered and unbuffered ranges cannot disagree: the
-     * buffer is applied to the viewport range rather than recovered from it.
+     * Split out so both modes pad the same way and the buffered range cannot
+     * disagree with the viewport range it wraps.
      *
      * @param range - Unbuffered range, from {@link getViewportRange}.
      * @param rowCount - Number of rows available to render.
      * @param bufferSize - Number of extra rows to render above/below.
      * @returns The range to mount.
      */
-    bufferRange(
-        range: { start: number; end: number },
-        rowCount: number,
-        bufferSize: number
-    ): { start: number; end: number } {
+    bufferRange(range: RowRange, rowCount: number, bufferSize: number): RowRange {
         return {
             start: Math.max(0, range.start - bufferSize),
             end: Math.min(rowCount, range.end + bufferSize)
@@ -189,52 +192,19 @@ export class HeightManager {
     }
 
     /**
-     * Calculate which rows to render given a scroll position and viewport
-     * height — the rows the viewport touches, padded by `bufferSize` on both
-     * ends.
-     *
-     * Derived from {@link getViewportRange} rather than scanned separately, so
-     * the mounted range always contains the visible one. An earlier version
-     * scanned for the end independently and mixed two coordinate systems,
-     * which dropped rows off the bottom whenever row heights varied.
-     *
-     * @param rowIds - Array of row IDs in order.
-     * @param scrollTop - Current scroll position.
-     * @param viewportHeight - Height of the visible area.
-     * @param bufferSize - Number of extra rows to render above/below.
-     * @returns Object with start and end indices of rows to render.
-     */
-    getVisibleRange(
-        rowIds: string[],
-        scrollTop: number,
-        viewportHeight: number,
-        bufferSize: number
-    ): { start: number; end: number } {
-        return this.bufferRange(
-            this.getViewportRange(rowIds, scrollTop, viewportHeight),
-            rowIds.length,
-            bufferSize
-        )
-    }
-
-    /**
      * Calculate which rows actually intersect the viewport, with no render
      * buffer.
      *
-     * {@link getVisibleRange} pads by `bufferSize` on both ends because it
-     * decides what gets mounted. This answers the different question of what
-     * the user is looking at, which is what a "rows N–M of T" readout wants.
+     * {@link bufferRange} pads this by `bufferSize` to decide what actually
+     * gets mounted. This answers the different question of what the user is
+     * looking at, which is what a "rows N–M of T" readout wants.
      *
      * @param rowIds - Array of row IDs in order.
      * @param scrollTop - Current scroll position.
      * @param viewportHeight - Height of the visible area.
      * @returns Object with start and end (exclusive) indices of visible rows.
      */
-    getViewportRange(
-        rowIds: string[],
-        scrollTop: number,
-        viewportHeight: number
-    ): { start: number; end: number } {
+    getViewportRange(rowIds: string[], scrollTop: number, viewportHeight: number): RowRange {
         const avgHeight = this.getAverageHeight()
         const topEdge = Math.max(0, scrollTop)
         const bottomEdge = topEdge + Math.max(0, viewportHeight)
@@ -338,11 +308,13 @@ export class HeightManager {
                 totalHeight: total === 0 ? 0 : Math.max(0, maxScrollHeight),
                 start: 0,
                 end: total,
-                // Rows with no height occupy none of the viewport, so nothing
-                // is visible — the same answer dense mode gives. `end` still
-                // spans the dataset because the render range has no positions
-                // to work from and `renderRange` clamps it to resident rows.
-                viewportEnd: 0,
+                // Rows with no height occupy none of the viewport, so the
+                // visible count is zero — as in dense mode, though dense
+                // reports the empty range at the end of the list rather than
+                // at 0. `end` still spans the dataset because the render range
+                // has no positions to work from; `renderRange` clamps it to
+                // the resident rows downstream.
+                viewport: { start: 0, end: 0 },
                 anchorIndex: 0,
                 anchorOffset: 0,
                 rowHeight,
@@ -368,14 +340,19 @@ export class HeightManager {
             Math.max(0, clampedScrollTop + viewport - anchorOffset) / rowHeight
         )
 
+        // The anchor is the first row the viewport touches, and `rowsBelow`
+        // reaches its bottom edge.
+        const viewportRange = { start: anchorIndex, end: Math.min(total, anchorIndex + rowsBelow) }
+
         return {
             totalHeight,
+            // Padded from the viewport range, the same direction dense mode
+            // goes, so what gets mounted always contains what is on screen.
+            // Only the top is special: `rowsAbove` is additionally clamped by
+            // the room above the anchor, so `bufferRange` handles the bottom.
             start: anchorIndex - rowsAbove,
-            end: Math.min(total, anchorIndex + rowsBelow + bufferSize),
-            // `rowsBelow` is how many rows it takes to reach the viewport's
-            // bottom edge from the anchor, so dropping the buffer term from
-            // `end` above leaves the unbuffered range.
-            viewportEnd: Math.min(total, anchorIndex + rowsBelow),
+            end: this.bufferRange(viewportRange, total, bufferSize).end,
+            viewport: viewportRange,
             anchorIndex,
             anchorOffset,
             rowHeight,
