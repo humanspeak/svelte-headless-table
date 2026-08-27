@@ -1411,6 +1411,36 @@ describe('addVirtualScroll with content above the rows', () => {
         unsubscribe()
     })
 
+    test('sparse mode accounts for the offset too', () => {
+        const TOTAL = 100_000
+        const dataOffset = writable(0)
+        const data = writable(createTestData(500))
+        const table = createTable(data, {
+            virtualScroll: addVirtualScroll<TestItem>({
+                estimatedRowHeight: ROW_HEIGHT,
+                bufferSize: 2,
+                totalRows: TOTAL,
+                dataOffset
+            })
+        })
+        const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
+        const vm = table.createViewModel(columns)
+        const unsubscribe = vm.pageRows.subscribe(() => {})
+        const state = vm.pluginStates.virtualScroll
+        const node = new OffsetScrollElement()
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        state.virtualScroll(node as any)
+
+        node.scroll(400)
+        const first = get(vm.pageRows)[0]
+        state.measureRowAction(rowNode(node, get(state.topSpacerHeight)), first.id)
+        node.scroll(400)
+
+        // Same shift as dense: container [400,800] is row space [360,760].
+        expect(get(state.viewportRange)).toEqual({ start: 9, end: 19 })
+        unsubscribe()
+    })
+
     test('is a no-op when the rows start at the container origin', () => {
         const { state, node, unsubscribe } = build(5)
         node.scroll(400)
