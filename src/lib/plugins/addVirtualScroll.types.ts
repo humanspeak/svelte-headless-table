@@ -10,6 +10,11 @@ export interface VirtualScrollConfig<Item> {
     /**
      * Callback fired when more data should be loaded (infinite scroll).
      * Return a promise to indicate when loading is complete.
+     *
+     * Append-only. Pair it with `data`-driven mode, not with `totalRows`:
+     * in sparse mode `loadMoreThreshold` would be measured against the
+     * compressed container height and mean something other than documented.
+     * Use `onRangeChange` there instead.
      */
     onLoadMore?: () => void | Promise<void>
 
@@ -44,6 +49,84 @@ export interface VirtualScrollConfig<Item> {
      * If provided, enables variable row heights.
      */
     getRowHeight?: (_item: Item) => number
+
+    /**
+     * Total number of rows in the full dataset, independent of how many are
+     * currently loaded.
+     *
+     * Supplying this opts into **sparse mode**: the plugin sizes the scroll
+     * container and computes visible ranges against the full dataset, while the
+     * table's `data` store holds only the resident window. Use it for
+     * server-paged datasets that are too large to materialize.
+     *
+     * In sparse mode all indices — `visibleRange`, `scrollToIndex`,
+     * `virtualIndex` — are absolute indices into the full dataset.
+     *
+     * Sparse geometry assumes a uniform row height (the running average of
+     * measured rows), since rows outside the resident window cannot be
+     * measured — per-row heights from `getRowHeight` feed that average but do
+     * not position individual rows.
+     */
+    totalRows?: Readable<number> | number
+
+    /**
+     * Absolute index of the first row held in the table's `data` store.
+     *
+     * Sparse mode only. Keep this in sync with `data` whenever the resident
+     * window moves — the plugin uses it to map absolute indices onto the loaded
+     * rows.
+     *
+     * @default 0
+     */
+    dataOffset?: Readable<number> | number
+
+    /**
+     * Fired whenever the visible range changes, so a caller can fetch the pages
+     * intersecting it and evict the ones that have scrolled away.
+     *
+     * In sparse mode the range is in absolute dataset indices. Invoked on a
+     * microtask, so it is safe to update stores from within it.
+     *
+     * The range moves faster than a network round trip, so an async handler
+     * must not assume it is still current when its fetch resolves — see
+     * {@link RangeChangeContext.signal}.
+     */
+    onRangeChange?: (_range: VisibleRange, _context: RangeChangeContext) => void
+
+    /**
+     * Largest height, in pixels, to give the scroll container.
+     *
+     * Sparse mode only. Browsers cap element height — ~16,777,216px in Chrome
+     * and Safari — and a container sized past the cap makes the tail of the
+     * dataset unreachable by dragging *and* by `scrollToIndex`, which the
+     * browser clamps. When `totalRows × rowHeight` exceeds this value the
+     * scroll range is compressed onto it instead.
+     *
+     * Rows still render at natural height and lay out 1:1 around the viewport;
+     * the compression only affects how far a given amount of scrolling travels,
+     * so a wheel notch covers proportionally more rows. Datasets that fit under
+     * the cap are unaffected.
+     *
+     * @default 16_000_000
+     */
+    maxScrollHeight?: number
+}
+
+/**
+ * Second argument to
+ * {@link VirtualScrollConfig.onRangeChange}.
+ */
+export interface RangeChangeContext {
+    /**
+     * Aborted as soon as a newer range supersedes this one.
+     *
+     * Rapid scrolling starts more range changes than can be served in order, so
+     * without this a slow early response can land after a fast later one and
+     * replace the current window with rows for a range the user has left. Pass
+     * it to `fetch` to cancel the request, and re-check `signal.aborted` before
+     * writing to `data` / `dataOffset`.
+     */
+    signal: AbortSignal
 }
 
 /**
@@ -140,6 +223,8 @@ export interface VirtualScrollState<Item> {
 
     /**
      * Total number of rows (before virtualization).
+     * In sparse mode this reflects the configured dataset total rather than the
+     * number of rows currently loaded.
      */
     totalRows: Readable<number>
 
@@ -147,6 +232,12 @@ export interface VirtualScrollState<Item> {
      * Number of rows currently rendered in the DOM.
      */
     renderedRows: Readable<number>
+
+    /**
+     * Absolute index of the first row held in the table's `data` store.
+     * Always `0` outside sparse mode.
+     */
+    dataOffset: Readable<number>
 }
 
 /**
@@ -155,6 +246,7 @@ export interface VirtualScrollState<Item> {
 export interface VirtualScrollRowProps {
     /**
      * Index of this row in the full dataset.
+     * In sparse mode this is the absolute index, i.e. offset by `dataOffset`.
      */
     virtualIndex: number
 

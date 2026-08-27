@@ -139,6 +139,56 @@ const table = createTable(data, {
 });
 ```
 
+## Sparse Mode (server-paged datasets)
+
+Infinite scroll is append-only: reaching row 2,000,000 means loading every row before it. For datasets that are too large to materialize, pass `totalRows` to opt into **sparse mode**. The caller owns fetching and eviction; the plugin owns geometry.
+
+In sparse mode the table's `data` store holds only the rows currently resident, `dataOffset` says where that window starts in the full dataset, and `onRangeChange` tells you when to move it. All indices the plugin reports — `visibleRange`, `scrollToIndex`, `virtualIndex` — are absolute indices into the full dataset.
+
+```ts
+const totalRows = writable(0); // filled from a cheap count query
+const dataOffset = writable(0); // absolute index of data[0]
+const data = writable([]); // only the resident window
+
+const table = createTable(data, {
+  virtualScroll: addVirtualScroll({
+    estimatedRowHeight: 32,
+    totalRows,
+    dataOffset,
+    onRangeChange: async ({ start, end }, { signal }) => {
+      // Fetch just the pages intersecting the range, and drop the rest.
+      const { rows, offset } = await fetchWindow(start, end, { signal });
+      // The range moves faster than a round trip. Without this check a slow
+      // early response can land after a fast later one and republish a window
+      // the user has already scrolled away from.
+      if (signal.aborted) return;
+      dataOffset.set(offset);
+      data.set(rows);
+    }
+  })
+});
+```
+
+The rendered markup is identical to the basic example — spacer rows, `use:virtualScroll`, `use:measureRowAction`. The scroll container is sized from `totalRows`, so the user can drag straight to row 2,000,000 and only that page is fetched.
+
+<Admonition type="note">Rows in the visible range that aren't resident yet simply don't render, and the spacers absorb their height. Widen the fetched window past <code>visibleRange</code>, or render skeleton rows from your own cache, to avoid a blank viewport during a fetch.</Admonition>
+
+### Browser scroll-height ceiling
+
+Browsers cap how tall an element can be — roughly **16,777,216px** in Chrome and Safari, with other engines varying. At 32px rows a naively-sized container would hit that wall at ~520,000 rows, and everything past it would be unreachable: the scrollbar bottoms out, and `scrollToIndex` doesn't help because the browser clamps `scrollTo` to the element's real height too.
+
+Sparse mode handles this for you. The container is sized to at most `maxScrollHeight` (default `16_000_000`), and when the dataset is larger the scroll position is mapped onto it proportionally. Rows still render at their natural height and lay out 1:1 around the viewport, so there is no drift or jitter — the mapping only decides which row anchors the top of the screen.
+
+The tradeoff is scroll *travel*. Over a 4,000,000-row dataset at 32px, the range is compressed ~8×, so one wheel notch covers ~24 rows instead of ~3. Datasets that fit under the cap are unaffected: the mapping is the identity and nothing changes.
+
+A few things to know:
+
+- **Row heights are uniform in sparse mode.** Rows outside the resident window can't be measured, so geometry uses the running average of the measured ones. Measurements still refine that average; `getRowHeight` feeds it but doesn't position individual rows.
+- **`onRangeChange` fires more than once during startup** as the viewport is measured. Debounce or de-duplicate in the handler if your fetch is expensive.
+- **Async handlers must respect `signal`.** It is aborted as soon as a newer range supersedes the one being served, and when the scroll container is destroyed. Pass it to `fetch` to cancel the request, and re-check `signal.aborted` before writing to `data` / `dataOffset` — otherwise out-of-order responses will republish a stale window.
+- **It is safe to update stores from `onRangeChange`.** The callback is deferred to a microtask, so it never writes to a store mid-derivation.
+- **Keep `dataOffset` and `data` in sync.** A stale offset shifts every rendered row.
+
 ## Options
 
 <Admonition type="info">Options passed into <code>addVirtualScroll</code>.</Admonition>
@@ -167,6 +217,20 @@ Default `200`. Number of pixels from the bottom to trigger `onLoadMore`.
 ### `getRowHeight?: (item: Item) => number`
 Optional function to get the exact height of a specific row. Enables precise variable row heights.
 
+### `totalRows?: Readable<number> | number`
+Total number of rows in the full dataset, independent of how many are loaded. Supplying this opts into [sparse mode](#sparse-mode-server-paged-datasets).
+
+### `dataOffset?: Readable<number> | number`
+Default `0`. Absolute index of the first row held in the table's `data` store. Sparse mode only — keep it in sync with `data` whenever the resident window moves.
+
+### `maxScrollHeight?: number`
+Default `16_000_000`. Largest height, in pixels, to give the scroll container. Sparse mode only. When `totalRows × rowHeight` exceeds this, the scroll range is compressed onto it so the tail of the dataset stays reachable — see [the scroll-height ceiling](#browser-scroll-height-ceiling).
+
+### `onRangeChange?: (range: { start: number; end: number }, context: { signal: AbortSignal }) => void`
+Fired whenever the visible range changes, so a caller can fetch the pages intersecting it and evict the ones that have scrolled away. In sparse mode the range is in absolute dataset indices. Invoked on a microtask, so it is safe to update stores from within it.
+
+`context.signal` is aborted as soon as a newer range supersedes this one, or when the scroll container is destroyed. Async handlers should pass it to `fetch` and re-check `signal.aborted` before publishing results.
+
 ## Plugin State
 
 <Admonition type="info">State provided by <code>addVirtualScroll</code>.</Admonition>
@@ -189,7 +253,7 @@ Height of the bottom spacer element in pixels.
 Svelte action to attach to each row for automatic height measurement. Usage: `<tr use:measureRowAction={row.id}>`.
 
 ### `scrollToIndex: (index: number, options?) => void`
-Scroll to a specific row index programmatically.
+Scroll to a specific row index programmatically. In sparse mode the index is absolute and may point outside the resident window, and every `align` mode accounts for any scroll-range compression.
 
 ```ts
 // Scroll options
@@ -200,13 +264,16 @@ scrollToIndex(100, {
 ```
 
 ### `visibleRange: Readable<{ start: number; end: number }>`
-Range of currently visible row indices.
+Range of currently visible row indices. Absolute dataset indices in sparse mode.
 
 ### `totalHeight: Readable<number>`
 Total height of all rows (for scroll container sizing).
 
 ### `totalRows: Readable<number>`
-Total number of rows in the dataset.
+Total number of rows in the dataset. In sparse mode this is the configured dataset total rather than the number of rows loaded.
+
+### `dataOffset: Readable<number>`
+Absolute index of the first row held in the table's `data` store. Always `0` outside sparse mode.
 
 ### `renderedRows: Readable<number>`
 Number of rows currently rendered in the DOM.
@@ -241,5 +308,5 @@ Manually notify the plugin that a row has been measured. Usually not needed when
 - **Use `table-layout: fixed`** on your `<table>` element. With virtual scroll, only a subset of rows is rendered at any time. The default `table-layout: auto` recalculates column widths based on visible content, causing header columns to shift as you scroll through rows with varying content lengths. `table-layout: fixed` locks column widths to the header, preventing layout jitter.
 - Use a reasonable `bufferSize` (10-20) to balance between smooth scrolling and DOM size
 - The `estimatedRowHeight` doesn't need to be exact - actual heights are measured automatically
-- For very large datasets (100,000+ rows), consider server-side pagination combined with virtual scroll
+- For very large datasets (100,000+ rows), combine server-side paging with [sparse mode](#sparse-mode-server-paged-datasets) so only the pages you look at are ever held in memory
 - Avoid complex components in cells that cause expensive re-renders

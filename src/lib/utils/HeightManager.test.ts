@@ -232,4 +232,135 @@ describe('HeightManager', () => {
             expect(manager.getAverageHeight()).toBe(60)
         })
     })
+
+    describe('sparse geometry', () => {
+        test('reports no compression when the dataset fits under the cap', () => {
+            const layout = manager.getSparseLayout(100_000, 0, 500, 10, 16_000_000)
+            expect(layout.ratio).toBe(1)
+            expect(layout.totalHeight).toBe(100_000 * 40)
+        })
+
+        test('reports the compression ratio when the dataset exceeds the cap', () => {
+            // 4,000,000 rows at 40px is 160,000,000px against a 16,000,000px cap.
+            const layout = manager.getSparseLayout(4_000_000, 0, 500, 10, 16_000_000)
+            expect(layout.ratio).toBeGreaterThan(9.9)
+            expect(layout.ratio).toBeLessThan(10.1)
+        })
+
+        describe('below the height cap', () => {
+            const CAP = 16_000_000
+
+            test('maps scroll position 1:1', () => {
+                // 40px rows, viewport shows 10 rows starting at row 1,000.
+                const layout = manager.getSparseLayout(100_000, 40_000, 400, 2, CAP)
+                expect(layout.totalHeight).toBe(100_000 * 40)
+                expect(layout.anchorIndex).toBe(1_000)
+                expect(layout.anchorOffset).toBe(40_000)
+                expect(layout.start).toBe(998)
+                expect(layout.end).toBe(1_012)
+            })
+
+            test('does not buffer above the top of the dataset', () => {
+                const layout = manager.getSparseLayout(100_000, 0, 400, 5, CAP)
+                expect(layout.start).toBe(0)
+                expect(layout.anchorIndex).toBe(0)
+                expect(layout.anchorOffset).toBe(0)
+            })
+
+            test('clamps the end to the dataset', () => {
+                const layout = manager.getSparseLayout(10, 0, 4000, 5, CAP)
+                expect(layout.end).toBe(10)
+            })
+
+            test('handles an empty dataset', () => {
+                const layout = manager.getSparseLayout(0, 0, 400, 5, CAP)
+                expect(layout).toMatchObject({ totalHeight: 0, start: 0, end: 0 })
+            })
+
+            test('scroll position for an index is its natural offset', () => {
+                expect(manager.getSparseScrollTopForIndex(100_000, 1_000, 400, CAP)).toBe(40_000)
+            })
+        })
+
+        describe('above the height cap', () => {
+            // 4,000,000 rows at 40px is 160,000,000px — 10x over the cap.
+            const CAP = 16_000_000
+            const TOTAL = 4_000_000
+
+            test('caps the container height', () => {
+                const layout = manager.getSparseLayout(TOTAL, 0, 500, 10, CAP)
+                expect(layout.totalHeight).toBe(CAP)
+            })
+
+            test('reaches the last row at maximum scroll', () => {
+                const layout = manager.getSparseLayout(TOTAL, CAP - 500, 500, 10, CAP)
+                expect(layout.end).toBe(TOTAL)
+                expect(layout.anchorIndex).toBeGreaterThan(TOTAL - 20)
+            })
+
+            test('reaches the middle of the dataset at half scroll', () => {
+                const layout = manager.getSparseLayout(TOTAL, (CAP - 500) / 2, 500, 10, CAP)
+                expect(layout.anchorIndex).toBeGreaterThan(1_990_000)
+                expect(layout.anchorIndex).toBeLessThan(2_010_000)
+            })
+
+            test('anchors rows within the container, never above it', () => {
+                for (const scrollTop of [0, 1, 100, 5_000, CAP / 2, CAP - 500]) {
+                    const layout = manager.getSparseLayout(TOTAL, scrollTop, 500, 10, CAP)
+                    const topSpacer =
+                        layout.anchorOffset + (layout.start - layout.anchorIndex) * layout.rowHeight
+                    expect(topSpacer).toBeGreaterThanOrEqual(0)
+                }
+            })
+
+            test('renders enough rows to cover the viewport', () => {
+                for (const scrollTop of [0, 100, 5_000, CAP / 2, CAP - 500]) {
+                    const layout = manager.getSparseLayout(TOTAL, scrollTop, 500, 0, CAP)
+                    const topSpacer =
+                        layout.anchorOffset + (layout.start - layout.anchorIndex) * layout.rowHeight
+                    const renderedBottom =
+                        topSpacer + (layout.end - layout.start) * layout.rowHeight
+                    expect(renderedBottom).toBeGreaterThanOrEqual(
+                        Math.min(scrollTop + 500, layout.totalHeight)
+                    )
+                }
+            })
+
+            test('scrollToIndex position brings that row into view', () => {
+                for (const index of [0, 1_000, 467_000, 2_000_000, TOTAL - 1]) {
+                    const scrollTop = manager.getSparseScrollTopForIndex(TOTAL, index, 500, CAP)
+                    expect(scrollTop).toBeLessThanOrEqual(CAP - 500)
+                    const layout = manager.getSparseLayout(TOTAL, scrollTop, 500, 0, CAP)
+                    expect(layout.start).toBeLessThanOrEqual(index)
+                    expect(layout.end).toBeGreaterThan(index)
+                }
+            })
+
+            test('anchors the requested row at the top when there is room below', () => {
+                for (const index of [0, 1_000, 467_000, 2_000_000]) {
+                    const scrollTop = manager.getSparseScrollTopForIndex(TOTAL, index, 500, CAP)
+                    const layout = manager.getSparseLayout(TOTAL, scrollTop, 500, 0, CAP)
+                    expect(layout.anchorIndex).toBe(index)
+                }
+            })
+
+            test('cannot anchor the final rows, which sit at the bottom of the viewport', () => {
+                // The last ~12 rows can never top the viewport: nothing follows
+                // them to scroll into view. Same as uncompressed geometry.
+                const scrollTop = manager.getSparseScrollTopForIndex(TOTAL, TOTAL - 1, 500, CAP)
+                const layout = manager.getSparseLayout(TOTAL, scrollTop, 500, 0, CAP)
+                expect(layout.anchorIndex).toBeLessThan(TOTAL - 1)
+                expect(layout.end).toBe(TOTAL)
+            })
+
+            test('never exceeds the cap regardless of scroll position', () => {
+                for (const scrollTop of [-100, 0, CAP, CAP * 2]) {
+                    const layout = manager.getSparseLayout(TOTAL, scrollTop, 500, 10, CAP)
+                    expect(layout.totalHeight).toBeLessThanOrEqual(CAP)
+                    expect(layout.start).toBeGreaterThanOrEqual(0)
+                    expect(layout.end).toBeLessThanOrEqual(TOTAL)
+                }
+            })
+        })
+    })
 })
