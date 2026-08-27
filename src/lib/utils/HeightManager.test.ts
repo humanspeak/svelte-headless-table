@@ -222,10 +222,17 @@ describe('HeightManager', () => {
             expect(manager.getViewportRange(rowIds, -50, 80)).toEqual({ start: 0, end: 2 })
         })
 
-        test('never reports outside the buffered range it is a subset of', () => {
-            for (const scrollTop of [0, 20, 40, 100, 160, 199]) {
+        test('never names a row outside the buffered range that gets mounted', () => {
+            // Past the end of the content (200px of rows) the range collapses to
+            // empty, which names no rows at all — the subset claim only has to
+            // hold while there is something on screen.
+            for (const scrollTop of [0, 20, 40, 100, 160, 199, 200, 240, 400]) {
                 const viewport = manager.getViewportRange(rowIds, scrollTop, 80)
                 const visible = manager.getVisibleRange(rowIds, scrollTop, 80, 2)
+                if (viewport.end === viewport.start) {
+                    expect(viewport).toEqual({ start: rowIds.length, end: rowIds.length })
+                    continue
+                }
                 expect(viewport.start).toBeGreaterThanOrEqual(visible.start)
                 expect(viewport.end).toBeLessThanOrEqual(visible.end)
             }
@@ -314,8 +321,11 @@ describe('HeightManager', () => {
                 expect(layout.totalHeight).toBe(100_000 * 40)
                 expect(layout.anchorIndex).toBe(1_000)
                 expect(layout.anchorOffset).toBe(40_000)
+                // The rendered range carries bufferSize on both ends...
                 expect(layout.start).toBe(998)
                 expect(layout.end).toBe(1_012)
+                // ...the viewport range is exactly the 10 rows on screen.
+                expect(layout.viewportEnd).toBe(1_010)
             })
 
             test('does not buffer above the top of the dataset', () => {
@@ -332,21 +342,11 @@ describe('HeightManager', () => {
 
             test('handles an empty dataset', () => {
                 const layout = manager.getSparseLayout(0, 0, 400, 5, CAP)
-                expect(layout).toMatchObject({ totalHeight: 0, start: 0, end: 0 })
+                expect(layout).toMatchObject({ totalHeight: 0, start: 0, end: 0, viewportEnd: 0 })
             })
 
             test('scroll position for an index is its natural offset', () => {
                 expect(manager.getSparseScrollTopForIndex(100_000, 1_000, 400, CAP)).toBe(40_000)
-            })
-
-            test('the viewport range drops the buffer the render range carries', () => {
-                // 40px rows, 400px viewport: exactly 10 rows are on screen.
-                const layout = manager.getSparseLayout(100_000, 40_000, 400, 2, CAP)
-                expect(layout.viewportStart).toBe(1_000)
-                expect(layout.viewportEnd).toBe(1_010)
-                // The rendered range is the same window padded by bufferSize.
-                expect(layout.start).toBe(998)
-                expect(layout.end).toBe(1_012)
             })
 
             test('the viewport range reaches the last row at maximum scroll', () => {
@@ -355,11 +355,6 @@ describe('HeightManager', () => {
                 const layout = manager.getSparseLayout(100_000, scrollTop, viewport, 2, CAP)
                 // `end` is exclusive, so the final row is included only here.
                 expect(layout.viewportEnd).toBe(100_000)
-            })
-
-            test('the viewport range is empty for an empty dataset', () => {
-                const layout = manager.getSparseLayout(0, 0, 400, 5, CAP)
-                expect(layout).toMatchObject({ viewportStart: 0, viewportEnd: 0 })
             })
         })
 
@@ -377,23 +372,19 @@ describe('HeightManager', () => {
                 const layout = manager.getSparseLayout(TOTAL, CAP - 500, 500, 10, CAP)
                 expect(layout.end).toBe(TOTAL)
                 expect(layout.anchorIndex).toBeGreaterThan(TOTAL - 20)
-            })
-
-            test('the viewport range reaches the last row without the buffer', () => {
-                // The compression ratio is irrational here, so `anchorIndex` can
-                // land a row early to float error. `rowsBelow` is derived from
-                // `anchorOffset`, which slips with it, so the end stays exact.
-                const layout = manager.getSparseLayout(TOTAL, CAP - 500, 500, 10, CAP)
+                // Also without the buffer. The compression ratio is irrational
+                // here, so `anchorIndex` can land a row early to float error;
+                // `rowsBelow` is derived from `anchorOffset`, which slips with
+                // it, so the end stays exact.
                 expect(layout.viewportEnd).toBe(TOTAL)
-                expect(layout.viewportStart).toBe(layout.anchorIndex)
             })
 
             test('the viewport range stays inside the render range while scrolling', () => {
                 for (const scrollTop of [0, 1, 5_000, CAP / 2, CAP - 500]) {
                     const layout = manager.getSparseLayout(TOTAL, scrollTop, 500, 10, CAP)
-                    expect(layout.viewportStart).toBeGreaterThanOrEqual(layout.start)
+                    expect(layout.anchorIndex).toBeGreaterThanOrEqual(layout.start)
                     expect(layout.viewportEnd).toBeLessThanOrEqual(layout.end)
-                    expect(layout.viewportStart).toBeLessThan(layout.viewportEnd)
+                    expect(layout.anchorIndex).toBeLessThan(layout.viewportEnd)
                 }
             })
 

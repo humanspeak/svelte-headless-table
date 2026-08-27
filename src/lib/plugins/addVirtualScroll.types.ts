@@ -188,10 +188,13 @@ export interface VirtualScrollState<Item> {
      * compression the plugin applies above `maxScrollHeight` is already undone,
      * so consumers never re-derive that mapping themselves.
      *
-     * The range is measured against the container's own viewport. An in-flow
-     * `position: sticky` header sits inside that viewport but covers the top of
-     * it, so a caller with one should subtract its height from the row count it
-     * displays — the plugin cannot see the caller's markup.
+     * The range is measured against the scroll container's own viewport, which
+     * the plugin reads from `clientHeight`. An in-flow `position: sticky`
+     * `<thead>` is inside that box but paints over the top of it, so the first
+     * row or two of this range can be hidden behind the header. The plugin
+     * cannot see the caller's markup, so it does not compensate: move the
+     * header outside the scroll container if the readout must be exact, or
+     * advance `start` by the header's height in rows.
      *
      * `end` is exclusive, so a range of `{ start: 0, end: 10 }` means rows 1–10
      * of a 1-based readout.

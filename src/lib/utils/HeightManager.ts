@@ -10,14 +10,9 @@ export interface SparseLayout {
     /** Absolute index one past the last row to render (buffer included). */
     end: number
     /**
-     * Absolute index of the first row intersecting the viewport, buffer
-     * excluded. Same as {@link SparseLayout.anchorIndex}, named for the range
-     * it opens.
-     */
-    viewportStart: number
-    /**
      * Absolute index one past the last row intersecting the viewport, buffer
-     * excluded.
+     * excluded. The range opens at {@link SparseLayout.anchorIndex}, which is
+     * by definition the first row the viewport touches.
      */
     viewportEnd: number
     /** Absolute index of the row anchoring the top of the viewport. */
@@ -246,31 +241,28 @@ export class HeightManager {
         const topEdge = Math.max(0, scrollTop)
         const bottomEdge = topEdge + Math.max(0, viewportHeight)
 
-        // Scrolled past the content, or nothing to show: an empty range at the
-        // end reads as "0 rows" rather than pointing at a row that isn't there.
-        let start = rowIds.length
-        let end = rowIds.length
+        // Counted rather than indexed: `start` is how many rows sit entirely
+        // above the viewport, `end` how many begin before its bottom edge. That
+        // keeps `start <= end` true by construction, and scrolled past the
+        // content both land on `rowIds.length`, which reads as "0 rows" rather
+        // than naming a row that is not on screen.
+        let start = 0
+        let end = 0
         let offset = 0
 
-        for (let i = 0; i < rowIds.length; i++) {
-            // A zero-height viewport lands both edges on the same pixel, so
-            // check the bottom first — otherwise the row starting exactly there
-            // would count as visible.
+        for (const rowId of rowIds) {
             if (offset >= bottomEdge) {
-                end = i
                 break
             }
-            const height = this.heightCache.get(rowIds[i]) ?? avgHeight
-            if (start === rowIds.length && offset + height > topEdge) {
-                start = i
+            const height = this.heightCache.get(rowId) ?? avgHeight
+            if (offset + height <= topEdge) {
+                start++
             }
+            end++
             offset += height
         }
 
-        // `start` stays at the sentinel when the viewport is zero-height, which
-        // breaks below an `end` found on the first row. Collapse rather than
-        // invert.
-        return { start: Math.min(start, end), end }
+        return { start, end }
     }
 
     /**
@@ -348,7 +340,6 @@ export class HeightManager {
                 totalHeight: total === 0 ? 0 : Math.max(0, maxScrollHeight),
                 start: 0,
                 end: total,
-                viewportStart: 0,
                 viewportEnd: total,
                 anchorIndex: 0,
                 anchorOffset: 0,
@@ -379,11 +370,9 @@ export class HeightManager {
             totalHeight,
             start: anchorIndex - rowsAbove,
             end: Math.min(total, anchorIndex + rowsBelow + bufferSize),
-            // The anchor is the first row the viewport touches and `rowsBelow`
-            // is how many rows it takes to reach the viewport's bottom edge, so
-            // the unbuffered range is what is left once the buffer terms above
-            // are dropped.
-            viewportStart: anchorIndex,
+            // `rowsBelow` is how many rows it takes to reach the viewport's
+            // bottom edge from the anchor, so dropping the buffer term from
+            // `end` above leaves the unbuffered range.
             viewportEnd: Math.min(total, anchorIndex + rowsBelow),
             anchorIndex,
             anchorOffset,

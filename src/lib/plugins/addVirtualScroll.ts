@@ -243,15 +243,12 @@ export const addVirtualScroll = <Item>({
         )
     }
 
-    /** The render range, deduped and reported to `onRangeChange`. */
-    const trackedRange = (source: Readable<VisibleRange>): Readable<VisibleRange> =>
-        dedupedRange(source, notifyRangeChange)
-
     const createDenseGeometry = (): Geometry => {
-        const visibleRange = trackedRange(
+        const visibleRange = dedupedRange(
             derived([rowIds, scrollTop, viewportHeight], ([$rowIds, $scrollTop, $viewportHeight]) =>
                 heightManager.getVisibleRange($rowIds, $scrollTop, $viewportHeight, bufferSize)
-            )
+            ),
+            notifyRangeChange
         )
         const totalHeight = derived(rowIds, ($rowIds) => heightManager.getTotalHeight($rowIds))
 
@@ -259,10 +256,13 @@ export const addVirtualScroll = <Item>({
             visibleRange,
             // Every row is resident, so nothing is clamped away.
             renderRange: visibleRange,
-            // A second O(rows) walk, but `derived` is lazy: it costs nothing
-            // until something subscribes, and it cannot be folded into
-            // `visibleRange` without that store emitting on sub-row scrolls
-            // and dragging the spacers along with it.
+            // A second O(rows) walk over the same dependencies as
+            // `visibleRange`. It should be one walk feeding two dedupers, the
+            // way sparse mode hangs both ranges off `layout` — but
+            // `getVisibleRange` computes its `end` from a desynced offset
+            // (issue #299), so it is not `viewportEnd + bufferSize` and the
+            // two cannot share a pass until that is fixed. Fold them then.
+            // `derived` is lazy, so this costs nothing until subscribed.
             viewportRange: dedupedRange(
                 derived(
                     [rowIds, scrollTop, viewportHeight],
@@ -296,8 +296,9 @@ export const addVirtualScroll = <Item>({
                     maxScrollHeight
                 )
         )
-        const visibleRange = trackedRange(
-            derived(layout, ($layout) => ({ start: $layout.start, end: $layout.end }))
+        const visibleRange = dedupedRange(
+            derived(layout, ($layout) => ({ start: $layout.start, end: $layout.end })),
+            notifyRangeChange
         )
 
         // The visible range is absolute and may extend past the resident
@@ -334,7 +335,7 @@ export const addVirtualScroll = <Item>({
             // cannot drift from what is on screen.
             viewportRange: dedupedRange(
                 derived(layout, ($layout) => ({
-                    start: $layout.viewportStart,
+                    start: $layout.anchorIndex,
                     end: $layout.viewportEnd
                 }))
             ),

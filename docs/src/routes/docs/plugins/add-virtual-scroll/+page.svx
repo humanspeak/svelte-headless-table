@@ -300,7 +300,7 @@ Rows actually intersecting the viewport, with no render buffer — the range a "
 </tfoot>
 ```
 
-<Admonition type="note">The range is measured against the scroll container's viewport. An in-flow <code>position: sticky</code> header sits inside that viewport but covers the top of it, so if you have one, subtract its height from <code>viewportHeight</code> yourself — the plugin can't see your markup.</Admonition>
+<Admonition type="note">The range is measured against the scroll container's viewport, which the plugin reads from <code>clientHeight</code>. An in-flow <code>position: sticky</code> <code>&lt;thead&gt;</code> is inside that box but paints over the top of it, so the first row or two of the range can be hidden behind the header. The plugin can't see your markup, so it doesn't compensate — move the header outside the scroll container if the readout must be exact, or advance <code>start</code> by the header's height in rows.</Admonition>
 
 ### `totalHeight: Readable<number>`
 Total height of all rows (for scroll container sizing).

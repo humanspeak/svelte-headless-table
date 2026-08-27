@@ -53,6 +53,31 @@ function attachScrollAction(
     return { node, destroy: () => ret?.destroy?.() }
 }
 
+/** Dense-mode row height, buffer and viewport shared by the dense suites. */
+const DENSE_ROW_HEIGHT = 40
+const DENSE_BUFFER = 5
+const DENSE_VIEWPORT_ROWS = 10
+
+/** Build a dense-mode table with the action attached to a 10-row viewport. */
+function createDenseTable(rowCount: number) {
+    const data = writable(createTestData(rowCount))
+    const table = createTable(data, {
+        virtualScroll: addVirtualScroll<TestItem>({
+            estimatedRowHeight: DENSE_ROW_HEIGHT,
+            bufferSize: DENSE_BUFFER
+        })
+    })
+    const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
+    const vm = table.createViewModel(columns)
+    const unsubscribe = vm.pageRows.subscribe(() => {})
+    const state = vm.pluginStates.virtualScroll
+    const { node } = attachScrollAction(
+        state,
+        new FakeScrollElement(DENSE_VIEWPORT_ROWS * DENSE_ROW_HEIGHT)
+    )
+    return { data, vm, state, node, unsubscribe }
+}
+
 describe('addVirtualScroll', () => {
     test('exposes required state stores', () => {
         const data = writable(createTestData(50))
@@ -403,20 +428,6 @@ describe('addVirtualScroll dense mode geometry cost', () => {
      * a large dataset churns for seconds. These assert the memoization that
      * keeps that from happening — they are cheap proxies for a perf guard.
      */
-    function createDenseTable(rowCount: number) {
-        const data = writable(createTestData(rowCount))
-        const table = createTable(data, {
-            virtualScroll: addVirtualScroll<TestItem>({ estimatedRowHeight: 40, bufferSize: 5 })
-        })
-        const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
-        const vm = table.createViewModel(columns)
-        const unsubscribe = vm.pageRows.subscribe(() => {})
-        const state = vm.pluginStates.virtualScroll
-        const node = new FakeScrollElement(400)
-        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-        state.virtualScroll(node as any)
-        return { data, vm, state, node, unsubscribe }
-    }
 
     test('totalHeight does not recompute while scrolling', () => {
         const { state, node, unsubscribe } = createDenseTable(100_000)
@@ -1265,36 +1276,14 @@ describe('addVirtualScroll container lifecycle', () => {
 })
 
 describe('addVirtualScroll viewportRange in dense mode', () => {
-    const ROW_HEIGHT = 40
-    const BUFFER = 5
-    const VIEWPORT_ROWS = 10
-
-    function createDenseTable(rowCount: number) {
-        const data = writable(createTestData(rowCount))
-        const table = createTable(data, {
-            virtualScroll: addVirtualScroll<TestItem>({
-                estimatedRowHeight: ROW_HEIGHT,
-                bufferSize: BUFFER
-            })
-        })
-        const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
-        const vm = table.createViewModel(columns)
-        const unsubscribe = vm.pageRows.subscribe(() => {})
-        const state = vm.pluginStates.virtualScroll
-        const node = new FakeScrollElement(VIEWPORT_ROWS * ROW_HEIGHT)
-        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-        state.virtualScroll(node as any)
-        return { state, node, unsubscribe }
-    }
-
     test('reports only the rows the viewport covers, not the buffered ones', () => {
         const { state, node, unsubscribe } = createDenseTable(100_000)
 
-        node.scroll(50_000 * ROW_HEIGHT)
+        node.scroll(50_000 * DENSE_ROW_HEIGHT)
 
         expect(get(state.viewportRange)).toEqual({ start: 50_000, end: 50_010 })
         // The buffer pads what gets mounted above the viewport.
-        expect(get(state.visibleRange).start).toBe(50_000 - BUFFER)
+        expect(get(state.visibleRange).start).toBe(50_000 - DENSE_BUFFER)
         unsubscribe()
     })
 
