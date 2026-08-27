@@ -129,8 +129,10 @@
     <h1>Virtual Scroll &mdash; Sparse Mode</h1>
     <p class="hint">
         A {DATASET_SIZE.toLocaleString()}-row dataset served in {PAGE_SIZE}-row pages, with at most
-        {MAX_RESIDENT_PAGES} pages held in memory. Jump anywhere &mdash; only the pages you look at are
-        ever fetched.
+        {MAX_RESIDENT_PAGES} pages held in memory &mdash; only the pages you look at are ever fetched.
+        Note that Chrome caps element height at ~16.7M px, so scrolling and
+        <code>scrollToIndex</code>
+        both stop at row ~467,000 of the 4,000,000.
     </p>
 
     <section class="controls">
