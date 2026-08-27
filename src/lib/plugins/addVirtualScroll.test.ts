@@ -1127,10 +1127,14 @@ describe('addVirtualScroll survives a view model rebuild', () => {
             ])
             return table.createViewModel(columns).pluginStates.virtualScroll
         }
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
         const one = build()
         const two = build()
 
         expect(two.virtualScroll).toBe(one.virtualScroll)
+        // Sharing is silent otherwise, so the second table gets a warning.
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('more than one table'))
+        warn.mockRestore()
     })
 
     test('destroying the action retains geometry for the next mount', () => {
