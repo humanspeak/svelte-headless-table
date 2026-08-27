@@ -244,10 +244,28 @@ export const addVirtualScroll = <Item>({
     }
 
     const createDenseGeometry = (): Geometry => {
+        // One O(rows) walk per scroll event feeding both ranges, the way sparse
+        // mode hangs everything off `layout`. The buffered range is the
+        // viewport range padded, so what gets mounted always contains what is
+        // on screen — and the walk is not repeated to recover one from the
+        // other. Each range dedupes independently below, so `visibleRange`
+        // still holds still through sub-row scrolls and the spacers with it.
+        const scan = derived(
+            [rowIds, scrollTop, viewportHeight],
+            ([$rowIds, $scrollTop, $viewportHeight]) => {
+                const viewport = heightManager.getViewportRange(
+                    $rowIds,
+                    $scrollTop,
+                    $viewportHeight
+                )
+                return {
+                    viewport,
+                    visible: heightManager.bufferRange(viewport, $rowIds.length, bufferSize)
+                }
+            }
+        )
         const visibleRange = dedupedRange(
-            derived([rowIds, scrollTop, viewportHeight], ([$rowIds, $scrollTop, $viewportHeight]) =>
-                heightManager.getVisibleRange($rowIds, $scrollTop, $viewportHeight, bufferSize)
-            ),
+            derived(scan, ($scan) => $scan.visible),
             notifyRangeChange
         )
         const totalHeight = derived(rowIds, ($rowIds) => heightManager.getTotalHeight($rowIds))
@@ -256,20 +274,7 @@ export const addVirtualScroll = <Item>({
             visibleRange,
             // Every row is resident, so nothing is clamped away.
             renderRange: visibleRange,
-            // A second O(rows) walk over the same dependencies as
-            // `visibleRange`. It should be one walk feeding two dedupers, the
-            // way sparse mode hangs both ranges off `layout` — but
-            // `getVisibleRange` computes its `end` from a desynced offset
-            // (issue #299), so it is not `viewportEnd + bufferSize` and the
-            // two cannot share a pass until that is fixed. Fold them then.
-            // `derived` is lazy, so this costs nothing until subscribed.
-            viewportRange: dedupedRange(
-                derived(
-                    [rowIds, scrollTop, viewportHeight],
-                    ([$rowIds, $scrollTop, $viewportHeight]) =>
-                        heightManager.getViewportRange($rowIds, $scrollTop, $viewportHeight)
-                )
-            ),
+            viewportRange: dedupedRange(derived(scan, ($scan) => $scan.viewport)),
             totalHeight,
             topSpacerHeight: derived([rowIds, visibleRange], ([$rowIds, $range]) =>
                 heightManager.getOffsetForIndex($rowIds, $range.start)

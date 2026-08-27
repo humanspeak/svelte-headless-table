@@ -174,6 +174,57 @@ describe('HeightManager', () => {
         })
     })
 
+    describe('getVisibleRange with variable row heights', () => {
+        /**
+         * A tall row inside the buffer makes the two coordinate systems in the
+         * old two-loop scan diverge far enough to be unmistakable. Heights are
+         * [10, 1000, 10, 10, ...], so at scrollTop 1010 the viewport sits just
+         * past the tall row and covers ten short ones.
+         */
+        const rowIds = Array.from({ length: 20 }, (_, i) => `row-${i}`)
+
+        beforeEach(() => {
+            rowIds.forEach((id, i) => manager.setHeight(id, i === 1 ? 1000 : 10))
+        })
+
+        test('mounts every row the viewport touches', () => {
+            // Rows 2-11 span y=1010..1110, exactly the viewport.
+            expect(manager.getViewportRange(rowIds, 1010, 100)).toEqual({ start: 2, end: 12 })
+
+            const visible = manager.getVisibleRange(rowIds, 1010, 100, 1)
+            // Anything less leaves the bottom of the viewport blank.
+            expect(visible.start).toBeLessThanOrEqual(2)
+            expect(visible.end).toBeGreaterThanOrEqual(12)
+        })
+
+        test('applies the buffer below the viewport, not just above', () => {
+            const visible = manager.getVisibleRange(rowIds, 1010, 100, 1)
+            expect(visible).toEqual({ start: 1, end: 13 })
+        })
+
+        test('a larger buffer never renders fewer rows', () => {
+            let previous = manager.getVisibleRange(rowIds, 1010, 100, 0)
+            for (const bufferSize of [1, 2, 3, 5, 8]) {
+                const current = manager.getVisibleRange(rowIds, 1010, 100, bufferSize)
+                expect(current.start).toBeLessThanOrEqual(previous.start)
+                expect(current.end).toBeGreaterThanOrEqual(previous.end)
+                previous = current
+            }
+        })
+
+        test('always contains the viewport range as it scrolls', () => {
+            for (let scrollTop = 0; scrollTop <= 1200; scrollTop += 7) {
+                const viewport = manager.getViewportRange(rowIds, scrollTop, 100)
+                const visible = manager.getVisibleRange(rowIds, scrollTop, 100, 2)
+                if (viewport.end === viewport.start) {
+                    continue
+                }
+                expect(visible.start).toBeLessThanOrEqual(viewport.start)
+                expect(visible.end).toBeGreaterThanOrEqual(viewport.end)
+            }
+        })
+    })
+
     describe('getViewportRange', () => {
         const rowIds = ['row-0', 'row-1', 'row-2', 'row-3', 'row-4']
 

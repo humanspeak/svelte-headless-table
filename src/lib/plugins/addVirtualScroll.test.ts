@@ -465,7 +465,8 @@ describe('addVirtualScroll dense mode geometry cost', () => {
         // A sub-row scroll that lands on the same visible range.
         node.scroll(2_000_015)
 
-        expect(get(state.visibleRange)).toEqual({ start: 49_995, end: 50_011 })
+        // 10 rows on screen, padded by bufferSize 5 on both ends.
+        expect(get(state.visibleRange)).toEqual({ start: 49_995, end: 50_016 })
         expect(topEmissions).toBe(top)
         expect(bottomEmissions).toBe(bottom)
         stopTop()
@@ -478,10 +479,11 @@ describe('addVirtualScroll dense mode geometry cost', () => {
 
         node.scroll(50_000 * 40)
 
-        expect(get(state.visibleRange)).toEqual({ start: 49_995, end: 50_010 })
+        expect(get(state.visibleRange)).toEqual({ start: 49_995, end: 50_015 })
         expect(get(state.totalHeight)).toBe(100_000 * 40)
         expect(get(state.topSpacerHeight)).toBe(49_995 * 40)
-        expect(get(vm.pageRows)).toHaveLength(15)
+        // 10 visible rows plus bufferSize 5 above and below.
+        expect(get(vm.pageRows)).toHaveLength(20)
         unsubscribe()
     })
 })
@@ -1284,6 +1286,24 @@ describe('addVirtualScroll viewportRange in dense mode', () => {
         expect(get(state.viewportRange)).toEqual({ start: 50_000, end: 50_010 })
         // The buffer pads what gets mounted above the viewport.
         expect(get(state.visibleRange).start).toBe(50_000 - DENSE_BUFFER)
+        unsubscribe()
+    })
+
+    test('is always contained by the range that gets mounted', () => {
+        const { state, node, unsubscribe } = createDenseTable(100_000)
+
+        for (const top of [0, 17, 400, 40_000, 2_000_015, 100_000 * DENSE_ROW_HEIGHT]) {
+            node.scroll(top)
+            const viewport = get(state.viewportRange)
+            const visible = get(state.visibleRange)
+            if (viewport.end === viewport.start) {
+                continue
+            }
+            // Structural now that `visibleRange` is `viewportRange` padded, so
+            // a footer can never name a row that was never rendered.
+            expect(visible.start).toBeLessThanOrEqual(viewport.start)
+            expect(visible.end).toBeGreaterThanOrEqual(viewport.end)
+        }
         unsubscribe()
     })
 

@@ -167,13 +167,42 @@ export class HeightManager {
     }
 
     /**
-     * Calculate which rows are visible given a scroll position and viewport height.
+     * Pad a viewport range with the render buffer, clamped to the row list.
+     *
+     * Split out so the buffered and unbuffered ranges cannot disagree: the
+     * buffer is applied to the viewport range rather than recovered from it.
+     *
+     * @param range - Unbuffered range, from {@link getViewportRange}.
+     * @param rowCount - Number of rows available to render.
+     * @param bufferSize - Number of extra rows to render above/below.
+     * @returns The range to mount.
+     */
+    bufferRange(
+        range: { start: number; end: number },
+        rowCount: number,
+        bufferSize: number
+    ): { start: number; end: number } {
+        return {
+            start: Math.max(0, range.start - bufferSize),
+            end: Math.min(rowCount, range.end + bufferSize)
+        }
+    }
+
+    /**
+     * Calculate which rows to render given a scroll position and viewport
+     * height — the rows the viewport touches, padded by `bufferSize` on both
+     * ends.
+     *
+     * Derived from {@link getViewportRange} rather than scanned separately, so
+     * the mounted range always contains the visible one. An earlier version
+     * scanned for the end independently and mixed two coordinate systems,
+     * which dropped rows off the bottom whenever row heights varied.
      *
      * @param rowIds - Array of row IDs in order.
      * @param scrollTop - Current scroll position.
      * @param viewportHeight - Height of the visible area.
      * @param bufferSize - Number of extra rows to render above/below.
-     * @returns Object with start and end indices of visible rows.
+     * @returns Object with start and end indices of rows to render.
      */
     getVisibleRange(
         rowIds: string[],
@@ -181,42 +210,11 @@ export class HeightManager {
         viewportHeight: number,
         bufferSize: number
     ): { start: number; end: number } {
-        if (rowIds.length === 0) {
-            return { start: 0, end: 0 }
-        }
-
-        const avgHeight = this.getAverageHeight()
-        let offset = 0
-        let start = 0
-        let end = rowIds.length
-
-        // Find start index (first row that's at least partially visible)
-        for (let i = 0; i < rowIds.length; i++) {
-            const height = this.heightCache.get(rowIds[i]) ?? avgHeight
-            if (offset + height > scrollTop) {
-                start = Math.max(0, i - bufferSize)
-                break
-            }
-            offset += height
-        }
-
-        // Find end index (first row that's completely below the viewport)
-        const bottomEdge = scrollTop + viewportHeight
-        for (let i = start; i < rowIds.length; i++) {
-            const height = this.heightCache.get(rowIds[i]) ?? avgHeight
-            if (offset >= bottomEdge) {
-                end = Math.min(rowIds.length, i + bufferSize)
-                break
-            }
-            offset += height
-        }
-
-        // If we reached the end without finding bottomEdge, show all remaining rows
-        if (end === rowIds.length) {
-            end = rowIds.length
-        }
-
-        return { start, end }
+        return this.bufferRange(
+            this.getViewportRange(rowIds, scrollTop, viewportHeight),
+            rowIds.length,
+            bufferSize
+        )
     }
 
     /**
