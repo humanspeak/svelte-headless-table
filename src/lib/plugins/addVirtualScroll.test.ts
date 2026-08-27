@@ -1101,3 +1101,90 @@ describe('addVirtualScroll survives a view model rebuild', () => {
         cleanup()
     })
 })
+
+describe('addVirtualScroll container lifecycle', () => {
+    /**
+     * The container binding and in-flight work are plugin-scoped now, so
+     * teardown has to prove it owns them before clearing. Svelte defers a
+     * block's destroy behind an out transition, which routinely lands an
+     * outgoing node's teardown after its replacement has already mounted.
+     */
+    const ROW_HEIGHT = 40
+    const VIEWPORT = 400
+
+    function createScrollTable(data = writable(createTestData(1_000))) {
+        const table = createTable(data, {
+            virtualScroll: addVirtualScroll<TestItem>({
+                estimatedRowHeight: ROW_HEIGHT,
+                bufferSize: 5
+            })
+        })
+        const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
+        const vm = table.createViewModel(columns)
+        const stop = vm.pageRows.subscribe(() => {})
+        return { state: vm.pluginStates.virtualScroll, stop }
+    }
+
+    const mount = (state: { virtualScroll: (_node: HTMLElement) => unknown }) =>
+        attachScrollAction(state, new FakeScrollElement(VIEWPORT))
+
+    test('a superseded container does not lose the binding to a late teardown', () => {
+        const { state, stop } = createScrollTable()
+        const outgoing = mount(state)
+        // The replacement mounts before the outgoing node's transition ends.
+        const incoming = mount(state)
+
+        outgoing.destroy()
+        state.scrollToIndex(500, { align: 'start' })
+
+        expect(incoming.node.scrollTo).toHaveBeenCalled()
+        expect(outgoing.node.scrollTo).not.toHaveBeenCalled()
+        stop()
+    })
+
+    test('the binding falls back to a container that is still mounted', () => {
+        const { state, stop } = createScrollTable()
+        const first = mount(state)
+        const second = mount(state)
+
+        second.destroy()
+        state.scrollToIndex(500, { align: 'start' })
+
+        expect(first.node.scrollTo).toHaveBeenCalled()
+        stop()
+    })
+
+    test('tearing down the last container leaves the plugin driving nothing', () => {
+        const { state, stop } = createScrollTable()
+        const only = mount(state)
+
+        only.destroy()
+        state.scrollToIndex(500, { align: 'start' })
+
+        expect(only.node.scrollTo).not.toHaveBeenCalled()
+        stop()
+    })
+
+    test('two tables over one data store scroll independently', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+        const data = writable(createTestData(1_000))
+        const left = createScrollTable(data)
+        const right = createScrollTable(data)
+        const leftContainer = mount(left.state)
+        mount(right.state)
+
+        leftContainer.node.scroll(4_000)
+
+        // Two views of one dataset is the supported shape for concurrent
+        // scrolling: separate `addVirtualScroll()` results, so separate
+        // geometry. The shared-instance warning is for one result driving two
+        // tables, which this is not.
+        expect(get(left.state.scrollTop)).toBe(4_000)
+        expect(get(right.state.scrollTop)).toBe(0)
+        expect(warn).not.toHaveBeenCalled()
+
+        warn.mockRestore()
+        left.stop()
+        right.stop()
+    })
+})

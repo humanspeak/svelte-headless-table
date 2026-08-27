@@ -92,11 +92,17 @@ const toStore = <T>(value: Readable<T> | T | undefined, fallback: T): Readable<T
  * ```
  *
  * @remarks
- * One result drives one table. Scroll position, viewport height and the
- * measured-height cache live in this factory's closure so they survive a view
- * model rebuild — which is also what makes them shared. Call
+ * One result drives one rendered table. Scroll position, viewport height and
+ * the measured-height cache live in this factory's closure so they survive a
+ * view model rebuild — which is also what makes them shared. Call
  * `addVirtualScroll()` once per table rather than hoisting a single result to
  * module scope; doing the latter warns in the console.
+ *
+ * To scroll two views of the same data independently, build two tables over
+ * the same `data` store, each with its own `addVirtualScroll()`. Two view
+ * models built from a *single* table share one scroll position: a rebuild and
+ * a second concurrent view are indistinguishable from inside the plugin, since
+ * both are just another `createViewModel` call while a container is mounted.
  */
 export const addVirtualScroll = <Item>({
     onLoadMore,
@@ -145,8 +151,14 @@ export const addVirtualScroll = <Item>({
     // Track whether we've already triggered a load to prevent duplicates
     let loadMorePending = false
 
-    // Scroll container reference (set by the action)
+    // The container the plugin currently drives — the most recently mounted.
     let scrollContainer: HTMLElement | null = null
+
+    // Every container currently bound. Normally one. Two appear transiently
+    // whenever an out-transition defers the outgoing node's teardown past its
+    // replacement's mount, which is why teardown checks ownership instead of
+    // assuming it.
+    const attachedNodes = new Set<HTMLElement>()
 
     // Cache for row lookup (set by derivePageRows)
     let allRowsCache: BodyRow<Item>[] = []
@@ -371,6 +383,7 @@ export const addVirtualScroll = <Item>({
      * Svelte action to attach to the scroll container.
      */
     const virtualScroll: Action<HTMLElement> = (node) => {
+        attachedNodes.add(node)
         scrollContainer = node
 
         // Disable overflow-anchor to prevent the browser from adjusting
@@ -413,19 +426,34 @@ export const addVirtualScroll = <Item>({
 
         return {
             destroy() {
-                // Scroll position, viewport height and measured heights are
-                // plugin-scoped and survive — they are what the next mount
-                // restores from. Everything below belongs to this node.
-                scrollContainer = null
+                attachedNodes.delete(node)
                 node.removeEventListener('scroll', handleScroll)
                 resizeObserver.disconnect()
-                // Let callers cancel work for a table that is going away.
+
+                // State below is plugin-scoped, not node-scoped, so only the
+                // node that owns the binding may touch it. A node that has
+                // already been superseded is a deferred teardown finishing
+                // late — clearing here would strand the live container on a
+                // null binding it can never recover from, because the action
+                // does not re-run.
+                if (scrollContainer !== node) {
+                    return
+                }
+
+                // Hand the binding to whatever is still mounted.
+                scrollContainer = attachedNodes.values().next().value ?? null
+                if (scrollContainer !== null) {
+                    return
+                }
+
+                // Nothing is mounted now. Let callers cancel work for a table
+                // that is going away, and drop the row cache — it is only read
+                // by `measureRow`, which cannot fire without a container, and
+                // `syncedRows` rebuilds it on the way back in. Scroll position,
+                // viewport height and measured heights survive: they are what
+                // the next mount restores from.
                 rangeRequest?.abort()
                 rangeRequest = undefined
-                // Only read by `measureRow`, which cannot fire without a
-                // mounted container, and rebuilt by `syncedRows` on the way
-                // back in. Holding it would pin every row and cell for the
-                // life of the plugin.
                 allRowsCache = []
             }
         }
