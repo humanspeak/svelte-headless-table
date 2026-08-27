@@ -212,17 +212,22 @@ export const addVirtualScroll = <Item>({
         visibleRange: Readable<VisibleRange>
         /** Absolute range actually rendered, clamped to resident rows. */
         renderRange: Readable<VisibleRange>
+        /** Absolute range intersecting the viewport, buffer excluded. */
+        viewportRange: Readable<VisibleRange>
         totalHeight: Readable<number>
         topSpacerHeight: Readable<number>
         bottomSpacerHeight: Readable<number>
     }
 
     /**
-     * Emit a range only when it actually changes, and report it to the
-     * caller. `renderRange` and the spacers hang off the result, so the
+     * Emit a range only when it actually changes, optionally reporting it
+     * onward. `renderRange` and the spacers hang off the result, so the
      * expensive dense derivations stay put while scrolling within a row.
      */
-    const trackedRange = (source: Readable<VisibleRange>): Readable<VisibleRange> => {
+    const dedupedRange = (
+        source: Readable<VisibleRange>,
+        onChange?: (_range: VisibleRange) => void
+    ): Readable<VisibleRange> => {
         let currentRange: VisibleRange = { start: 0, end: 0 }
         return derived(
             source,
@@ -232,11 +237,15 @@ export const addVirtualScroll = <Item>({
                 }
                 currentRange = $range
                 set($range)
-                notifyRangeChange($range)
+                onChange?.($range)
             },
             currentRange
         )
     }
+
+    /** The render range, deduped and reported to `onRangeChange`. */
+    const trackedRange = (source: Readable<VisibleRange>): Readable<VisibleRange> =>
+        dedupedRange(source, notifyRangeChange)
 
     const createDenseGeometry = (): Geometry => {
         const visibleRange = trackedRange(
@@ -250,6 +259,17 @@ export const addVirtualScroll = <Item>({
             visibleRange,
             // Every row is resident, so nothing is clamped away.
             renderRange: visibleRange,
+            // A second O(rows) walk, but `derived` is lazy: it costs nothing
+            // until something subscribes, and it cannot be folded into
+            // `visibleRange` without that store emitting on sub-row scrolls
+            // and dragging the spacers along with it.
+            viewportRange: dedupedRange(
+                derived(
+                    [rowIds, scrollTop, viewportHeight],
+                    ([$rowIds, $scrollTop, $viewportHeight]) =>
+                        heightManager.getViewportRange($rowIds, $scrollTop, $viewportHeight)
+                )
+            ),
             totalHeight,
             topSpacerHeight: derived([rowIds, visibleRange], ([$rowIds, $range]) =>
                 heightManager.getOffsetForIndex($rowIds, $range.start)
@@ -309,6 +329,15 @@ export const addVirtualScroll = <Item>({
         return {
             visibleRange,
             renderRange,
+            // Already absolute and already decompressed — `layout` computed it
+            // from the same anchor that positions the rendered block, so this
+            // cannot drift from what is on screen.
+            viewportRange: dedupedRange(
+                derived(layout, ($layout) => ({
+                    start: $layout.viewportStart,
+                    end: $layout.viewportEnd
+                }))
+            ),
             totalHeight: derived(layout, ($layout) => $layout.totalHeight),
             topSpacerHeight,
             bottomSpacerHeight: derived(
@@ -322,9 +351,14 @@ export const addVirtualScroll = <Item>({
         }
     }
 
-    const { visibleRange, renderRange, totalHeight, topSpacerHeight, bottomSpacerHeight } = isSparse
-        ? createSparseGeometry()
-        : createDenseGeometry()
+    const {
+        visibleRange,
+        renderRange,
+        viewportRange,
+        totalHeight,
+        topSpacerHeight,
+        bottomSpacerHeight
+    } = isSparse ? createSparseGeometry() : createDenseGeometry()
 
     // Total and rendered row counts
     const totalRows: Readable<number> = isSparse
@@ -598,6 +632,7 @@ export const addVirtualScroll = <Item>({
         scrollTop: { subscribe: scrollTop.subscribe },
         viewportHeight: { subscribe: viewportHeight.subscribe },
         visibleRange,
+        viewportRange,
         totalHeight,
         topSpacerHeight,
         bottomSpacerHeight,

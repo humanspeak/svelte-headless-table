@@ -9,6 +9,17 @@ export interface SparseLayout {
     start: number
     /** Absolute index one past the last row to render (buffer included). */
     end: number
+    /**
+     * Absolute index of the first row intersecting the viewport, buffer
+     * excluded. Same as {@link SparseLayout.anchorIndex}, named for the range
+     * it opens.
+     */
+    viewportStart: number
+    /**
+     * Absolute index one past the last row intersecting the viewport, buffer
+     * excluded.
+     */
+    viewportEnd: number
     /** Absolute index of the row anchoring the top of the viewport. */
     anchorIndex: number
     /** Container-space offset at which `anchorIndex` begins. */
@@ -214,6 +225,55 @@ export class HeightManager {
     }
 
     /**
+     * Calculate which rows actually intersect the viewport, with no render
+     * buffer.
+     *
+     * {@link getVisibleRange} pads by `bufferSize` on both ends because it
+     * decides what gets mounted. This answers the different question of what
+     * the user is looking at, which is what a "rows N–M of T" readout wants.
+     *
+     * @param rowIds - Array of row IDs in order.
+     * @param scrollTop - Current scroll position.
+     * @param viewportHeight - Height of the visible area.
+     * @returns Object with start and end (exclusive) indices of visible rows.
+     */
+    getViewportRange(
+        rowIds: string[],
+        scrollTop: number,
+        viewportHeight: number
+    ): { start: number; end: number } {
+        const avgHeight = this.getAverageHeight()
+        const topEdge = Math.max(0, scrollTop)
+        const bottomEdge = topEdge + Math.max(0, viewportHeight)
+
+        // Scrolled past the content, or nothing to show: an empty range at the
+        // end reads as "0 rows" rather than pointing at a row that isn't there.
+        let start = rowIds.length
+        let end = rowIds.length
+        let offset = 0
+
+        for (let i = 0; i < rowIds.length; i++) {
+            // A zero-height viewport lands both edges on the same pixel, so
+            // check the bottom first — otherwise the row starting exactly there
+            // would count as visible.
+            if (offset >= bottomEdge) {
+                end = i
+                break
+            }
+            const height = this.heightCache.get(rowIds[i]) ?? avgHeight
+            if (start === rowIds.length && offset + height > topEdge) {
+                start = i
+            }
+            offset += height
+        }
+
+        // `start` stays at the sentinel when the viewport is zero-height, which
+        // breaks below an `end` found on the first row. Collapse rather than
+        // invert.
+        return { start: Math.min(start, end), end }
+    }
+
+    /**
      * Shared metrics behind the sparse geometry.
      *
      * Sparse mode windows over a dataset whose rows are mostly not resident in
@@ -288,6 +348,8 @@ export class HeightManager {
                 totalHeight: total === 0 ? 0 : Math.max(0, maxScrollHeight),
                 start: 0,
                 end: total,
+                viewportStart: 0,
+                viewportEnd: total,
                 anchorIndex: 0,
                 anchorOffset: 0,
                 rowHeight,
@@ -317,6 +379,12 @@ export class HeightManager {
             totalHeight,
             start: anchorIndex - rowsAbove,
             end: Math.min(total, anchorIndex + rowsBelow + bufferSize),
+            // The anchor is the first row the viewport touches and `rowsBelow`
+            // is how many rows it takes to reach the viewport's bottom edge, so
+            // the unbuffered range is what is left once the buffer terms above
+            // are dropped.
+            viewportStart: anchorIndex,
+            viewportEnd: Math.min(total, anchorIndex + rowsBelow),
             anchorIndex,
             anchorOffset,
             rowHeight,

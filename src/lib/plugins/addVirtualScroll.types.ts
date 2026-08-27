@@ -169,8 +169,34 @@ export interface VirtualScrollState<Item> {
 
     /**
      * Range of currently visible row indices.
+     *
+     * Padded by `bufferSize` on both ends: this is what the plugin mounts, not
+     * what the user sees. For a "rows N–M of T" readout use
+     * {@link VirtualScrollState.viewportRange}.
      */
     visibleRange: Readable<VisibleRange>
+
+    /**
+     * Rows actually intersecting the viewport, with no render buffer.
+     *
+     * `visibleRange` is padded by `bufferSize` because it decides what gets
+     * mounted; this answers the different question of what the user is looking
+     * at — the range a footer tally, a scroll-progress readout or a "jump to
+     * row" indicator should report.
+     *
+     * In sparse mode these are absolute indices into the full dataset, and the
+     * compression the plugin applies above `maxScrollHeight` is already undone,
+     * so consumers never re-derive that mapping themselves.
+     *
+     * The range is measured against the container's own viewport. An in-flow
+     * `position: sticky` header sits inside that viewport but covers the top of
+     * it, so a caller with one should subtract its height from the row count it
+     * displays — the plugin cannot see the caller's markup.
+     *
+     * `end` is exclusive, so a range of `{ start: 0, end: 10 }` means rows 1–10
+     * of a 1-based readout.
+     */
+    viewportRange: Readable<VisibleRange>
 
     /**
      * Total height of all rows (for scroll container sizing).

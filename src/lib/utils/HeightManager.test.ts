@@ -174,6 +174,64 @@ describe('HeightManager', () => {
         })
     })
 
+    describe('getViewportRange', () => {
+        const rowIds = ['row-0', 'row-1', 'row-2', 'row-3', 'row-4']
+
+        beforeEach(() => {
+            // Each row is 40px, so the five rows span y=0 to y=200.
+            rowIds.forEach((id) => manager.setHeight(id, 40))
+        })
+
+        test('returns an empty range for no rows', () => {
+            expect(manager.getViewportRange([], 0, 100)).toEqual({ start: 0, end: 0 })
+        })
+
+        test('reports the rows the viewport covers', () => {
+            // y=0 to y=80 is rows 0 and 1.
+            expect(manager.getViewportRange(rowIds, 0, 80)).toEqual({ start: 0, end: 2 })
+        })
+
+        test('adds no buffer, unlike getVisibleRange', () => {
+            // Same scroll position that getVisibleRange pads out to row 0.
+            expect(manager.getViewportRange(rowIds, 40, 80)).toEqual({ start: 1, end: 3 })
+            expect(manager.getVisibleRange(rowIds, 40, 80, 1).start).toBe(0)
+        })
+
+        test('counts a partially visible row at either edge', () => {
+            // y=20 to y=100 clips row 0 at the top and row 2 at the bottom.
+            expect(manager.getViewportRange(rowIds, 20, 80)).toEqual({ start: 0, end: 3 })
+        })
+
+        test('covers every row when the viewport is taller than the content', () => {
+            expect(manager.getViewportRange(rowIds, 0, 1000)).toEqual({ start: 0, end: 5 })
+        })
+
+        test('collapses to an empty range past the end of the content', () => {
+            const range = manager.getViewportRange(rowIds, 400, 80)
+            expect(range.end).toBe(range.start)
+            expect(range.start).toBeLessThanOrEqual(rowIds.length)
+        })
+
+        test('collapses rather than inverting for a zero-height viewport', () => {
+            const range = manager.getViewportRange(rowIds, 0, 0)
+            expect(range.start).toBeLessThanOrEqual(range.end)
+            expect(range).toEqual({ start: 0, end: 0 })
+        })
+
+        test('treats a negative scroll position as the top', () => {
+            expect(manager.getViewportRange(rowIds, -50, 80)).toEqual({ start: 0, end: 2 })
+        })
+
+        test('never reports outside the buffered range it is a subset of', () => {
+            for (const scrollTop of [0, 20, 40, 100, 160, 199]) {
+                const viewport = manager.getViewportRange(rowIds, scrollTop, 80)
+                const visible = manager.getVisibleRange(rowIds, scrollTop, 80, 2)
+                expect(viewport.start).toBeGreaterThanOrEqual(visible.start)
+                expect(viewport.end).toBeLessThanOrEqual(visible.end)
+            }
+        })
+    })
+
     describe('getIndexAtOffset', () => {
         const rowIds = ['row-0', 'row-1', 'row-2', 'row-3', 'row-4']
 
@@ -280,6 +338,29 @@ describe('HeightManager', () => {
             test('scroll position for an index is its natural offset', () => {
                 expect(manager.getSparseScrollTopForIndex(100_000, 1_000, 400, CAP)).toBe(40_000)
             })
+
+            test('the viewport range drops the buffer the render range carries', () => {
+                // 40px rows, 400px viewport: exactly 10 rows are on screen.
+                const layout = manager.getSparseLayout(100_000, 40_000, 400, 2, CAP)
+                expect(layout.viewportStart).toBe(1_000)
+                expect(layout.viewportEnd).toBe(1_010)
+                // The rendered range is the same window padded by bufferSize.
+                expect(layout.start).toBe(998)
+                expect(layout.end).toBe(1_012)
+            })
+
+            test('the viewport range reaches the last row at maximum scroll', () => {
+                const viewport = 400
+                const scrollTop = 100_000 * 40 - viewport
+                const layout = manager.getSparseLayout(100_000, scrollTop, viewport, 2, CAP)
+                // `end` is exclusive, so the final row is included only here.
+                expect(layout.viewportEnd).toBe(100_000)
+            })
+
+            test('the viewport range is empty for an empty dataset', () => {
+                const layout = manager.getSparseLayout(0, 0, 400, 5, CAP)
+                expect(layout).toMatchObject({ viewportStart: 0, viewportEnd: 0 })
+            })
         })
 
         describe('above the height cap', () => {
@@ -296,6 +377,24 @@ describe('HeightManager', () => {
                 const layout = manager.getSparseLayout(TOTAL, CAP - 500, 500, 10, CAP)
                 expect(layout.end).toBe(TOTAL)
                 expect(layout.anchorIndex).toBeGreaterThan(TOTAL - 20)
+            })
+
+            test('the viewport range reaches the last row without the buffer', () => {
+                // The compression ratio is irrational here, so `anchorIndex` can
+                // land a row early to float error. `rowsBelow` is derived from
+                // `anchorOffset`, which slips with it, so the end stays exact.
+                const layout = manager.getSparseLayout(TOTAL, CAP - 500, 500, 10, CAP)
+                expect(layout.viewportEnd).toBe(TOTAL)
+                expect(layout.viewportStart).toBe(layout.anchorIndex)
+            })
+
+            test('the viewport range stays inside the render range while scrolling', () => {
+                for (const scrollTop of [0, 1, 5_000, CAP / 2, CAP - 500]) {
+                    const layout = manager.getSparseLayout(TOTAL, scrollTop, 500, 10, CAP)
+                    expect(layout.viewportStart).toBeGreaterThanOrEqual(layout.start)
+                    expect(layout.viewportEnd).toBeLessThanOrEqual(layout.end)
+                    expect(layout.viewportStart).toBeLessThan(layout.viewportEnd)
+                }
             })
 
             test('reaches the middle of the dataset at half scroll', () => {

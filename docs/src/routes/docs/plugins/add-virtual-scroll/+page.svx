@@ -143,7 +143,7 @@ const table = createTable(data, {
 
 Infinite scroll is append-only: reaching row 2,000,000 means loading every row before it. For datasets that are too large to materialize, pass `totalRows` to opt into **sparse mode**. The caller owns fetching and eviction; the plugin owns geometry.
 
-In sparse mode the table's `data` store holds only the rows currently resident, `dataOffset` says where that window starts in the full dataset, and `onRangeChange` tells you when to move it. All indices the plugin reports — `visibleRange`, `scrollToIndex`, `virtualIndex` — are absolute indices into the full dataset.
+In sparse mode the table's `data` store holds only the rows currently resident, `dataOffset` says where that window starts in the full dataset, and `onRangeChange` tells you when to move it. All indices the plugin reports — `visibleRange`, `viewportRange`, `scrollToIndex`, `virtualIndex` — are absolute indices into the full dataset.
 
 ```ts
 const totalRows = writable(0); // filled from a cheap count query
@@ -287,7 +287,20 @@ scrollToIndex(100, {
 ```
 
 ### `visibleRange: Readable<{ start: number; end: number }>`
-Range of currently visible row indices. Absolute dataset indices in sparse mode.
+Range of currently rendered row indices, padded by `bufferSize` on both ends. Absolute dataset indices in sparse mode. Use this to decide what to fetch; use `viewportRange` to tell the user what they are looking at.
+
+### `viewportRange: Readable<{ start: number; end: number }>`
+Rows actually intersecting the viewport, with no render buffer — the range a "rows N–M of T" footer, a scroll-progress readout or a "jump to row" indicator should report. Absolute dataset indices in sparse mode, with any scroll-range compression already undone, so you never re-derive that mapping yourself. `end` is exclusive.
+
+```svelte
+<tfoot>
+  <tr><td>
+    Rows {$viewportRange.start + 1}–{$viewportRange.end} of {$totalRows}
+  </td></tr>
+</tfoot>
+```
+
+<Admonition type="note">The range is measured against the scroll container's viewport. An in-flow <code>position: sticky</code> header sits inside that viewport but covers the top of it, so if you have one, subtract its height from <code>viewportHeight</code> yourself — the plugin can't see your markup.</Admonition>
 
 ### `totalHeight: Readable<number>`
 Total height of all rows (for scroll container sizing).

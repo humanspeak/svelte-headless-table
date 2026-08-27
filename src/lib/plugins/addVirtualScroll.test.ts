@@ -926,6 +926,81 @@ describe('addVirtualScroll sparse mode', () => {
         expect(get(vm.pluginStates.virtualScroll.dataOffset)).toBe(0)
         unsubscribe()
     })
+
+    describe('viewportRange', () => {
+        test('excludes the render buffer that visibleRange pads with', () => {
+            const { state, unsubscribe } = createSparseTable()
+            const node = attach(state)
+
+            node.scroll(OFFSET * ROW_HEIGHT)
+
+            // The viewport is exactly 10 rows tall, so that is what a
+            // "rows N-M of T" readout should report...
+            expect(get(state.viewportRange)).toEqual({ start: OFFSET, end: OFFSET + 10 })
+            // ...while visibleRange stays padded by bufferSize on both ends,
+            // because it drives what gets mounted.
+            expect(get(state.visibleRange)).toEqual({ start: OFFSET - 2, end: OFFSET + 12 })
+            unsubscribe()
+        })
+
+        test('includes the last row at the true bottom of the dataset', () => {
+            const { state, unsubscribe } = createSparseTable()
+            const node = attach(state)
+
+            // Scroll past the end; the container clamps to its own maximum.
+            node.scroll(TOTAL * ROW_HEIGHT)
+
+            // `end` is exclusive, so the final row is only reported when this
+            // equals the dataset total. Re-deriving the mapping in app code and
+            // clamping against `totalHeight` alone drops it.
+            expect(get(state.viewportRange).end).toBe(TOTAL)
+            unsubscribe()
+        })
+
+        test('includes the last row at the bottom of a compressed dataset', () => {
+            const { state, unsubscribe } = createSparseTable({ total: HUGE_TOTAL })
+            const node = attach(state)
+
+            node.scroll(CAP - node.clientHeight)
+
+            expect(get(state.viewportRange).end).toBe(HUGE_TOTAL)
+            unsubscribe()
+        })
+
+        test('stays within visibleRange at every scroll position', () => {
+            const { state, unsubscribe } = createSparseTable({ total: HUGE_TOTAL })
+            const node = attach(state)
+
+            for (const top of [0, 1, 100, 5_000, CAP / 2, CAP - node.clientHeight]) {
+                node.scroll(top)
+                const viewport = get(state.viewportRange)
+                const visible = get(state.visibleRange)
+
+                // A consumer reporting `viewportRange` must never name a row the
+                // plugin did not consider visible.
+                expect(viewport.start).toBeGreaterThanOrEqual(visible.start)
+                expect(viewport.end).toBeLessThanOrEqual(visible.end)
+                expect(viewport.start).toBeLessThan(viewport.end)
+                expect(viewport.end).toBeLessThanOrEqual(HUGE_TOTAL)
+            }
+            unsubscribe()
+        })
+
+        test('is reported in absolute indices, independent of the loaded window', () => {
+            const { state, dataOffset, unsubscribe } = createSparseTable()
+            const node = attach(state)
+
+            node.scroll(OFFSET * ROW_HEIGHT)
+            const before = get(state.viewportRange)
+            expect(before).toEqual({ start: OFFSET, end: OFFSET + 10 })
+
+            // Moving the resident window does not move the viewport.
+            dataOffset.set(OFFSET - 100)
+
+            expect(get(state.viewportRange)).toEqual(before)
+            unsubscribe()
+        })
+    })
 })
 
 describe('addVirtualScroll survives a view model rebuild', () => {
@@ -1186,5 +1261,52 @@ describe('addVirtualScroll container lifecycle', () => {
         warn.mockRestore()
         left.stop()
         right.stop()
+    })
+})
+
+describe('addVirtualScroll viewportRange in dense mode', () => {
+    const ROW_HEIGHT = 40
+    const BUFFER = 5
+    const VIEWPORT_ROWS = 10
+
+    function createDenseTable(rowCount: number) {
+        const data = writable(createTestData(rowCount))
+        const table = createTable(data, {
+            virtualScroll: addVirtualScroll<TestItem>({
+                estimatedRowHeight: ROW_HEIGHT,
+                bufferSize: BUFFER
+            })
+        })
+        const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
+        const vm = table.createViewModel(columns)
+        const unsubscribe = vm.pageRows.subscribe(() => {})
+        const state = vm.pluginStates.virtualScroll
+        const node = new FakeScrollElement(VIEWPORT_ROWS * ROW_HEIGHT)
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        state.virtualScroll(node as any)
+        return { state, node, unsubscribe }
+    }
+
+    test('reports only the rows the viewport covers, not the buffered ones', () => {
+        const { state, node, unsubscribe } = createDenseTable(100_000)
+
+        node.scroll(50_000 * ROW_HEIGHT)
+
+        expect(get(state.viewportRange)).toEqual({ start: 50_000, end: 50_010 })
+        // The buffer pads what gets mounted above the viewport.
+        expect(get(state.visibleRange).start).toBe(50_000 - BUFFER)
+        unsubscribe()
+    })
+
+    test('reports an empty range for an empty table', () => {
+        const { state, unsubscribe } = createDenseTable(0)
+        expect(get(state.viewportRange)).toEqual({ start: 0, end: 0 })
+        unsubscribe()
+    })
+
+    test('covers the whole table when it is shorter than the viewport', () => {
+        const { state, unsubscribe } = createDenseTable(4)
+        expect(get(state.viewportRange)).toEqual({ start: 0, end: 4 })
+        unsubscribe()
     })
 })
