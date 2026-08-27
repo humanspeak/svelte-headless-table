@@ -11,6 +11,12 @@
             href: '/virtual-scroll',
             description:
                 'Virtualized table rendering with infinite scroll support for large datasets (10,000+ rows).'
+        },
+        {
+            name: 'Virtual Scroll (Sparse)',
+            href: '/virtual-scroll-sparse',
+            description:
+                'Sparse windowing over a 4,000,000-row server-paged dataset, holding only the pages you look at.'
         }
     ]
 </script>

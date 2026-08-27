@@ -1,5 +1,5 @@
 import { get, writable } from 'svelte/store'
-import { describe, expect, test, vi } from 'vitest'
+import { beforeAll, describe, expect, test, vi } from 'vitest'
 import { createTable } from '../createTable.js'
 import { addVirtualScroll } from './addVirtualScroll.js'
 
@@ -355,5 +355,277 @@ describe('addVirtualScroll', () => {
         state.measureRow('0', 100)
         // Total height should still be based on getRowHeight (60 * 10 = 600)
         expect(get(state.totalHeight)).toBe(600)
+    })
+})
+
+describe('addVirtualScroll sparse mode', () => {
+    const TOTAL = 4_000_000
+    const ROW_HEIGHT = 32
+    const PAGE_SIZE = 500
+    const OFFSET = 1_200_000
+
+    /**
+     * Minimal stand-in for the scroll container. The suite runs without a DOM,
+     * so the action needs an EventTarget with the handful of properties it
+     * touches.
+     */
+    class FakeScrollElement extends EventTarget {
+        style: Record<string, string> = {}
+        scrollTop = 0
+        scrollTo = vi.fn()
+        clientHeight: number
+        constructor(clientHeight: number) {
+            super()
+            this.clientHeight = clientHeight
+        }
+        scroll(top: number) {
+            this.scrollTop = top
+            this.dispatchEvent(new Event('scroll'))
+        }
+    }
+
+    beforeAll(() => {
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        ;(globalThis as any).ResizeObserver = class {
+            observe() {}
+            unobserve() {}
+            disconnect() {}
+        }
+    })
+
+    /** Build a sparse-mode table over a window of `PAGE_SIZE` rows. */
+    function createSparseTable({
+        offset = OFFSET,
+        total = TOTAL,
+        bufferSize = 2,
+        onRangeChange
+    }: {
+        offset?: number
+        total?: number | ReturnType<typeof writable<number>>
+        bufferSize?: number
+        onRangeChange?: (_range: { start: number; end: number }) => void
+    } = {}) {
+        const dataOffset = writable(offset)
+        const data = writable(createTestData(PAGE_SIZE))
+        const table = createTable(data, {
+            virtualScroll: addVirtualScroll<TestItem>({
+                estimatedRowHeight: ROW_HEIGHT,
+                bufferSize,
+                totalRows: total,
+                dataOffset,
+                onRangeChange
+            })
+        })
+        const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
+        const vm = table.createViewModel(columns)
+        // Keep the derived chain hot so range changes propagate.
+        const unsubscribe = vm.pageRows.subscribe(() => {})
+        return { data, dataOffset, vm, state: vm.pluginStates.virtualScroll, unsubscribe }
+    }
+
+    /** Flush the microtask that `onRangeChange` is deferred onto. */
+    const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
+
+    test('totalRows reports the dataset total, not the loaded window', () => {
+        const { state, unsubscribe } = createSparseTable()
+        expect(get(state.totalRows)).toBe(TOTAL)
+        expect(get(state.totalHeight)).toBe(TOTAL * ROW_HEIGHT)
+        unsubscribe()
+    })
+
+    test('accepts a plain number for totalRows', () => {
+        const { state, unsubscribe } = createSparseTable({ total: 1000 })
+        expect(get(state.totalRows)).toBe(1000)
+        unsubscribe()
+    })
+
+    test('reacts to a changing totalRows store', () => {
+        const total = writable(1000)
+        const { state, unsubscribe } = createSparseTable({ total })
+        expect(get(state.totalHeight)).toBe(1000 * ROW_HEIGHT)
+        total.set(2000)
+        expect(get(state.totalHeight)).toBe(2000 * ROW_HEIGHT)
+        unsubscribe()
+    })
+
+    test('exposes dataOffset', () => {
+        const { state, dataOffset, unsubscribe } = createSparseTable()
+        expect(get(state.dataOffset)).toBe(OFFSET)
+        dataOffset.set(7)
+        expect(get(state.dataOffset)).toBe(7)
+        unsubscribe()
+    })
+
+    test('visibleRange is absolute and follows the scroll position', () => {
+        const { state, unsubscribe } = createSparseTable()
+        const node = new FakeScrollElement(10 * ROW_HEIGHT)
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        state.virtualScroll(node as any)
+
+        node.scroll(OFFSET * ROW_HEIGHT)
+
+        expect(get(state.visibleRange)).toEqual({ start: OFFSET - 2, end: OFFSET + 12 })
+        unsubscribe()
+    })
+
+    test('renders the intersection of the visible range and the loaded window', () => {
+        const { vm, state, unsubscribe } = createSparseTable()
+        const node = new FakeScrollElement(10 * ROW_HEIGHT)
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        state.virtualScroll(node as any)
+
+        node.scroll(OFFSET * ROW_HEIGHT)
+
+        // Range starts 2 rows before the window, so those 2 are not resident.
+        const pageRows = get(vm.pageRows)
+        expect(pageRows).toHaveLength(12)
+        expect(get(state.renderedRows)).toBe(12)
+        unsubscribe()
+    })
+
+    test('spacers sum to the full dataset height', () => {
+        const { vm, state, unsubscribe } = createSparseTable()
+        const node = new FakeScrollElement(10 * ROW_HEIGHT)
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        state.virtualScroll(node as any)
+
+        node.scroll(OFFSET * ROW_HEIGHT)
+
+        const rendered = get(vm.pageRows).length
+        expect(get(state.topSpacerHeight)).toBe(OFFSET * ROW_HEIGHT)
+        expect(
+            get(state.topSpacerHeight) + rendered * ROW_HEIGHT + get(state.bottomSpacerHeight)
+        ).toBe(get(state.totalHeight))
+        unsubscribe()
+    })
+
+    test('renders nothing but keeps geometry intact when the window is not resident', () => {
+        const { vm, state, unsubscribe } = createSparseTable()
+        const node = new FakeScrollElement(10 * ROW_HEIGHT)
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        state.virtualScroll(node as any)
+
+        // Scroll to the top while the loaded window still sits at OFFSET.
+        node.scroll(0)
+
+        expect(get(vm.pageRows)).toHaveLength(0)
+        expect(get(state.renderedRows)).toBe(0)
+        expect(get(state.topSpacerHeight) + get(state.bottomSpacerHeight)).toBe(
+            get(state.totalHeight)
+        )
+        unsubscribe()
+    })
+
+    test('picks up rows once the caller moves the window to the visible range', () => {
+        const { vm, data, dataOffset, state, unsubscribe } = createSparseTable()
+        const node = new FakeScrollElement(10 * ROW_HEIGHT)
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        state.virtualScroll(node as any)
+
+        node.scroll(2_000_000 * ROW_HEIGHT)
+        expect(get(vm.pageRows)).toHaveLength(0)
+
+        // Caller fetches the page covering the new range and evicts the old one.
+        dataOffset.set(2_000_000 - 2)
+        data.set(createTestData(PAGE_SIZE))
+
+        expect(get(vm.pageRows)).toHaveLength(14)
+        expect(get(state.topSpacerHeight)).toBe((2_000_000 - 2) * ROW_HEIGHT)
+        unsubscribe()
+    })
+
+    test('virtualIndex on rendered rows is absolute', () => {
+        const { vm, state, unsubscribe } = createSparseTable()
+        const node = new FakeScrollElement(10 * ROW_HEIGHT)
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        state.virtualScroll(node as any)
+
+        node.scroll(OFFSET * ROW_HEIGHT)
+
+        const [firstRow] = get(vm.pageRows)
+        expect(get(firstRow.props()).virtualScroll.virtualIndex).toBe(OFFSET)
+        unsubscribe()
+    })
+
+    test('onRangeChange reports absolute ranges as the window moves', async () => {
+        const onRangeChange = vi.fn()
+        const { state, unsubscribe } = createSparseTable({ onRangeChange })
+        const node = new FakeScrollElement(10 * ROW_HEIGHT)
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        state.virtualScroll(node as any)
+
+        node.scroll(2_000_000 * ROW_HEIGHT)
+        await flush()
+
+        expect(onRangeChange).toHaveBeenCalledWith({ start: 1_999_998, end: 2_000_012 })
+        unsubscribe()
+    })
+
+    test('onRangeChange does not fire again for an unchanged range', async () => {
+        const onRangeChange = vi.fn()
+        const { state, unsubscribe } = createSparseTable({ onRangeChange })
+        const node = new FakeScrollElement(10 * ROW_HEIGHT)
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        state.virtualScroll(node as any)
+
+        node.scroll(2_000_000 * ROW_HEIGHT + 10)
+        await flush()
+        const callsAfterScroll = onRangeChange.mock.calls.length
+
+        // Sub-row scrolling that lands on the same range must not re-fetch.
+        node.scroll(2_000_000 * ROW_HEIGHT + 15)
+        await flush()
+
+        expect(onRangeChange).toHaveBeenCalledTimes(callsAfterScroll)
+        unsubscribe()
+    })
+
+    test('scrollToIndex jumps to an absolute index outside the loaded window', () => {
+        const { state, unsubscribe } = createSparseTable()
+        const node = new FakeScrollElement(10 * ROW_HEIGHT)
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        state.virtualScroll(node as any)
+
+        state.scrollToIndex(2_000_000)
+
+        expect(node.scrollTo).toHaveBeenCalledWith({
+            top: 2_000_000 * ROW_HEIGHT,
+            behavior: 'auto'
+        })
+        unsubscribe()
+    })
+
+    test('scrollToIndex is bounded by the dataset total, not the loaded window', () => {
+        const { state, unsubscribe } = createSparseTable()
+        const node = new FakeScrollElement(10 * ROW_HEIGHT)
+        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+        state.virtualScroll(node as any)
+
+        state.scrollToIndex(TOTAL)
+        state.scrollToIndex(-1)
+
+        expect(node.scrollTo).not.toHaveBeenCalled()
+        unsubscribe()
+    })
+
+    test('dense mode still reports data-relative ranges to onRangeChange', async () => {
+        const onRangeChange = vi.fn()
+        const data = writable(createTestData(50))
+        const table = createTable(data, {
+            virtualScroll: addVirtualScroll<TestItem>({
+                estimatedRowHeight: ROW_HEIGHT,
+                bufferSize: 5,
+                onRangeChange
+            })
+        })
+        const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
+        const vm = table.createViewModel(columns)
+        const unsubscribe = vm.pageRows.subscribe(() => {})
+
+        await flush()
+
+        expect(onRangeChange).toHaveBeenCalledWith({ start: 0, end: 5 })
+        expect(get(vm.pluginStates.virtualScroll.dataOffset)).toBe(0)
+        unsubscribe()
     })
 })

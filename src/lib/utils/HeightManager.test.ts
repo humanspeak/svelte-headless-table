@@ -232,4 +232,49 @@ describe('HeightManager', () => {
             expect(manager.getAverageHeight()).toBe(60)
         })
     })
+
+    describe('sparse geometry', () => {
+        test('getSparseTotalHeight scales the average across the dataset', () => {
+            expect(manager.getSparseTotalHeight(4_000_000)).toBe(4_000_000 * 40)
+        })
+
+        test('getSparseTotalHeight uses measured average once rows are measured', () => {
+            manager.setHeight('row-0', 60)
+            expect(manager.getSparseTotalHeight(1000)).toBe(60_000)
+        })
+
+        test('getSparseTotalHeight clamps negative totals to 0', () => {
+            expect(manager.getSparseTotalHeight(-5)).toBe(0)
+        })
+
+        test('getSparseOffsetForIndex is uniform', () => {
+            expect(manager.getSparseOffsetForIndex(0)).toBe(0)
+            expect(manager.getSparseOffsetForIndex(2_000_000)).toBe(2_000_000 * 40)
+            expect(manager.getSparseOffsetForIndex(-1)).toBe(0)
+        })
+
+        test('getSparseVisibleRange returns absolute indices with buffer', () => {
+            // 40px rows, viewport shows 10 rows starting at row 1,000,000.
+            const range = manager.getSparseVisibleRange(4_000_000, 40_000_000, 400, 2)
+            expect(range).toEqual({ start: 999_998, end: 1_000_012 })
+        })
+
+        test('getSparseVisibleRange clamps to the dataset bounds', () => {
+            expect(manager.getSparseVisibleRange(100, 0, 400, 5)).toEqual({ start: 0, end: 15 })
+            expect(manager.getSparseVisibleRange(10, 0, 4000, 5)).toEqual({ start: 0, end: 10 })
+        })
+
+        test('getSparseVisibleRange handles an empty dataset', () => {
+            expect(manager.getSparseVisibleRange(0, 0, 400, 5)).toEqual({ start: 0, end: 0 })
+        })
+
+        test('getSparseVisibleRange falls back to the full dataset for 0-height rows', () => {
+            manager.setEstimatedRowHeight(0)
+            expect(manager.getSparseVisibleRange(50, 0, 400, 5)).toEqual({ start: 0, end: 50 })
+        })
+
+        test('getSparseVisibleRange ignores negative scroll positions', () => {
+            expect(manager.getSparseVisibleRange(100, -200, 400, 0)).toEqual({ start: 0, end: 10 })
+        })
+    })
 })

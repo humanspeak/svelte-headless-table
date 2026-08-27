@@ -176,6 +176,69 @@ export class HeightManager {
     }
 
     /**
+     * Calculate the total height of a sparse dataset.
+     *
+     * Sparse mode windows over a dataset whose rows are mostly not resident in
+     * memory, so per-row measurements are unavailable for all but the current
+     * window. Geometry therefore falls back to a uniform row height — the
+     * running average of whatever has been measured so far.
+     *
+     * @param totalRows - Total number of rows in the dataset.
+     * @returns The total height in pixels.
+     */
+    getSparseTotalHeight(totalRows: number): number {
+        return Math.max(0, totalRows) * this.getAverageHeight()
+    }
+
+    /**
+     * Calculate the offset (top position) of an absolute row index in a sparse
+     * dataset, assuming a uniform row height.
+     *
+     * @param index - Absolute index of the target row.
+     * @returns The offset from the top in pixels.
+     */
+    getSparseOffsetForIndex(index: number): number {
+        return Math.max(0, index) * this.getAverageHeight()
+    }
+
+    /**
+     * Calculate which absolute row indices are visible in a sparse dataset,
+     * assuming a uniform row height.
+     *
+     * @param totalRows - Total number of rows in the dataset.
+     * @param scrollTop - Current scroll position.
+     * @param viewportHeight - Height of the visible area.
+     * @param bufferSize - Number of extra rows to include above/below.
+     * @returns Object with absolute start and end (exclusive) indices.
+     */
+    getSparseVisibleRange(
+        totalRows: number,
+        scrollTop: number,
+        viewportHeight: number,
+        bufferSize: number
+    ): { start: number; end: number } {
+        const total = Math.max(0, totalRows)
+        if (total === 0) {
+            return { start: 0, end: 0 }
+        }
+
+        const rowHeight = this.getAverageHeight()
+        if (rowHeight <= 0) {
+            return { start: 0, end: total }
+        }
+
+        const firstVisible = Math.floor(Math.max(0, scrollTop) / rowHeight)
+        const lastVisible = Math.ceil(
+            (Math.max(0, scrollTop) + Math.max(0, viewportHeight)) / rowHeight
+        )
+
+        const start = Math.max(0, Math.min(total, firstVisible - bufferSize))
+        const end = Math.max(start, Math.min(total, lastVisible + bufferSize))
+
+        return { start, end }
+    }
+
+    /**
      * Find the row index at a given scroll position.
      *
      * @param rowIds - Array of row IDs in order.

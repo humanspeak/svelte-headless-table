@@ -23,6 +23,16 @@ const DEFAULTS = {
 } as const
 
 /**
+ * Normalize a `Readable<number> | number | undefined` config value into a
+ * readable store.
+ */
+const toNumberStore = (
+    value: Readable<number> | number | undefined,
+    fallback: number
+): Readable<number> =>
+    typeof value === 'object' && value !== null ? value : readable(value ?? fallback)
+
+/**
  * Creates a virtual scroll plugin that enables virtualized table rendering.
  * Only renders rows that are visible in the viewport plus a buffer, dramatically
  * improving performance for large datasets.
@@ -52,6 +62,23 @@ const DEFAULTS = {
  *   visibleRange
  * } = table.pluginStates.virtualScroll
  * ```
+ *
+ * @example Sparse mode — window over a server-paged dataset
+ * ```typescript
+ * // `data` holds only the resident window; `offset` is where it starts.
+ * const table = createTable(data, {
+ *   virtualScroll: addVirtualScroll({
+ *     estimatedRowHeight: 32,
+ *     totalRows: rowCount,   // Readable<number> over the whole dataset
+ *     dataOffset: offset,    // absolute index of data[0]
+ *     onRangeChange: async ({ start, end }) => {
+ *       const window = await fetchWindow(start, end)  // fetches + evicts
+ *       offset.set(window.start)
+ *       data.set(window.items)
+ *     }
+ *   })
+ * })
+ * ```
  */
 export const addVirtualScroll =
     <Item>({
@@ -60,7 +87,10 @@ export const addVirtualScroll =
         loadMoreThreshold = DEFAULTS.loadMoreThreshold,
         estimatedRowHeight = DEFAULTS.estimatedRowHeight,
         bufferSize = DEFAULTS.bufferSize,
-        getRowHeight
+        getRowHeight,
+        totalRows: totalRowsConfig,
+        dataOffset: dataOffsetConfig,
+        onRangeChange
     }: VirtualScrollConfig<Item> = {}): TablePlugin<
         Item,
         VirtualScrollState<Item>,
@@ -81,6 +111,14 @@ export const addVirtualScroll =
         // This is a simple array, not derived from rows to avoid circular deps
         const rowIds = writable<string[]>([])
 
+        // Sparse mode: the caller owns fetching and eviction, the plugin owns
+        // geometry. `data` holds only the resident window; `datasetRows` is the
+        // size of the full dataset and `dataOffset` is the absolute index of
+        // the first resident row.
+        const isSparse = totalRowsConfig !== undefined
+        const datasetRows = toNumberStore(totalRowsConfig, 0)
+        const dataOffset = toNumberStore(dataOffsetConfig, 0)
+
         // Loading state
         const isLoading = writable(false)
         const hasMoreStore: Writable<boolean> =
@@ -97,53 +135,108 @@ export const addVirtualScroll =
         // Cache for row lookup (set by derivePageRows)
         let allRowsCache: BodyRow<Item>[] = []
 
+        /**
+         * Report a new visible range to the caller. Deferred to a microtask so
+         * that handlers which update `data` / `dataOffset` don't write to
+         * stores from inside a store derivation.
+         */
+        const notifyRangeChange = (range: VisibleRange) => {
+            if (onRangeChange === undefined) {
+                return
+            }
+            queueMicrotask(() => onRangeChange(range))
+        }
+
         // Visible range calculation.
         // Return the same object reference when the range hasn't changed to avoid
         // unnecessary downstream store updates (spacer heights, rendered rows).
         let currentRange: VisibleRange = { start: 0, end: 0 }
         const visibleRange: Readable<VisibleRange> = derived(
-            [rowIds, scrollTop, viewportHeight],
-            ([$rowIds, $scrollTop, $viewportHeight], set) => {
-                const range = heightManager.getVisibleRange(
-                    $rowIds,
-                    $scrollTop,
-                    $viewportHeight,
-                    bufferSize
-                )
+            [rowIds, scrollTop, viewportHeight, datasetRows],
+            ([$rowIds, $scrollTop, $viewportHeight, $datasetRows], set) => {
+                const range = isSparse
+                    ? heightManager.getSparseVisibleRange(
+                          $datasetRows,
+                          $scrollTop,
+                          $viewportHeight,
+                          bufferSize
+                      )
+                    : heightManager.getVisibleRange(
+                          $rowIds,
+                          $scrollTop,
+                          $viewportHeight,
+                          bufferSize
+                      )
                 if (range.start === currentRange.start && range.end === currentRange.end) {
                     return
                 }
                 currentRange = range
                 set(range)
+                notifyRangeChange(range)
             },
             currentRange
         )
 
+        // Absolute range of rows actually rendered. In sparse mode the visible
+        // range can extend past the resident window; spacer heights must follow
+        // what is really in the DOM or the scroll container mis-sizes.
+        const renderRange: Readable<VisibleRange> = derived(
+            [visibleRange, rowIds, dataOffset, datasetRows],
+            ([$range, $rowIds, $dataOffset, $datasetRows]) => {
+                if (!isSparse) {
+                    return $range
+                }
+                const windowEnd = $dataOffset + $rowIds.length
+                const start = Math.min(Math.max($range.start, $dataOffset), windowEnd)
+                const end = Math.max(start, Math.min($range.end, windowEnd))
+                if (end <= start) {
+                    // Nothing resident for this range yet. Collapse to a
+                    // zero-width slice so the spacers still sum to totalHeight.
+                    const collapsed = Math.max(0, Math.min($range.start, $datasetRows))
+                    return { start: collapsed, end: collapsed }
+                }
+                return { start, end }
+            }
+        )
+
         // Total height of all rows
-        const totalHeight: Readable<number> = derived(rowIds, ($rowIds) => {
-            return heightManager.getTotalHeight($rowIds)
-        })
+        const totalHeight: Readable<number> = derived(
+            [rowIds, datasetRows],
+            ([$rowIds, $datasetRows]) => {
+                return isSparse
+                    ? heightManager.getSparseTotalHeight($datasetRows)
+                    : heightManager.getTotalHeight($rowIds)
+            }
+        )
 
         // Spacer heights
+        const offsetForIndex = (rowIdList: string[], index: number): number =>
+            isSparse
+                ? heightManager.getSparseOffsetForIndex(index)
+                : heightManager.getOffsetForIndex(rowIdList, index)
+
         const topSpacerHeight: Readable<number> = derived(
-            [rowIds, visibleRange],
+            [rowIds, renderRange],
             ([$rowIds, $range]) => {
-                return heightManager.getOffsetForIndex($rowIds, $range.start)
+                return offsetForIndex($rowIds, $range.start)
             }
         )
 
         const bottomSpacerHeight: Readable<number> = derived(
-            [rowIds, visibleRange, totalHeight],
+            [rowIds, renderRange, totalHeight],
             ([$rowIds, $range, $total]) => {
-                const endOffset = heightManager.getOffsetForIndex($rowIds, $range.end)
+                const endOffset = offsetForIndex($rowIds, $range.end)
                 return Math.max(0, $total - endOffset)
             }
         )
 
         // Total and rendered row counts
-        const totalRows: Readable<number> = derived(rowIds, ($rowIds) => $rowIds.length)
+        const totalRows: Readable<number> = derived(
+            [rowIds, datasetRows],
+            ([$rowIds, $datasetRows]) => (isSparse ? $datasetRows : $rowIds.length)
+        )
         const renderedRows: Readable<number> = derived(
-            visibleRange,
+            renderRange,
             ($range) => $range.end - $range.start
         )
 
@@ -241,12 +334,19 @@ export const addVirtualScroll =
             const { align = 'start', behavior = 'auto' } = options
             const $rowIds = get(rowIds)
 
-            if (index < 0 || index >= $rowIds.length) {
+            // In sparse mode `index` is absolute, so it is bounded by the
+            // dataset total rather than by what happens to be loaded.
+            const indexLimit = isSparse ? get(datasetRows) : $rowIds.length
+            if (index < 0 || index >= indexLimit) {
                 return
             }
 
-            const targetOffset = heightManager.getOffsetForIndex($rowIds, index)
-            const rowHeight = heightManager.getHeight($rowIds[index])
+            const targetOffset = isSparse
+                ? heightManager.getSparseOffsetForIndex(index)
+                : heightManager.getOffsetForIndex($rowIds, index)
+            const rowHeight = isSparse
+                ? heightManager.getAverageHeight()
+                : heightManager.getHeight($rowIds[index])
             const $viewportHeight = get(viewportHeight)
 
             let scrollPosition: number
@@ -358,7 +458,8 @@ export const addVirtualScroll =
             measureRow,
             measureRowAction,
             totalRows,
-            renderedRows
+            renderedRows,
+            dataOffset
         }
 
         /**
@@ -366,34 +467,36 @@ export const addVirtualScroll =
          * Re-runs when rows, scroll position, or viewport height changes.
          */
         const derivePageRows: DeriveRowsFn<Item> = (rows) => {
-            return derived(
-                [rows, scrollTop, viewportHeight],
-                ([$rows, $scrollTop, $viewportHeight], set) => {
-                    // Cache rows for lookup in measureRow and hooks
-                    allRowsCache = $rows
+            // Keep the row ID list (and the lookup cache) in sync with the rows
+            // handed to us. Split out so the slicing derivation below can depend
+            // on `visibleRange`, which itself depends on `rowIds`.
+            const syncedRows = derived(rows, ($rows) => {
+                // Cache rows for lookup in measureRow and hooks
+                allRowsCache = $rows
 
-                    // Extract row IDs and update the store (only if changed)
-                    const ids = $rows.map((r) => r.id)
-                    const currentIds = get(rowIds)
-                    if (
-                        ids.length !== currentIds.length ||
-                        ids.some((id, i) => id !== currentIds[i])
-                    ) {
-                        rowIds.set(ids)
+                // Extract row IDs and update the store (only if changed)
+                const ids = $rows.map((r) => r.id)
+                const currentIds = get(rowIds)
+                if (ids.length !== currentIds.length || ids.some((id, i) => id !== currentIds[i])) {
+                    rowIds.set(ids)
+                }
+
+                return $rows
+            })
+
+            return derived(
+                [syncedRows, visibleRange, dataOffset],
+                ([$rows, $range, $dataOffset]) => {
+                    if (!isSparse) {
+                        return $rows.slice($range.start, $range.end)
                     }
 
-                    // Calculate visible range
-                    const range = heightManager.getVisibleRange(
-                        ids,
-                        $scrollTop,
-                        $viewportHeight,
-                        bufferSize
-                    )
-
-                    // Return only the visible subset
-                    const visibleRows = $rows.slice(range.start, range.end)
-
-                    set(visibleRows)
+                    // Sparse mode: `$range` is absolute, `$rows` covers
+                    // [$dataOffset, $dataOffset + $rows.length). Render the
+                    // intersection — anything outside it isn't resident yet.
+                    const start = Math.min($rows.length, Math.max(0, $range.start - $dataOffset))
+                    const end = Math.min($rows.length, Math.max(start, $range.end - $dataOffset))
+                    return $rows.slice(start, end)
                 }
             )
         }
@@ -401,11 +504,14 @@ export const addVirtualScroll =
         // Hooks to add virtual index props to rows
         const hooks = {
             'tbody.tr': (row: BodyRow<Item>) => {
-                const virtualIndex = allRowsCache.findIndex((r) => r.id === row.id)
+                const localIndex = allRowsCache.findIndex((r) => r.id === row.id)
+                // In sparse mode the rendered rows are a window into the
+                // dataset, so report the absolute index.
+                const offset = isSparse ? get(dataOffset) : 0
 
                 return {
                     props: readable({
-                        virtualIndex: virtualIndex >= 0 ? virtualIndex : 0,
+                        virtualIndex: localIndex >= 0 ? localIndex + offset : offset,
                         isVirtual: true
                     } as VirtualScrollRowProps)
                 }
