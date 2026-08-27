@@ -5,6 +5,7 @@ import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TableP
 import { HeightManager } from '../utils/HeightManager.js'
 import { isReadable, isWritable } from '../utils/store.js'
 import type {
+    RangeChangeContext,
     ScrollToIndexOptions,
     VirtualScrollConfig,
     VirtualScrollRowProps,
@@ -12,7 +13,14 @@ import type {
     VisibleRange
 } from './addVirtualScroll.types.js'
 
-export type { ScrollToIndexOptions, VirtualScrollConfig, VirtualScrollState, VisibleRange }
+export type {
+    RangeChangeContext,
+    ScrollToIndexOptions,
+    VirtualScrollConfig,
+    VirtualScrollRowProps,
+    VirtualScrollState,
+    VisibleRange
+}
 
 /**
  * Default configuration values for virtual scroll.
