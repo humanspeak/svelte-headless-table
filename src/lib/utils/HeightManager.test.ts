@@ -234,17 +234,17 @@ describe('HeightManager', () => {
     })
 
     describe('sparse geometry', () => {
-        test('getSparseNaturalHeight scales the average across the dataset', () => {
-            expect(manager.getSparseNaturalHeight(4_000_000)).toBe(4_000_000 * 40)
+        test('reports no compression when the dataset fits under the cap', () => {
+            const layout = manager.getSparseLayout(100_000, 0, 500, 10, 16_000_000)
+            expect(layout.ratio).toBe(1)
+            expect(layout.totalHeight).toBe(100_000 * 40)
         })
 
-        test('getSparseNaturalHeight uses the measured average', () => {
-            manager.setHeight('row-0', 60)
-            expect(manager.getSparseNaturalHeight(1000)).toBe(60_000)
-        })
-
-        test('getSparseNaturalHeight clamps negative totals to 0', () => {
-            expect(manager.getSparseNaturalHeight(-5)).toBe(0)
+        test('reports the compression ratio when the dataset exceeds the cap', () => {
+            // 4,000,000 rows at 40px is 160,000,000px against a 16,000,000px cap.
+            const layout = manager.getSparseLayout(4_000_000, 0, 500, 10, 16_000_000)
+            expect(layout.ratio).toBeGreaterThan(9.9)
+            expect(layout.ratio).toBeLessThan(10.1)
         })
 
         describe('below the height cap', () => {

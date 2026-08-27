@@ -10,6 +10,11 @@ export interface VirtualScrollConfig<Item> {
     /**
      * Callback fired when more data should be loaded (infinite scroll).
      * Return a promise to indicate when loading is complete.
+     *
+     * Append-only. Pair it with `data`-driven mode, not with `totalRows`:
+     * in sparse mode `loadMoreThreshold` would be measured against the
+     * compressed container height and mean something other than documented.
+     * Use `onRangeChange` there instead.
      */
     onLoadMore?: () => void | Promise<void>
 

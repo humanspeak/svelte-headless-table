@@ -2,7 +2,8 @@ import type { Action } from 'svelte/action'
 import { derived, get, readable, writable, type Readable, type Writable } from 'svelte/store'
 import type { BodyRow } from '../bodyRows.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
-import { HeightManager, type SparseLayout } from '../utils/HeightManager.js'
+import { HeightManager } from '../utils/HeightManager.js'
+import { isReadable, isWritable } from '../utils/store.js'
 import type {
     ScrollToIndexOptions,
     VirtualScrollConfig,
@@ -29,14 +30,10 @@ const DEFAULTS = {
 } as const
 
 /**
- * Normalize a `Readable<number> | number | undefined` config value into a
- * readable store.
+ * Normalize a `Readable<T> | T | undefined` config value into a store.
  */
-const toNumberStore = (
-    value: Readable<number> | number | undefined,
-    fallback: number
-): Readable<number> =>
-    typeof value === 'object' && value !== null ? value : readable(value ?? fallback)
+const toStore = <T>(value: Readable<T> | T | undefined, fallback: T): Readable<T> =>
+    isReadable<T>(value) ? value : readable(value ?? fallback)
 
 /**
  * Creates a virtual scroll plugin that enables virtualized table rendering.
@@ -123,15 +120,14 @@ export const addVirtualScroll =
         // size of the full dataset and `dataOffset` is the absolute index of
         // the first resident row.
         const isSparse = totalRowsConfig !== undefined
-        const datasetRows = toNumberStore(totalRowsConfig, 0)
-        const dataOffset = toNumberStore(dataOffsetConfig, 0)
+        const datasetRows = toStore(totalRowsConfig, 0)
+        const dataOffset = toStore(dataOffsetConfig, 0)
 
         // Loading state
         const isLoading = writable(false)
-        const hasMoreStore: Writable<boolean> =
-            typeof hasMoreConfig === 'object' && hasMoreConfig !== null
-                ? hasMoreConfig
-                : writable(hasMoreConfig ?? false)
+        const hasMoreStore: Writable<boolean> = isWritable<boolean>(hasMoreConfig)
+            ? hasMoreConfig
+            : writable(hasMoreConfig ?? false)
 
         // Track whether we've already triggered a load to prevent duplicates
         let loadMorePending = false
@@ -160,109 +156,155 @@ export const addVirtualScroll =
             queueMicrotask(() => onRangeChange(range))
         }
 
-        // Sparse layout for the current scroll position: container height, the
-        // absolute range to render, and the anchor that positions it.
-        // `rowIds` participates so that new measurements (which change the
-        // average row height) re-run the geometry.
-        const sparseLayout: Readable<SparseLayout> = derived(
-            [rowIds, scrollTop, viewportHeight, datasetRows],
-            ([, $scrollTop, $viewportHeight, $datasetRows]) =>
-                heightManager.getSparseLayout(
+        /**
+         * Geometry: container height, the range to render, and the spacer
+         * heights that position it. Dense and sparse are separate strategies,
+         * so the store graph is built once for the chosen one rather than
+         * branching on every scroll event — a dense table must not pay for
+         * sparse geometry it never reads.
+         *
+         * The four values are only meaningful when mutually consistent, so
+         * they are produced together by a single derivation.
+         */
+        interface Geometry {
+            totalHeight: number
+            /** Absolute range requested by the viewport, before residency. */
+            range: VisibleRange
+            /** Absolute range actually rendered, clamped to resident rows. */
+            renderRange: VisibleRange
+            topSpacer: number
+            bottomSpacer: number
+        }
+
+        // The visible range is reported to `onRangeChange` from here rather
+        // than from `visibleRange`, so the callback fires whenever any geometry
+        // consumer is subscribed — not only when something happens to read
+        // `visibleRange`. Returns a stable reference while the range is
+        // unchanged so downstream dedup stays cheap.
+        let currentRange: VisibleRange = { start: 0, end: 0 }
+        const trackRange = (range: VisibleRange): VisibleRange => {
+            if (range.start === currentRange.start && range.end === currentRange.end) {
+                return currentRange
+            }
+            currentRange = range
+            notifyRangeChange(range)
+            return range
+        }
+
+        const EMPTY_GEOMETRY: Geometry = {
+            totalHeight: 0,
+            range: { start: 0, end: 0 },
+            renderRange: { start: 0, end: 0 },
+            topSpacer: 0,
+            bottomSpacer: 0
+        }
+
+        /**
+         * Dense geometry: every row is resident, so the range is the render
+         * range and offsets come from the measured per-row heights.
+         *
+         * `rowIds` carries the measurement signal — `measureRow` touches it
+         * when a height changes.
+         */
+        const denseGeometry: Readable<Geometry> = derived(
+            [rowIds, scrollTop, viewportHeight],
+            ([$rowIds, $scrollTop, $viewportHeight]) => {
+                const range = heightManager.getVisibleRange(
+                    $rowIds,
+                    $scrollTop,
+                    $viewportHeight,
+                    bufferSize
+                )
+                const totalHeight = heightManager.getTotalHeight($rowIds)
+                const topSpacer = heightManager.getOffsetForIndex($rowIds, range.start)
+                const endOffset = heightManager.getOffsetForIndex($rowIds, range.end)
+                const tracked = trackRange(range)
+                return {
+                    totalHeight,
+                    range: tracked,
+                    renderRange: tracked,
+                    topSpacer,
+                    bottomSpacer: Math.max(0, totalHeight - endOffset)
+                }
+            }
+        )
+
+        /**
+         * Sparse geometry: the visible range is absolute and may extend past
+         * the resident window, so the rendered range is the intersection with
+         * it — computed once here, and reused by `derivePageRows` so the
+         * spacers and the DOM can't disagree.
+         *
+         * Rows are placed relative to the anchor row, so the block around the
+         * viewport lays out at natural scale even when the overall scroll range
+         * is compressed.
+         */
+        const sparseGeometry: Readable<Geometry> = derived(
+            [rowIds, scrollTop, viewportHeight, datasetRows, dataOffset],
+            ([$rowIds, $scrollTop, $viewportHeight, $datasetRows, $dataOffset]) => {
+                const layout = heightManager.getSparseLayout(
                     $datasetRows,
                     $scrollTop,
                     $viewportHeight,
                     bufferSize,
                     maxScrollHeight
                 )
+                const range = trackRange({ start: layout.start, end: layout.end })
+
+                const windowEnd = $dataOffset + $rowIds.length
+                const start = Math.min(Math.max(range.start, $dataOffset), windowEnd)
+                const end = Math.min(range.end, windowEnd)
+                // Nothing resident for this range yet: collapse to a zero-width
+                // slice anchored where the user is looking, not at the window
+                // edge, so the spacers still sum to the full height.
+                const renderRange =
+                    end > start ? { start, end } : { start: range.start, end: range.start }
+
+                const topSpacer = Math.max(
+                    0,
+                    layout.anchorOffset +
+                        (renderRange.start - layout.anchorIndex) * layout.rowHeight
+                )
+                const renderedHeight = (renderRange.end - renderRange.start) * layout.rowHeight
+                return {
+                    totalHeight: layout.totalHeight,
+                    range,
+                    renderRange,
+                    topSpacer,
+                    bottomSpacer: Math.max(0, layout.totalHeight - topSpacer - renderedHeight)
+                }
+            }
         )
 
-        // Visible range calculation.
-        // Return the same object reference when the range hasn't changed to avoid
-        // unnecessary downstream store updates (spacer heights, rendered rows).
-        let currentRange: VisibleRange = { start: 0, end: 0 }
+        const geometry = isSparse ? sparseGeometry : denseGeometry
+
+        // Suppress no-op emissions so consumers don't churn on every scroll
+        // pixel; `trackRange` already gives us a stable reference to compare.
+        let lastEmittedRange: VisibleRange = EMPTY_GEOMETRY.range
         const visibleRange: Readable<VisibleRange> = derived(
-            [rowIds, scrollTop, viewportHeight, sparseLayout],
-            ([$rowIds, $scrollTop, $viewportHeight, $layout], set) => {
-                const range = isSparse
-                    ? { start: $layout.start, end: $layout.end }
-                    : heightManager.getVisibleRange(
-                          $rowIds,
-                          $scrollTop,
-                          $viewportHeight,
-                          bufferSize
-                      )
-                if (range.start === currentRange.start && range.end === currentRange.end) {
+            geometry,
+            ($geometry, set) => {
+                if ($geometry.range === lastEmittedRange) {
                     return
                 }
-                currentRange = range
-                set(range)
-                notifyRangeChange(range)
+                lastEmittedRange = $geometry.range
+                set($geometry.range)
             },
-            currentRange
+            lastEmittedRange
         )
 
-        // Absolute range of rows actually rendered. In sparse mode the visible
-        // range can extend past the resident window; spacer heights must follow
-        // what is really in the DOM or the scroll container mis-sizes.
         const renderRange: Readable<VisibleRange> = derived(
-            [visibleRange, rowIds, dataOffset],
-            ([$range, $rowIds, $dataOffset]) => {
-                if (!isSparse) {
-                    return $range
-                }
-                const windowEnd = $dataOffset + $rowIds.length
-                const start = Math.min(Math.max($range.start, $dataOffset), windowEnd)
-                const end = Math.max(start, Math.min($range.end, windowEnd))
-                if (end <= start) {
-                    // Nothing resident for this range yet. Collapse to a
-                    // zero-width slice anchored at the range start.
-                    return { start: $range.start, end: $range.start }
-                }
-                return { start, end }
-            }
+            geometry,
+            ($geometry) => $geometry.renderRange
         )
-
-        // Total height of all rows
-        const totalHeight: Readable<number> = derived(
-            [rowIds, sparseLayout],
-            ([$rowIds, $layout]) => {
-                return isSparse ? $layout.totalHeight : heightManager.getTotalHeight($rowIds)
-            }
-        )
-
-        // Spacer heights. In sparse mode rows are placed relative to the anchor
-        // row, so the block around the viewport lays out at natural scale even
-        // when the overall scroll range is compressed.
-        const topSpacerHeight: Readable<number> = derived(
-            [rowIds, renderRange, sparseLayout],
-            ([$rowIds, $range, $layout]) => {
-                if (!isSparse) {
-                    return heightManager.getOffsetForIndex($rowIds, $range.start)
-                }
-                return Math.max(
-                    0,
-                    $layout.anchorOffset + ($range.start - $layout.anchorIndex) * $layout.rowHeight
-                )
-            }
-        )
-
-        const bottomSpacerHeight: Readable<number> = derived(
-            [rowIds, renderRange, totalHeight, topSpacerHeight, sparseLayout],
-            ([$rowIds, $range, $total, $top, $layout]) => {
-                if (!isSparse) {
-                    const endOffset = heightManager.getOffsetForIndex($rowIds, $range.end)
-                    return Math.max(0, $total - endOffset)
-                }
-                const renderedHeight = ($range.end - $range.start) * $layout.rowHeight
-                return Math.max(0, $total - $top - renderedHeight)
-            }
-        )
+        const totalHeight: Readable<number> = derived(geometry, ($g) => $g.totalHeight)
+        const topSpacerHeight: Readable<number> = derived(geometry, ($g) => $g.topSpacer)
+        const bottomSpacerHeight: Readable<number> = derived(geometry, ($g) => $g.bottomSpacer)
 
         // Total and rendered row counts
-        const totalRows: Readable<number> = derived(
-            [rowIds, datasetRows],
-            ([$rowIds, $datasetRows]) => (isSparse ? $datasetRows : $rowIds.length)
-        )
+        const totalRows: Readable<number> = isSparse
+            ? datasetRows
+            : derived(rowIds, ($rowIds) => $rowIds.length)
         const renderedRows: Readable<number> = derived(
             renderRange,
             ($range) => $range.end - $range.start
@@ -426,7 +468,7 @@ export const addVirtualScroll =
         const measureRow = (rowId: string, height: number) => {
             // If getRowHeight is provided, prefer that
             if (getRowHeight) {
-                const row = allRowsCache.find((r) => r.id === rowId)
+                const row = allRowsCache[get(rowIndexById).get(rowId) ?? -1]
                 if (row?.isData() && row.original) {
                     const specifiedHeight = getRowHeight(row.original)
                     if (specifiedHeight !== height) {
@@ -500,18 +542,30 @@ export const addVirtualScroll =
          * Re-runs when rows, scroll position, or viewport height changes.
          */
         const derivePageRows: DeriveRowsFn<Item> = (rows) => {
-            // Keep the row ID list (and the lookup cache) in sync with the rows
+            // Keep the row ID list and the lookup indexes in sync with the rows
             // handed to us. Split out so the slicing derivation below can depend
-            // on `visibleRange`, which itself depends on `rowIds`.
+            // on `geometry`, which itself depends on `rowIds`.
             const syncedRows = derived(rows, ($rows) => {
-                // Cache rows for lookup in measureRow and hooks
-                allRowsCache = $rows
-                rowIndexById.set(new Map($rows.map((r, i) => [r.id, i])))
-
-                // Extract row IDs and update the store (only if changed)
-                const ids = $rows.map((r) => r.id)
+                // One pass builds the ID list, the ID->position index, and the
+                // changed check. This runs on every window move in sparse mode,
+                // so the intermediate arrays are worth avoiding.
+                const ids = new Array<string>($rows.length)
+                const index = new Map<string, number>()
                 const currentIds = get(rowIds)
-                if (ids.length !== currentIds.length || ids.some((id, i) => id !== currentIds[i])) {
+                let changed = $rows.length !== currentIds.length
+                for (let i = 0; i < $rows.length; i++) {
+                    const id = $rows[i].id
+                    ids[i] = id
+                    index.set(id, i)
+                    if (!changed && id !== currentIds[i]) {
+                        changed = true
+                    }
+                }
+
+                // Cache rows for lookup in measureRow
+                allRowsCache = $rows
+                rowIndexById.set(index)
+                if (changed) {
                     rowIds.set(ids)
                 }
 
@@ -519,38 +573,46 @@ export const addVirtualScroll =
             })
 
             return derived(
-                [syncedRows, visibleRange, dataOffset],
-                ([$rows, $range, $dataOffset]) => {
+                [syncedRows, geometry, dataOffset],
+                ([$rows, $geometry, $dataOffset]) => {
+                    const { start, end } = $geometry.renderRange
                     if (!isSparse) {
-                        return $rows.slice($range.start, $range.end)
+                        return $rows.slice(start, end)
                     }
-
-                    // Sparse mode: `$range` is absolute, `$rows` covers
-                    // [$dataOffset, $dataOffset + $rows.length). Render the
-                    // intersection — anything outside it isn't resident yet.
-                    const start = Math.min($rows.length, Math.max(0, $range.start - $dataOffset))
-                    const end = Math.min($rows.length, Math.max(start, $range.end - $dataOffset))
-                    return $rows.slice(start, end)
+                    // `renderRange` is absolute and already clamped to the resident
+                    // window, so shifting it into window-local coordinates is all
+                    // that's left.
+                    const localStart = Math.min($rows.length, Math.max(0, start - $dataOffset))
+                    const localEnd = Math.min($rows.length, Math.max(localStart, end - $dataOffset))
+                    return $rows.slice(localStart, localEnd)
                 }
             )
         }
 
+        // Props for every resident row, keyed by ID. Built once per window
+        // rather than once per row: the absolute index is folded in here, so a
+        // row's hook is a single lookup against one store instead of its own
+        // derived over both the index map and the offset.
+        const rowPropsById: Readable<Map<string, VirtualScrollRowProps>> = derived(
+            [rowIndexById, dataOffset],
+            ([$rowIndexById, $dataOffset]) => {
+                const offset = isSparse ? $dataOffset : 0
+                const props = new Map<string, VirtualScrollRowProps>()
+                for (const [id, index] of $rowIndexById) {
+                    props.set(id, { virtualIndex: index + offset, isVirtual: true })
+                }
+                return props
+            }
+        )
+
+        /** Reported for a row that is no longer in the resident window. */
+        const FALLBACK_ROW_PROPS: VirtualScrollRowProps = { virtualIndex: 0, isVirtual: true }
+
         // Hooks to add virtual index props to rows
         const hooks = {
-            'tbody.tr': (row: BodyRow<Item>) => {
-                return {
-                    // In sparse mode the rendered rows are a window into the
-                    // dataset, so report the absolute index.
-                    props: derived([rowIndexById, dataOffset], ([$rowIndexById, $dataOffset]) => {
-                        const localIndex = $rowIndexById.get(row.id)
-                        const offset = isSparse ? $dataOffset : 0
-                        return {
-                            virtualIndex: localIndex !== undefined ? localIndex + offset : offset,
-                            isVirtual: true
-                        } as VirtualScrollRowProps
-                    })
-                }
-            }
+            'tbody.tr': (row: BodyRow<Item>) => ({
+                props: derived(rowPropsById, ($props) => $props.get(row.id) ?? FALLBACK_ROW_PROPS)
+            })
         }
 
         return {

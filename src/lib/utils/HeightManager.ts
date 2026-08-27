@@ -15,6 +15,25 @@ export interface SparseLayout {
     anchorOffset: number
     /** Uniform row height used for this layout. */
     rowHeight: number
+    /**
+     * Container pixels to dataset pixels. 1 when the dataset fits under the
+     * height cap; greater when the scroll range is compressed.
+     */
+    ratio: number
+}
+
+/**
+ * Shared metrics behind the sparse geometry.
+ * See {@link HeightManager.getSparseMetrics}.
+ */
+interface SparseMetrics {
+    total: number
+    rowHeight: number
+    viewport: number
+    totalHeight: number
+    scrollableNatural: number
+    scrollableDisplay: number
+    ratio: number
 }
 
 /**
@@ -195,36 +214,56 @@ export class HeightManager {
     }
 
     /**
-     * Calculate the natural (uncompressed) height of a sparse dataset.
+     * Shared metrics behind the sparse geometry.
      *
      * Sparse mode windows over a dataset whose rows are mostly not resident in
      * memory, so per-row measurements are unavailable for all but the current
      * window. Geometry therefore falls back to a uniform row height — the
      * running average of whatever has been measured so far.
      *
-     * @param totalRows - Total number of rows in the dataset.
-     * @returns The height the dataset would occupy at full scale, in pixels.
+     * Browsers also cap how tall an element may be (~16.7M px in Chrome), which
+     * at a typical row height puts a hard ceiling of a few hundred thousand rows
+     * on a naively-sized scroll container — rows past it become unreachable by
+     * dragging *and* by `scrollTo`, which the browser clamps. So the container
+     * is sized to at most `maxScrollHeight` and `ratio` maps container pixels
+     * onto dataset pixels. When the dataset fits under the cap, `ratio` is 1 and
+     * the mapping is the identity.
+     *
+     * Both {@link getSparseLayout} and {@link getSparseScrollTopForIndex} derive
+     * from this, so the forward and inverse mappings cannot drift apart.
      */
-    getSparseNaturalHeight(totalRows: number): number {
-        return Math.max(0, totalRows) * this.getAverageHeight()
+    private getSparseMetrics(
+        totalRows: number,
+        viewportHeight: number,
+        maxScrollHeight: number
+    ): SparseMetrics {
+        const total = Math.max(0, totalRows)
+        const rowHeight = this.getAverageHeight()
+        const viewport = Math.max(0, viewportHeight)
+        const naturalHeight = total * rowHeight
+        // Never shrink below the viewport, or there would be nothing to scroll.
+        const totalHeight = Math.min(naturalHeight, Math.max(viewport, maxScrollHeight))
+        const scrollableNatural = Math.max(0, naturalHeight - viewport)
+        const scrollableDisplay = Math.max(0, totalHeight - viewport)
+
+        return {
+            total,
+            rowHeight,
+            viewport,
+            totalHeight,
+            scrollableNatural,
+            scrollableDisplay,
+            ratio: scrollableDisplay > 0 ? scrollableNatural / scrollableDisplay : 1
+        }
     }
 
     /**
      * Compute the sparse scroll layout for a given scroll position.
      *
-     * Browsers cap how tall an element may be (~16.7M px in Chrome), which at
-     * a typical row height puts a hard ceiling of a few hundred thousand rows
-     * on a naively-sized scroll container — rows past it become unreachable by
-     * dragging *and* by `scrollTo`, which the browser clamps.
-     *
-     * To stay under that cap, the container is sized to at most
-     * `maxScrollHeight` and the scroll position is mapped onto the dataset
-     * proportionally. Rows still render at their natural height: the mapping
-     * only decides which row anchors the top of the viewport and where that
-     * anchor sits, so rows around it lay out 1:1 with no drift.
-     *
-     * When the dataset fits under the cap the mapping is the identity and this
-     * behaves exactly like uncompressed geometry.
+     * Rows render at their natural height: the compression described in
+     * {@link getSparseMetrics} only decides which row anchors the top of the
+     * viewport and where that anchor sits, so rows around it lay out 1:1 with
+     * no drift.
      *
      * @param totalRows - Total number of rows in the dataset.
      * @param scrollTop - Current scroll position, in container pixels.
@@ -241,28 +280,20 @@ export class HeightManager {
         bufferSize: number,
         maxScrollHeight: number
     ): SparseLayout {
-        const total = Math.max(0, totalRows)
-        const rowHeight = this.getAverageHeight()
+        const { total, rowHeight, viewport, totalHeight, scrollableDisplay, ratio } =
+            this.getSparseMetrics(totalRows, viewportHeight, maxScrollHeight)
 
         if (total === 0 || rowHeight <= 0) {
             return {
                 totalHeight: total === 0 ? 0 : Math.max(0, maxScrollHeight),
                 start: 0,
-                end: total === 0 ? 0 : total,
+                end: total,
                 anchorIndex: 0,
                 anchorOffset: 0,
-                rowHeight
+                rowHeight,
+                ratio
             }
         }
-
-        const viewport = Math.max(0, viewportHeight)
-        const naturalHeight = total * rowHeight
-        // Never shrink below the viewport, or there would be nothing to scroll.
-        const totalHeight = Math.min(naturalHeight, Math.max(viewport, maxScrollHeight))
-
-        const scrollableNatural = Math.max(0, naturalHeight - viewport)
-        const scrollableDisplay = Math.max(0, totalHeight - viewport)
-        const ratio = scrollableDisplay > 0 ? scrollableNatural / scrollableDisplay : 1
 
         const clampedScrollTop = Math.min(Math.max(0, scrollTop), scrollableDisplay)
         const naturalTop = clampedScrollTop * ratio
@@ -277,11 +308,7 @@ export class HeightManager {
 
         // Only buffer above by as much as there is room for, or the top spacer
         // would have to go negative and the rendered block would slip.
-        const rowsAbove = Math.min(
-            bufferSize,
-            anchorIndex,
-            Math.floor(Math.max(0, anchorOffset) / rowHeight)
-        )
+        const rowsAbove = Math.min(bufferSize, anchorIndex, Math.floor(anchorOffset / rowHeight))
         const rowsBelow = Math.ceil(
             Math.max(0, clampedScrollTop + viewport - anchorOffset) / rowHeight
         )
@@ -292,14 +319,14 @@ export class HeightManager {
             end: Math.min(total, anchorIndex + rowsBelow + bufferSize),
             anchorIndex,
             anchorOffset,
-            rowHeight
+            rowHeight,
+            ratio
         }
     }
 
     /**
      * Container scroll position that puts an absolute row index at the top of
-     * the viewport, accounting for any compression applied by
-     * {@link getSparseLayout}.
+     * the viewport — the inverse of {@link getSparseLayout}'s mapping.
      *
      * @param totalRows - Total number of rows in the dataset.
      * @param index - Absolute index of the target row.
@@ -313,26 +340,14 @@ export class HeightManager {
         viewportHeight: number,
         maxScrollHeight: number
     ): number {
-        const total = Math.max(0, totalRows)
-        const rowHeight = this.getAverageHeight()
+        const { total, rowHeight, scrollableNatural, scrollableDisplay, ratio } =
+            this.getSparseMetrics(totalRows, viewportHeight, maxScrollHeight)
 
-        if (total === 0 || rowHeight <= 0) {
+        if (total === 0 || rowHeight <= 0 || scrollableNatural <= 0) {
             return 0
         }
 
-        const viewport = Math.max(0, viewportHeight)
-        const naturalHeight = total * rowHeight
-        const totalHeight = Math.min(naturalHeight, Math.max(viewport, maxScrollHeight))
-
-        const scrollableNatural = Math.max(0, naturalHeight - viewport)
-        const scrollableDisplay = Math.max(0, totalHeight - viewport)
-        if (scrollableNatural <= 0) {
-            return 0
-        }
-
-        const naturalTop = Math.max(0, index) * rowHeight
-        const ratio = scrollableDisplay > 0 ? scrollableNatural / scrollableDisplay : 1
-        return Math.min(scrollableDisplay, naturalTop / ratio)
+        return Math.min(scrollableDisplay, (Math.max(0, index) * rowHeight) / ratio)
     }
 
     /**

@@ -46,6 +46,9 @@
     const cache = new SvelteMap<number, DataItem[]>()
     let fetches = $state(0)
     let evictions = $state(0)
+    // Pages currently published as `data`, so an unchanged window is a no-op.
+    let publishedFirstPage = -1
+    let publishedLastPage = -1
 
     const datasetRows = writable(DATASET_SIZE)
     const dataOffset = writable(0)
@@ -60,6 +63,13 @@
         const firstPage = Math.floor(start / PAGE_SIZE)
         const lastPage = Math.floor(Math.max(start, end - 1) / PAGE_SIZE)
 
+        // Compression means the range advances every few container pixels, so
+        // most calls land on the same pages. Republishing would rebuild the
+        // whole view model for identical content.
+        if (firstPage === publishedFirstPage && lastPage === publishedLastPage) {
+            return
+        }
+
         for (let page = firstPage; page <= lastPage; page++) {
             if (!cache.has(page)) {
                 cache.set(page, fetchPage(page))
@@ -68,17 +78,23 @@
         }
 
         // Evict least-recently-fetched pages outside the current window.
-        for (const page of [...cache.keys()]) {
-            if (cache.size <= MAX_RESIDENT_PAGES) break
-            if (page >= firstPage && page <= lastPage) continue
-            cache.delete(page)
-            evictions += 1
+        if (cache.size > MAX_RESIDENT_PAGES) {
+            for (const page of [...cache.keys()]) {
+                if (cache.size <= MAX_RESIDENT_PAGES) break
+                if (page >= firstPage && page <= lastPage) continue
+                cache.delete(page)
+                evictions += 1
+            }
         }
 
         const rows: DataItem[] = []
         for (let page = firstPage; page <= lastPage; page++) {
-            rows.push(...(cache.get(page) ?? []))
+            for (const row of cache.get(page) ?? []) {
+                rows.push(row)
+            }
         }
+        publishedFirstPage = firstPage
+        publishedLastPage = lastPage
         dataOffset.set(firstPage * PAGE_SIZE)
         data.set(rows)
     }
