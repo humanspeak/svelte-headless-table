@@ -8,19 +8,36 @@
 > dispatched you and told you they maintain the index.
 >
 > **Drift check (run first)**:
-> `git diff --stat 7dbb5a2..HEAD -- README.md docs/src/routes/docs/api docs/src/routes/docs/getting-started`
+> `git diff --stat 520f2dd..HEAD -- README.md docs/src/routes/docs/api docs/src/routes/docs/getting-started`
 > Compare any changed file against the "Current state" excerpts; on a mismatch, STOP.
 > Also confirm plans 002, 003 and 005 are marked DONE in the batch README —
 > this plan documents what they shipped.
-
-## Status
+>
+> **Revision 2026-09-25 (guard, pre-flight)**: plans 001–005 are DONE on
+> this branch; drift-check SHA re-baselined to the tip. Confirmed exported
+> names: `createSnippetRender(snippet, args?)` and
+> `SnippetRenderConfig<Args = void>` (fields `snippet: Snippet<[Args]>`,
+> `args: Args | Readable<Args>`), both exported from the package root;
+> `RenderConfig` now includes `SnippetRenderConfig<any>`. Docs facts from
+> a baseline run: `cd docs && pnpm check` reports two errors about
+> `$lib/github-stats.json` until `cd docs && pnpm build` has generated that
+> (gitignored) file once — run the build first, then check. The docs build
+> also rewrites `docs/src/lib/demo-loaders.ts` with formatting-only churn;
+> revert it with `git checkout -- docs/src/lib/demo-loaders.ts` and do not
+> commit it. For Step 2's dev-server check, no interactive browser is
+> available: write a throwaway Playwright script (Chromium is installed) or
+> curl the built page to confirm the quick-start demo renders three rows
+> and header cells, and delete the script afterwards. `trunk fmt`/`trunk
+check` may reformat files under `.agents/` — revert those, never commit them.
+> Lib and docs share one `node_modules` via the pnpm workspace; run `pnpm package`
+> at the repo root before docs commands so `docs/` sees the current `dist/`.
 
 - **Priority**: P2
 - **Effort**: M
 - **Risk**: LOW
 - **Depends on**: 002-inline-render.md, 003-inline-subscribe.md, 005-snippet-render-config.md
 - **Category**: docs
-- **Planned at**: commit `7dbb5a2`, 2026-09-25
+- **Planned at**: commit `520f2dd`, 2026-09-25 (re-baselined; originally `7dbb5a2`)
 
 ## Why this matters
 
