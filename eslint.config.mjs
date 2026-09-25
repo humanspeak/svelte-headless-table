@@ -113,7 +113,13 @@ export default [
         }
     },
     {
-        files: ['eslint.config.mjs', 'playwright.config.ts', 'svelte.config.js', 'scripts/*.mjs'],
+        files: [
+            'eslint.config.mjs',
+            'playwright.config.ts',
+            'svelte.config.js',
+            'scripts/*.mjs',
+            'vitest.setup.ts'
+        ],
         languageOptions: {
             parserOptions: {
                 projectService: false
