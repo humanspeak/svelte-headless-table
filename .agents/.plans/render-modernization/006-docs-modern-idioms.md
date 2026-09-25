@@ -43,11 +43,11 @@ Pages are `.svx` (mdsvex) with a frontmatter block and a `<script>` that
 sets SEO context; demos are `.svelte` files next to them.
 
 - `docs/src/routes/docs/api/create-render/+page.svx:28`:
-  `<Admonition type="note">\`createRender\` is based on <a href="https://github.com/humanspeak/svelte-render">svelte-render</a>.</Admonition>`
+  a note-type admonition reading "createRender is based on svelte-render", linking to github.com/humanspeak/svelte-render.
   Lines 98–120 document `.on(type, handler)` as a normal feature; it is
   `@deprecated` in the code.
 - `docs/src/routes/docs/api/subscribe/+page.svx:25`:
-  `<Admonition type="note">\`&lt;Subscribe/&gt;\` is based on <a href="https://github.com/humanspeak/svelte-subscribe">svelte-subscribe</a>.</Admonition>`
+  a note-type admonition reading "Subscribe is based on svelte-subscribe", linking to github.com/humanspeak/svelte-subscribe,
   and lines 27–33 explain the component via "slot props" with a link to the Svelte 3 tutorial.
 - `docs/src/routes/docs/api/render/+page.svx` lines 30–40 list the three
   `RenderConfig` variants (string/number, `Readable`, `ComponentRenderConfig`).
@@ -83,18 +83,22 @@ sets SEO context; demos are `.svelte` files next to them.
 {/each}
 ```
 
-  `fromStore(...).current` is reactive when read inside a template
-  (Svelte's `createSubscriber` subscribes for the lifetime of the enclosing
-  effect — `node_modules/svelte/src/store/index-client.js:128-168`).
-  **Verify this in the docs demo before documenting it** (Step 2).
+`fromStore(...).current` is reactive when read inside a template
+(Svelte's `createSubscriber` subscribes for the lifetime of the enclosing
+effect — `node_modules/svelte/src/store/index-client.js:128-168`).
+**Verify this in the docs demo before documenting it** (Step 2).
+
 - Snippet cells (plan 005) — exported names are `createSnippetRender` and
   `SnippetRenderConfig`; consumer shape:
 
 ```svelte
 <script>
     const columns = table.createColumns([
-        table.column({ accessor: 'name', header: 'Name',
-            cell: ({ value }) => createSnippetRender(nameCell, value) })
+        table.column({
+            accessor: 'name',
+            header: 'Name',
+            cell: ({ value }) => createSnippetRender(nameCell, value)
+        })
     ])
 </script>
 
@@ -109,15 +113,15 @@ sets SEO context; demos are `.svelte` files next to them.
 
 ## Commands you will need
 
-| Purpose            | Command                                           | Expected on success                   |
-| ------------------ | ------------------------------------------------- | ------------------------------------- |
-| Install            | `pnpm install`                                    | exit 0                                |
-| Library package    | `pnpm package` (root)                             | exit 0 — docs consume `dist/`         |
-| Docs typecheck     | `cd docs && pnpm check`                           | exit 0, `svelte-check found 0 errors` |
-| Docs build         | `cd docs && pnpm build`                           | exit 0                                |
-| Docs dev server    | `cd docs && pnpm dev`                             | serves; open the edited pages         |
-| Lint               | `trunk check` (root)                              | no failures                           |
-| Format             | `trunk fmt` (root)                                | exit 0/1                              |
+| Purpose         | Command                 | Expected on success                   |
+| --------------- | ----------------------- | ------------------------------------- |
+| Install         | `pnpm install`          | exit 0                                |
+| Library package | `pnpm package` (root)   | exit 0 — docs consume `dist/`         |
+| Docs typecheck  | `cd docs && pnpm check` | exit 0, `svelte-check found 0 errors` |
+| Docs build      | `cd docs && pnpm build` | exit 0                                |
+| Docs dev server | `cd docs && pnpm dev`   | serves; open the edited pages         |
+| Lint            | `trunk check` (root)    | no failures                           |
+| Format          | `trunk fmt` (root)      | exit 0/1                              |
 
 ## Scope
 

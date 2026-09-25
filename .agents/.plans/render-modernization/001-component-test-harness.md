@@ -9,10 +9,22 @@
 > dispatched you and told you they maintain the index.
 >
 > **Drift check (run first)**:
-> `git diff --stat 7dbb5a2..HEAD -- vite.config.ts package.json src/lib/render src/lib/test`
+> `git diff --stat 4b03e9a..HEAD -- vite.config.ts eslint.config.mjs package.json src/lib/render src/lib/test`
 > If any in-scope file changed since this plan was written, compare the
 > "Current state" excerpts against the live code before proceeding; on a
 > mismatch, treat it as a STOP condition.
+>
+> **Revision 2026-09-25 (guard)**: first execution showed two plan defects.
+> (1) `vitest.setup.ts` is in no tsconfig project, so eslint's project
+> service fails to parse it and `trunk check` reports a high-severity error;
+> the fix belongs in `eslint.config.mjs`, which the plan had left out of
+> scope. `eslint.config.mjs` is now in scope for that one-line change
+> (Step 3b). (2) For the same reason, jest-dom's matcher types do not load
+> from the setup file; each component test must import
+> `@testing-library/jest-dom/vitest` directly (as svelte-markdown does) —
+> Step 4 now says so. Also: `pnpm add -D jsdom` fails with
+> `ERR_PNPM_ADDING_TO_ROOT` because the repo is a workspace root; use
+> `pnpm add -D -w jsdom`. Drift-check SHA moved from 7dbb5a2 to 4b03e9a.
 
 ## Status
 
@@ -21,7 +33,7 @@
 - **Risk**: LOW
 - **Depends on**: none
 - **Category**: tests / dx
-- **Planned at**: commit `7dbb5a2`, 2026-09-25
+- **Planned at**: commit `4b03e9a`, 2026-09-25 (amended; originally `7dbb5a2`)
 
 ## Why this matters
 
@@ -34,7 +46,7 @@ components (`@humanspeak/svelte-render`, `@humanspeak/svelte-subscribe`)
 with first-party code, and they need a harness that can mount a component,
 assert on DOM, and observe store-driven updates. This plan adds that
 harness, modelled exactly on the sibling repo `@humanspeak/svelte-markdown`,
-and proves it with one smoke test against the *current* dependency so later
+and proves it with one smoke test against the _current_ dependency so later
 plans have a green characterization baseline to preserve.
 
 ## Current state
@@ -58,8 +70,17 @@ export default defineConfig({
             reporter: ['lcov'],
             provider: 'v8',
             include: ['src/**/*.ts'],
-            exclude: [ 'src/**/*.test.ts', 'docs/**', 'docs-new/**', 'docs-old/**',
-                       'scripts/**', '.trunk/**', '.svelte-kit/**', 'tests/**', 'src/routes/**' ]
+            exclude: [
+                'src/**/*.test.ts',
+                'docs/**',
+                'docs-new/**',
+                'docs-old/**',
+                'scripts/**',
+                '.trunk/**',
+                '.svelte-kit/**',
+                'tests/**',
+                'src/routes/**'
+            ]
         },
         reporters: ['verbose', ['junit', { outputFile: './junit-vitest.xml' }]]
     }
@@ -104,7 +125,8 @@ export default defineConfig({
         ...
 ```
 
-  and its `vitest.setup.ts` begins with `import '@testing-library/jest-dom/vitest'`.
+and its `vitest.setup.ts` begins with `import '@testing-library/jest-dom/vitest'`.
+
 - Publishing: `package.json` `files` is `["dist", "!dist/**/*.test.*", "!dist/**/*.spec.*"]`,
   so any fixture named `*.test.svelte` is automatically excluded from the npm tarball.
 - Coding-style rule from `CLAUDE.md`: suppress lint with
@@ -112,15 +134,15 @@ export default defineConfig({
 
 ## Commands you will need
 
-| Purpose        | Command                                             | Expected on success                        |
-| -------------- | --------------------------------------------------- | ------------------------------------------ |
-| Install        | `pnpm install`                                      | exit 0                                     |
-| Typecheck      | `pnpm check`                                        | exit 0, `svelte-check found 0 errors`      |
-| One test file  | `pnpm exec vitest run <path>`                       | all tests in file pass                     |
-| All unit tests | `pnpm test:only`                                    | exit 0, all files pass                     |
-| Lint           | `trunk check`                                       | no failures on changed files               |
-| Format         | `trunk fmt`                                         | exit 0 or 1 (1 = it reformatted something) |
-| Package        | `pnpm package`                                      | exit 0, publint reports no errors          |
+| Purpose        | Command                       | Expected on success                        |
+| -------------- | ----------------------------- | ------------------------------------------ |
+| Install        | `pnpm install`                | exit 0                                     |
+| Typecheck      | `pnpm check`                  | exit 0, `svelte-check found 0 errors`      |
+| One test file  | `pnpm exec vitest run <path>` | all tests in file pass                     |
+| All unit tests | `pnpm test:only`              | exit 0, all files pass                     |
+| Lint           | `trunk check`                 | no failures on changed files               |
+| Format         | `trunk fmt`                   | exit 0 or 1 (1 = it reformatted something) |
+| Package        | `pnpm package`                | exit 0, publint reports no errors          |
 
 Trunk (`.trunk/trunk.yaml`) is the lint/format authority. Do not run
 `pnpm lint` / `prettier` / `eslint` directly.
@@ -132,6 +154,7 @@ Trunk (`.trunk/trunk.yaml`) is the lint/format authority. Do not run
 - `vite.config.ts`
 - `vitest.setup.ts` (create)
 - `package.json` (add `jsdom` devDependency only)
+- `eslint.config.mjs` (add `'vitest.setup.ts'` to the existing `projectService: false` file list only)
 - `pnpm-lock.yaml` (regenerated by `pnpm install`)
 - `src/lib/render/Render.smoke.test.ts` (create)
 - `src/lib/render/Fixture.test.svelte` (create — a trivial fixture component)
@@ -156,7 +179,7 @@ Trunk (`.trunk/trunk.yaml`) is the lint/format authority. Do not run
 
 ### Step 1: Add `jsdom` as a devDependency
 
-Run `pnpm add -D jsdom`. This is the only `package.json` change.
+Run `pnpm add -D -w jsdom` (`-w` is required because the repo is a pnpm workspace root; plain `add -D` fails with `ERR_PNPM_ADDING_TO_ROOT`). This is the only `package.json` change.
 
 **Verify**: `grep -n '"jsdom"' package.json` → one line under
 `devDependencies`; `pnpm install` → exit 0.
@@ -192,6 +215,15 @@ Keep `include`, `globals`, `coverage`, and `reporters` unchanged.
 passes (40 files). If `createViewModel.performance.test.ts` fails on
 timing, see STOP conditions.
 
+### Step 3b: Exempt `vitest.setup.ts` from eslint's project service
+
+In `eslint.config.mjs`, the block whose `files` list is
+`['eslint.config.mjs', 'playwright.config.ts', 'svelte.config.js', 'scripts/*.mjs']`
+sets `parserOptions.projectService: false`. Add `'vitest.setup.ts'` to that
+list. No other change to the file.
+
+**Verify**: `trunk check vitest.setup.ts` → no issues.
+
 ### Step 4: Add a fixture component and a smoke test against the current `Render`
 
 Create `src/lib/render/Fixture.test.svelte`:
@@ -207,6 +239,7 @@ Create `src/lib/render/Fixture.test.svelte`:
 Create `src/lib/render/Render.smoke.test.ts`:
 
 ```ts
+import '@testing-library/jest-dom/vitest'
 import { render, screen } from '@testing-library/svelte'
 import { writable } from 'svelte/store'
 import { tick } from 'svelte'
@@ -265,7 +298,7 @@ Run, in order: `trunk fmt`, `trunk check`, `pnpm check`, `pnpm test:only`,
 **Verify**: all exit 0 (trunk fmt may exit 1 if it reformatted; re-run
 `trunk check` after). `pnpm package` → publint clean, and
 `ls dist/render/` must NOT list `Fixture.test.svelte` or `Render.smoke.test.*`
-in the *published* set — confirm with `npm pack --dry-run 2>&1 | grep -c 'test'`
+in the _published_ set — confirm with `npm pack --dry-run 2>&1 | grep -c 'test'`
 → `0`.
 
 ## Test plan
@@ -286,6 +319,7 @@ in the *published* set — confirm with `npm pack --dry-run 2>&1 | grep -c 'test
 - [ ] `grep -n "environment: 'jsdom'" vite.config.ts` → 1 match
 - [ ] `grep -n "svelteTesting()" vite.config.ts` → 1 match
 - [ ] `npm pack --dry-run 2>&1 | grep -c 'test'` → `0`
+- [ ] `trunk check` on the changed files reports no issues (including `vitest.setup.ts`)
 - [ ] `git status --porcelain` lists only the in-scope files
 - [ ] `.agents/.plans/render-modernization/README.md` status row for 001 updated
 

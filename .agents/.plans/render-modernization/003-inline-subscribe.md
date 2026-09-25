@@ -52,35 +52,48 @@ accident. The Svelte-5-native replacement for consumers is the built-in
 
 ```js
 // derivedKeys.js
-import { derived } from 'svelte/store';
+import { derived } from 'svelte/store'
 export const derivedKeys = (storeMap) => {
     // Freeze the order of entries.
-    const entries = Object.entries(storeMap);
-    const keys = entries.map(([key]) => key);
-    return derived(entries.map(([, store]) => store), ($stores) => {
-        return Object.fromEntries($stores.map((store, idx) => [keys[idx], store]));
-    });
-};
+    const entries = Object.entries(storeMap)
+    const keys = entries.map(([key]) => key)
+    return derived(
+        entries.map(([, store]) => store),
+        ($stores) => {
+            return Object.fromEntries($stores.map((store, idx) => [keys[idx], store]))
+        }
+    )
+}
 ```
 
 ```svelte
 <!-- Subscribe.svelte -->
-<script>import { derivedKeys } from "./derivedKeys.js";
-const values = derivedKeys($$restProps);
+<script>
+    import { derivedKeys } from './derivedKeys.js'
+    const values = derivedKeys($$restProps)
 </script>
 
 <slot {...$values} />
 ```
 
-  and its types (`derivedKeys.d.ts`):
+and its types (`derivedKeys.d.ts`):
 
 ```ts
 export type ReadOrWritable<T> = Readable<T> | Writable<T>
-export type WritableKeys<T> = { [K in keyof T]: T[K] extends undefined ? Writable<T[K] | undefined> : Writable<T[K]> }
-export type ReadableKeys<T> = { [K in keyof T]: T[K] extends undefined ? Readable<T[K] | undefined> : Readable<T[K]> }
-export type ReadOrWritableKeys<T> = { [K in keyof T]: T[K] extends undefined ? ReadOrWritable<T[K] | undefined> : ReadOrWritable<T[K]> }
-export declare const derivedKeys: <S extends ReadOrWritableKeys<unknown>>(storeMap: S) => DerivedKeys<S>
-export type DerivedKeys<S extends ReadOrWritableKeys<unknown>> = S extends ReadOrWritableKeys<infer T> ? Readable<T> : never
+export type WritableKeys<T> = {
+    [K in keyof T]: T[K] extends undefined ? Writable<T[K] | undefined> : Writable<T[K]>
+}
+export type ReadableKeys<T> = {
+    [K in keyof T]: T[K] extends undefined ? Readable<T[K] | undefined> : Readable<T[K]>
+}
+export type ReadOrWritableKeys<T> = {
+    [K in keyof T]: T[K] extends undefined ? ReadOrWritable<T[K] | undefined> : ReadOrWritable<T[K]>
+}
+export declare const derivedKeys: <S extends ReadOrWritableKeys<unknown>>(
+    storeMap: S
+) => DerivedKeys<S>
+export type DerivedKeys<S extends ReadOrWritableKeys<unknown>> =
+    S extends ReadOrWritableKeys<infer T> ? Readable<T> : never
 ```
 
 - `src/lib/utils/store.ts` already defines `ReadOrWritable<T>` (line 4) and
@@ -165,7 +178,10 @@ that mirrors real consumer usage:
 <script lang="ts">
     import type { Readable } from 'svelte/store'
     import { Subscribe } from '../index.js'
-    const { attrs, props }: { attrs: Readable<Record<string, unknown>>; props: Readable<{ n: number }> } = $props()
+    const {
+        attrs,
+        props
+    }: { attrs: Readable<Record<string, unknown>>; props: Readable<{ n: number }> } = $props()
 </script>
 
 <Subscribe {attrs} let:attrs {props} let:props>

@@ -55,21 +55,23 @@ export { Subscribe } from '@humanspeak/svelte-subscribe'
 
 ```ts
 export type RenderConfig<TComponent extends Component = Component<any>> =
-    | ComponentRenderConfig<TComponent>
-    | string
-    | number
-    | Readable<string | number>
+    ComponentRenderConfig<TComponent> | string | number | Readable<string | number>
 
 export declare class ComponentRenderConfig<TComponent extends Component = Component<any>> {
     component: TComponent
     props?: Record<string, unknown> | undefined
     constructor(component: TComponent, props?: Record<string, unknown> | undefined)
     /** @deprecated */ eventHandlers: [string, (ev: any) => void][]
-    /** @deprecated */ on<TEventType extends string, TEvent = any>(type: TEventType, handler: (ev: TEvent) => void): this
+    /** @deprecated */ on<TEventType extends string, TEvent = any>(
+        type: TEventType,
+        handler: (ev: TEvent) => void
+    ): this
     children: RenderConfig[]
     slot(...children: RenderConfig[]): this
 }
-export declare function createRender<TComponent extends Component<any>>(component: TComponent): ComponentRenderConfig<TComponent>
+export declare function createRender<TComponent extends Component<any>>(
+    component: TComponent
+): ComponentRenderConfig<TComponent>
 export declare function createRender<TComponent extends Component<any>>(
     component: TComponent,
     props: Partial<ComponentProps<TComponent>> | Readable<ComponentProps<TComponent>>
@@ -98,17 +100,17 @@ export declare function createRender<TComponent extends Component<any>>(
 {/if}
 ```
 
-  `ComponentRenderer.svelte` then checks `isReadable(config.props)` and either
-  wraps `PropsRenderer` in `<Subscribe props={config.props} let:props>` or
-  passes `config.props` directly. `PropsRenderer.svelte` renders
-  `<config.component {...props}>{#each config.children as child, i (i)}<Render of={child} />{/each}</config.component>`.
-  The `bind:instance` in those files is internal and never exposed — drop it.
+`ComponentRenderer.svelte` then checks `isReadable(config.props)` and either
+wraps `PropsRenderer` in `<Subscribe props={config.props} let:props>` or
+passes `config.props` directly. `PropsRenderer.svelte` renders
+`<config.component {...props}>{#each config.children as child, i (i)}<Render of={child} />{/each}</config.component>`.
+The `bind:instance` in those files is internal and never exposed — drop it.
 
 - In-repo type-only imports of `RenderConfig` that must be re-pointed:
-  - `src/lib/types/Label.ts:1` — `import type { RenderConfig } from '@humanspeak/svelte-render'`
-  - `src/lib/headerCells.ts:6` — same
-  - `src/lib/bodyCells.ts:6` — same
-  - `src/lib/plugins/addColumnFilters.ts:2` — same
+    - `src/lib/types/Label.ts:1` — `import type { RenderConfig } from '@humanspeak/svelte-render'`
+    - `src/lib/headerCells.ts:6` — same
+    - `src/lib/bodyCells.ts:6` — same
+    - `src/lib/plugins/addColumnFilters.ts:2` — same
 - `src/lib/utils/store.ts` already exports an `isReadable` type guard
   (identical semantics to the dependency's): use it, do not add another.
 - Dev example that exercises every path (keep it as the e2e fixture, do not
@@ -125,15 +127,15 @@ export declare function createRender<TComponent extends Component<any>>(
 
 ## Commands you will need
 
-| Purpose        | Command                                       | Expected on success                   |
-| -------------- | --------------------------------------------- | ------------------------------------- |
-| Install        | `pnpm install`                                | exit 0                                |
-| Typecheck      | `pnpm check`                                  | exit 0, `svelte-check found 0 errors` |
-| One test file  | `pnpm exec vitest run <path>`                 | all pass                              |
-| All unit tests | `pnpm test:only`                              | exit 0                                |
-| Lint           | `trunk check`                                 | no failures                           |
-| Format         | `trunk fmt`                                   | exit 0/1                              |
-| Package        | `pnpm package`                                | exit 0, publint clean                 |
+| Purpose        | Command                                                         | Expected on success                   |
+| -------------- | --------------------------------------------------------------- | ------------------------------------- |
+| Install        | `pnpm install`                                                  | exit 0                                |
+| Typecheck      | `pnpm check`                                                    | exit 0, `svelte-check found 0 errors` |
+| One test file  | `pnpm exec vitest run <path>`                                   | all pass                              |
+| All unit tests | `pnpm test:only`                                                | exit 0                                |
+| Lint           | `trunk check`                                                   | no failures                           |
+| Format         | `trunk fmt`                                                     | exit 0/1                              |
+| Package        | `pnpm package`                                                  | exit 0, publint clean                 |
 | E2E            | `pnpm exec playwright install --with-deps` then `pnpm test:e2e` | all pass (builds + previews on :4173) |
 
 ## Scope
@@ -188,8 +190,8 @@ implementation change — they pin the dependency's behaviour.
 <div data-testid="wrapper">{@render children?.()}</div>
 ```
 
-  then `render(Render, { props: { of: createRender(Wrapper).slot('inner', createRender(Fixture, { label: 'n' })) } })`
-  → `getByTestId('wrapper')` has text containing `inner` and `n:0`.
+then `render(Render, { props: { of: createRender(Wrapper).slot('inner', createRender(Fixture, { label: 'n' })) } })`
+→ `getByTestId('wrapper')` has text containing `inner` and `n:0`.
 
 Note: today the dependency renders children into the component's **default
 slot**. In Svelte 5 that is the `children` snippet, so `Wrapper` above is
@@ -234,9 +236,7 @@ three dependency components. Target shape:
     // Primitive-or-store branch: a store that always exists lets the template
     // use `$` auto-subscription on a $derived value (same trick the
     // dependency used) instead of manual subscribe/unsubscribe.
-    const valueStore = $derived(
-        isReadable<string | number>(config) ? config : readable(undefined)
-    )
+    const valueStore = $derived(isReadable<string | number>(config) ? config : readable(undefined))
 
     // Component branch: normalise props to a store so the template can
     // spread `$propsStore` whether the caller passed a plain object or a Readable.

@@ -9,7 +9,7 @@
 >
 > **Drift check (run first)**:
 > `git diff --stat 7dbb5a2..HEAD -- src/lib/render src/lib/index.ts`
-> Plan 002 is expected to have *created* `src/lib/render/`. Open
+> Plan 002 is expected to have _created_ `src/lib/render/`. Open
 > `src/lib/render/Render.svelte` and `src/lib/render/createRender.ts` and
 > confirm they match the shapes described in "Current state" (three-branch
 > template; `ComponentRenderConfig` class). On a mismatch, STOP.
@@ -30,10 +30,11 @@ which forces a separate `.svelte` file for every custom cell — the kitchen
 sink has seven of them (`_Profile.svelte`, `_Tick.svelte`, `_Italic.svelte`,
 …). Svelte 5 snippets exist precisely so small bits of markup can live
 inline, and the sibling `@humanspeak/svelte-markdown` made "snippet override
+
 > component renderer > default" its headline customization feature. This
-plan adds one additive `RenderConfig` variant so a column can say
-`cell: ({ value }) => createSnippetRender(profile, value)` where `profile` is
-a `{#snippet profile(value)}` declared in the same file. No existing API changes.
+> plan adds one additive `RenderConfig` variant so a column can say
+> `cell: ({ value }) => createSnippetRender(profile, value)` where `profile` is
+> a `{#snippet profile(value)}` declared in the same file. No existing API changes.
 
 ## Current state
 
@@ -42,10 +43,7 @@ a `{#snippet profile(value)}` declared in the same file. No existing API changes
 
 ```ts
 export type RenderConfig<TComponent extends Component = Component<any>> =
-    | ComponentRenderConfig<TComponent>
-    | string
-    | number
-    | Readable<string | number>
+    ComponentRenderConfig<TComponent> | string | number | Readable<string | number>
 ```
 
 - After plan 002, `src/lib/render/Render.svelte` has a three-branch template:
@@ -164,7 +162,7 @@ assumption is false: STOP and report.
 
 In `src/lib/render/createRender.ts`:
 
-```ts
+````ts
 import type { Snippet } from 'svelte'
 
 /**
@@ -200,7 +198,7 @@ export function createSnippetRender<Args = void>(
     snippet: Snippet<[Args]>,
     args?: Args | Readable<Args>
 ): SnippetRenderConfig<Args>
-```
+````
 
 (Implement the body: `return new SnippetRenderConfig(snippet, args as Args)`;
 for `Args = void` callers pass nothing.)
@@ -226,7 +224,9 @@ with, in the script, the same store-normalisation used for component props:
 ```ts
 const snippetArgsStore = $derived(
     config instanceof SnippetRenderConfig
-        ? isReadable(config.args) ? config.args : readable(config.args)
+        ? isReadable(config.args)
+            ? config.args
+            : readable(config.args)
         : readable(undefined)
 )
 ```

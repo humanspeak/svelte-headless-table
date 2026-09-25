@@ -33,7 +33,7 @@ dot (`'U.S. Sales'`, `'Avg. Score'`, `'v1.2'`) and has a column filter
 crashes the moment its filter value is set. Verified against the installed
 package on 2026-09-25:
 
-```
+```text
 keyed(writable({}), 'U.S. Sales').set('x')
 → TypeError: Cannot set properties of undefined (setting ' Sales')
 ```
@@ -87,8 +87,8 @@ const isExpanded = keyed(expandedIds, row.id) as Writable<boolean>
   `src/lib/plugins/addResizedColumns.test.ts:78` (`'thead.tr.th attrs ...'`)
   for that access pattern.
 - `src/lib/utils/store.ts` — home for store helpers; documented with JSDoc
-  + `@example` blocks; tests are one file per helper:
-  `store.arraySetStore.test.ts`, `store.recordSetStore.test.ts`.
+    - `@example` blocks; tests are one file per helper:
+      `store.arraySetStore.test.ts`, `store.recordSetStore.test.ts`.
 
 ## Commands you will need
 
@@ -145,7 +145,9 @@ describe('column ids containing dots (regression)', () => {
         ])
         const vm = table.createViewModel(columns)
         const headerCell = get(vm.headerRows)[0].cells[0]
-        const props = get(headerCell.props()) as { colFilter: { filterValue: { set: (v: unknown) => void } } }
+        const props = get(headerCell.props()) as {
+            colFilter: { filterValue: { set: (v: unknown) => void } }
+        }
 
         expect(() => props.colFilter.filterValue.set('active')).not.toThrow()
         expect(get(vm.pluginStates.colFilter.filterValues)).toEqual({ 'status.v1': 'active' })
@@ -166,7 +168,7 @@ If it passes, the reproduction is wrong: STOP and report.
 
 ### Step 2: Add `keyedProp` to `src/lib/utils/store.ts`
 
-```ts
+````ts
 /**
  * Creates a writable view of a single top-level property of a record store.
  * Unlike a path-based helper, the key is used verbatim — keys containing
@@ -195,7 +197,7 @@ export const keyedProp = <Parent extends object, Key extends keyof Parent & stri
     }
     return { subscribe, set, update }
 }
-```
+````
 
 `derived` and `Updater` are already imported in this file (check the top
 of the file; add `derived` to the `svelte/store` import if missing).
@@ -266,5 +268,5 @@ cover `columnWidths` and `isExpanded`).
 
 - `keyedProp` is intentionally single-level. If a future plugin needs nested
   paths, add a separate helper rather than re-introducing tokenisation.
-- Reviewer focus: `update` must call `fn` with the *current* value inside
+- Reviewer focus: `update` must call `fn` with the _current_ value inside
   `parent.update` (not a captured one) — the test "update uses the previous value" guards it.

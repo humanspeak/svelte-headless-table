@@ -14,14 +14,14 @@ your row when done.
 
 ## Execution order & status
 
-| Plan | Title                                                              | Priority | Effort | Depends on    | Status |
-| ---- | ------------------------------------------------------------------ | -------- | ------ | ------------- | ------ |
-| 001  | Add a jsdom component-test harness                                 | P1       | S      | —             | TODO   |
-| 002  | Make `Render`/`createRender` first-party, drop svelte-render       | P1       | M      | 001           | TODO   |
-| 003  | Make `Subscribe`/`derivedKeys` first-party, drop svelte-subscribe  | P1       | S      | 001           | TODO   |
-| 004  | Replace svelte-keyed with `keyedProp`; fix dotted-column-id crash  | P1       | S      | —             | TODO   |
-| 005  | Snippet cells/headers via `createSnippetRender`                    | P2       | M      | 002           | TODO   |
-| 006  | Docs: first-party API, `fromStore` idiom, snippet cells            | P2       | M      | 002, 003, 005 | TODO   |
+| Plan | Title                                                             | Priority | Effort | Depends on    | Status |
+| ---- | ----------------------------------------------------------------- | -------- | ------ | ------------- | ------ |
+| 001  | Add a jsdom component-test harness                                | P1       | S      | —             | TODO   |
+| 002  | Make `Render`/`createRender` first-party, drop svelte-render      | P1       | M      | 001           | TODO   |
+| 003  | Make `Subscribe`/`derivedKeys` first-party, drop svelte-subscribe | P1       | S      | 001           | TODO   |
+| 004  | Replace svelte-keyed with `keyedProp`; fix dotted-column-id crash | P1       | S      | —             | TODO   |
+| 005  | Snippet cells/headers via `createSnippetRender`                   | P2       | M      | 002           | TODO   |
+| 006  | Docs: first-party API, `fromStore` idiom, snippet cells           | P2       | M      | 002, 003, 005 | TODO   |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale)
 
