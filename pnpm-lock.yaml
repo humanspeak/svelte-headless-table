@@ -11,9 +11,6 @@ importers:
       '@humanspeak/memory-cache':
         specifier: ^1.1.2
         version: 1.1.2
-      '@humanspeak/svelte-render':
-        specifier: ^5.1.1
-        version: 5.1.1(svelte@5.56.10(@typescript-eslint/types@8.67.0))
       '@humanspeak/svelte-subscribe':
         specifier: ^5.0.0
         version: 5.0.0
@@ -913,11 +910,6 @@ packages:
 
   '@humanspeak/svelte-motion@0.9.3':
     resolution: {integrity: sha512-ZJUMW6ovPEEvpkO6Ao6oZwK90eBdt18VuQB5rdVWKiUDh0KtpRQ4IPLC6Zd/Cg0QvC/+uz8CbVapQLnpuHPzWA==}
-    peerDependencies:
-      svelte: ^5.0.0
-
-  '@humanspeak/svelte-render@5.1.1':
-    resolution: {integrity: sha512-OGqKLVezvEvHmouQXhzfGibtFxgA6a9PAuuNzJ54t1KFQScBCDl9MtLao+ze+5nVUJHoVCWbvXOEMOFY4eGROw==}
     peerDependencies:
       svelte: ^5.0.0
 
@@ -4576,11 +4568,6 @@ snapshots:
     transitivePeerDependencies:
       - react
       - react-dom
-
-  '@humanspeak/svelte-render@5.1.1(svelte@5.56.10(@typescript-eslint/types@8.67.0))':
-    dependencies:
-      '@humanspeak/svelte-subscribe': 5.0.0
-      svelte: 5.56.10(@typescript-eslint/types@8.67.0)
 
   '@humanspeak/svelte-satori-fix@0.0.6(svelte@5.56.10(@typescript-eslint/types@8.67.0))':
     dependencies:

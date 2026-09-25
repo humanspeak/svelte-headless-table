@@ -1,9 +1,9 @@
 import type { BodyRow } from '$lib/bodyRows.js'
 import type { DataColumn, DisplayColumn, FlatColumn } from '$lib/columns.js'
+import type { RenderConfig } from '$lib/render/createRender.js'
 import { TableComponent } from '$lib/tableComponent.js'
 import type { DataLabel, DisplayLabel } from '$lib/types/Label.js'
 import type { AnyPlugins } from '$lib/types/TablePlugin.js'
-import type { RenderConfig } from '@humanspeak/svelte-render'
 import { derived, type Readable } from 'svelte/store'
 
 /**

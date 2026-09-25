@@ -1,8 +1,7 @@
 <script lang="ts">
     import { page } from '$app/stores'
-    import { createRender } from '@humanspeak/svelte-render'
     import { derived, get, readable, writable } from 'svelte/store'
-    import { Render, Subscribe, createTable } from '../../lib/index.js'
+    import { Render, Subscribe, createRender, createTable } from '../../lib/index.js'
     import {
         addColumnFilters,
         addColumnOrder,

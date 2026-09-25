@@ -1,5 +1,5 @@
 // components
-export * from '@humanspeak/svelte-render'
+export * from '$lib/render/index.js'
 export { Subscribe } from '@humanspeak/svelte-subscribe'
 // table core
 export { createTable } from '$lib/createTable.js'
