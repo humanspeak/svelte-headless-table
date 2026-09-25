@@ -1,8 +1,8 @@
-import { keyed } from '@humanspeak/svelte-keyed'
 import { derived, writable, type Writable } from 'svelte/store'
 import type { HeaderCell } from '../headerCells.js'
 import type { NewTableAttributeSet, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { sum } from '../utils/math.js'
+import { keyedProp } from '../utils/store.js'
 
 /**
  * Configuration options for the addResizedColumns plugin.
@@ -152,7 +152,7 @@ export const addResizedColumns =
             current: initialWidths,
             start: {}
         })
-        const columnWidths = keyed(columnsWidthState, 'current')
+        const columnWidths = keyedProp(columnsWidthState, 'current')
 
         const pluginState = { columnWidths }
 

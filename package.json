@@ -87,7 +87,6 @@
     },
     "dependencies": {
         "@humanspeak/memory-cache": "^1.1.2",
-        "@humanspeak/svelte-keyed": "^5.0.1",
         "@humanspeak/svelte-render": "^5.1.1",
         "@humanspeak/svelte-subscribe": "^5.0.0"
     },

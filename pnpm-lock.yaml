@@ -11,9 +11,6 @@ importers:
       '@humanspeak/memory-cache':
         specifier: ^1.1.2
         version: 1.1.2
-      '@humanspeak/svelte-keyed':
-        specifier: ^5.0.1
-        version: 5.0.1
       '@humanspeak/svelte-render':
         specifier: ^5.1.1
         version: 5.1.1(svelte@5.56.10(@typescript-eslint/types@8.67.0))
@@ -897,9 +894,6 @@ packages:
   '@humanspeak/memory-cache@1.1.2':
     resolution: {integrity: sha512-6kmeqrCVThw4RYZsJ74l9cOdZQ84XHnGIzrv+Po49CZBNNVDEzi0CGsTx+KKmr/Hb6hY6yDGxeWTiz4VHkdsEg==}
     engines: {node: '>=20.19.0'}
-
-  '@humanspeak/svelte-keyed@5.0.1':
-    resolution: {integrity: sha512-jFvANd9Nb5B/u9ELTSw1iUyuckgjF9R15BvK1V7eLLPurt4hxu35bZAoZMkqYxmj8fazcSw9UkmEu66jZ0+0Rg==}
 
   '@humanspeak/svelte-markdown@1.8.7':
     resolution: {integrity: sha512-IJFFF7QuKytGBIDy/fp8xeAxMjuFfV1rt3H8t6kjDlIckVTwCTD6WPFIbirlgeingOdD6j4U6Ox8aHu0YTe2Xw==}
@@ -4562,8 +4556,6 @@ snapshots:
       - zod
 
   '@humanspeak/memory-cache@1.1.2': {}
-
-  '@humanspeak/svelte-keyed@5.0.1': {}
 
   '@humanspeak/svelte-markdown@1.8.7(shiki@4.4.3)(svelte@5.56.10(@typescript-eslint/types@8.67.0))':
     dependencies:

@@ -1,4 +1,11 @@
-import { readable, writable, type Readable, type Updater, type Writable } from 'svelte/store'
+import {
+    derived,
+    readable,
+    writable,
+    type Readable,
+    type Updater,
+    type Writable
+} from 'svelte/store'
 
 /** Union type representing either a Readable or Writable Svelte store. */
 export type ReadOrWritable<T> = Readable<T> | Writable<T>
@@ -276,4 +283,33 @@ export const recordSetStore = <T extends string | number>(
         removeAll,
         clear
     }
+}
+
+/**
+ * Creates a writable view of a single top-level property of a record store.
+ * Unlike a path-based helper, the key is used verbatim — keys containing
+ * `.` or `[` are ordinary keys.
+ *
+ * Writes replace the parent with a shallow copy so subscribers of the
+ * parent are notified.
+ *
+ * @example
+ * ```typescript
+ * const widths = writable<{ current: Record<string, number> }>({ current: {} })
+ * const current = keyedProp(widths, 'current')
+ * current.set({ a: 10 }) // widths → { current: { a: 10 } }
+ * ```
+ */
+export const keyedProp = <Parent extends object, Key extends keyof Parent & string>(
+    parent: Writable<Parent>,
+    key: Key
+): Writable<Parent[Key]> => {
+    const { subscribe } = derived(parent, ($parent) => $parent[key])
+    const set = (value: Parent[Key]) => {
+        parent.update(($parent) => ({ ...$parent, [key]: value }))
+    }
+    const update = (fn: Updater<Parent[Key]>) => {
+        parent.update(($parent) => ({ ...$parent, [key]: fn($parent[key]) }))
+    }
+    return { subscribe, set, update }
 }
