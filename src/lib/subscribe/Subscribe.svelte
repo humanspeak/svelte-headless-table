@@ -9,8 +9,8 @@
     consumer forces `compilerOptions.runes = true` (a `$$restProps` version
     would fail there with `legacy_rest_props_invalid`).
 
-    Svelte 5 consumers who prefer runes can use `fromStore` from
-    'svelte/store' instead of this component.
+    @see fromStore from 'svelte/store' — the runes-native alternative:
+    `{@const attrs = fromStore(cell.attrs())}` then `{...attrs.current}`.
 -->
 <script lang="ts" generics="Stores extends Record<string, unknown>">
     import type { Readable } from 'svelte/store'

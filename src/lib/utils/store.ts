@@ -81,6 +81,9 @@ export type DerivedKeys<S extends ReadOrWritableKeys<unknown>> =
  * Combines a map of stores into a single Readable store of their values,
  * keyed by the same names. Key order follows the insertion order of the map.
  *
+ * Exists mainly to back `<Subscribe>`; in runes code prefer reading each
+ * store with `fromStore` from 'svelte/store'.
+ *
  * @template S - The map of stores, keyed by name.
  * @param storeMap - An object whose values are Readable or Writable stores.
  * @returns A Readable store containing an object of the current store values.
