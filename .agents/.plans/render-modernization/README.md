@@ -17,10 +17,10 @@ your row when done.
 | Plan | Title                                                             | Priority | Effort | Depends on    | Status                                  |
 | ---- | ----------------------------------------------------------------- | -------- | ------ | ------------- | --------------------------------------- |
 | 001  | Add a jsdom component-test harness                                | P1       | S      | —             | DONE (PASS 965672f; amended 2026-09-25) |
-| 002  | Make `Render`/`createRender` first-party, drop svelte-render      | P1       | M      | 001           | TODO                                    |
-| 003  | Make `Subscribe`/`derivedKeys` first-party, drop svelte-subscribe | P1       | S      | 001           | TODO                                    |
+| 002  | Make `Render`/`createRender` first-party, drop svelte-render      | P1       | M      | 001           | IN PROGRESS (re-baselined to 72e5ca6)   |
+| 003  | Make `Subscribe`/`derivedKeys` first-party, drop svelte-subscribe | P1       | S      | 001           | IN PROGRESS (re-baselined to 72e5ca6)   |
 | 004  | Replace svelte-keyed with `keyedProp`; fix dotted-column-id crash | P1       | S      | —             | DONE (PASS 4371e3d)                     |
-| 005  | Snippet cells/headers via `createSnippetRender`                   | P2       | M      | 002           | TODO                                    |
+| 005  | Snippet cells/headers via `createSnippetRender`                   | P2       | M      | 002           | IN PROGRESS (re-baselined to 72e5ca6)   |
 | 006  | Docs: first-party API, `fromStore` idiom, snippet cells           | P2       | M      | 002, 003, 005 | TODO                                    |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale)

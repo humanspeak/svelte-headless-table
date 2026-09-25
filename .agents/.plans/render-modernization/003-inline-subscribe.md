@@ -12,6 +12,19 @@
 > Plans 001/002 may have touched `src/lib/index.ts` line 2 and `package.json`
 > (that is expected). Anything else must match the "Current state" excerpts;
 > on a mismatch, STOP.
+>
+> **Revision 2026-09-25 (guard, pre-flight)**: re-baselined after plans 001
+> and 004 landed on this branch (tip `72e5ca6`). Expected sibling changes
+> you will find: `src/lib/render/Fixture.test.svelte` and
+> `src/lib/render/Render.smoke.test.ts` exist (plan 001); `package.json`
+> gained `jsdom` and lost `@humanspeak/svelte-keyed` (plan 004);
+> `src/lib/utils/store.ts` gained `keyedProp` (plan 004); the three
+> plugins no longer import `svelte-keyed`. Treat those as the new baseline,
+> not drift. Environment facts from the first runs: `pnpm add`/`remove`
+> at this workspace root need `-w`; every component test file must start
+> with `import '@testing-library/jest-dom/vitest'` (the setup file's types
+> do not propagate); `trunk fmt`/`trunk check` may reformat files under
+> `.agents/` — revert those with `git checkout -- .agents` and never commit them.
 
 ## Status
 
