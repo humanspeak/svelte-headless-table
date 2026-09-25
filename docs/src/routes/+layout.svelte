@@ -6,6 +6,6 @@
     const { children } = $props()
 </script>
 
-<RootLayout config={docsConfig} favicon="/logo.svg" stars={githubStats.stars}>
+<RootLayout config={docsConfig} favicon="/favicon.png" stars={githubStats.stars}>
     {@render children?.()}
 </RootLayout>
