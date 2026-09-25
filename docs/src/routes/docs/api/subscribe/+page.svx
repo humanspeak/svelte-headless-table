@@ -26,7 +26,7 @@ sidebar_title: Subscribe
 
 Svelte Headless Table is able to remain performant by using granular derived stores for each table component; this reduces the work required to update the view model when state changes. However, stores can only be subscribed to with the `$` auto-subscription syntax if they are declared at the top level of the `<script/>` tag, and the stores returned by `.attrs()` and `.props()` are created inside `{#each}` blocks.
 
-`<Subscribe/>` gets around this by exposing each store prop as a slot prop of the same name (`let:` directive). It is a legacy-mode component, kept for compatibility; in new code you can use Svelte's built-in `fromStore` instead (see [below](#svelte-5-alternative-fromstore)).
+`<Subscribe/>` gets around this by exposing each store prop as a slot prop of the same name (`let:` directive). It is kept for compatibility with existing templates and compiles in both runes and legacy mode; in new code you can use Svelte's built-in `fromStore` instead (see [below](#svelte-5-alternative-fromstore)).
 
 ## Usage
 

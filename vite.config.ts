@@ -17,9 +17,17 @@ export default defineConfig({
         environment: 'jsdom',
         setupFiles: ['vitest.setup.ts'],
         coverage: {
-            reporter: ['lcov'],
+            reporter: ['lcov', 'text-summary'],
             provider: 'v8',
             include: ['src/**/*.ts'],
+            // Floor just under the level measured on 2026-09-25 (87/79/87/87);
+            // raise as coverage improves, never lower to make a PR pass.
+            thresholds: {
+                statements: 85,
+                branches: 77,
+                functions: 85,
+                lines: 85
+            },
             exclude: [
                 'src/**/*.test.ts',
                 'docs/**',

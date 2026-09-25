@@ -16,6 +16,8 @@ junit-playwright.xml
 # Playwright
 /test-results/
 /playwright-report/
+/docs/test-results/
+/docs/playwright-report/
 /blob-report/
 /playwright/.cache/
 
