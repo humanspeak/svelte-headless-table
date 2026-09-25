@@ -8,7 +8,7 @@
 > dispatched you and told you they maintain the index.
 >
 > **Drift check (run first)**:
-> `git diff --stat 7dbb5a2..HEAD -- src/lib/index.ts src/lib/tableComponent.ts src/lib/utils/store.ts src/lib/subscribe package.json`
+> `git diff --stat 72e5ca6..HEAD -- src/lib/index.ts src/lib/tableComponent.ts src/lib/utils/store.ts src/lib/subscribe package.json`
 > Plans 001/002 may have touched `src/lib/index.ts` line 2 and `package.json`
 > (that is expected). Anything else must match the "Current state" excerpts;
 > on a mismatch, STOP.
@@ -20,7 +20,7 @@
 - **Risk**: MED (the component is legacy-mode Svelte by necessity — see Step 3)
 - **Depends on**: 001-component-test-harness.md (can run in parallel with 002)
 - **Category**: migration / tech-debt
-- **Planned at**: commit `7dbb5a2`, 2026-09-25
+- **Planned at**: commit `72e5ca6`, 2026-09-25 (re-baselined; originally `7dbb5a2`)
 
 ## Why this matters
 

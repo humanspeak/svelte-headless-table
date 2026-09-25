@@ -8,11 +8,24 @@
 > dispatched you and told you they maintain the index.
 >
 > **Drift check (run first)**:
-> `git diff --stat 7dbb5a2..HEAD -- src/lib/index.ts src/lib/render src/lib/types/Label.ts src/lib/headerCells.ts src/lib/bodyCells.ts src/lib/plugins/addColumnFilters.ts package.json`
+> `git diff --stat 72e5ca6..HEAD -- src/lib/index.ts src/lib/render src/lib/types/Label.ts src/lib/headerCells.ts src/lib/bodyCells.ts src/lib/plugins/addColumnFilters.ts package.json`
 > Plan 001 is expected to have added `src/lib/render/Render.smoke.test.ts`
 > and `src/lib/render/Fixture.test.svelte`; anything else changed under
 > in-scope paths must be compared against the "Current state" excerpts. On a
 > mismatch, treat it as a STOP condition.
+>
+> **Revision 2026-09-25 (guard, pre-flight)**: re-baselined after plans 001
+> and 004 landed on this branch (tip `72e5ca6`). Expected sibling changes
+> you will find: `src/lib/render/Fixture.test.svelte` and
+> `src/lib/render/Render.smoke.test.ts` exist (plan 001); `package.json`
+> gained `jsdom` and lost `@humanspeak/svelte-keyed` (plan 004);
+> `src/lib/utils/store.ts` gained `keyedProp` (plan 004); the three
+> plugins no longer import `svelte-keyed`. Treat those as the new baseline,
+> not drift. Environment facts from the first runs: `pnpm add`/`remove`
+> at this workspace root need `-w`; every component test file must start
+> with `import '@testing-library/jest-dom/vitest'` (the setup file's types
+> do not propagate); `trunk fmt`/`trunk check` may reformat files under
+> `.agents/` — revert those with `git checkout -- .agents` and never commit them.
 
 ## Status
 
@@ -21,7 +34,7 @@
 - **Risk**: MED (public API surface; must stay byte-for-byte compatible)
 - **Depends on**: 001-component-test-harness.md
 - **Category**: migration / tech-debt
-- **Planned at**: commit `7dbb5a2`, 2026-09-25
+- **Planned at**: commit `72e5ca6`, 2026-09-25 (re-baselined; originally `7dbb5a2`)
 
 ## Why this matters
 
