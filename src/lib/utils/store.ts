@@ -70,6 +70,38 @@ export type ReadOrWritableKeys<T> = {
     [K in keyof T]: T[K] extends undefined ? ReadOrWritable<T[K] | undefined> : ReadOrWritable<T[K]>
 }
 
+/**
+ * The Readable store type produced by {@link derivedKeys} for a given map of stores.
+ * @template S - The map of stores, keyed by name.
+ */
+export type DerivedKeys<S extends ReadOrWritableKeys<unknown>> =
+    S extends ReadOrWritableKeys<infer T> ? Readable<T> : never
+
+/**
+ * Combines a map of stores into a single Readable store of their values,
+ * keyed by the same names. Key order follows the insertion order of the map.
+ *
+ * @template S - The map of stores, keyed by name.
+ * @param storeMap - An object whose values are Readable or Writable stores.
+ * @returns A Readable store containing an object of the current store values.
+ * @example
+ * ```typescript
+ * const merged = derivedKeys({ a: readable(1), b: writable('x') })
+ * get(merged) // { a: 1, b: 'x' }
+ * ```
+ */
+export const derivedKeys = <S extends ReadOrWritableKeys<unknown>>(storeMap: S): DerivedKeys<S> => {
+    // Freeze the order of entries.
+    const entries = Object.entries(storeMap) as [string, Readable<unknown>][]
+    const keys = entries.map(([key]) => key)
+    return derived(
+        entries.map(([, store]) => store),
+        ($stores) => {
+            return Object.fromEntries($stores.map((store, idx) => [keys[idx], store]))
+        }
+    ) as DerivedKeys<S>
+}
+
 /** A readable store that always contains undefined. */
 export const Undefined = readable(undefined)
 

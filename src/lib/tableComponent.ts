@@ -7,7 +7,7 @@ import type {
 } from '$lib/types/TablePlugin.js'
 import { finalizeAttributes, mergeAttributes } from '$lib/utils/attributes.js'
 import type { Clonable } from '$lib/utils/clone.js'
-import { derivedKeys } from '@humanspeak/svelte-subscribe'
+import { derivedKeys } from '$lib/utils/store.js'
 import { derived, type Readable } from 'svelte/store'
 
 /**

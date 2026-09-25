@@ -86,8 +86,7 @@
         "test:watch": "vitest"
     },
     "dependencies": {
-        "@humanspeak/memory-cache": "^1.1.2",
-        "@humanspeak/svelte-subscribe": "^5.0.0"
+        "@humanspeak/memory-cache": "^1.1.2"
     },
     "devDependencies": {
         "@eslint/compat": "^2.1.0",
