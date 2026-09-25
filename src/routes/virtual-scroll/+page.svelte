@@ -106,8 +106,9 @@
         if (loadingMore) return
         loadingMore = true
 
-        // Simulate network delay
-        await new Promise((resolve) => setTimeout(resolve, 300))
+        // Simulate network delay with ±100 ms of jitter around 300 ms.
+        const delayMs = 200 + Math.random() * 200
+        await new Promise((resolve) => setTimeout(resolve, delayMs))
 
         const newItems = generateItems(1000, totalItemsLoaded)
         data.update((d) => [...d, ...newItems])
