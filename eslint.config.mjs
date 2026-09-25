@@ -135,12 +135,11 @@ export default [
         }
     },
     {
-        // Start with warnings to establish a baseline for production package code.
         // Modified complexity counts each switch once, regardless of case count.
         files: ['src/lib/**/*.{ts,js,svelte}'],
         ignores: ['src/lib/**/*.test.*', 'src/lib/**/*.spec.*', 'src/lib/**/*.d.ts'],
         rules: {
-            complexity: ['warn', { max: 15, variant: 'modified' }]
+            complexity: ['error', { max: 15, variant: 'modified' }]
         }
     }
 ]

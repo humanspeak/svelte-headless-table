@@ -1,7 +1,7 @@
 import { get, writable } from 'svelte/store'
 import { beforeAll, describe, expect, test, vi } from 'vitest'
 import { createTable } from '../createTable.js'
-import { addVirtualScroll } from './addVirtualScroll.js'
+import { addVirtualScroll, resolveAlignedOffset } from './addVirtualScroll.js'
 
 interface TestItem {
     id: number
@@ -1582,5 +1582,32 @@ describe('addVirtualScroll with a sticky header', () => {
         // screen occupy [440,800] — row space [400,760], i.e. rows 10-18.
         expect(get(state.viewportRange)).toEqual({ start: 10, end: 19 })
         unsubscribe()
+    })
+})
+
+describe('resolveAlignedOffset', () => {
+    // rowStart 500, rowHeight 40, viewport 300, currentTop 100
+    test('start aligns the row to the top', () => {
+        expect(resolveAlignedOffset('start', 500, 40, 300, 100)).toBe(500)
+    })
+
+    test('center puts the row in the middle of the viewport', () => {
+        expect(resolveAlignedOffset('center', 500, 40, 300, 100)).toBe(500 - (300 - 40) / 2)
+    })
+
+    test('end aligns the row bottom to the viewport bottom', () => {
+        expect(resolveAlignedOffset('end', 500, 40, 300, 100)).toBe(500 - 300 + 40)
+    })
+
+    test('auto returns undefined when the row is already fully visible', () => {
+        expect(resolveAlignedOffset('auto', 150, 40, 300, 100)).toBeUndefined()
+    })
+
+    test('auto scrolls up to a row above the viewport', () => {
+        expect(resolveAlignedOffset('auto', 50, 40, 300, 100)).toBe(50)
+    })
+
+    test('auto scrolls down just enough for a row below the viewport', () => {
+        expect(resolveAlignedOffset('auto', 500, 40, 300, 100)).toBe(500 + 40 - 300)
     })
 })
