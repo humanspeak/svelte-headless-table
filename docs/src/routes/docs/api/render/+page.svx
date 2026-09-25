@@ -38,6 +38,7 @@ sidebar_title: Render
 1. a `string` or `number` for static content
 2. a `Readable<string>` or `Readable<number>` for dynamic content
 3. a `ComponentRenderConfig` returned from `createRender` for Svelte component content
+4. a `SnippetRenderConfig` returned from <a href="./create-render#createsnippetrender">`createSnippetRender`</a> for Svelte 5 snippet content
 
 <Admonition type="note">`ComponentRenderConfig` can either be static or dynamic depending on its prop type. See also <a href="./create-render">createRender</a>.</Admonition>
 
@@ -83,3 +84,20 @@ Renders a Svelte component with props. `ComponentRenderConfig` is created with <
 <Render of={profile} />
 ```
 
+---
+
+### `Render#of: SnippetRenderConfig`
+
+Renders a Svelte 5 snippet with a single argument. `SnippetRenderConfig` is created with <a href="./create-render#createsnippetrender">createSnippetRender</a>.
+
+```svelte
+<script>
+    const greeting = createSnippetRender(hello, 'Alan Turing')
+</script>
+
+{#snippet hello(name)}
+    <strong>Hello, {name}</strong>
+{/snippet}
+
+<Render of={greeting} />
+```

@@ -25,14 +25,12 @@ sidebar_title: createRender
 
 It combines a component with props and events to create a `ComponentRenderConfig` that is passed into <a href="/docs/api/render">`Render#of`</a> to dynamically render Svelte components.
 
-<Admonition type="note">`createRender` is based on <a href="https://github.com/humanspeak/svelte-render">svelte-render</a>.</Admonition>
-
 `createRender` accepts a Svelte component and either:
 
 1. an object of static props; or
 2. a `Readable` object for dynamic props.
 
-To define event handlers, chain <code>.on(type, handler)</code> method calls.
+To define event handlers, pass them as `on<event>` props (for example `onclick`), the same way you would on any Svelte 5 component.
 
 ## Usage
 
@@ -97,7 +95,9 @@ Creates a render configuration with a Svelte component and dynamic props.
 
 ### `.on(type: EventType, handler: (ev) => void)`
 
-`ComponentRenderConfig` exposes an `.on()` method that allows events to be defined and attached to the component when it is mounted.
+<Admonition type="warning">`.on()` is deprecated and will be removed in the next major release. Pass the handler as an `on&lt;event&gt;` prop instead: `createRender(Button, &#123; onclick: handler &#125;)`.</Admonition>
+
+`ComponentRenderConfig` exposes an `.on()` method that allows events to be defined and attached to the component when it is mounted. Each call sets the matching `on<type>` prop on the component.
 
 ```svelte
 <script>
@@ -123,4 +123,39 @@ Creates a render configuration with a Svelte component and dynamic props.
 <Render of={notice} />
 ```
 
+To migrate, pass the handler as an `on<event>` prop instead of chaining `.on()`:
 
+```svelte
+<script>
+    import Notice from './Notice.svelte'
+    const notice = createRender(Notice, {
+        onclick: (ev) => console.log(ev)
+    })
+</script>
+
+<Render of={notice} />
+```
+
+## `createSnippetRender: (snippet: Snippet<[Args]>, args?: Args | Readable<Args>) => SnippetRenderConfig`
+
+Creates a render configuration from a Svelte 5 snippet instead of a component. The snippet receives a single argument, which can be a static value or a `Readable` store (the snippet re-renders when the store changes). Omit `args` for snippets that take no argument.
+
+This works from `<script>` because Svelte hoists top-level snippets, so a snippet declared in the component's markup can be referenced while defining columns.
+
+```svelte
+<script>
+    import { createSnippetRender } from '@humanspeak/svelte-headless-table'
+
+    const columns = table.createColumns([
+        table.column({
+            accessor: 'name',
+            header: 'Name',
+            cell: ({ value }) => createSnippetRender(nameCell, value)
+        })
+    ])
+</script>
+
+{#snippet nameCell(name)}
+    <strong>{name}</strong>
+{/snippet}
+```

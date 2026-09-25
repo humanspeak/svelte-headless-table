@@ -95,7 +95,47 @@ HTML tables have a standard structure.
 </table>
 ```
 
-We apply our view model over the structure.
+We apply our view model over the structure. The `.attrs()` stores are created per row and per cell, so we read them with Svelte's `fromStore`, whose `current` property is reactive inside the template.
+
+```svelte
+<script>
+    import { fromStore } from 'svelte/store'
+    import { Render } from '@humanspeak/svelte-headless-table'
+</script>
+
+<table {...$tableAttrs}>
+    <thead>
+        {#each $headerRows as headerRow (headerRow.id)}
+            {@const rowAttrs = fromStore(headerRow.attrs())}
+            <tr {...rowAttrs.current}>
+                {#each headerRow.cells as cell (cell.id)}
+                    {@const attrs = fromStore(cell.attrs())}
+                    <th {...attrs.current}>
+                        <Render of={cell.render()} />
+                    </th>
+                {/each}
+            </tr>
+        {/each}
+    </thead>
+    <tbody {...$tableBodyAttrs}>
+        {#each $rows as row (row.id)}
+            {@const rowAttrs = fromStore(row.attrs())}
+            <tr {...rowAttrs.current}>
+                {#each row.cells as cell (cell.id)}
+                    {@const attrs = fromStore(cell.attrs())}
+                    <td {...attrs.current}>
+                        <Render of={cell.render()} />
+                    </td>
+                {/each}
+            </tr>
+        {/each}
+    </tbody>
+</table>
+```
+
+### Using Subscribe
+
+Both approaches are supported; this is the same table using the `Subscribe` component, which exposes each store as a slot prop.
 
 ```svelte
 <table {...$tableAttrs}>
@@ -132,7 +172,7 @@ We apply our view model over the structure.
 </table>
 ```
 
-<Admonition type="info">`Subscribe` and `Render` are provided by Svelte Headless Table to overcome certain limitations of Svelte. Read more about <a href="/docs/api/subscribe">Subscribe</a> and <a href="/docs/api/render">Render</a>.</Admonition>
+<Admonition type="info">`Render` is provided by Svelte Headless Table; `fromStore` comes from Svelte itself. If you prefer slot props, `Subscribe` is also provided — see <a href="/docs/api/subscribe">Subscribe</a> and <a href="/docs/api/render">Render</a>.</Admonition>
 
 ## Final result
 
