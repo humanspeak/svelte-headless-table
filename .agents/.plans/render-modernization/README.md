@@ -18,7 +18,7 @@ your row when done.
 | ---- | ----------------------------------------------------------------- | -------- | ------ | ------------- | --------------------------------------- |
 | 001  | Add a jsdom component-test harness                                | P1       | S      | —             | DONE (PASS 965672f; amended 2026-09-25) |
 | 002  | Make `Render`/`createRender` first-party, drop svelte-render      | P1       | M      | 001           | DONE (PASS ec996fb)                     |
-| 003  | Make `Subscribe`/`derivedKeys` first-party, drop svelte-subscribe | P1       | S      | 001           | IN PROGRESS (re-baselined to 72e5ca6)   |
+| 003  | Make `Subscribe`/`derivedKeys` first-party, drop svelte-subscribe | P1       | S      | 001           | DONE (PASS 05f757e)                     |
 | 004  | Replace svelte-keyed with `keyedProp`; fix dotted-column-id crash | P1       | S      | —             | DONE (PASS 4371e3d)                     |
 | 005  | Snippet cells/headers via `createSnippetRender`                   | P2       | M      | 002           | DONE (PASS ec996fb)                     |
 | 006  | Docs: first-party API, `fromStore` idiom, snippet cells           | P2       | M      | 002, 003, 005 | TODO                                    |

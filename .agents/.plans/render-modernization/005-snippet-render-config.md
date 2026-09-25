@@ -8,20 +8,33 @@
 > dispatched you and told you they maintain the index.
 >
 > **Drift check (run first)**:
-> `git diff --stat 7dbb5a2..HEAD -- src/lib/render src/lib/index.ts`
+> `git diff --stat 05f757e..HEAD -- src/lib/render src/lib/index.ts src/routes/kitchen-sink src/routes/_Profile.svelte`
 > Plan 002 is expected to have _created_ `src/lib/render/`. Open
 > `src/lib/render/Render.svelte` and `src/lib/render/createRender.ts` and
 > confirm they match the shapes described in "Current state" (three-branch
 > template; `ComponentRenderConfig` class). On a mismatch, STOP.
-
-## Status
+>
+> **Revision 2026-09-25 (guard, pre-flight)**: plans 001–004 have landed;
+> drift-check SHA re-baselined to the batch tip. Facts from the earlier
+> runs: `src/lib/render/` contains `Render.svelte`, `createRender.ts`,
+> `index.ts`, `Render.test.ts` (9 cases) and two fixtures
+> (`Fixture.test.svelte`, `Wrapper.test.svelte`); `Render.svelte` carries a
+> `trunk-ignore(eslint/svelte/require-store-reactive-access)` on its
+> primitive branch — keep it. Every component test file must begin with
+> `import '@testing-library/jest-dom/vitest'`. `pnpm` add/remove at this
+> workspace root needs `-w`. `trunk fmt`/`trunk check` may reformat files
+> under `.agents/` — revert with `git checkout -- .agents`, never commit them.
+> The plan's `node -e "import('./dist/index.js')…"` done criterion cannot
+> pass in Node (it cannot import `.svelte`); use
+> `node -e "import('./dist/render/createRender.js').then(m => console.log(typeof m.createSnippetRender, typeof m.SnippetRenderConfig))"`
+> instead.
 
 - **Priority**: P2
 - **Effort**: M
 - **Risk**: LOW (purely additive; existing `RenderConfig` variants untouched)
 - **Depends on**: 002-inline-render.md (needs first-party `Render.svelte`)
 - **Category**: direction / enhancement
-- **Planned at**: commit `7dbb5a2`, 2026-09-25
+- **Planned at**: commit `05f757e`, 2026-09-25 (re-baselined; originally `7dbb5a2`)
 
 ## Why this matters
 
@@ -285,7 +298,7 @@ as `Colton Mertz` rendered by this column).
 
 - [ ] `pnpm check` exits 0
 - [ ] `pnpm test:only` exits 0; `Render.snippet.test.ts` has 4 passing tests
-- [ ] `node -e "import('./dist/index.js').then(m => console.log(typeof m.createSnippetRender, typeof m.SnippetRenderConfig))"` → `function function` (after `pnpm package`)
+- [ ] `node -e "import('./dist/render/createRender.js').then(m => console.log(typeof m.createSnippetRender, typeof m.SnippetRenderConfig))"` → `function function` (after `pnpm package`)
 - [ ] `grep -n "createSnippetRender" src/routes/kitchen-sink/+page.svelte` → ≥ 1 match
 - [ ] `pnpm test:e2e` exits 0
 - [ ] `git status --porcelain` lists only in-scope files
