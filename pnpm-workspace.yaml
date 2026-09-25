@@ -6,8 +6,7 @@ minimumReleaseAge: 2880
 minimumReleaseAgeExclude:
     - '@humanspeak/*'
 allowBuilds:
-    '@humanspeak/docs-kit': true
+    '@humanspeak/docs-kit@git+https://github.com/humanspeak/docs-kit.git': true
     esbuild: true
     sharp: true
     workerd: true
-    '@humanspeak/docs-kit@https://codeload.github.com/humanspeak/docs-kit/tar.gz/7f9018cb91c5497c7ebd2bfca2c28aab9e1116ae': true
