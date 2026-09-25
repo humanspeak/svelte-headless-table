@@ -28,24 +28,23 @@
         isReadable<string | number>(config) ? config : readable(undefined)
     )
 
-    // Snippet branch: normalise the snippet argument to a store, mirroring the
-    // component-props normalisation below.
+    // Snippet branch. The instanceof check is the one place `config` is
+    // inspected as a raw value; the store rule cannot see that a
+    // SnippetRenderConfig is never a store, so it is suppressed here only.
+    // trunk-ignore(eslint/svelte/require-store-reactive-access)
+    const snippetConfig = $derived(config instanceof SnippetRenderConfig ? config : undefined)
     const snippetArgsStore: Readable<unknown> = $derived(
-        // `config` is a SnippetRenderConfig here, not a store; the rule cannot see the narrowing.
-        // trunk-ignore(eslint/svelte/require-store-reactive-access)
-        config instanceof SnippetRenderConfig
-            ? isReadable(config.args)
-                ? config.args
-                : readable(config.args)
-            : readable(undefined)
+        snippetConfig === undefined
+            ? readable(undefined)
+            : isReadable(snippetConfig.args)
+              ? snippetConfig.args
+              : readable(snippetConfig.args)
     )
 
     // Component branch: normalise props to a store so the template can
     // spread `$propsStore` whether the caller passed a plain object or a Readable.
     const componentConfig = $derived(
-        typeof config === 'object' &&
-            !isReadable(config) &&
-            !(config instanceof SnippetRenderConfig)
+        typeof config === 'object' && !isReadable(config) && snippetConfig === undefined
             ? (config as ComponentRenderConfig<TComponent>)
             : undefined
     )
@@ -60,10 +59,8 @@
 
 {#if isReadable(config)}
     {$valueStore}
-    <!-- The store case is handled above, so `config` is not a store here. -->
-    <!-- trunk-ignore(eslint/svelte/require-store-reactive-access) -->
-{:else if config instanceof SnippetRenderConfig}
-    {@render config.snippet($snippetArgsStore)}
+{:else if snippetConfig !== undefined}
+    {@render snippetConfig.snippet($snippetArgsStore)}
 {:else if componentConfig === undefined}
     <!-- Narrowed to string | number here; the store branch is handled above. -->
     <!-- trunk-ignore(eslint/svelte/require-store-reactive-access) -->
