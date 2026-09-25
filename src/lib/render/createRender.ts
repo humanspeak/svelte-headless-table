@@ -1,18 +1,24 @@
-import type { Component, ComponentProps } from 'svelte'
+import type { Component, ComponentProps, Snippet } from 'svelte'
 import type { Readable } from 'svelte/store'
 
 /**
  * Configuration type for rendering Svelte components or primitive values.
  *
  * A `RenderConfig` is either a {@link ComponentRenderConfig} (created with
- * {@link createRender}), a plain string or number, or a `Readable` store of a
- * string or number.
+ * {@link createRender}), a {@link SnippetRenderConfig} (created with
+ * {@link createSnippetRender}), a plain string or number, or a `Readable`
+ * store of a string or number.
  *
  * @template TComponent - The Svelte component type.
  */
 // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
 export type RenderConfig<TComponent extends Component = Component<any>> =
-    ComponentRenderConfig<TComponent> | string | number | Readable<string | number>
+    | ComponentRenderConfig<TComponent>
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+    | SnippetRenderConfig<any>
+    | string
+    | number
+    | Readable<string | number>
 
 /**
  * Configuration class for rendering Svelte components with props and slots.
@@ -134,4 +140,50 @@ export function createRender<TComponent extends Component<any>>(
     props?: Partial<ComponentProps<TComponent>> | Readable<ComponentProps<TComponent>>
 ): ComponentRenderConfig<TComponent> {
     return new ComponentRenderConfig(component, props as Record<string, unknown> | undefined)
+}
+
+/**
+ * Render configuration for a Svelte 5 snippet with a single argument.
+ * Created with {@link createSnippetRender}.
+ *
+ * @template Args - The type of the single argument passed to the snippet.
+ */
+export class SnippetRenderConfig<Args = void> {
+    constructor(
+        /** The snippet to render. */
+        // trunk-ignore(eslint/no-unused-vars)
+        public snippet: Snippet<[Args]>,
+        /** The single argument passed to the snippet, static or reactive. */
+        // trunk-ignore(eslint/no-unused-vars)
+        public args: Args | Readable<Args>
+    ) {}
+}
+
+/**
+ * Creates a render configuration for a snippet declared in the consumer's
+ * markup. Top-level snippets are hoisted by Svelte, so they can be referenced
+ * from the `<script>` block where columns are defined.
+ *
+ * @template Args - The type of the single argument passed to the snippet.
+ * @param snippet - The snippet to render.
+ * @param args - The single argument passed to the snippet, either static or a
+ * `Readable` store. Omit for snippets that take no argument.
+ * @returns A new {@link SnippetRenderConfig} instance.
+ *
+ * @example
+ * ```svelte
+ * <script>
+ *   const columns = table.createColumns([
+ *     table.column({ accessor: 'name', header: 'Name',
+ *       cell: ({ value }) => createSnippetRender(nameCell, value) })
+ *   ])
+ * </script>
+ * {#snippet nameCell(name)}<strong>{name}</strong>{/snippet}
+ * ```
+ */
+export function createSnippetRender<Args = void>(
+    snippet: Snippet<[Args]>,
+    args?: Args | Readable<Args>
+): SnippetRenderConfig<Args> {
+    return new SnippetRenderConfig(snippet, args as Args)
 }
