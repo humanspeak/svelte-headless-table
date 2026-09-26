@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@humanspeak/memory-cache':
-        specifier: ^1.1.2
-        version: 1.1.2
+        specifier: ^1.2.0
+        version: 1.2.0
     devDependencies:
       '@eslint/compat':
         specifier: ^2.1.0
@@ -888,8 +888,8 @@ packages:
       shiki:
         optional: true
 
-  '@humanspeak/memory-cache@1.1.2':
-    resolution: {integrity: sha512-6kmeqrCVThw4RYZsJ74l9cOdZQ84XHnGIzrv+Po49CZBNNVDEzi0CGsTx+KKmr/Hb6hY6yDGxeWTiz4VHkdsEg==}
+  '@humanspeak/memory-cache@1.2.0':
+    resolution: {integrity: sha512-im7GIIpgjdD6Fx68xCeiXw3XiDv30/WMRAaodMm+ep0ptYfEUd0cdNeTAylHGIRTJIeByKFHdTmPjAktyDM/JQ==}
     engines: {node: '>=20.19.0'}
 
   '@humanspeak/svelte-markdown@1.8.7':
@@ -4544,11 +4544,11 @@ snapshots:
       - '@internationalized/date'
       - zod
 
-  '@humanspeak/memory-cache@1.1.2': {}
+  '@humanspeak/memory-cache@1.2.0': {}
 
   '@humanspeak/svelte-markdown@1.8.7(shiki@4.4.3)(svelte@5.56.10(@typescript-eslint/types@8.67.0))':
     dependencies:
-      '@humanspeak/memory-cache': 1.1.2
+      '@humanspeak/memory-cache': 1.2.0
       github-slugger: 2.0.0
       htmlparser2: 12.0.0
       marked: 18.0.10
