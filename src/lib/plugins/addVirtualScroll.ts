@@ -3,6 +3,7 @@ import { derived, get, readable, writable, type Readable, type Writable } from '
 import type { BodyRow } from '../bodyRows.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { HeightManager } from '../utils/HeightManager.js'
+import { resolveAlignedOffset } from '../utils/scrollAlign.js'
 import { isReadable, isWritable } from '../utils/store.js'
 import type {
     RangeChangeContext,
@@ -595,27 +596,16 @@ export const addVirtualScroll = <Item>({
               )
             : get(rowViewport).top
 
-        let targetOffset: number
-        switch (align) {
-            case 'center':
-                targetOffset = rowStart - ($viewportHeight - rowHeight) / 2
-                break
-            case 'end':
-                targetOffset = rowStart - $viewportHeight + rowHeight
-                break
-            case 'auto': {
-                const rowEnd = rowStart + rowHeight
-                if (rowStart >= currentTop && rowEnd <= currentTop + $viewportHeight) {
-                    // Already fully visible
-                    return
-                }
-                targetOffset = rowStart < currentTop ? rowStart : rowEnd - $viewportHeight
-                break
-            }
-            case 'start':
-            default:
-                targetOffset = rowStart
-                break
+        const targetOffset = resolveAlignedOffset(
+            align,
+            rowStart,
+            rowHeight,
+            $viewportHeight,
+            currentTop
+        )
+        if (targetOffset === undefined) {
+            // Already fully visible
+            return
         }
 
         const scrollPosition = isSparse

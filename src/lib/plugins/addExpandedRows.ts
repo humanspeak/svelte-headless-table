@@ -1,9 +1,8 @@
 import { MemoryCache } from '@humanspeak/memory-cache'
-import { keyed } from '@humanspeak/svelte-keyed'
 import { derived, readable, type Readable, type Writable } from 'svelte/store'
 import type { BodyRow } from '../bodyRows.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
-import { recordSetStore, type RecordSetStore } from '../utils/store.js'
+import { keyedProp, recordSetStore, type RecordSetStore } from '../utils/store.js'
 import { DEFAULT_ROW_STATE_CACHE_CONFIG } from './cacheConfig.js'
 
 /**
@@ -103,7 +102,7 @@ export const addExpandedRows =
                 return cached
             }
 
-            const isExpanded = keyed(expandedIds, row.id) as Writable<boolean>
+            const isExpanded = keyedProp(expandedIds, row.id)
             const canExpand = readable((row.subRows?.length ?? 0) > 0)
             const subRowExpandedIds = derived(expandedIds, ($expandedIds) => {
                 // Check prefix with '>' to match child ids while ignoring this row's id.

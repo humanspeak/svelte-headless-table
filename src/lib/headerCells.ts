@@ -1,9 +1,9 @@
 import { NBSP } from '$lib/constants.js'
 import type { TableState } from '$lib/createViewModel.js'
+import type { RenderConfig } from '$lib/render/createRender.js'
 import { TableComponent } from '$lib/tableComponent.js'
 import type { HeaderLabel } from '$lib/types/Label.js'
 import type { AnyPlugins } from '$lib/types/TablePlugin.js'
-import type { RenderConfig } from '@humanspeak/svelte-render'
 import { derived } from 'svelte/store'
 
 /**

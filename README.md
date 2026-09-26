@@ -67,6 +67,9 @@ Easily extend Svelte Headless Table with complex **sorting**, **filtering**, **g
 <!-- prettier-ignore -->
 ```svelte
 <script>
+  import { fromStore, readable } from 'svelte/store';
+  import { createTable, Render } from '@humanspeak/svelte-headless-table';
+
   const data = readable([
     { name: 'Ada Lovelace', age: 21 },
     { name: 'Barbara Liskov', age: 52 },
@@ -97,35 +100,56 @@ Easily extend Svelte Headless Table with complex **sorting**, **filtering**, **g
 <table {...$tableAttrs}>
   <thead>
     {#each $headerRows as headerRow (headerRow.id)}
-      <Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
-        <tr {...rowAttrs}>
-          {#each headerRow.cells as cell (cell.id)}
-            <Subscribe attrs={cell.attrs()} let:attrs>
-              <th {...attrs}>
-                <Render of={cell.render()} />
-              </th>
-            </Subscribe>
-          {/each}
-        </tr>
-      </Subscribe>
+      {@const rowAttrs = fromStore(headerRow.attrs())}
+      <tr {...rowAttrs.current}>
+        {#each headerRow.cells as cell (cell.id)}
+          {@const attrs = fromStore(cell.attrs())}
+          <th {...attrs.current}>
+            <Render of={cell.render()} />
+          </th>
+        {/each}
+      </tr>
     {/each}
   </thead>
   <tbody {...$tableBodyAttrs}>
     {#each $rows as row (row.id)}
-      <Subscribe rowAttrs={row.attrs()} let:rowAttrs>
-        <tr {...rowAttrs}>
-          {#each row.cells as cell (cell.id)}
-            <Subscribe attrs={cell.attrs()} let:attrs>
-              <td {...attrs}>
-                <Render of={cell.render()} />
-              </td>
-            </Subscribe>
-          {/each}
-        </tr>
-      </Subscribe>
+      {@const rowAttrs = fromStore(row.attrs())}
+      <tr {...rowAttrs.current}>
+        {#each row.cells as cell (cell.id)}
+          {@const attrs = fromStore(cell.attrs())}
+          <td {...attrs.current}>
+            <Render of={cell.render()} />
+          </td>
+        {/each}
+      </tr>
     {/each}
   </tbody>
 </table>
+```
+
+`fromStore` comes from Svelte itself; its `current` property is reactive inside the template. The `Subscribe` component (`<Subscribe attrs={cell.attrs()} let:attrs>`) is still supported if you prefer slot props — see the [Subscribe docs](https://table.svelte.page/docs/api/subscribe).
+
+### Custom cells with snippets
+
+Use `createSnippetRender` to render a cell (or header) with a snippet declared in the same component. Top-level snippets are hoisted, so they can be referenced from `<script>`.
+
+<!-- prettier-ignore -->
+```svelte
+<script>
+  import { createSnippetRender } from '@humanspeak/svelte-headless-table';
+
+  const columns = table.createColumns([
+    table.column({
+      accessor: 'name',
+      header: 'Name',
+      cell: ({ value }) => createSnippetRender(nameCell, value),
+    }),
+  ]);
+</script>
+
+{#snippet nameCell(name)}
+  <strong>{name}</strong>
+{/snippet}
 ```
 
 For more complex examples with advanced features, visit the [documentation site](https://table.svelte.page/docs/plugins/overview).

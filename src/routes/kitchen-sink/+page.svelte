@@ -1,8 +1,13 @@
 <script lang="ts">
     import { page } from '$app/stores'
-    import { createRender } from '@humanspeak/svelte-render'
     import { derived, get, readable, writable } from 'svelte/store'
-    import { Render, Subscribe, createTable } from '../../lib/index.js'
+    import {
+        Render,
+        Subscribe,
+        createRender,
+        createSnippetRender,
+        createTable
+    } from '../../lib/index.js'
     import {
         addColumnFilters,
         addColumnOrder,
@@ -26,7 +31,6 @@
     import ExpandIndicator from '../_ExpandIndicator.svelte'
     import Italic from '../_Italic.svelte'
     import NumberRangeFilter from '../_NumberRangeFilter.svelte'
-    import Profile from '../_Profile.svelte'
     import SelectFilter from '../_SelectFilter.svelte'
     import SelectIndicator from '../_SelectIndicator.svelte'
     import TextFilter from '../_TextFilter.svelte'
@@ -151,12 +155,7 @@
             header: 'Summary',
             id: 'summary',
             accessor: (item) => item,
-            cell: ({ value }) =>
-                createRender(Profile, {
-                    age: value.age,
-                    progress: value.progress,
-                    name: `${value.firstName} ${value.lastName}`
-                }),
+            cell: ({ value }) => createSnippetRender(summaryCell, value),
             plugins: {
                 sort: {
                     getSortValue: (i) => i.lastName
@@ -338,6 +337,12 @@
     const { exportedData: exportedJson } = pluginStates.exportJson
     const { exportedData: exportedCsv } = pluginStates.exportCsv
 </script>
+
+{#snippet summaryCell(value: Sample)}
+    {@const name = `${value.firstName} ${value.lastName}`}
+    <div style="font-size: 0.875rem">{name}, <strong>{value.age}</strong></div>
+    <div style="font-size: 0.875rem">{value.progress} / 100</div>
+{/snippet}
 
 <h1>@humanspeak/svelte-headless-table</h1>
 

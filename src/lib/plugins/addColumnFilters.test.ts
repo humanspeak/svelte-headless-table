@@ -1,4 +1,4 @@
-import { get, readable } from 'svelte/store'
+import { get, readable, type Writable } from 'svelte/store'
 import { describe, expect, test } from 'vitest'
 import { createTable } from '../createTable.js'
 import {
@@ -337,5 +337,41 @@ describe('integration tests', () => {
         headerRows[0].cells.forEach((cell) => get(cell.props()))
         const rows = get(vm.rows)
         expect(rows).toHaveLength(2)
+    })
+})
+
+describe('column ids containing dots (regression)', () => {
+    test('setting a filter on a column whose id contains a dot does not throw and filters', () => {
+        const table = createTable(readable(sampleData), { colFilter: addColumnFilters() })
+        // The header-cell props expose only `render`; the filter-value store is
+        // handed to the column's `render` callback, so capture it there.
+        let filterValue: Writable<unknown> | undefined
+        const columns = table.createColumns([
+            table.column({
+                accessor: 'status',
+                id: 'status.v1',
+                header: 'Status v1',
+                plugins: {
+                    colFilter: {
+                        fn: matchFilter,
+                        render: ((args: any) => {
+                            filterValue = args.filterValue
+                            return { component: 'input' as unknown as never, props: {} }
+                        }) as any
+                    }
+                }
+            })
+        ])
+        const vm = table.createViewModel(columns)
+        const headerCell = get(vm.headerRows)[0].cells[0]
+        get(headerCell.props())
+
+        expect(filterValue).toBeDefined()
+        expect(() => filterValue!.set('active')).not.toThrow()
+        expect(get(vm.pluginStates.colFilter.filterValues)).toEqual({ 'status.v1': 'active' })
+        expect(get(vm.rows).map((r) => r.isData() && r.original.status)).toEqual([
+            'active',
+            'active'
+        ])
     })
 })

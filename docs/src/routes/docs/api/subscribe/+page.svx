@@ -22,13 +22,11 @@ sidebar_title: Subscribe
   }
 </script>
 
-<Admonition type="note">`&lt;Subscribe/&gt;` is based on <a href="https://github.com/humanspeak/svelte-subscribe">svelte-subscribe</a>.</Admonition>
-
 ## Granular stores
 
-Svelte Headless Table is able to remain performant by using granular derived stores for each table component; this reduces the work required to update the view model when state changes. However, stores can only be subscribed to with the `$` auto-subscription syntax if they are defined in the top level of the `<script/>` tag.
+Svelte Headless Table is able to remain performant by using granular derived stores for each table component; this reduces the work required to update the view model when state changes. However, stores can only be subscribed to with the `$` auto-subscription syntax if they are declared at the top level of the `<script/>` tag, and the stores returned by `.attrs()` and `.props()` are created inside `{#each}` blocks.
 
-`<Subscribe/>` cleverly gets around this limitation by using <a href="https://svelte.dev/tutorial/slot-props">slot props</a>.
+`<Subscribe/>` gets around this by exposing each store prop as a slot prop of the same name (`let:` directive). It is kept for compatibility with existing templates and compiles in both runes and legacy mode; in new code you can use Svelte's built-in `fromStore` instead (see [below](#svelte-5-alternative-fromstore)).
 
 ## Usage
 
@@ -63,3 +61,27 @@ For every Svelte store prop that `<Subscribe/>` receives, it exposes a slot prop
 ```
 
 
+## Svelte 5 alternative: fromStore
+
+Svelte 5 ships `fromStore` in `svelte/store`, which turns any store into an object with a reactive `current` property. Reading `.current` inside the template subscribes for as long as that part of the template is rendered, so you can read the `.attrs()` and `.props()` stores directly in an `{#each}` block without `<Subscribe/>`.
+
+```svelte
+<script>
+    import { fromStore } from 'svelte/store'
+</script>
+
+{#each $rows as row (row.id)}
+    {@const rowAttrs = fromStore(row.attrs())}
+    <tr {...rowAttrs.current}>
+        {#each row.cells as cell (cell.id)}
+            {@const attrs = fromStore(cell.attrs())}
+            {@const props = fromStore(cell.props())}
+            <td {...attrs.current} class:sorted={props.current.sort?.order !== undefined}>
+                <Render of={cell.render()} />
+            </td>
+        {/each}
+    </tr>
+{/each}
+```
+
+`<Subscribe/>` remains supported; both approaches can be mixed in the same table.

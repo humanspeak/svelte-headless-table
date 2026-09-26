@@ -1,6 +1,6 @@
 <script>
-    import { readable } from 'svelte/store'
-    import { createTable, Subscribe, Render } from '@humanspeak/svelte-headless-table'
+    import { fromStore, readable } from 'svelte/store'
+    import { createTable, Render } from '@humanspeak/svelte-headless-table'
 
     const data = readable([
         { name: 'Ada Lovelace', age: 21 },
@@ -27,32 +27,28 @@
 <table class="demo" {...$tableAttrs}>
     <thead>
         {#each $headerRows as headerRow (headerRow.id)}
-            <Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
-                <tr {...rowAttrs}>
-                    {#each headerRow.cells as cell (cell.id)}
-                        <Subscribe attrs={cell.attrs()} let:attrs>
-                            <th {...attrs}>
-                                <Render of={cell.render()} />
-                            </th>
-                        </Subscribe>
-                    {/each}
-                </tr>
-            </Subscribe>
+            {@const rowAttrs = fromStore(headerRow.attrs())}
+            <tr {...rowAttrs.current}>
+                {#each headerRow.cells as cell (cell.id)}
+                    {@const attrs = fromStore(cell.attrs())}
+                    <th {...attrs.current}>
+                        <Render of={cell.render()} />
+                    </th>
+                {/each}
+            </tr>
         {/each}
     </thead>
     <tbody {...$tableBodyAttrs}>
         {#each $rows as row (row.id)}
-            <Subscribe rowAttrs={row.attrs()} let:rowAttrs>
-                <tr {...rowAttrs}>
-                    {#each row.cells as cell (cell.id)}
-                        <Subscribe attrs={cell.attrs()} let:attrs>
-                            <td {...attrs}>
-                                <Render of={cell.render()} />
-                            </td>
-                        </Subscribe>
-                    {/each}
-                </tr>
-            </Subscribe>
+            {@const rowAttrs = fromStore(row.attrs())}
+            <tr {...rowAttrs.current}>
+                {#each row.cells as cell (cell.id)}
+                    {@const attrs = fromStore(cell.attrs())}
+                    <td {...attrs.current}>
+                        <Render of={cell.render()} />
+                    </td>
+                {/each}
+            </tr>
         {/each}
     </tbody>
 </table>

@@ -1,10 +1,10 @@
-import { keyed } from '@humanspeak/svelte-keyed'
-import type { RenderConfig } from '@humanspeak/svelte-render'
 import { derived, writable, type Readable, type Writable } from 'svelte/store'
 import type { DataBodyCell } from '../bodyCells.js'
 import type { BodyRow } from '../bodyRows.js'
 import type { PluginInitTableState } from '../createViewModel.js'
+import type { RenderConfig } from '../render/createRender.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
+import { keyedProp } from '../utils/store.js'
 
 /**
  * Configuration options for the addColumnFilters plugin.
@@ -209,7 +209,7 @@ export const addColumnFilters =
             deriveRows,
             hooks: {
                 'thead.tr.th': (headerCell) => {
-                    const filterValue = keyed(filterValues, headerCell.id)
+                    const filterValue = keyedProp(filterValues, headerCell.id)
                     const props = derived([], () => {
                         const columnOption = columnOptions[headerCell.id]
                         if (columnOption === undefined) {

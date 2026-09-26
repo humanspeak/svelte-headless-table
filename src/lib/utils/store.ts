@@ -1,4 +1,11 @@
-import { readable, writable, type Readable, type Updater, type Writable } from 'svelte/store'
+import {
+    derived,
+    readable,
+    writable,
+    type Readable,
+    type Updater,
+    type Writable
+} from 'svelte/store'
 
 /** Union type representing either a Readable or Writable Svelte store. */
 export type ReadOrWritable<T> = Readable<T> | Writable<T>
@@ -61,6 +68,41 @@ export type ReadableKeys<T> = {
  */
 export type ReadOrWritableKeys<T> = {
     [K in keyof T]: T[K] extends undefined ? ReadOrWritable<T[K] | undefined> : ReadOrWritable<T[K]>
+}
+
+/**
+ * The Readable store type produced by {@link derivedKeys} for a given map of stores.
+ * @template S - The map of stores, keyed by name.
+ */
+export type DerivedKeys<S extends ReadOrWritableKeys<unknown>> =
+    S extends ReadOrWritableKeys<infer T> ? Readable<T> : never
+
+/**
+ * Combines a map of stores into a single Readable store of their values,
+ * keyed by the same names. Key order follows the insertion order of the map.
+ *
+ * Exists mainly to back `<Subscribe>`; in runes code prefer reading each
+ * store with `fromStore` from 'svelte/store'.
+ *
+ * @template S - The map of stores, keyed by name.
+ * @param storeMap - An object whose values are Readable or Writable stores.
+ * @returns A Readable store containing an object of the current store values.
+ * @example
+ * ```typescript
+ * const merged = derivedKeys({ a: readable(1), b: writable('x') })
+ * get(merged) // { a: 1, b: 'x' }
+ * ```
+ */
+export const derivedKeys = <S extends ReadOrWritableKeys<unknown>>(storeMap: S): DerivedKeys<S> => {
+    // Freeze the order of entries.
+    const entries = Object.entries(storeMap) as [string, Readable<unknown>][]
+    const keys = entries.map(([key]) => key)
+    return derived(
+        entries.map(([, store]) => store),
+        ($stores) => {
+            return Object.fromEntries($stores.map((store, idx) => [keys[idx], store]))
+        }
+    ) as DerivedKeys<S>
 }
 
 /** A readable store that always contains undefined. */
@@ -276,4 +318,33 @@ export const recordSetStore = <T extends string | number>(
         removeAll,
         clear
     }
+}
+
+/**
+ * Creates a writable view of a single top-level property of a record store.
+ * Unlike a path-based helper, the key is used verbatim — keys containing
+ * `.` or `[` are ordinary keys.
+ *
+ * Writes replace the parent with a shallow copy so subscribers of the
+ * parent are notified.
+ *
+ * @example
+ * ```typescript
+ * const widths = writable<{ current: Record<string, number> }>({ current: {} })
+ * const current = keyedProp(widths, 'current')
+ * current.set({ a: 10 }) // widths → { current: { a: 10 } }
+ * ```
+ */
+export const keyedProp = <Parent extends object, Key extends keyof Parent & string>(
+    parent: Writable<Parent>,
+    key: Key
+): Writable<Parent[Key]> => {
+    const { subscribe } = derived(parent, ($parent) => $parent[key])
+    const set = (value: Parent[Key]) => {
+        parent.update(($parent) => ({ ...$parent, [key]: value }))
+    }
+    const update = (fn: Updater<Parent[Key]>) => {
+        parent.update(($parent) => ({ ...$parent, [key]: fn($parent[key]) }))
+    }
+    return { subscribe, set, update }
 }

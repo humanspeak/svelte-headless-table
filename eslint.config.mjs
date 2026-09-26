@@ -113,7 +113,13 @@ export default [
         }
     },
     {
-        files: ['eslint.config.mjs', 'playwright.config.ts', 'svelte.config.js', 'scripts/*.mjs'],
+        files: [
+            'eslint.config.mjs',
+            'playwright.config.ts',
+            'svelte.config.js',
+            'scripts/*.mjs',
+            'vitest.setup.ts'
+        ],
         languageOptions: {
             parserOptions: {
                 projectService: false
@@ -126,6 +132,14 @@ export default [
             parserOptions: {
                 parser: ts.parser
             }
+        }
+    },
+    {
+        // Modified complexity counts each switch once, regardless of case count.
+        files: ['src/lib/**/*.{ts,js,svelte}'],
+        ignores: ['src/lib/**/*.test.*', 'src/lib/**/*.spec.*', 'src/lib/**/*.d.ts'],
+        rules: {
+            complexity: ['error', { max: 15, variant: 'modified' }]
         }
     }
 ]
