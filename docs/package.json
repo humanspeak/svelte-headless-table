@@ -31,7 +31,7 @@
         "github-slugger": "^2.0.0"
     },
     "devDependencies": {
-        "@cloudflare/workers-types": "^5.20260821.1",
+        "@cloudflare/workers-types": "^5.20260923.1",
         "@eslint/compat": "^2.1.0",
         "@eslint/js": "^10.0.1",
         "@faker-js/faker": "^10.6.0",
