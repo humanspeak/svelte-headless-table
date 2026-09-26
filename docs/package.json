@@ -27,7 +27,7 @@
         "@humanspeak/docs-kit": "github:humanspeak/docs-kit#2026.9.3",
         "@humanspeak/svelte-headless-table": "workspace:*",
         "@humanspeak/svelte-markdown": "^1.8.7",
-        "@humanspeak/svelte-motion": "^0.9.3",
+        "@humanspeak/svelte-motion": "^1.2.1",
         "github-slugger": "^2.0.0"
     },
     "devDependencies": {
