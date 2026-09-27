@@ -9,6 +9,8 @@
 >
 > **Read first**: `.agents/.plans/runes-core/001-runes-spike.report.md` and `src/lib/tableComponent.svelte.ts` (plan 002's `current` implementation is the exemplar).
 >
+> **Revision 2026-09-27 (guard, second pre-flight)**: the importer list was stale (counted before 002/003 landed); it is now 15 files including three type-only route imports, and `+page.svelte` / `_PerfTableStore.svelte` are in scope for that one line each. Executor correctly stopped on the count mismatch.
+>
 > **Revision 2026-09-27 (guard, pre-flight)**: 002 and 003 landed (c557fe5, 815c91d). The kitchen sink and `_PerfTable.svelte` already read `row.current.*` / `cell.current.*`; only their table-level `$tableAttrs` / `$pageRows` / `$headerRows` / `$tableBodyAttrs` reads remain for Step 4. `_PerfTableStore.svelte` (the `?renderer=store` control) must keep using stores — do not touch it. `svelte/require-store-reactive-access` fires on raw reads of store-typed identifiers in `.svelte.ts`; a `$derived.by(() => fromStore(store).current)` reads the store correctly, so suppress with `// trunk-ignore(eslint/svelte/require-store-reactive-access)` only where the rule misfires, as `tableComponent.svelte.ts` does.
 >
 > **Revision 2026-09-27 (guard, after the spike)**: the spike chose
@@ -87,13 +89,22 @@ export interface TableViewModel<Item, Plugins extends AnyPlugins = AnyPlugins> {
 - `_debug` is consumed by `src/routes/test/perf-bench/+page.svelte`
   (`snapshotDerivations(vm)`), `scripts/perf-bench.mjs` (`deriv*` / `time*`
   fields) and `src/lib/createViewModel.performance.test.ts`.
-- Importers of `$lib/createViewModel.js` (non-test) that must move to the
-  new path: `src/lib/columns.ts`, `src/lib/createTable.ts`,
-  `src/lib/headerCells.ts`, `src/lib/index.ts` (`export type * from`),
-  `src/lib/plugins/addColumnFilters.ts`, `src/lib/plugins/addGridLayout.ts`,
-  `src/lib/tableComponent.svelte.ts`, `src/lib/types/Label.ts`,
-  `src/lib/types/TablePlugin.ts`; plus 5 test files (`grep -rln "createViewModel.js" src`
-  → 14 files total at plan time).
+- Importers of `$lib/createViewModel.js` that must move to the new path
+  (15 files at re-baseline 815c91d; verify with `grep -rln "createViewModel.js" src`):
+    - library (9): `src/lib/columns.ts`, `src/lib/createTable.ts`,
+      `src/lib/headerCells.ts`, `src/lib/index.ts` (`export type * from`),
+      `src/lib/plugins/addColumnFilters.ts`, `src/lib/plugins/addGridLayout.ts`,
+      `src/lib/tableComponent.svelte.ts`, `src/lib/types/Label.ts`,
+      `src/lib/types/TablePlugin.ts`;
+    - tests (3): `src/lib/bodyCells.DataBodyCell.render.test.ts`,
+      `src/lib/bodyCells.DisplayBodyCell.render.test.ts`,
+      `src/lib/bodyCells.HeaderCell.render.test.ts`;
+    - routes (3, type-only imports of `TableViewModel`):
+      `src/routes/test/perf-bench/_PerfTable.svelte`,
+      `src/routes/test/perf-bench/+page.svelte`,
+      `src/routes/test/perf-bench/_PerfTableStore.svelte` — for these two the
+      import line is the **only** permitted change; `_PerfTableStore.svelte`
+      must keep rendering through stores.
 - `src/lib/createTable.ts:172-193` caches the view model per `reuseKey`/`rowDataId`;
   `vm.current` must be created inside `createViewModel` so the cache returns
   the same object.
@@ -109,7 +120,7 @@ Same as plan 002; plus `pnpm perf:bench` (see plan 001) for the before/after.
 **In scope**:
 
 - `src/lib/createViewModel.ts` → `git mv` to `src/lib/createViewModel.svelte.ts`, then edited
-- The 14 importers (import path only)
+- The 15 importers listed in Current state (import path only; for `src/routes/test/perf-bench/+page.svelte` and `_PerfTableStore.svelte` nothing but that line)
 - `src/lib/createViewModel.current.test.ts` and `src/lib/VmCurrentHost.test.svelte` (create)
 - `src/routes/test/perf-bench/_PerfTable.svelte` and `src/routes/kitchen-sink/+page.svelte` (switch the table-level `$store` reads to `vm.current.*`)
 - `src/lib/index.exports.test.ts` — the root snapshot must NOT change (no new root export); if it does, STOP
@@ -146,7 +157,7 @@ header click the order flips; `vm.current.tableAttrs.role === 'table'`.
 
 ### Step 3: Rename and add `vm.current`
 
-`git mv` to `createViewModel.svelte.ts`; update the 14 importers. Inside
+`git mv` to `createViewModel.svelte.ts`; update the 15 importers. Inside
 `createViewModel`, after the stores are built, create the mirror:
 
 ```ts
@@ -213,7 +224,7 @@ the commit before this plan (`git stash` is not allowed; use `git worktree add /
 - The Step 1 counter assertion changes value after Step 3 (the mirror is triggering extra derivations).
 - `rows10k` median regresses by more than 10%.
 - `createTable`'s cached view model returns an object without `current` (cache path missed).
-- Any importer outside the 14 listed needs to change (means the excerpt is stale).
+- Any importer outside the 15 listed needs to change (means the excerpt is stale).
 
 ## Maintenance notes
 
