@@ -9,6 +9,16 @@
 >
 > **Read first**: `.agents/.plans/runes-core/001-runes-spike.report.md` and `src/lib/tableComponent.svelte.ts` (plan 002's `current` implementation is the exemplar).
 >
+> **Revision 2026-09-27 (guard, fix round 3)**: Step 3d's lazily created
+> `$state` cannot be tracked by the reaction that creates it (Svelte
+> records a signal born inside a running reaction in that reaction's
+> `current_sources` and refuses to register it as a dependency), so the
+> first template reader of `current` never saw later `applyHook` calls.
+> Step 3d now specifies a lazily created `writable` read through
+> `fromStore` as the version signal — the same primitive `current.attrs`
+> already relies on. Construction stays allocation-free; the probe stays
+> under 150 ms; the late-`applyHook` test passes.
+>
 > **Revision 2026-09-27 (guard, fix round 2)**: round 1 fixed the freeze,
 > but a same-machine bench against the spike commit shows rows-10k first
 > paint at ~440–475 ms versus ~190–200 ms at e5fbb85, on **both**
@@ -277,10 +287,11 @@ closures. Only the first read of `component.current` pays for a signal and
 a view object. In `src/lib/tableComponent.svelte.ts`:
 
 1. Replace `#hookVersion = $state(0)` with a plain `#hookVersion = 0`, and
-   add `#versionSignal?: { v: number }` (undefined until first use).
+   add `#version?: { store: Writable<number>; handle: { readonly current: number } }`
+   (undefined until first use). Import `writable` from `svelte/store`.
 2. Remove the `current` field and everything the constructor does except
-   `this.id = id`.
-3. Add a prototype getter:
+   `this.id = id`. No `$state`, no `$derived` anywhere in the class.
+3. Add a prototype getter and lazy helpers:
 
 ```ts
 #currentView?: { readonly attrs: Record<string, unknown>; readonly props: PluginTablePropSet<Plugins>[Key] }
@@ -290,12 +301,16 @@ get current() {
     return (this.#currentView ??= this.#createCurrentView())
 }
 
+// The version must be observable by the reaction that first reads it, so it
+// cannot be a `$state` created inside that read (Svelte does not let a
+// reaction depend on a signal it created). A writable read through
+// fromStore is created by createSubscriber outside that capture path.
 #trackVersion(): number {
-    if (this.#versionSignal === undefined) {
-        const signal = $state({ v: this.#hookVersion }) // local rune declaration is allowed in a method
-        this.#versionSignal = signal
+    if (this.#version === undefined) {
+        const store = writable(this.#hookVersion)
+        this.#version = { store, handle: fromStore(store) }
     }
-    return this.#versionSignal.v
+    return this.#version.handle.current
 }
 
 #createCurrentView() {
@@ -314,13 +329,7 @@ get current() {
 ```
 
 4. In `applyHook`, after storing the hook: `this.#hookVersion += 1` and, if
-   `this.#versionSignal` exists, `this.#versionSignal.v = this.#hookVersion`.
-
-If the compiler rejects `$state` inside a method, fall back to importing
-`createSubscriber`-free primitives is NOT allowed; instead declare the
-signal with `$state` in a tiny standalone helper function in the same
-file (`const makeVersionSignal = (v: number) => { const s = $state({ v }); return s }`)
-and call that from `#trackVersion`.
+   `this.#version !== undefined`, `this.#version.store.set(this.#hookVersion)`.
 
 **Verify (red → green)**: put this throwaway test at
 `src/lib/ctorProbe.test.ts` (delete it before finishing):
@@ -386,7 +395,7 @@ the commit before this plan (`git stash` is not allowed; use `git worktree add /
 - [ ] `pnpm check` exits 0; `pnpm test` exits 0 with thresholds
 - [ ] `test -f src/lib/createViewModel.svelte.ts && ! test -f src/lib/createViewModel.ts`; `grep -rn "createViewModel.js'" src/` → none
 - [ ] `createViewModel.current.test.ts` 5 passing (incl. the Step 2b select-after-sort case); Step 1 counter assertion unchanged
-- [ ] `grep -rn "derived_inert" <full vitest output>` → no matches; `grep -n "\$derived" src/lib/tableComponent.svelte.ts src/lib/createViewModel.svelte.ts` → none
+- [ ] `grep -rn "derived_inert" <full vitest output>` → no matches; `grep -n "\$derived\|\$state" src/lib/tableComponent.svelte.ts src/lib/createViewModel.svelte.ts` → none
 - [ ] `src/lib/index.exports.test.ts` snapshot unchanged
 - [ ] e2e chromium + mobile-chrome exit 0
 - [ ] `rows10k` `firstPaintMs.median` on the default renderer within 15% of the spike commit's (`e5fbb85`) **store** renderer, measured back to back on the same machine (guard's reference: 201 ms); numbers recorded in README
