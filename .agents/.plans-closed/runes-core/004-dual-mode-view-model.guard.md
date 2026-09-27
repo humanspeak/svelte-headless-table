@@ -29,3 +29,13 @@ bfa0d6d · fix round 1 verified correct (guard's independent probe: select → s
 
 - Amendment: the lazy version signal becomes a `writable` read through `fromStore` (created on first `current` read; `applyHook` calls `set` when it exists). `fromStore`'s source is created by `createSubscriber` outside the reader's dependency-capture path, so the first reader tracks it. Executor prototyped this: probe ~127 ms, 11/11 tests, no `derived_inert`. Cost: one more subscription per instance actually read through `current`, same class of cost as the attrs/props handles.
 - Fix-dispatched (round 3 of 3).
+
+## Checkpoint 4 — 2026-09-27 05:57 — ON TRACK
+
+e72b549 · final close-out after fix round 3 (base 5e5f174 → snapshots 5252d33 WIP, bfa0d6d round 1, e72b549 round 3)
+
+- Reproduced by guard at e72b549 with throwaway probes (deleted): select → sort → select → sort through `vm.current` stays live with no `derived_inert`; 10k×8 construction 134.7 ms (was 390 ms at 5252d33, 103 ms at the spike commit).
+- Gates reproduced: `pnpm check` 0 errors; `pnpm test` 56 files / 597 tests with thresholds, `derived_inert` 0 lines; no `$state`/`$derived` in either `.svelte.ts`; `trunk check` no issues; `pnpm package` All good with `dist/createViewModel.svelte.js`; e2e chromium + mobile-chrome 36 passed / 2 skipped; exports snapshot unchanged.
+- Absolute perf gate, back to back on one machine, 10 cold iterations, firstPaintMs median: SPIKE store rows10k 198.65 vs NOW current.* 185.15 (0.93×) and NOW store 199.6 (1.00×) → within 15%, regression gone. rows1k 83.65 / 62.35 / 81.75; sortCycle1k 51.05 / 43.6 / 52.35; kitchenSink1k 64.55 / 45.95 / 68.2.
+- Diff read: `TableComponent` constructor sets only `id`; `current` is a prototype getter over a lazily created view; version signal is a lazily created `writable` read through `fromStore`; `applyHook` bumps the counter and `set`s the store if present. `createViewModel.svelte.ts` `live()` is a once-per-store `fromStore` handle. One `trunk-ignore(no-this-alias)` for the `component = this` capture, justified.
+- Action: PASS; README row → DONE; batch retired.
