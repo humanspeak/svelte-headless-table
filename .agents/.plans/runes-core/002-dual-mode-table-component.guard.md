@@ -10,3 +10,7 @@ c557fe5 · final close-out after one Opus executor run (base 47c71a8)
 - Executor decision 1 (trunk findings in the spike file after its blanket ignore was removed per Step 0): accepted as known until plan 003 deletes the file; the four findings are in `src/routes/test/runes-spike/runesComponent.svelte.ts` only. Consequence: the pre-commit hook rejected the snapshot commit, so it was made with `--no-verify` after `trunk check` on `src/lib` and `eslint.config.mjs` was confirmed clean.
 - Executor decision 2 (no kitchen-sink e2e spec): incorrect premise — `tests/initial.test.ts` and `tests/performance.test.ts` both navigate to `/kitchen-sink`; the STOP condition was exercised and passed.
 - Action: PASS; README row → DONE; plan 003 re-baselined to c557fe5.
+
+## Checkpoint 2 — 2026-09-27 05:17 — DRIFTING (addendum from plan 004)
+
+c557fe5 · defect found downstream: `current` deriveds created in the constructor go inert (`derived_inert`) when rows are constructed inside a store derivation that runs under a transient `fromStore` effect — the exact situation `vm.current.pageRows` creates. Not detectable by 002's own tests (rows there were subscribed from a long-lived component effect). Fix is carried by plan 004 (Step 3c). Verdict for 002 stands as PASS against its plan; the plan's mechanism was the defect.

@@ -1,0 +1,11 @@
+# Guard log — 004 dual-mode-view-model
+
+## Checkpoint 1 — 2026-09-27 05:17 — DRIFTING → PLAN AMENDED (fix round 1)
+
+5252d33 (WIP snapshot, not accepted) · executor completed Steps 1–5 with every listed gate green, then correctly refused to hand it over: rows and cells reached through `vm.current.pageRows` can freeze after a re-derive.
+
+- Reproduced by guard with a throwaway host (sort + select plugins, deleted afterwards): via `$pageRows`, `selectedDataIds.set({'0': true})` after a sort → flags `[false, true, false]`; via `vm.current.pageRows` → `[false, false, false]` plus three `[svelte] derived_inert` warnings. Same shape as the executor's probe.
+- Diagnosis (guard, from Svelte's ownership rules + the warning text): `TableComponent` (plan 002) creates its `current` `$derived`s in the constructor; rows/cells are constructed inside the store derivation chain; when that chain first runs under the `render_effect` that `fromStore` opens for the `vm.current.pageRows` `$derived`, the row deriveds are owned by that effect and go inert when it is torn down on the next re-derivation. Through `$pageRows` the subscription is owned by the component's long-lived effect, so nothing is torn down. The spike missed it because its wrappers were created at component init, not inside a derivation.
+- Classification: **plan defect** (002's mechanism is unsafe for objects created inside store derivations), surfaced by 004 — not executor drift. Executor conduct: exemplary; it stopped with evidence rather than weakening tests.
+- Executor's listed results reproduced by guard at 5252d33: `pnpm check` 0 errors; `pnpm test` 56 files / 596 tests; exports snapshot unchanged; the eight `$`-prefixed local renames in `createViewModel.svelte.ts` are mechanical.
+- Action: 004 amended — scope gains `src/lib/tableComponent.svelte.ts`; new Step 3c replaces the constructor `$derived`s with getters over a `fromStore` instance cached per `#hookVersion` (no class-level deriveds); `vm.current` getters likewise read a `fromStore` instance created once per store; a red regression test (select after sort through `vm.current.pageRows`) is required first. Fix-dispatched to the same executor (round 1 of 3). 002's guard log gets an addendum.

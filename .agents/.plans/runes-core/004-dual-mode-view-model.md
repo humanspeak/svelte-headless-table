@@ -9,6 +9,22 @@
 >
 > **Read first**: `.agents/.plans/runes-core/001-runes-spike.report.md` and `src/lib/tableComponent.svelte.ts` (plan 002's `current` implementation is the exemplar).
 >
+> **Revision 2026-09-27 (guard, fix round 1)**: the first execution passed
+> every gate but exposed a correctness defect: rows/cells reached through
+> `vm.current.pageRows` freeze after a re-derive (`derived_inert`). Cause:
+> `TableComponent.current` (plan 002) creates `$derived`s in the
+> constructor, and rows are constructed inside the store chain, which now
+> first runs under the transient `render_effect` that `fromStore` opens
+> for the `vm.current.*` `$derived`; when that effect is torn down, the row
+> deriveds go inert. **New Step 3c** replaces those constructor deriveds
+> with plain getters over a `fromStore` instance cached per `#hookVersion`
+> (no class-level `$derived` anywhere in `TableComponent`), and Step 3's
+> `live()` helper becomes a once-per-store `fromStore` instance read by a
+> getter (no `$derived.by`). `src/lib/tableComponent.svelte.ts` and
+> `src/lib/tableComponent.current.test.ts` are now in scope. Step 2b adds
+> the red regression test that reproduces the freeze. The WIP snapshot
+> `5252d33` holds the first execution; continue from it.
+>
 > **Revision 2026-09-27 (guard, second pre-flight)**: the importer list was stale (counted before 002/003 landed); it is now 15 files including three type-only route imports, and `+page.svelte` / `_PerfTableStore.svelte` are in scope for that one line each. Executor correctly stopped on the count mismatch.
 >
 > **Revision 2026-09-27 (guard, pre-flight)**: 002 and 003 landed (c557fe5, 815c91d). The kitchen sink and `_PerfTable.svelte` already read `row.current.*` / `cell.current.*`; only their table-level `$tableAttrs` / `$pageRows` / `$headerRows` / `$tableBodyAttrs` reads remain for Step 4. `_PerfTableStore.svelte` (the `?renderer=store` control) must keep using stores — do not touch it. `svelte/require-store-reactive-access` fires on raw reads of store-typed identifiers in `.svelte.ts`; a `$derived.by(() => fromStore(store).current)` reads the store correctly, so suppress with `// trunk-ignore(eslint/svelte/require-store-reactive-access)` only where the rule misfires, as `tableComponent.svelte.ts` does.
@@ -121,6 +137,9 @@ Same as plan 002; plus `pnpm perf:bench` (see plan 001) for the before/after.
 
 - `src/lib/createViewModel.ts` → `git mv` to `src/lib/createViewModel.svelte.ts`, then edited
 - The 15 importers listed in Current state (import path only; for `src/routes/test/perf-bench/+page.svelte` and `_PerfTableStore.svelte` nothing but that line)
+- `src/lib/tableComponent.svelte.ts` (Step 3c only: the `current` mechanism; `attrs()`, `props()`, `applyHook`, `decorateAttrs` unchanged)
+- `src/lib/tableComponent.current.test.ts` (only if an assertion must change because `current.attrs` is no longer a `$derived`; the four cases must keep passing)
+- `src/lib/createViewModel.current.test.ts` and `src/lib/VmCurrentHost.test.svelte` (Step 2b adds the select plugin and the regression case)
 - `src/lib/createViewModel.current.test.ts` and `src/lib/VmCurrentHost.test.svelte` (create)
 - `src/routes/test/perf-bench/_PerfTable.svelte` and `src/routes/kitchen-sink/+page.svelte` (switch the table-level `$store` reads to `vm.current.*`)
 - `src/lib/index.exports.test.ts` — the root snapshot must NOT change (no new root export); if it does, STOP
@@ -155,6 +174,21 @@ header click the order flips; `vm.current.tableAttrs.role === 'table'`.
 
 **Verify**: `pnpm check` fails with `Property 'current' does not exist on type 'TableViewModel…'`.
 
+### Step 2b: Red regression test for the freeze
+
+Add `addSelectedRows()` to `VmCurrentHost.test.svelte`'s plugin map and put
+`data-selected={String(row.current.props.select.selected)}` on each row.
+In `createViewModel.current.test.ts` add: render the host, click the
+`name` header (sort), `await tick()`, then
+`pluginStates.select.selectedDataIds.set({ '0': true })`, `await tick()`,
+and assert one row has `data-selected="true"`. Also assert no
+`derived_inert` message was logged (spy on `console.warn`/`console.error`
+for the test's duration).
+
+**Verify**: against the WIP snapshot this test FAILS — all rows read
+`data-selected="false"` and the console spy records `derived_inert`.
+If it passes, the reproduction is wrong: STOP and report.
+
 ### Step 3: Rename and add `vm.current`
 
 `git mv` to `createViewModel.svelte.ts`; update the 15 importers. Inside
@@ -185,6 +219,45 @@ for the lifetime of the reading effect otherwise. Do not add `current` to `Plugi
 the Step 1 counter assertion still passes (reading `vm.current.pageRows`
 must not add derivation calls beyond what `$pageRows` would).
 
+### Step 3c: Remove constructor deriveds from `TableComponent.current`
+
+In `src/lib/tableComponent.svelte.ts`, delete the two `$derived.by` in the
+constructor and the `current` object built from them. Replace with private
+cached `fromStore` handles and getters, so no reactive primitive is _owned_
+by the constructing context:
+
+```ts
+#hookVersion = $state(0)
+#attrsHandle?: { version: number; handle: { readonly current: Record<string, unknown> } }
+#propsHandle?: { version: number; handle: { readonly current: PluginTablePropSet<Plugins>[Key] } }
+
+readonly current = {
+    attrs: (): Record<string, unknown> => { /* replaced by getter below */ }
+}
+```
+
+Implement `current` as an object with `get attrs()` / `get props()` whose
+bodies are:
+
+```ts
+const version = this.#hookVersion // tracked by the reading effect
+if (this.#attrsHandle?.version !== version) {
+    this.#attrsHandle = { version, handle: fromStore(this.attrs()) }
+}
+return this.#attrsHandle.handle.current // subscribes under the reader's effect
+```
+
+(and the same for `props`). `fromStore(...)` itself owns nothing: its
+subscription is opened by `createSubscriber` under whichever effect reads
+`.current`, and closed when that effect goes away. `applyHook` keeps
+bumping `#hookVersion`. In `createViewModel.svelte.ts`, change `live()` to
+create the `fromStore` handle once per store outside any derived and
+return `{ get value() { return handle.current } }`.
+
+**Verify**: `pnpm exec vitest run src/lib/createViewModel.current.test.ts src/lib/tableComponent.current.test.ts src/lib/tableComponent.ssr.test.ts src/lib/createViewModel.current.ssr.test.ts`
+→ all pass, including the Step 2b case, with no `derived_inert` output;
+`pnpm check` → 0 errors; `grep -n "\$derived" src/lib/tableComponent.svelte.ts src/lib/createViewModel.svelte.ts` → no matches.
+
 ### Step 4: Fixtures
 
 Switch the table-level reads in `_PerfTable.svelte` and the kitchen sink from
@@ -212,7 +285,8 @@ the commit before this plan (`git stash` is not allowed; use `git worktree add /
 
 - [ ] `pnpm check` exits 0; `pnpm test` exits 0 with thresholds
 - [ ] `test -f src/lib/createViewModel.svelte.ts && ! test -f src/lib/createViewModel.ts`; `grep -rn "createViewModel.js'" src/` → none
-- [ ] `createViewModel.current.test.ts` 4 passing; Step 1 counter assertion unchanged
+- [ ] `createViewModel.current.test.ts` 5 passing (incl. the Step 2b select-after-sort case); Step 1 counter assertion unchanged
+- [ ] `grep -rn "derived_inert" <full vitest output>` → no matches; `grep -n "\$derived" src/lib/tableComponent.svelte.ts src/lib/createViewModel.svelte.ts` → none
 - [ ] `src/lib/index.exports.test.ts` snapshot unchanged
 - [ ] e2e chromium + mobile-chrome exit 0
 - [ ] `rows10k` `firstPaintMs.median` within 10% of the pre-plan run (numbers recorded in README)
