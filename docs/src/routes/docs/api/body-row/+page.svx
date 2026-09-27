@@ -42,6 +42,16 @@ A `Readable` store with additional properties derived from plugin view model ext
 
 <Admonition type="tip">See also <a href="/docs/plugins/overview">Plugin View Model Extensions</a>.</Admonition>
 
+### `current: { attrs: BodyRowAttributes; props: BodyRowProps }`
+
+The same attributes and props as plain reactive values, for runes-style templates. `current.attrs` is ready to spread onto the `tr` element and `current.props` holds the plugin state; both update in place as state changes, with no store subscription, `$` prefix or `Subscribe` wrapper. Reads outside a template or effect return the current value, and server rendering produces the same markup as the store path.
+
+```svelte
+<tr {...row.current.attrs}>
+```
+
+<Admonition type="tip">`current.*` and the `attrs()` / `props()` stores are two views of the same data; mix them freely.</Admonition>
+
 ### `cells: BodyCell[]`
 
 An array of <a href="./body-cell">`BodyCell`</a>s to iterate over and apply onto `<td>` elements.

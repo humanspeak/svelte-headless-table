@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test'
 
 // The quick-start demo is the first table most readers copy. It uses the
-// fromStore idiom, so a regression there would ship straight into user code.
-test('quick-start demo renders the table through fromStore', async ({ page }) => {
+// runes-style `current.*` API, so a regression there would ship straight
+// into user code.
+test('quick-start demo renders the table through current.*', async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', (err) => errors.push(String(err)))
 
@@ -20,6 +21,7 @@ test('quick-start demo renders the table through fromStore', async ({ page }) =>
         '38'
     ])
     expect(errors).toEqual([])
+    await expect(page.getByText('row.current.attrs').first()).toBeVisible()
 })
 
 test('API pages document the first-party render primitives', async ({ page }) => {

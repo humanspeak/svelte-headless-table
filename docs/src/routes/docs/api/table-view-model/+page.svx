@@ -35,6 +35,26 @@ const {
 
 ## Usage
 
+### `TableViewModel#current: ViewModelCurrent`
+
+Plain reactive values for runes-style templates: `tableAttrs`, `tableHeadAttrs`, `tableBodyAttrs`, `visibleColumns`, `headerRows`, `rows` and `pageRows`. Each is the current value of the matching store below and updates in place as data or plugin state changes. Combined with `row.current` and `cell.current`, a table needs no stores at all:
+
+```svelte
+<table {...vm.current.tableAttrs}>
+    <tbody {...vm.current.tableBodyAttrs}>
+        {#each vm.current.pageRows as row (row.id)}
+            <tr {...row.current.attrs}>
+                {#each row.cells as cell (cell.id)}
+                    <td {...cell.current.attrs}><Render of={cell.render()} /></td>
+                {/each}
+            </tr>
+        {/each}
+    </tbody>
+</table>
+```
+
+Reads outside a template or effect return the current value, and server rendering matches the store path. `current` is not passed to plugins; it is a read-side view for templates.
+
 ### Attributes
 
 #### `TableViewModel#tableAttrs: Readable<TableAttributes>`

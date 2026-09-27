@@ -1,5 +1,5 @@
 <script>
-    import { fromStore, readable } from 'svelte/store'
+    import { readable } from 'svelte/store'
     import { createTable, Render } from '@humanspeak/svelte-headless-table'
 
     const data = readable([
@@ -21,30 +21,26 @@
         })
     ])
 
-    const { headerRows, rows, tableAttrs, tableBodyAttrs } = table.createViewModel(columns)
+    const vm = table.createViewModel(columns)
 </script>
 
-<table class="demo" {...$tableAttrs}>
+<table class="demo" {...vm.current.tableAttrs}>
     <thead>
-        {#each $headerRows as headerRow (headerRow.id)}
-            {@const rowAttrs = fromStore(headerRow.attrs())}
-            <tr {...rowAttrs.current}>
+        {#each vm.current.headerRows as headerRow (headerRow.id)}
+            <tr {...headerRow.current.attrs}>
                 {#each headerRow.cells as cell (cell.id)}
-                    {@const attrs = fromStore(cell.attrs())}
-                    <th {...attrs.current}>
+                    <th {...cell.current.attrs}>
                         <Render of={cell.render()} />
                     </th>
                 {/each}
             </tr>
         {/each}
     </thead>
-    <tbody {...$tableBodyAttrs}>
-        {#each $rows as row (row.id)}
-            {@const rowAttrs = fromStore(row.attrs())}
-            <tr {...rowAttrs.current}>
+    <tbody {...vm.current.tableBodyAttrs}>
+        {#each vm.current.pageRows as row (row.id)}
+            <tr {...row.current.attrs}>
                 {#each row.cells as cell (cell.id)}
-                    {@const attrs = fromStore(cell.attrs())}
-                    <td {...attrs.current}>
+                    <td {...cell.current.attrs}>
                         <Render of={cell.render()} />
                     </td>
                 {/each}
