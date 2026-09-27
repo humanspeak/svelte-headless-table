@@ -9,7 +9,7 @@ import type {
 import { finalizeAttributes, mergeAttributes } from '$lib/utils/attributes.js'
 import type { Clonable } from '$lib/utils/clone.js'
 import { derivedKeys } from '$lib/utils/store.js'
-import { derived, fromStore, type Readable } from 'svelte/store'
+import { derived, fromStore, writable, type Readable, type Writable } from 'svelte/store'
 
 /**
  * Initialization options for a TableComponent.
@@ -35,8 +35,12 @@ export abstract class TableComponent<
     /** Unique identifier for the component. */
     id: string
 
-    // Bumped by applyHook so `current.*` re-reads over the new hook set.
-    #hookVersion = $state(0)
+    // Bumped by applyHook so `current.*` re-reads over the new hook set. A
+    // plain counter: constructing a row or cell allocates nothing reactive.
+    // The store that lets a reading effect track it is created lazily on the
+    // first `current` read and kept in step by applyHook.
+    #hookVersion = 0
+    #version?: { store: Writable<number>; handle: { readonly current: number } }
 
     // `fromStore` handles cached per hook version. A handle owns no reactive
     // state of its own: its subscription is opened under whichever effect
@@ -49,16 +53,8 @@ export abstract class TableComponent<
         handle: { readonly current: PluginTablePropSet<Plugins>[Key] }
     }
 
-    /**
-     * Runes-native view of the same values the `attrs()` / `props()` stores
-     * expose. Read inside a template or an effect to track updates; reads
-     * outside any effect return the current value (fromStore falls back to
-     * `get(store)`), and the values are also correct under SSR.
-     */
-    readonly current: {
-        /** The merged HTML attributes from all applied plugins. */
+    #currentView?: {
         readonly attrs: Record<string, unknown>
-        /** The plugin props keyed by plugin name. */
         readonly props: PluginTablePropSet<Plugins>[Key]
     }
 
@@ -69,27 +65,53 @@ export abstract class TableComponent<
      */
     constructor({ id }: TableComponentInit) {
         this.id = id
-        // Arrow functions keep `this` bound to the component inside the getters.
-        const readAttrs = () => {
-            const version = this.#hookVersion // tracked by the reading effect
-            if (this.#attrsHandle?.version !== version) {
-                this.#attrsHandle = { version, handle: fromStore(this.attrs()) }
-            }
-            return this.#attrsHandle.handle.current
+    }
+
+    /**
+     * Runes-native view of the same values the `attrs()` / `props()` stores
+     * expose, created on first access. Read inside a template or an effect to
+     * track updates; reads outside any effect return the current value
+     * (fromStore falls back to `get(store)`), and the values are also correct
+     * under SSR.
+     */
+    get current(): {
+        /** The merged HTML attributes from all applied plugins. */
+        readonly attrs: Record<string, unknown>
+        /** The plugin props keyed by plugin name. */
+        readonly props: PluginTablePropSet<Plugins>[Key]
+    } {
+        return (this.#currentView ??= this.#createCurrentView())
+    }
+
+    // The version must be observable by the reaction that first reads it, so
+    // it cannot be rune state created inside that read (Svelte does not let a
+    // reaction depend on a signal it created). A writable read through
+    // fromStore is tracked via createSubscriber, outside that capture path.
+    #trackVersion(): number {
+        if (this.#version === undefined) {
+            const store = writable(this.#hookVersion)
+            this.#version = { store, handle: fromStore(store) }
         }
-        const readProps = () => {
-            const version = this.#hookVersion // tracked by the reading effect
-            if (this.#propsHandle?.version !== version) {
-                this.#propsHandle = { version, handle: fromStore(this.props()) }
-            }
-            return this.#propsHandle.handle.current
-        }
-        this.current = {
-            get attrs() {
-                return readAttrs()
+        return this.#version.handle.current // tracked by the reading effect
+    }
+
+    #createCurrentView() {
+        // trunk-ignore(eslint/@typescript-eslint/no-this-alias)
+        const component = this
+        return {
+            get attrs(): Record<string, unknown> {
+                const version = component.#trackVersion()
+                if (component.#attrsHandle?.version !== version) {
+                    component.#attrsHandle = { version, handle: fromStore(component.attrs()) }
+                }
+                return component.#attrsHandle.handle.current
             },
-            get props() {
-                return readProps()
+            get props(): PluginTablePropSet<Plugins>[Key] {
+                const version = component.#trackVersion()
+                if (component.#propsHandle?.version !== version) {
+                    component.#propsHandle = { version, handle: fromStore(component.props()) }
+                }
+                return component.#propsHandle.handle.current
             }
         }
     }
@@ -166,6 +188,9 @@ export abstract class TableComponent<
             this.attrsForName[pluginName] = hook.attrs
         }
         this.#hookVersion += 1
+        if (this.#version !== undefined) {
+            this.#version.store.set(this.#hookVersion)
+        }
     }
 
     abstract clone(): TableComponent<Item, Plugins, Key>
