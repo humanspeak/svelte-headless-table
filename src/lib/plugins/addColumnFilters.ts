@@ -12,7 +12,20 @@ import { keyedProp } from '../utils/store.js'
 export interface ColumnFiltersConfig {
     /** If true, filtering is handled server-side and all rows are returned. */
     serverSide?: boolean
+    /**
+     * How rows with sub-rows are matched.
+     *
+     * - `'self-or-descendants'` (default): a row is kept when it matches or
+     *   when any of its descendants match, so a non-matching parent still
+     *   appears above its matching children.
+     * - `'self'`: every kept row must match on its own values; a parent that
+     *   does not match is removed together with its subtree.
+     */
+    matchMode?: ColumnFiltersMatchMode
 }
+
+/** Sub-row matching strategy for {@link addColumnFilters}. */
+export type ColumnFiltersMatchMode = 'self-or-descendants' | 'self'
 
 /**
  * State exposed by the addColumnFilters plugin.
@@ -114,7 +127,8 @@ export type ColumnFiltersPropSet = NewTablePropSet<{
 const getFilteredRows = <Item, Row extends BodyRow<Item>>(
     rows: Row[],
     filterValues: Record<string, unknown>,
-    columnOptions: Record<string, ColumnFiltersColumnOptions<Item>>
+    columnOptions: Record<string, ColumnFiltersColumnOptions<Item>>,
+    matchMode: ColumnFiltersMatchMode = 'self-or-descendants'
 ): Row[] => {
     const $filteredRows = rows
         // Filter `subRows`
@@ -123,13 +137,13 @@ const getFilteredRows = <Item, Row extends BodyRow<Item>>(
             if (subRows === undefined) {
                 return row
             }
-            const filteredSubRows = getFilteredRows(subRows, filterValues, columnOptions)
+            const filteredSubRows = getFilteredRows(subRows, filterValues, columnOptions, matchMode)
             const clonedRow = row.clone() as Row
             clonedRow.subRows = filteredSubRows
             return clonedRow
         })
         .filter((row) => {
-            if ((row.subRows?.length ?? 0) !== 0) {
+            if (matchMode === 'self-or-descendants' && (row.subRows?.length ?? 0) !== 0) {
                 return true
             }
             for (const [columnId, columnOption] of Object.entries(columnOptions)) {
@@ -178,7 +192,10 @@ const getFilteredRows = <Item, Row extends BodyRow<Item>>(
  * ```
  */
 export const addColumnFilters =
-    <Item>({ serverSide = false }: ColumnFiltersConfig = {}): TablePlugin<
+    <Item>({
+        serverSide = false,
+        matchMode = 'self-or-descendants'
+    }: ColumnFiltersConfig = {}): TablePlugin<
         Item,
         ColumnFiltersState<Item>,
         ColumnFiltersColumnOptions<Item>,
@@ -198,7 +215,12 @@ export const addColumnFilters =
                     filteredRows.set($rows)
                     return $rows
                 }
-                const _filteredRows = getFilteredRows($rows, $filterValues, columnOptions)
+                const _filteredRows = getFilteredRows(
+                    $rows,
+                    $filterValues,
+                    columnOptions,
+                    matchMode
+                )
                 filteredRows.set(_filteredRows)
                 return _filteredRows
             })

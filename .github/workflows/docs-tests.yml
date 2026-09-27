@@ -1,0 +1,69 @@
+name: Docs tests
+
+permissions:
+    contents: read
+
+on:
+    pull_request:
+        branches:
+            - main
+            - '!dependabot/**'
+        paths:
+            - docs/**
+            - src/lib/**
+            - .github/workflows/docs-tests.yml
+
+concurrency:
+    group: docs-tests-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    docs-e2e:
+        name: Docs smoke tests (Playwright)
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        steps:
+            - uses: actions/checkout@v7 # zizmor: ignore[unpinned-uses]
+              with:
+                  persist-credentials: false
+                  fetch-depth: 1
+
+            - uses: pnpm/action-setup@v6 # zizmor: ignore[unpinned-uses]
+
+            - name: Use Node.js - 24
+              uses: actions/setup-node@v7 # zizmor: ignore[unpinned-uses]
+              with:
+                  node-version: 24
+
+            - name: Install dependencies (root + docs)
+              run: pnpm install --frozen-lockfile --config.engine-strict=false
+
+            - name: Build the library package docs resolve against
+              run: pnpm package
+
+            - name: Cache Playwright browsers
+              uses: actions/cache@v6 # zizmor: ignore[unpinned-uses]
+              with:
+                  path: ~/.cache/ms-playwright
+                  key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-playwright-
+
+            - name: Install Playwright Chromium
+              run: pnpm exec playwright install --with-deps chromium
+
+            - name: Run docs smoke tests
+              working-directory: docs
+              env:
+                  CI: true
+              run: pnpm exec playwright test --reporter=line
+
+            - name: Upload Playwright artifacts
+              if: always()
+              uses: actions/upload-artifact@v7 # zizmor: ignore[unpinned-uses]
+              with:
+                  name: docs-playwright-artifacts
+                  path: |
+                      docs/playwright-report/**
+                      docs/test-results/**
+                  if-no-files-found: ignore
