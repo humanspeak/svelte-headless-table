@@ -16,18 +16,18 @@ committing.
 
 ## Execution order & status
 
-| Plan | Title                                                                        | Priority | Effort | Depends on | Status                                                                                                 |
-| ---- | ---------------------------------------------------------------------------- | -------- | ------ | ---------- | ------------------------------------------------------------------------------------------------------ |
-| 001  | Spike a runes-backed TableComponent and measure it against the stores        | P1       | M      | —          | TODO                                                                                                   |
-| 002  | `TableComponent.current.attrs/props` beside the store methods (`.svelte.ts`) | P1       | M      | 001 report | TODO (blocked: needs 001's report, then a pre-flight amendment if it chose a different name/mechanism) |
-| 003  | Perf-bench renderer and kitchen sink on `current.*`; delete the spike        | P2       | S      | 002        | TODO                                                                                                   |
-| 004  | `vm.current.*` on the view model (`.svelte.ts`), fixtures fully store-free   | P2       | L      | 002, 003   | TODO                                                                                                   |
+| Plan | Title                                                                        | Priority | Effort | Depends on | Status                                                                                       |
+| ---- | ---------------------------------------------------------------------------- | -------- | ------ | ---------- | -------------------------------------------------------------------------------------------- |
+| 001  | Spike a runes-backed TableComponent and measure it against the stores        | P1       | M      | —          | DONE (PASS e5fbb85; report in 001-runes-spike.report.md)                                     |
+| 002  | `TableComponent.current.attrs/props` beside the store methods (`.svelte.ts`) | P1       | M      | 001 report | TODO (amended 2026-09-27: mechanism A, eslint `.svelte.ts` fix, SSR test; ready to dispatch) |
+| 003  | Perf-bench renderer and kitchen sink on `current.*`; delete the spike        | P2       | S      | 002        | TODO                                                                                         |
+| 004  | `vm.current.*` on the view model (`.svelte.ts`), fixtures fully store-free   | P2       | L      | 002, 003   | TODO                                                                                         |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale)
 
 ## Dependency notes
 
-- 001 is a design output, not a merge candidate on its own: it lives under `src/routes/test/` and produces `001-runes-spike.report.md`. Plans 002 and 004 are written against the **default design** (namespace `current`, "subscriber mirror" mechanism). Before dispatching 002, the reviewer must read the report and either confirm the default or amend 002/004 (name, mechanism) with a dated revision note. Do not dispatch 002 until that happens.
+- 001 ran on 2026-09-27 (snapshot `e5fbb85`). Its report confirmed the `current` namespace and **overturned** the default mechanism: the subscriber mirror returns an empty seed outside effects and crashes SSR; `$derived` over `fromStore` works in both. Plans 002 and 004 were amended the same day to mechanism A; 002 also gained a Step 0 (`eslint.config.mjs` must parse `.svelte.ts`) and an SSR test.
 - 003 is small and exists so the e2e suite and the perf bench exercise the rune path under the full plugin stack before 004 touches the view model.
 - 004 re-baselines its drift check to the 003 snapshot; it also needs a "before" perf run from the 002 snapshot (use a temporary worktree).
 - Release: everything here is additive to the public API (`current` is new; nothing removed) → `minor`. The breaking steps (plugin contract, `createTable(() => data)`, removing `Subscribe`/stores) are deliberately **not** in this batch; they are v7 and should be planned after 004 lands and the perf numbers are known.

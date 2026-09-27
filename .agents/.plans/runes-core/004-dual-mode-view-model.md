@@ -7,9 +7,17 @@
 > in `.agents/.plans/runes-core/README.md` — unless a reviewer dispatched you
 > and told you they maintain the index.
 >
-> **Read first**: `.agents/.plans/runes-core/001-runes-spike.report.md`
-> (Decision 3 decides whether `fromStore` inside `$derived` is trustworthy
-> here). This plan defaults to the subscriber-mirror mechanism used in plan 002.
+> **Read first**: `.agents/.plans/runes-core/001-runes-spike.report.md`.
+>
+> **Revision 2026-09-27 (guard, after the spike)**: the spike chose
+> mechanism A (`$derived` over `fromStore(store).current`) over the
+> subscriber mirror, because the mirror returns an empty seed outside
+> effects and crashes SSR. Step 3 of this plan now uses mechanism A: each
+> `vm.current.*` getter returns a `$derived.by(() => fromStore(store).current)`
+> created inside `createViewModel` (a `.svelte.ts` function body may use
+> runes). No `createSubscriber`, no `$state` mirrors, no `get(...)` seeding.
+> Add an SSR test (`// @vitest-environment node`, `render` from
+> `svelte/server` on the host) alongside the reactivity test.
 >
 > **Drift check (run first)**:
 > `git diff --stat <003 snapshot SHA>..HEAD -- src/lib/createViewModel.ts src/lib/createTable.ts src/lib/index.ts src/lib/types src/lib/createViewModel.performance.test.ts`
@@ -22,7 +30,7 @@
 - **Risk**: MED–HIGH (the file is the heart of the library; the `_debug` counters feed the perf bench and must keep their meaning)
 - **Depends on**: 002-dual-mode-table-component.md, 003-fixtures-on-current.md
 - **Category**: migration
-- **Planned at**: commit `fdc76a8`, 2026-09-27 (re-baseline after 003)
+- **Planned at**: commit `e5fbb85`, 2026-09-27 (amended after the spike; re-baseline again after 003)
 
 ## Why this matters
 
@@ -87,8 +95,8 @@ export interface TableViewModel<Item, Plugins extends AnyPlugins = AnyPlugins> {
 - `src/lib/createTable.ts:172-193` caches the view model per `reuseKey`/`rowDataId`;
   `vm.current` must be created inside `createViewModel` so the cache returns
   the same object.
-- Exemplar for the mirror mechanism: the `#subscribe`/`createSubscriber`
-  block added to `src/lib/tableComponent.svelte.ts` by plan 002.
+- Exemplar for the mechanism: the `current` namespace added to
+  `src/lib/tableComponent.svelte.ts` by plan 002 (mechanism A).
 
 ## Commands you will need
 
@@ -140,33 +148,25 @@ header click the order flips; `vm.current.tableAttrs.role === 'table'`.
 `createViewModel`, after the stores are built, create the mirror:
 
 ```ts
-const mirror = <T>(store: Readable<T>, initial: T) => {
-    let value = $state.raw<T>(initial)
-    const subscribe = createSubscriber((update) =>
-        store.subscribe((next) => {
-            value = next
-            update()
-        })
-    )
+import { fromStore } from 'svelte/store'
+
+const live = <T>(store: Readable<T>) => {
+    const value = $derived.by(() => fromStore(store).current)
     return {
         get value() {
-            subscribe()
             return value
         }
     }
 }
-const current = {
-    tableAttrs: mirror(finalizedTableAttrs, get(finalizedTableAttrs))
-    // … one per exposed store
-}
+const pageRowsLive = live(injectedPageRows)
+// … one per exposed store
 ```
 
 and expose getters on the returned object:
-`current: { get pageRows() { return pageRowsMirror.value }, … }`. Add
+`current: { get pageRows() { return pageRowsLive.value }, … }`. Add
 `current` to `TableViewModel` with a `ViewModelCurrent<Item, Plugins>` type
-(plain values, not `Readable`s). `get(...)` for the initial value keeps SSR
-and first-read correct; the subscriber keeps it live once a template reads
-it. Do not add `current` to `PluginInitTableState` or `TableState`.
+(plain values, not `Readable`s). `fromStore` reads `get(store)` outside effects and under SSR, and subscribes
+for the lifetime of the reading effect otherwise. Do not add `current` to `PluginInitTableState` or `TableState`.
 
 **Verify**: `pnpm check` → 0 errors; `createViewModel.current.test.ts` → 4 pass;
 the Step 1 counter assertion still passes (reading `vm.current.pageRows`
@@ -207,7 +207,7 @@ the commit before this plan (`git stash` is not allowed; use `git worktree add /
 
 ## STOP conditions
 
-- The spike report's Decision 3 says the subscriber mirror was unreliable and the plan was not amended.
+- `$derived.by` inside the `createViewModel` function body is rejected by the compiler — report; the fallback is a small `.svelte.ts` class holding the deriveds.
 - The Step 1 counter assertion changes value after Step 3 (the mirror is triggering extra derivations).
 - `rows10k` median regresses by more than 10%.
 - `createTable`'s cached view model returns an object without `current` (cache path missed).

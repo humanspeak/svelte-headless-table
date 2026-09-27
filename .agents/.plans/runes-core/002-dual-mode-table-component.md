@@ -7,15 +7,29 @@
 > in `.agents/.plans/runes-core/README.md` — unless a reviewer dispatched you
 > and told you they maintain the index.
 >
-> **Read first**: `.agents/.plans/runes-core/001-runes-spike.report.md`. This
-> plan is written against the _default_ design (namespace `current`,
-> mechanism B "subscriber mirror"). If the report's "Recommendation for plan
-> 002" section chose a different name or mechanism, the reviewer will have
-> amended this plan; if it has not been amended and the report disagrees,
-> STOP and report the discrepancy.
+> **Read first**: `.agents/.plans/runes-core/001-runes-spike.report.md`.
+>
+> **Revision 2026-09-27 (guard, after the spike)**: the spike's report
+> settled both decisions and this plan now follows it. **Naming**: the
+> `current` namespace (confirmed). **Mechanism**: **A** — a class-owned
+> `$derived` over `fromStore(store).current`, assigned in the constructor —
+> not the subscriber mirror this plan originally described. Reasons, from
+> the report: mechanism B returns its empty seed when read outside an
+> effect and crashes SSR (`createSubscriber` is a no-op on the server →
+> 500 on the runes kitchen sink); mechanism A tracks inside effects, reads
+> live values outside them, and server-renders identically to the store
+> path. Two toolchain facts also came out of the spike: TypeScript rejects
+> `readonly attrs = $derived(fromStore(this.#store).current)` as a field
+> initializer (TS2729), so declare the field and assign the `$derived` in
+> the constructor; and `eslint.config.mjs` only gives `**/*.svelte` the TS
+> parser, so `.svelte.ts` files fail to parse under Trunk — that config
+> change is now Step 0 of this plan and `eslint.config.mjs` is in scope.
+> Step 3's code below has been rewritten for mechanism A; a reference
+> implementation of the exact shape lives in
+> `src/routes/test/runes-spike/runesComponent.svelte.ts` (`RunesViaFromStore`).
 >
 > **Drift check (run first)**:
-> `git diff --stat fdc76a8..HEAD -- src/lib/tableComponent.ts src/lib/headerCells.ts src/lib/bodyCells.ts src/lib/headerRows.ts src/lib/bodyRows.ts src/lib/tableComponent.applyHook.test.ts`
+> `git diff --stat e5fbb85..HEAD -- eslint.config.mjs src/lib/tableComponent.ts src/lib/headerCells.ts src/lib/bodyCells.ts src/lib/headerRows.ts src/lib/bodyRows.ts src/lib/tableComponent.applyHook.test.ts`
 > On a mismatch with the "Current state" excerpts, STOP.
 
 ## Status
@@ -23,9 +37,9 @@
 - **Priority**: P1
 - **Effort**: M
 - **Risk**: MED (touches the base class of every row and cell; public store methods must stay byte-compatible)
-- **Depends on**: 001-runes-spike.md (its report decides naming and mechanism)
+- **Depends on**: 001-runes-spike.md (DONE; report applied to this plan)
 - **Category**: migration
-- **Planned at**: commit `fdc76a8`, 2026-09-27
+- **Planned at**: commit `e5fbb85`, 2026-09-27 (amended after the spike; originally `fdc76a8`)
 
 ## Why this matters
 
@@ -117,7 +131,7 @@ and `src/lib/headerRows.ts:69-76` add `role: 'row'`.) `props()` is not overridde
   as `dist/tableComponent.svelte.js` (verified in
   `node_modules/@sveltejs/package/src/utils.js:156-166`); vitest compiles
   `.svelte.ts` through the SvelteKit Vite plugin already configured. Svelte
-  5.56.10: `createSubscriber` is exported from `svelte/reactivity`.
+  5.56.10: `fromStore` from `svelte/store` falls back to `get(store)` when not inside a tracking context, which is what makes reads outside effects and SSR correct.
 - Conventions: 4-space indent, no semicolons, single quotes, JSDoc on every
   public member, `// trunk-ignore(eslint/<rule>)` for suppressions.
 
@@ -140,7 +154,9 @@ and `src/lib/headerRows.ts:69-76` add `role: 'row'`.) `props()` is not overridde
 
 **In scope**:
 
+- `eslint.config.mjs` (Step 0 only: add `**/*.svelte.ts` to the TypeScript-parser file globs)
 - `src/lib/tableComponent.ts` → renamed with `git mv` to `src/lib/tableComponent.svelte.ts`, then edited
+- `src/lib/tableComponent.ssr.test.ts` (create)
 - `src/lib/bodyCells.ts`, `src/lib/bodyRows.ts`, `src/lib/headerCells.ts`, `src/lib/headerRows.ts` (import path + the `decorateAttrs` refactor in Step 3)
 - `src/lib/tableComponent.applyHook.test.ts` (import path only)
 - `src/lib/tableComponent.current.test.ts` and `src/lib/CurrentHost.test.svelte` (create)
@@ -160,6 +176,21 @@ and `src/lib/headerRows.ts:69-76` add `role: 'row'`.) `props()` is not overridde
 - Do NOT push or open a PR unless instructed.
 
 ## Steps
+
+### Step 0: Let ESLint parse `.svelte.ts`
+
+In `eslint.config.mjs`, every config block whose `files` includes
+`'src/**/*.svelte'` (or `'**/*.svelte'`) must also include the matching
+`'src/**/*.svelte.ts'` / `'**/*.svelte.ts'`, and the block that sets
+`parserOptions.parser` / `extraFileExtensions` for Svelte files must apply
+the TypeScript parser to `*.svelte.ts` too. The spike documented the exact
+failure: `Parsing error: Unexpected token {` on `import type` in a
+`.svelte.ts` file. Then delete the file-level
+`// trunk-ignore-all(eslint)` header from
+`src/routes/test/runes-spike/runesComponent.svelte.ts` (plan 003 deletes
+that file anyway; it is the ready-made probe for this step).
+
+**Verify**: `trunk check --no-fix src/routes/test/runes-spike/runesComponent.svelte.ts` → no parsing error (rule findings are fine).
 
 ### Step 1: Characterisation test for the store surface (green now, must stay green)
 
@@ -184,72 +215,78 @@ on a header cell obtained from `vm.headerRows`, `await tick()`, the rendered
 **Verify**: `pnpm check` fails with `Property 'current' does not exist` on
 the host (that is the red state). Do not proceed until you see that error.
 
-### Step 3: Rename the file and add `current`
+### Step 3: Rename the file and add `current` (mechanism A)
 
 `git mv src/lib/tableComponent.ts src/lib/tableComponent.svelte.ts`; update the
 five importers to `'$lib/tableComponent.svelte.js'`.
 
-In the class, keep `attrs()`, `props()`, `applyHook` and `injectState`
-exactly as they are, and add:
+Keep `attrs()`, `props()`, `applyHook` and `injectState` exactly as they are.
+Add a version signal that `applyHook` bumps, and a `current` namespace whose
+values are class-owned `$derived`s over `fromStore`. Each `$derived` reads
+the version, so a hook applied after `current` was first read (the
+re-derivation case in `createViewModel.ts:457-477`) rebuilds the store it
+wraps and is picked up:
 
 ```ts
-import { createSubscriber } from 'svelte/reactivity'
+import { fromStore } from 'svelte/store'
 
-// Rune-side mirrors of the hook maps. `$state.raw` because the values are
-// replaced wholesale, never mutated in place.
-#hookAttrs = $state.raw<Record<string, Record<string, unknown>>>({})
-#hookProps = $state.raw<Record<string, Record<string, unknown>>>({})
+// Bumped by applyHook so `current.*` re-derives over the new hook set.
 #hookVersion = $state(0)
-#subscribe = createSubscriber((update) => {
-    // Subscribe to every currently-applied hook store; re-run when the set changes.
-    const stops: (() => void)[] = []
-    for (const [name, store] of Object.entries(this.attrsForName)) {
-        stops.push(store.subscribe((value) => { this.#hookAttrs = { ...this.#hookAttrs, [name]: value }; update() }))
-    }
-    for (const [name, store] of Object.entries(this.propsForName)) {
-        stops.push(store.subscribe((value) => { this.#hookProps = { ...this.#hookProps, [name]: value }; update() }))
-    }
-    return () => stops.forEach((stop) => stop())
-})
 
 /**
  * Runes-native view of the same values the `attrs()` / `props()` stores
- * expose. Read inside a template or `$derived` to track updates.
+ * expose. Read inside a template or `$derived` to track updates; reads
+ * outside any effect return the current value (fromStore falls back to
+ * `get(store)`), and the values are also correct under SSR.
  */
-readonly current = {
-    attrs: (): Record<string, unknown> => {
-        this.#subscribe()
-        void this.#hookVersion
-        let merged: Record<string, unknown> = {}
-        for (const value of Object.values(this.#hookAttrs)) merged = mergeAttributes(merged, value)
-        return this.decorateAttrs(finalizeAttributes(merged))
-    },
-    props: (): PluginTablePropSet<Plugins>[Key] => {
-        this.#subscribe()
-        void this.#hookVersion
-        return { ...this.#hookProps } as PluginTablePropSet<Plugins>[Key]
-    }
+readonly current: {
+    readonly attrs: Record<string, unknown>
+    readonly props: PluginTablePropSet<Plugins>[Key]
 }
 
-/** Fixed attributes a subclass adds on top of the plugin-merged ones. */
-protected decorateAttrs(base: Record<string, unknown>): Record<string, unknown> {
-    return base
+constructor({ id }: TableComponentInit) {
+    this.id = id
+    // TS2729 forbids `$derived` referencing `this.#x` in a field initializer;
+    // Svelte 5 accepts the rune as an assignment in the constructor.
+    const attrs = $derived.by(() => {
+        void this.#hookVersion
+        return fromStore(this.attrs()).current
+    })
+    const props = $derived.by(() => {
+        void this.#hookVersion
+        return fromStore(this.props()).current
+    })
+    this.current = {
+        get attrs() {
+            return attrs
+        },
+        get props() {
+            return props
+        }
+    }
 }
 ```
 
-Then make `current.attrs` and `current.props` **getters**, not methods:
-implement `current` as an object with `get attrs()` / `get props()` so the
-template reads `cell.current.attrs` (the shape shown above is for clarity of
-the body; the final code uses getters). In `applyHook`, after storing the
-hook, increment `#hookVersion` so an active subscriber re-subscribes to the
-new set (`createSubscriber` tears down and restarts when its dependencies
-change because `#hookVersion` is read inside `current.*`). If the report's
-Decision 3 chose mechanism A instead, replace the mirror with
-`$derived(fromStore(this.attrs()).current)` per the report and delete the
-subscriber code — but only if the plan was amended to say so.
+In `applyHook`, after storing the hook, `this.#hookVersion += 1`. If the
+compiler rejects `$derived.by` captured by a getter object in the
+constructor, fall back to two private `$derived` fields assigned in the
+constructor with getters on `current` returning them — exactly the
+`RunesViaFromStore` shape in the spike. Do not introduce `createSubscriber`
+or `$state` mirrors anywhere in this class.
 
 **Verify**: `pnpm check` → 0 errors; `pnpm exec vitest run src/lib/tableComponent.current.test.ts`
-→ 4 pass; `pnpm exec vitest run src/lib/tableComponent.applyHook.test.ts` → 5 pass.
+→ 4 pass (the fourth, late `applyHook`, is what `#hookVersion` exists for);
+`pnpm exec vitest run src/lib/tableComponent.applyHook.test.ts` → 5 pass.
+
+### Step 3b: SSR test
+
+Create `src/lib/tableComponent.ssr.test.ts` with `// @vitest-environment node`
+at the top (model on `src/lib/ssr.test.ts`): `render` from `svelte/server`
+on `CurrentHost` must produce markup containing `role="columnheader"` and
+`data-order="none"`. This is the test the spike identified as missing; it
+is what would have caught mechanism B.
+
+**Verify**: `pnpm exec vitest run src/lib/tableComponent.ssr.test.ts` → 1 pass.
 
 ### Step 4: Route subclass attribute decoration through `decorateAttrs`
 
@@ -283,7 +320,8 @@ thresholds), `pnpm package` (confirm `ls dist/tableComponent.svelte.js`),
 ## Done criteria
 
 - [ ] `pnpm check` exits 0
-- [ ] `pnpm test` exits 0 with thresholds; `tableComponent.current.test.ts` has 4 passing tests
+- [ ] `pnpm test` exits 0 with thresholds; `tableComponent.current.test.ts` has 4 passing tests and `tableComponent.ssr.test.ts` passes
+- [ ] `trunk check --no-fix src/lib/tableComponent.svelte.ts` → no parsing error
 - [ ] `test -f src/lib/tableComponent.svelte.ts && ! test -f src/lib/tableComponent.ts`
 - [ ] `grep -rn "tableComponent.js'" src/` → no matches; `grep -rn "derived(super.attrs()" src/lib` → no matches
 - [ ] `pnpm package` exits 0 and `dist/tableComponent.svelte.js` exists
@@ -293,9 +331,9 @@ thresholds), `pnpm package` (confirm `ls dist/tableComponent.svelte.js`),
 
 ## STOP conditions
 
-- The spike report is missing, or its recommendation differs from this plan and the plan was not amended.
+- The compiler rejects `$derived.by` / `$derived` assigned in a constructor of a `.svelte.ts` class in a way the spike's `RunesViaFromStore` shape cannot work around.
 - Step 2's red state does not appear (means `current` already exists somewhere).
-- The Step 2 fourth assertion (late `applyHook`) cannot be made to pass with `createSubscriber` — report; do not fall back to a global `$effect`.
+- The Step 2 fourth assertion (late `applyHook`) cannot be made to pass with the `#hookVersion` signal — report; do not fall back to `createSubscriber` mirrors or a global `$effect`.
 - `src/lib/index.exports.test.ts` snapshot changes.
 - Any e2e failure in the kitchen sink.
 
