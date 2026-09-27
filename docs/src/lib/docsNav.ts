@@ -127,6 +127,7 @@ export const docsSections: NavSection[] = [
         title: 'Guides',
         icon: Compass,
         items: [
+            { title: 'Moving to current.*', href: '/docs/guides/moving-to-current', icon: Zap },
             { title: 'shadcn-svelte', href: '/docs/guides/shadcn-svelte', icon: BookOpen },
             {
                 title: 'Migrating from 0.17.x',
