@@ -92,7 +92,7 @@ Initial filter value.
 ## Interactions
 
 - Filters on hidden columns still apply. `addHiddenColumns` removes the cell from `row.cells`, not from the row's filter data, so a column-filter value keeps narrowing the rows while the column is hidden.
-- With `addExpandedRows`, a sub-row is kept if it matches the filter itself or has a matching descendant. Register `colFilter` before `expand` so filtering happens before the tree is flattened; either order produces the same visible rows for a plain tree, but filtering first is cheaper.
+- With `addExpandedRows`, a sub-row is kept if it matches the filter itself or has a matching descendant (the default `matchMode`; use `'self'` to drop non-matching parents). Register `colFilter` before `expand` so filtering happens before the tree is flattened; either order produces the same visible rows for a plain tree, but filtering first is cheaper.
 
 ## Plugin State
 
