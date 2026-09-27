@@ -6,6 +6,7 @@ sidebar_title: addSelectedRows
 
 <script>
   import Admonition from '$lib/components/Admonition.svelte'
+  import PluginProps from '$lib/components/PluginProps.svelte'
   import SimpleSelectedDemo from './SimpleSelectedDemo.svelte'
   import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
@@ -57,21 +58,15 @@ const columns = table.createColumns([
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
 
-```svelte
-{#each vm.current.headerRows as headerRow (headerRow.id)}
-  {headerRow.current.props.select}
-  {#each headerRow.cells as cell (cell.id)}
-    {cell.current.props.select}
-  {/each}
-{/each}
-```
+<PluginProps set="SelectedRowsPropSet" pluginKey="select" />
 
-### BodyRow props
-- `selected: boolean`
-- `someSubRowsSelected: boolean`
-- `allSubRowsSelected: boolean`
+## Interactions
+
+- `allPageRowsSelected` and `somePageRowsSelected` are scoped to the current page from `addPagination`, not the whole data set. Use `allRowsSelected` for the entire table.
+- The page-scoped stores read the view model's `pageRows` store, which is only populated while something subscribes to it. In a template that is always the case; in tests or headless code, subscribe to `vm.pageRows` (or read `vm.current.pageRows`) before setting `allPageRowsSelected`.
+- With `addSubRows`, selecting a parent selects its sub-rows, and `someSubRowsSelected` / `allSubRowsSelected` on the parent reflect the children's state.
 
 ## Plugin State
 

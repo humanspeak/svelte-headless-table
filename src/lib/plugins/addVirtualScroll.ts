@@ -23,6 +23,11 @@ export type {
     VisibleRange
 }
 
+/** Props addVirtualScroll contributes to `row.current.props.<key>` on body rows. */
+export type VirtualScrollPropSet = NewTablePropSet<{
+    'tbody.tr': VirtualScrollRowProps
+}>
+
 /**
  * Default configuration values for virtual scroll.
  */
@@ -120,9 +125,7 @@ export const addVirtualScroll = <Item>({
     Item,
     VirtualScrollState<Item>,
     Record<string, never>,
-    NewTablePropSet<{
-        'tbody.tr': VirtualScrollRowProps
-    }>
+    VirtualScrollPropSet
 > => {
     // Height management
     const heightManager = new HeightManager(estimatedRowHeight)

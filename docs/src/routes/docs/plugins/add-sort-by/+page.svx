@@ -6,6 +6,7 @@ sidebar_title: addSortBy
 
 <script>
   import Admonition from '$lib/components/Admonition.svelte'
+  import PluginProps from '$lib/components/PluginProps.svelte'
   import SimpleSortingDemo from './SimpleSortingDemo.svelte'
   import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
@@ -79,6 +80,17 @@ const columns = table.createColumns([
   }),
 ]);
 ```
+
+## Prop Set
+
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
+
+<PluginProps set="SortByPropSet" pluginKey="sort" />
+
+## Interactions
+
+- With `addSubRows`, sub-rows are sorted within their parent; parents are ordered among themselves and children among their siblings.
+- Sorting runs before `addPagination` and `addVirtualScroll`, so a sort always reorders the whole data set, not just the visible page.
 
 ## Examples
 

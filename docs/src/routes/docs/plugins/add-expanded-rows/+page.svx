@@ -66,6 +66,11 @@ const columns = table.createColumns([
 {/each}
 ```
 
+## Interactions
+
+- Filters (`addColumnFilters`, `addTableFilter`) keep a sub-row when it or one of its descendants matches. Registering the filter plugin before `expand` filters the tree first; either order yields the same visible rows.
+- With `addPagination`, expanded children count toward the page size, so expanding a row can push later rows onto the next page.
+
 ## Plugin State
 
 <Admonition type="info">State provided by <code>addExpandedRows</code>.</Admonition>

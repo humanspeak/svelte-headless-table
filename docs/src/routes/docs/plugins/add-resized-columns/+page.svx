@@ -6,6 +6,7 @@ sidebar_title: addResizedColumns
 
 <script>
   import Admonition from '$lib/components/Admonition.svelte'
+  import PluginProps from '$lib/components/PluginProps.svelte'
   import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
   if (seo) {
@@ -62,16 +63,7 @@ Disable resizing for the column. If all child columns of a group are disabled, t
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>.</Admonition>
-
-```svelte
-{#each vm.current.headerRows as headerRow (headerRow.id)}
-  {headerRow.current.props.resize}
-  {#each headerRow.cells as cell (cell.id)}
-    {cell.current.props.resize}
-  {/each}
-{/each}
-```
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
 
 ### HeaderCell action
 Use `use:cell.current.props.resize` on the `<th>` to initialize the plugin.
@@ -82,10 +74,5 @@ Use `use:cell.current.props.resize` on the `<th>` to initialize the plugin.
 {/each}
 ```
 
-#### `drag: Action`
-Drag-to-resize handle: `<div class="resizer" use:cell.current.props.resize.drag />`
-
-#### `reset: Action`
-Reset width handle: `<div class="resizer" use:cell.current.props.resize.reset />`
-
+<PluginProps set="ResizedColumnsPropSet" pluginKey="resize" />
 

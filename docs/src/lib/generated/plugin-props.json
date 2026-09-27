@@ -1,0 +1,158 @@
+{
+    "ColumnFiltersPropSet": {
+        "thead.tr.th": [
+            {
+                "name": "render",
+                "type": "RenderConfig | undefined",
+                "doc": "The rendered filter component."
+            }
+        ]
+    },
+    "FlattenPropSet": {
+        "tbody.tr.td": [
+            {
+                "name": "flatten",
+                "type": "(depth: number) => void",
+                "doc": "Function to set the flatten depth."
+            },
+            {
+                "name": "unflatten",
+                "type": "() => void",
+                "doc": "Function to reset flattening (set depth to 0)."
+            }
+        ]
+    },
+    "GroupByPropSet": {
+        "thead.tr.th": [
+            {
+                "name": "grouped",
+                "type": "boolean",
+                "doc": "Whether this column is currently grouped."
+            },
+            {
+                "name": "toggle",
+                "type": "(event: Event) => void",
+                "doc": "Function to toggle grouping on this column."
+            },
+            {
+                "name": "clear",
+                "type": "() => void",
+                "doc": "Function to clear grouping on this column."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "doc": "Whether grouping is disabled for this column."
+            }
+        ],
+        "tbody.tr.td": [
+            {
+                "name": "repeated",
+                "type": "boolean",
+                "doc": "Whether this cell is a repeated group value (not the first in group)."
+            },
+            {
+                "name": "aggregated",
+                "type": "boolean",
+                "doc": "Whether this cell displays an aggregated value."
+            },
+            {
+                "name": "grouped",
+                "type": "boolean",
+                "doc": "Whether this cell is the primary grouped column."
+            }
+        ]
+    },
+    "ResizedColumnsPropSet": {
+        "thead.tr.th": [
+            {
+                "name": "drag",
+                "type": "(node: Element) => void",
+                "doc": "Action to enable drag-to-resize on an element."
+            },
+            {
+                "name": "reset",
+                "type": "(node: Element) => void",
+                "doc": "Action to enable double-click-to-reset on an element."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "doc": "Whether resizing is disabled for this column."
+            }
+        ]
+    },
+    "SelectedRowsPropSet": {
+        "tbody.tr": [
+            {
+                "name": "selected",
+                "type": "boolean",
+                "doc": "Whether this row is selected."
+            },
+            {
+                "name": "someSubRowsSelected",
+                "type": "boolean",
+                "doc": "Whether some (but not all) sub-rows are selected."
+            },
+            {
+                "name": "allSubRowsSelected",
+                "type": "boolean",
+                "doc": "Whether all sub-rows are selected."
+            }
+        ]
+    },
+    "SortByPropSet": {
+        "thead.tr.th": [
+            {
+                "name": "order",
+                "type": "\"asc\" | \"desc\" | undefined",
+                "doc": "Current sort order for this column."
+            },
+            {
+                "name": "toggle",
+                "type": "(event: Event) => void",
+                "doc": "Function to toggle sorting on this column."
+            },
+            {
+                "name": "clear",
+                "type": "() => void",
+                "doc": "Function to clear sorting on this column."
+            },
+            {
+                "name": "disabled",
+                "type": "boolean",
+                "doc": "Whether sorting is disabled for this column."
+            }
+        ],
+        "tbody.tr.td": [
+            {
+                "name": "order",
+                "type": "\"asc\" | \"desc\" | undefined",
+                "doc": "Current sort order for this column."
+            }
+        ]
+    },
+    "TableFilterPropSet": {
+        "tbody.tr.td": [
+            {
+                "name": "matches",
+                "type": "boolean",
+                "doc": "True if this cell matches the current filter."
+            }
+        ]
+    },
+    "VirtualScrollPropSet": {
+        "tbody.tr": [
+            {
+                "name": "virtualIndex",
+                "type": "number",
+                "doc": "Index of this row in the full dataset.\nIn sparse mode this is the absolute index, i.e. offset by `dataOffset`."
+            },
+            {
+                "name": "isVirtual",
+                "type": "boolean",
+                "doc": "Whether this row is currently in the visible range."
+            }
+        ]
+    }
+}

@@ -6,6 +6,7 @@ sidebar_title: addGroupBy
 
 <script>
   import Admonition from '$lib/components/Admonition.svelte'
+  import PluginProps from '$lib/components/PluginProps.svelte'
   import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
   if (seo) {
@@ -73,27 +74,14 @@ Custom body cell for grouped rows; receives the row, column, value, and <a href=
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
 
-```svelte
-{#each vm.current.headerRows as headerRow (headerRow.id)}
-  {headerRow.current.props.group}
-  {#each headerRow.cells as cell (cell.id)}
-    {cell.current.props.group}
-  {/each}
-{/each}
-```
+<PluginProps set="GroupByPropSet" pluginKey="group" />
 
-### HeaderCell props
-- `grouped: boolean`
-- `disabled: boolean`
-- `toggle: (event: Event) => void`
-- `clear: () => void`
+## Interactions
 
-### BodyCell props
-- `repeated: boolean`
-- `aggregated: boolean`
-- `grouped: boolean`
+- With `addPagination`, page size counts group rows. A page of ten rows may hold two groups and eight children; the group header and its children are paged together only as far as the page boundary.
+- Register `group` before `sort` if you want groups ordered by their aggregated values; sort first if the rows inside each group should follow the sort order.
 
 ## Plugin State
 

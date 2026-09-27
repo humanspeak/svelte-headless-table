@@ -6,6 +6,12 @@ const argProjects = process.argv
     .filter((arg) => arg.startsWith('--project='))
     .flatMap((arg) => arg.slice('--project='.length).split(','))
 
+// Local runs can move the preview server off 4173 when another project already
+// owns it (`PLAYWRIGHT_PORT=4180 pnpm test:e2e`). With `reuseExistingServer`
+// on, a foreign server on the default port would otherwise answer every
+// request with a 404 and fail the whole suite.
+const port = Number(process.env.PLAYWRIGHT_PORT ?? 4173)
+
 export default defineConfig({
     testDir: './tests',
     // Produce artifacts that are easy to collect in CI
@@ -16,15 +22,15 @@ export default defineConfig({
         ['html', { open: 'never' }]
     ],
     webServer: {
-        command: 'npm run build && npm run preview',
-        port: 4173,
+        command: `npm run build && npm run preview -- --port ${port} --strictPort`,
+        port,
         timeout: 120000,
         reuseExistingServer: !process.env.CI,
         stdout: 'pipe',
         stderr: 'pipe'
     },
     use: {
-        baseURL: 'http://localhost:4173',
+        baseURL: `http://localhost:${port}`,
         trace: 'on-first-retry'
     },
     // Lower the default per-test timeout to speed up failures in CI
