@@ -7,7 +7,9 @@
 > in `.agents/.plans/runes-core/README.md` — unless a reviewer dispatched you
 > and told you they maintain the index.
 >
-> **Read first**: `.agents/.plans/runes-core/001-runes-spike.report.md`.
+> **Read first**: `.agents/.plans/runes-core/001-runes-spike.report.md` and `src/lib/tableComponent.svelte.ts` (plan 002's `current` implementation is the exemplar).
+>
+> **Revision 2026-09-27 (guard, pre-flight)**: 002 and 003 landed (c557fe5, 815c91d). The kitchen sink and `_PerfTable.svelte` already read `row.current.*` / `cell.current.*`; only their table-level `$tableAttrs` / `$pageRows` / `$headerRows` / `$tableBodyAttrs` reads remain for Step 4. `_PerfTableStore.svelte` (the `?renderer=store` control) must keep using stores — do not touch it. `svelte/require-store-reactive-access` fires on raw reads of store-typed identifiers in `.svelte.ts`; a `$derived.by(() => fromStore(store).current)` reads the store correctly, so suppress with `// trunk-ignore(eslint/svelte/require-store-reactive-access)` only where the rule misfires, as `tableComponent.svelte.ts` does.
 >
 > **Revision 2026-09-27 (guard, after the spike)**: the spike chose
 > mechanism A (`$derived` over `fromStore(store).current`) over the
@@ -20,7 +22,7 @@
 > `svelte/server` on the host) alongside the reactivity test.
 >
 > **Drift check (run first)**:
-> `git diff --stat <003 snapshot SHA>..HEAD -- src/lib/createViewModel.ts src/lib/createTable.ts src/lib/index.ts src/lib/types src/lib/createViewModel.performance.test.ts`
+> `git diff --stat 815c91d..HEAD -- src/lib/createViewModel.ts src/lib/createTable.ts src/lib/index.ts src/lib/types src/lib/createViewModel.performance.test.ts`
 > On a mismatch, STOP.
 
 ## Status
@@ -28,9 +30,9 @@
 - **Priority**: P2
 - **Effort**: L
 - **Risk**: MED–HIGH (the file is the heart of the library; the `_debug` counters feed the perf bench and must keep their meaning)
-- **Depends on**: 002-dual-mode-table-component.md, 003-fixtures-on-current.md
+- **Depends on**: 002-dual-mode-table-component.md, 003-fixtures-on-current.md (both DONE)
 - **Category**: migration
-- **Planned at**: commit `e5fbb85`, 2026-09-27 (amended after the spike; re-baseline again after 003)
+- **Planned at**: commit `815c91d`, 2026-09-27 (re-baselined after 003)
 
 ## Why this matters
 
@@ -185,7 +187,7 @@ the debug panel's store reads as they are).
 
 Capture `PERF_BENCH_ITERATIONS=30 PERF_BENCH_COLD_ONLY=1 pnpm perf:bench > /tmp/after.json`
 and compare `rows10k` / `sortCycle1k` `firstPaintMs.median` with a run from
-the commit before this plan (`git stash` is not allowed; use `git worktree add /tmp/before <002 SHA>` and run the bench there). Then `trunk fmt`, `trunk check`, `pnpm check`, `pnpm test`, `pnpm package`.
+the commit before this plan (`git stash` is not allowed; use `git worktree add /tmp/before 815c91d` and run the bench there (it needs `pnpm install --frozen-lockfile` and its own dev server on another port, e.g. `pnpm dev --port 8418`, with `PERF_BENCH_URL=http://localhost:8418/test/perf-bench`)). Then `trunk fmt`, `trunk check`, `pnpm check`, `pnpm test`, `pnpm package`.
 
 **Verify**: all exit 0; `dist/createViewModel.svelte.js` exists; record both medians in the README row.
 

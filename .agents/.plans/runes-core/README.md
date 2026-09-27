@@ -20,8 +20,8 @@ committing.
 | ---- | ---------------------------------------------------------------------------- | -------- | ------ | ---------- | -------------------------------------------------------- |
 | 001  | Spike a runes-backed TableComponent and measure it against the stores        | P1       | M      | —          | DONE (PASS e5fbb85; report in 001-runes-spike.report.md) |
 | 002  | `TableComponent.current.attrs/props` beside the store methods (`.svelte.ts`) | P1       | M      | 001 report | DONE (PASS c557fe5)                                      |
-| 003  | Perf-bench renderer and kitchen sink on `current.*`; delete the spike        | P2       | S      | 002        | IN PROGRESS (re-baselined to c557fe5)                    |
-| 004  | `vm.current.*` on the view model (`.svelte.ts`), fixtures fully store-free   | P2       | L      | 002, 003   | TODO                                                     |
+| 003  | Perf-bench renderer and kitchen sink on `current.*`; delete the spike        | P2       | S      | 002        | DONE (PASS 815c91d; scope amended mid-run)               |
+| 004  | `vm.current.*` on the view model (`.svelte.ts`), fixtures fully store-free   | P2       | L      | 002, 003   | IN PROGRESS (re-baselined to 815c91d)                    |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale)
 

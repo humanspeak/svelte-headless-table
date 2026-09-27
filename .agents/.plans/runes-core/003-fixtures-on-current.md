@@ -13,6 +13,8 @@
 >
 > **Revision 2026-09-27 (guard, pre-flight)**: 002 landed at c557fe5. `current.attrs` / `current.props` are getters on every row and cell (see `src/lib/tableComponent.svelte.ts`). The spike left four trunk findings in `src/routes/test/runes-spike/runesComponent.svelte.ts`; deleting that directory in Step 3 clears them and makes `trunk check` fully green again — confirm that in the final gate. `tests/initial.test.ts` and `tests/performance.test.ts` are the kitchen-sink e2e specs.
 
+> **Revision 2026-09-27 (guard, mid-execution)**: `src/routes/test/runes-kitchen-sink/**` added to Scope, Step 3 and Done criteria — it imports from `runes-spike/` and must be deleted with it (plan defect, not executor drift).
+
 ## Status
 
 - **Priority**: P2
