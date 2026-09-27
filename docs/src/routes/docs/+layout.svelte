@@ -52,7 +52,7 @@
     const pagerItems: PagerItem[] = docsSections.flatMap((section) =>
         section.items.map((item) => ({
             href: item.href,
-            label: `${item.title.toLowerCase()}.`
+            label: `${item.title}.`
         }))
     )
 </script>
@@ -72,10 +72,9 @@
     sitemapManifest={sitemapManifest as Record<string, string>}
 >
     {@render children()}
-    <!-- `not-prose` keeps the typography plugin's link/heading styles off the
-         pager; `brut-wrap` supplies the `--brut-*` tokens PagerV2 styles with
-         (DocsLayoutV2, unlike the example/compare shells, has no brut surface). -->
-    <div class="not-prose brut-wrap">
+    {#snippet pager()}
+        <!-- DocsLayoutV2 hosts this full-width at the bottom of the main column,
+             flush above the footer, with the brut tokens but no separate background. -->
         <PagerV2 items={pagerItems} counterLabel="doc" ariaLabel="Docs pagination" />
-    </div>
+    {/snippet}
 </DocsLayoutV2>

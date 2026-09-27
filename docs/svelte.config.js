@@ -1,3 +1,4 @@
+import { rehypeKeepCase } from '@humanspeak/docs-kit/mdsvex'
 import adapter from '@sveltejs/adapter-cloudflare'
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 import { mdsvex } from 'mdsvex'
@@ -15,6 +16,8 @@ const config = {
         vitePreprocess(),
         mdsvex({
             extensions: ['.md', '.svx'],
+            // Keep authored casing on identifier headings (createColumns, signatures).
+            rehypePlugins: [rehypeKeepCase],
             highlight: {
                 highlighter: async (code, lang = 'text') => {
                     const lightHtml = highlighter.codeToHtml(code, {
