@@ -1,4 +1,4 @@
-import type { TableState } from '$lib/createViewModel.js'
+import type { TableState } from '$lib/createViewModel.svelte.js'
 import type {
     AnyPlugins,
     AttributesForKey,

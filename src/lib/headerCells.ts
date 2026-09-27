@@ -1,5 +1,5 @@
 import { NBSP } from '$lib/constants.js'
-import type { TableState } from '$lib/createViewModel.js'
+import type { TableState } from '$lib/createViewModel.svelte.js'
 import type { RenderConfig } from '$lib/render/createRender.js'
 import { TableComponent } from '$lib/tableComponent.svelte.js'
 import type { HeaderLabel } from '$lib/types/Label.js'

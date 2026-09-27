@@ -41,7 +41,7 @@
         matchFilter,
         textPrefixFilter
     } from '$lib/plugins/index.js'
-    import type { TableViewModel } from '$lib/createViewModel.js'
+    import type { TableViewModel } from '$lib/createViewModel.svelte.js'
     import type { AnyPlugins } from '$lib/types/TablePlugin.js'
     import PerfTable from './_PerfTable.svelte'
     import PerfTableStore from './_PerfTableStore.svelte'

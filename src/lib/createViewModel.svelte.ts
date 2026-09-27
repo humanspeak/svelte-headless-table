@@ -12,7 +12,7 @@ import type {
 } from '$lib/types/TablePlugin.js'
 import { finalizeAttributes } from '$lib/utils/attributes.js'
 import { nonUndefined } from '$lib/utils/filter.js'
-import { derived, readable, writable, type Readable, type Writable } from 'svelte/store'
+import { derived, fromStore, readable, writable, type Readable, type Writable } from 'svelte/store'
 
 /**
  * HTML attributes for the table element.
@@ -113,6 +113,30 @@ export interface ViewModelDebug {
 }
 
 /**
+ * Runes-native view of the view model's stores: the same values as
+ * `$tableAttrs`, `$pageRows` etc., read as plain reactive properties.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ */
+export interface ViewModelCurrent<Item, Plugins extends AnyPlugins = AnyPlugins> {
+    /** The finalized attributes for the `<table>` element. */
+    readonly tableAttrs: TableAttributes<Item, Plugins>
+    /** The finalized attributes for the `<thead>` element. */
+    readonly tableHeadAttrs: TableHeadAttributes<Item, Plugins>
+    /** The finalized attributes for the `<tbody>` element. */
+    readonly tableBodyAttrs: TableBodyAttributes<Item, Plugins>
+    /** The columns left after every plugin's column derivation. */
+    readonly visibleColumns: FlatColumn<Item, Plugins>[]
+    /** The header rows for the visible columns. */
+    readonly headerRows: HeaderRow<Item, Plugins>[]
+    /** All rows after every plugin's row derivation. */
+    readonly rows: DataBodyRow<Item, Plugins>[]
+    /** The rows of the current page. */
+    readonly pageRows: DataBodyRow<Item, Plugins>[]
+}
+
+/**
  * The view model for a table, containing all reactive stores and state.
  * Created by `createViewModel` and used to render the table.
  *
@@ -130,6 +154,12 @@ export interface TableViewModel<Item, Plugins extends AnyPlugins = AnyPlugins> {
     rows: Readable<DataBodyRow<Item, Plugins>[]>
     pageRows: Readable<DataBodyRow<Item, Plugins>[]>
     pluginStates: PluginStates<Plugins>
+    /**
+     * Runes-native view of the stores above. Read inside a template or
+     * `$derived` to track updates; reads outside any effect (and under SSR)
+     * return the current value.
+     */
+    readonly current: ViewModelCurrent<Item, Plugins>
     /** Debug information for performance analysis (always available) */
     _debug: ViewModelDebug
 }
@@ -150,7 +180,7 @@ export type ReadOrWritable<T> = Readable<T> | Writable<T>
  */
 export interface PluginInitTableState<Item, Plugins extends AnyPlugins = AnyPlugins> extends Omit<
     TableViewModel<Item, Plugins>,
-    'pluginStates' | '_debug'
+    'pluginStates' | '_debug' | 'current'
 > {
     /** The data source for the table. */
     data: ReadOrWritable<Item[]>
@@ -167,7 +197,7 @@ export interface PluginInitTableState<Item, Plugins extends AnyPlugins = AnyPlug
  */
 export interface TableState<Item, Plugins extends AnyPlugins = AnyPlugins> extends Omit<
     TableViewModel<Item, Plugins>,
-    '_debug'
+    '_debug' | 'current'
 > {
     /** The data source for the table. */
     data: ReadOrWritable<Item[]>
@@ -249,11 +279,11 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         headerRows: 0
     }
 
-    const $flatColumns = getFlatColumns(columns)
-    const flatColumns = readable($flatColumns)
+    const flatColumnsValue = getFlatColumns(columns)
+    const flatColumns = readable(flatColumnsValue)
 
-    const originalRows = derived([data, flatColumns], ([$data, $flatColumns]) => {
-        return getBodyRows($data, $flatColumns, { rowDataId })
+    const originalRows = derived([data, flatColumns], ([dataValue, flatColumnsValue]) => {
+        return getBodyRows(dataValue, flatColumnsValue, { rowDataId })
     })
 
     // _stores need to be defined first to pass into plugins for initialization.
@@ -271,7 +301,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     const pluginInitTableState: PluginInitTableState<Item, Plugins> = {
         data,
         columns,
-        flatColumns: $flatColumns,
+        flatColumns: flatColumnsValue,
         tableAttrs: _tableAttrs,
         tableHeadAttrs: _tableHeadAttrs,
         tableBodyAttrs: _tableBodyAttrs,
@@ -285,7 +315,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     const pluginInstances = Object.fromEntries(
         Object.entries(plugins).map(([pluginName, plugin]) => {
             const columnOptions = Object.fromEntries(
-                $flatColumns
+                flatColumnsValue
                     .map((c) => {
                         const option = c.plugins?.[pluginName]
                         if (option === undefined) return undefined
@@ -313,7 +343,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     const tableState: TableState<Item, Plugins> = {
         data,
         columns,
-        flatColumns: $flatColumns,
+        flatColumns: flatColumnsValue,
         tableAttrs: _tableAttrs,
         tableHeadAttrs: _tableHeadAttrs,
         tableBodyAttrs: _tableBodyAttrs,
@@ -334,13 +364,13 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     deriveTableAttrsFns.forEach((fn) => {
         tableAttrs = fn(tableAttrs)
     })
-    const finalizedTableAttrs = derived(tableAttrs, ($tableAttrs) => {
+    const finalizedTableAttrs = derived(tableAttrs, (tableAttrsValue) => {
         const _t0 = performance.now()
         derivationCalls.tableAttrs++
-        const $finalizedAttrs = finalizeAttributes($tableAttrs) as TableAttributes<Item>
-        _tableAttrs.set($finalizedAttrs)
+        const finalizedAttrsValue = finalizeAttributes(tableAttrsValue) as TableAttributes<Item>
+        _tableAttrs.set(finalizedAttrsValue)
         derivationTimings.tableAttrs += performance.now() - _t0
-        return $finalizedAttrs
+        return finalizedAttrsValue
     })
 
     const deriveTableHeadAttrsFns: DeriveFn<TableHeadAttributes<Item>>[] = Object.values(
@@ -352,13 +382,15 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     deriveTableHeadAttrsFns.forEach((fn) => {
         tableHeadAttrs = fn(tableHeadAttrs)
     })
-    const finalizedTableHeadAttrs = derived(tableHeadAttrs, ($tableHeadAttrs) => {
+    const finalizedTableHeadAttrs = derived(tableHeadAttrs, (tableHeadAttrsValue) => {
         const _t0 = performance.now()
         derivationCalls.tableHeadAttrs++
-        const $finalizedAttrs = finalizeAttributes($tableHeadAttrs) as TableHeadAttributes<Item>
-        _tableHeadAttrs.set($finalizedAttrs)
+        const finalizedAttrsValue = finalizeAttributes(
+            tableHeadAttrsValue
+        ) as TableHeadAttributes<Item>
+        _tableHeadAttrs.set(finalizedAttrsValue)
         derivationTimings.tableHeadAttrs += performance.now() - _t0
-        return $finalizedAttrs
+        return finalizedAttrsValue
     })
 
     const deriveTableBodyAttrsFns: DeriveFn<TableBodyAttributes<Item>>[] = Object.values(
@@ -372,13 +404,15 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     deriveTableBodyAttrsFns.forEach((fn) => {
         tableBodyAttrs = fn(tableBodyAttrs)
     })
-    const finalizedTableBodyAttrs = derived(tableBodyAttrs, ($tableBodyAttrs) => {
+    const finalizedTableBodyAttrs = derived(tableBodyAttrs, (tableBodyAttrsValue) => {
         const _t0 = performance.now()
         derivationCalls.tableBodyAttrs++
-        const $finalizedAttrs = finalizeAttributes($tableBodyAttrs) as TableBodyAttributes<Item>
-        _tableBodyAttrs.set($finalizedAttrs)
+        const finalizedAttrsValue = finalizeAttributes(
+            tableBodyAttrsValue
+        ) as TableBodyAttributes<Item>
+        _tableBodyAttrs.set(finalizedAttrsValue)
         derivationTimings.tableBodyAttrs += performance.now() - _t0
-        return $finalizedAttrs
+        return finalizedAttrsValue
     })
 
     const deriveFlatColumnsFns: DeriveFlatColumnsFn<Item>[] = Object.values(pluginInstances)
@@ -392,22 +426,22 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         visibleColumns = fn(visibleColumns as any) as any
     })
 
-    const injectedColumns = derived(visibleColumns, ($visibleColumns) => {
+    const injectedColumns = derived(visibleColumns, (visibleColumnsValue) => {
         const _t0 = performance.now()
         derivationCalls.visibleColumns++
-        _visibleColumns.set($visibleColumns)
+        _visibleColumns.set(visibleColumnsValue)
         derivationTimings.visibleColumns += performance.now() - _t0
-        return $visibleColumns
+        return visibleColumnsValue
     })
 
     const columnedRows = derived(
         [originalRows, injectedColumns],
-        ([$originalRows, $injectedColumns]) => {
+        ([originalRowsValue, injectedColumnsValue]) => {
             const _t0 = performance.now()
             derivationCalls.columnedRows++
             const result = getColumnedBodyRows(
-                $originalRows,
-                $injectedColumns.map((c) => c.id)
+                originalRowsValue,
+                injectedColumnsValue.map((c) => c.id)
             )
             derivationTimings.columnedRows += performance.now() - _t0
             return result
@@ -454,10 +488,10 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     // closure allocations per derivation pass.
     const injectCellState = (cell: BodyCell<Item, Plugins>) => cell.injectState(tableState)
 
-    const injectedRows = derived(rows, ($rows) => {
+    const injectedRows = derived(rows, (rowsValue) => {
         const _t0 = performance.now()
         derivationCalls.injectedRows++
-        $rows.forEach((row) => {
+        rowsValue.forEach((row) => {
             row.injectState(tableState)
             row.cells.forEach(injectCellState)
             for (const [pluginName, trHook] of trHookEntries) {
@@ -471,9 +505,9 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
                 })
             }
         })
-        _rows.set($rows)
+        _rows.set(rowsValue)
         derivationTimings.injectedRows += performance.now() - _t0
-        return $rows
+        return rowsValue
     })
 
     const derivePageRowsFns: DeriveRowsFn<Item>[] = Object.values(pluginInstances)
@@ -489,22 +523,22 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
 
     // Page rows are a subset of the same object references already processed
     // by injectedRows — no need to re-inject state or re-apply hooks.
-    const injectedPageRows = derived(pageRows, ($pageRows) => {
+    const injectedPageRows = derived(pageRows, (pageRowsValue) => {
         const _t0 = performance.now()
         derivationCalls.injectedPageRows++
-        _pageRows.set($pageRows)
+        _pageRows.set(pageRowsValue)
         derivationTimings.injectedPageRows += performance.now() - _t0
-        return $pageRows
+        return pageRowsValue
     })
 
-    const headerRows = derived(injectedColumns, ($injectedColumns) => {
+    const headerRows = derived(injectedColumns, (injectedColumnsValue) => {
         const _t0 = performance.now()
         derivationCalls.headerRows++
-        const $headerRows = getHeaderRows(
+        const headerRowsValue = getHeaderRows(
             columns,
-            $injectedColumns.map((c) => c.id)
+            injectedColumnsValue.map((c) => c.id)
         )
-        $headerRows.forEach((row) => {
+        headerRowsValue.forEach((row) => {
             row.injectState(tableState)
             row.cells.forEach((cell) => cell.injectState(tableState))
             for (const [pluginName, pluginInstance] of pluginEntries) {
@@ -518,9 +552,9 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
                 }
             }
         })
-        _headerRows.set($headerRows)
+        _headerRows.set(headerRowsValue)
         derivationTimings.headerRows += performance.now() - _t0
-        return $headerRows
+        return headerRowsValue
     })
 
     const _debug: ViewModelDebug = {
@@ -550,17 +584,61 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         }
     }
 
+    // Runes-native mirror of the finalized stores (mechanism A from the
+    // runes spike). `fromStore` subscribes only while a reading effect is
+    // alive and falls back to `get(store)` otherwise, so the derivation
+    // chain above is not driven any harder than `$store` would drive it.
+    const live = <T>(store: Readable<T>) => {
+        const value = $derived.by(() => fromStore(store).current)
+        return {
+            get value() {
+                return value
+            }
+        }
+    }
+    const tableAttrsLive = live(finalizedTableAttrs)
+    const tableHeadAttrsLive = live(finalizedTableHeadAttrs)
+    const tableBodyAttrsLive = live(finalizedTableBodyAttrs)
+    const visibleColumnsLive = live(injectedColumns)
+    const headerRowsLive = live(headerRows)
+    const rowsLive = live(injectedRows)
+    const pageRowsLive = live(injectedPageRows)
+    const current: ViewModelCurrent<Item, Plugins> = {
+        get tableAttrs() {
+            return tableAttrsLive.value
+        },
+        get tableHeadAttrs() {
+            return tableHeadAttrsLive.value
+        },
+        get tableBodyAttrs() {
+            return tableBodyAttrsLive.value
+        },
+        get visibleColumns() {
+            return visibleColumnsLive.value
+        },
+        get headerRows() {
+            return headerRowsLive.value
+        },
+        get rows() {
+            return rowsLive.value
+        },
+        get pageRows() {
+            return pageRowsLive.value
+        }
+    }
+
     return {
         tableAttrs: finalizedTableAttrs,
         tableHeadAttrs: finalizedTableHeadAttrs,
         tableBodyAttrs: finalizedTableBodyAttrs,
         visibleColumns: injectedColumns,
-        flatColumns: $flatColumns,
+        flatColumns: flatColumnsValue,
         headerRows,
         originalRows,
         rows: injectedRows,
         pageRows: injectedPageRows,
         pluginStates,
+        current,
         _debug
     }
 }

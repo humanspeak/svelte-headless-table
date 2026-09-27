@@ -16,7 +16,7 @@ import {
     createViewModel,
     type CreateViewModelOptions,
     type TableViewModel
-} from '$lib/createViewModel.js'
+} from '$lib/createViewModel.svelte.js'
 import type { AnyPlugins } from '$lib/types/TablePlugin.js'
 import { arrayEquals, getDuplicates } from '$lib/utils/array.js'
 import type { ReadOrWritable } from '$lib/utils/store.js'

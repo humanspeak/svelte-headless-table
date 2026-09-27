@@ -405,9 +405,9 @@
     Export as CSV
 </button>
 
-<table {...$tableAttrs}>
+<table {...viewModel.current.tableAttrs}>
     <thead>
-        {#each $headerRows as headerRow (headerRow.id)}
+        {#each viewModel.current.headerRows as headerRow (headerRow.id)}
             <tr {...headerRow.current.attrs}>
                 {#each headerRow.cells as cell (cell.id)}
                     <th
@@ -462,8 +462,8 @@
             </th>
         </tr>
     </thead>
-    <tbody {...$tableBodyAttrs}>
-        {#each $pageRows as row (row.id)}
+    <tbody {...viewModel.current.tableBodyAttrs}>
+        {#each viewModel.current.pageRows as row (row.id)}
             <tr
                 id={row.id}
                 {...row.current.attrs}

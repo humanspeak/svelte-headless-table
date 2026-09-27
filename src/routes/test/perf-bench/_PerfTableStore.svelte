@@ -13,7 +13,7 @@
      * remount, ensuring no stale subscriptions from the previous run.
      */
     import { Render, Subscribe } from '$lib/index.js'
-    import type { TableViewModel } from '$lib/createViewModel.js'
+    import type { TableViewModel } from '$lib/createViewModel.svelte.js'
     import type { AnyPlugins } from '$lib/types/TablePlugin.js'
 
     type AnyVm = TableViewModel<unknown, AnyPlugins>

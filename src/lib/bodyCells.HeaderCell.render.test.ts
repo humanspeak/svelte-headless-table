@@ -1,4 +1,4 @@
-import type { TableState } from './createViewModel.js'
+import type { TableState } from './createViewModel.svelte.js'
 import { HeaderCell } from './headerCells.js'
 
 interface User {

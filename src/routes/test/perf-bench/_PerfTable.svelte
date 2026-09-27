@@ -1,8 +1,9 @@
 <script lang="ts">
     /**
-     * Default renderer for the perf-bench fixture. Reads every row's and
-     * cell's attrs through the runes-backed `current.attrs` getter and spreads
-     * them directly, with no store-subscription wrapper component. The
+     * Default renderer for the perf-bench fixture. Reads the table-level
+     * values through `vm.current.*` and every row's and cell's attrs through
+     * the runes-backed `current.attrs` getter, with no `$store` reads and no
+     * store-subscription wrapper component. The
      * store-path control lives in `_PerfTableStore.svelte` (`?renderer=store`).
      *
      * The parent fixture keys this component on `vm` so a scenario change
@@ -10,19 +11,17 @@
      * previous run.
      */
     import { Render } from '$lib/index.js'
-    import type { TableViewModel } from '$lib/createViewModel.js'
+    import type { TableViewModel } from '$lib/createViewModel.svelte.js'
     import type { AnyPlugins } from '$lib/types/TablePlugin.js'
 
     type AnyVm = TableViewModel<unknown, AnyPlugins>
     // Keyed on `vm` by the parent, so `vm` never changes within an instance.
     const { vm }: { vm: AnyVm } = $props()
-
-    const { headerRows, pageRows, tableAttrs, tableBodyAttrs } = vm
 </script>
 
-<table {...$tableAttrs}>
+<table {...vm.current.tableAttrs}>
     <thead>
-        {#each $headerRows as headerRow (headerRow.id)}
+        {#each vm.current.headerRows as headerRow (headerRow.id)}
             <tr {...headerRow.current.attrs}>
                 {#each headerRow.cells as cell (cell.id)}
                     <th {...cell.current.attrs}>
@@ -32,8 +31,8 @@
             </tr>
         {/each}
     </thead>
-    <tbody {...$tableBodyAttrs}>
-        {#each $pageRows as row (row.id)}
+    <tbody {...vm.current.tableBodyAttrs}>
+        {#each vm.current.pageRows as row (row.id)}
             <tr {...row.current.attrs} data-row-id={row.id} data-depth={row.depth}>
                 {#each row.cells as cell (cell.id)}
                     <td {...cell.current.attrs}>

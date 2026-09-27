@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store'
+import { get, writable } from 'svelte/store'
 import { createTable } from './createTable.js'
 import {
     addColumnFilters,
@@ -151,5 +151,45 @@ describe('Store derivation chain performance', () => {
         expect(vm._debug.getTotalCalls()).toBeGreaterThan(0)
         // Performance threshold - typically ~10ms, allow 100ms for CI variability
         expect(elapsed).toBeLessThan(100)
+    })
+
+    it('pins derivationCalls for sort + pagination after one get(vm.pageRows)', () => {
+        const data = writable<TestItem[]>(
+            Array.from({ length: 5 }, (_, i) => ({
+                id: String(i),
+                firstName: `First${i}`,
+                lastName: `Last${i}`,
+                age: 20 + i,
+                status: 'active',
+                visits: i,
+                progress: i
+            }))
+        )
+        const table = createTable(data, {
+            sort: addSortBy(),
+            page: addPagination({ initialPageSize: 2 })
+        })
+        const columns = table.createColumns([
+            table.column({ header: 'First', accessor: 'firstName' }),
+            table.column({ header: 'Age', accessor: 'age' })
+        ])
+        const vm = table.createViewModel(columns)
+
+        get(vm.pageRows)
+
+        // Baseline pinned before createViewModel moved to .svelte.ts (plan 004).
+        // `vm.current` must not change these counts.
+        expect({ ...vm._debug.derivationCalls }).toEqual({
+            tableAttrs: 0,
+            tableHeadAttrs: 0,
+            tableBodyAttrs: 0,
+            visibleColumns: 1,
+            columnedRows: 1,
+            rows: 0,
+            injectedRows: 1,
+            pageRows: 0,
+            injectedPageRows: 1,
+            headerRows: 0
+        })
     })
 })

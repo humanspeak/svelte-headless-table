@@ -1,5 +1,5 @@
 import type { DataBodyCell, DisplayBodyCell } from '../bodyCells.js'
-import type { TableState } from '../createViewModel.js'
+import type { TableState } from '../createViewModel.svelte.js'
 import type { HeaderCell } from '../headerCells.js'
 import type { RenderConfig } from '../render/createRender.js'
 import type { AnyPlugins } from './TablePlugin.js'
