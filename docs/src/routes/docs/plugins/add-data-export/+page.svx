@@ -63,18 +63,14 @@ Exclude a column from the export.
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>.</Admonition>
 
 ```svelte
-{#each $headerRows as headerRow (headerRow.id)}
-  <Subscribe rowProps={headerRow.props()} let:rowProps>
-    {rowProps.export}
-    {#each headerRow.cells as cell (cell.id)}
-      <Subscribe props={cell.props()} let:props>
-        {props.export}
-      </Subscribe>
-    {/each}
-  </Subscribe>
+{#each vm.current.headerRows as headerRow (headerRow.id)}
+  {headerRow.current.props.export}
+  {#each headerRow.cells as cell (cell.id)}
+    {cell.current.props.export}
+  {/each}
 {/each}
 ```
 
@@ -83,7 +79,8 @@ Exclude a column from the export.
 <Admonition type="info">State provided by <code>addDataExport</code>.</Admonition>
 
 ```ts {3}
-const { headerRows, rows, pluginStates } = table.createViewModel(columns);
+const vm = table.createViewModel(columns);
+const { pluginStates } = vm;
 const { ... } = pluginStates.export;
 ```
 

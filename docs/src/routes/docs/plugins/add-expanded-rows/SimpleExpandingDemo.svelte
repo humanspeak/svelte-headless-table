@@ -1,7 +1,7 @@
 <script>
     import { dev } from '$app/environment'
     import { derived, readable } from 'svelte/store'
-    import { createTable, Subscribe, Render, createRender } from '@humanspeak/svelte-headless-table'
+    import { createTable, Render, createRender } from '@humanspeak/svelte-headless-table'
     import { addSubRows, addExpandedRows } from '@humanspeak/svelte-headless-table/plugins'
     import { createSamples } from '$lib/utils/createSamples'
     import ExpandIndicator from './ExpandIndicator.svelte'
@@ -46,8 +46,8 @@
         })
     ])
 
-    const { headerRows, rows, tableAttrs, tableBodyAttrs, pluginStates } =
-        table.createViewModel(columns)
+    const vm = table.createViewModel(columns)
+    const { pluginStates } = vm
     const { expandedIds } = pluginStates.expand
 </script>
 
@@ -56,35 +56,27 @@
 {/if}
 
 <div class="overflow-x-auto">
-    <table class="demo my-0" {...$tableAttrs}>
+    <table class="demo my-0" {...vm.current.tableAttrs}>
         <thead>
-            {#each $headerRows as headerRow (headerRow.id)}
-                <Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
-                    <tr {...rowAttrs}>
-                        {#each headerRow.cells as cell (cell.id)}
-                            <Subscribe attrs={cell.attrs()} let:attrs>
-                                <th {...attrs}>
-                                    <Render of={cell.render()} />
-                                </th>
-                            </Subscribe>
-                        {/each}
-                    </tr>
-                </Subscribe>
+            {#each vm.current.headerRows as headerRow (headerRow.id)}
+                <tr {...headerRow.current.attrs}>
+                    {#each headerRow.cells as cell (cell.id)}
+                        <th {...cell.current.attrs}>
+                            <Render of={cell.render()} />
+                        </th>
+                    {/each}
+                </tr>
             {/each}
         </thead>
-        <tbody {...$tableBodyAttrs}>
-            {#each $rows as row (row.id)}
-                <Subscribe rowAttrs={row.attrs()} let:rowAttrs>
-                    <tr {...rowAttrs}>
-                        {#each row.cells as cell (cell.id)}
-                            <Subscribe attrs={cell.attrs()} let:attrs>
-                                <td {...attrs}>
-                                    <Render of={cell.render()} />
-                                </td>
-                            </Subscribe>
-                        {/each}
-                    </tr>
-                </Subscribe>
+        <tbody {...vm.current.tableBodyAttrs}>
+            {#each vm.current.rows as row (row.id)}
+                <tr {...row.current.attrs}>
+                    {#each row.cells as cell (cell.id)}
+                        <td {...cell.current.attrs}>
+                            <Render of={cell.render()} />
+                        </td>
+                    {/each}
+                </tr>
             {/each}
         </tbody>
     </table>

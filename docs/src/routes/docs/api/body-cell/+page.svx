@@ -38,6 +38,16 @@ A `Readable` store with additional properties derived from plugin view model ext
 
 <Admonition type="tip">See also <a href="/docs/plugins/overview">Plugin View Model Extensions</a>.</Admonition>
 
+### `current: { attrs: BodyCellAttributes; props: BodyCellProps }`
+
+The same attributes and props as plain reactive values, for runes-style templates. `current.attrs` is ready to spread onto the `td` element and `current.props` holds the plugin state; both update in place as state changes, with no store subscription, `$` prefix or `Subscribe` wrapper. Reads outside a template or effect return the current value, and server rendering produces the same markup as the store path.
+
+```svelte
+<td {...cell.current.attrs}>
+```
+
+<Admonition type="tip">`current.*` and the `attrs()` / `props()` stores are two views of the same data; mix them freely.</Admonition>
+
 ### `render: () => RenderConfig`
 
 Returns the <a href="/docs/api/render#renderconfig">render configuration</a> of the body cell. Pass into `Render#of`.
@@ -45,11 +55,9 @@ Returns the <a href="/docs/api/render#renderconfig">render configuration</a> of 
 ```svelte
 <tr>
     {#each row.cells as cell (cell.id)}
-        <Subscribe attrs={cell.attrs()} let:attrs>
-            <td {...attrs}>
-                <Render of={cell.render()} />
-            </td>
-        </Subscribe>
+        <td {...cell.current.attrs}>
+            <Render of={cell.render()} />
+        </td>
     {/each}
 </tr>
 ```

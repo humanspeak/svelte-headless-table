@@ -2,7 +2,6 @@
     import { writable } from 'svelte/store'
     import {
         Render,
-        Subscribe,
         createTable,
         createRender,
         type DataLabel
@@ -90,41 +89,33 @@
         })
     ])
 
-    const { headerRows, pageRows, tableAttrs, tableBodyAttrs } = table.createViewModel(columns)
+    const vm = table.createViewModel(columns)
 </script>
 
 <div class="editable-shell">
-    <table {...$tableAttrs} class="editable-table">
+    <table {...vm.current.tableAttrs} class="editable-table">
         <thead>
-            {#each $headerRows as headerRow (headerRow.id)}
-                <Subscribe attrs={headerRow.attrs()} let:attrs>
-                    <tr {...attrs}>
-                        {#each headerRow.cells as cell (cell.id)}
-                            <Subscribe attrs={cell.attrs()} let:attrs>
-                                <th {...attrs}>
-                                    <div class="th-inner">
-                                        <Render of={cell.render()} />
-                                    </div>
-                                </th>
-                            </Subscribe>
-                        {/each}
-                    </tr>
-                </Subscribe>
+            {#each vm.current.headerRows as headerRow (headerRow.id)}
+                <tr {...headerRow.current.attrs}>
+                    {#each headerRow.cells as cell (cell.id)}
+                        <th {...cell.current.attrs}>
+                            <div class="th-inner">
+                                <Render of={cell.render()} />
+                            </div>
+                        </th>
+                    {/each}
+                </tr>
             {/each}
         </thead>
-        <tbody {...$tableBodyAttrs}>
-            {#each $pageRows as row (row.id)}
-                <Subscribe attrs={row.attrs()} let:attrs>
-                    <tr {...attrs}>
-                        {#each row.cells as cell (cell.id)}
-                            <Subscribe attrs={cell.attrs()} let:attrs>
-                                <td {...attrs}>
-                                    <Render of={cell.render()} />
-                                </td>
-                            </Subscribe>
-                        {/each}
-                    </tr>
-                </Subscribe>
+        <tbody {...vm.current.tableBodyAttrs}>
+            {#each vm.current.pageRows as row (row.id)}
+                <tr {...row.current.attrs}>
+                    {#each row.cells as cell (cell.id)}
+                        <td {...cell.current.attrs}>
+                            <Render of={cell.render()} />
+                        </td>
+                    {/each}
+                </tr>
             {/each}
         </tbody>
     </table>

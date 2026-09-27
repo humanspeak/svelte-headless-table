@@ -57,18 +57,14 @@ const columns = table.createColumns([
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>.</Admonition>
 
 ```svelte
-{#each $headerRows as headerRow (headerRow.id)}
-  <Subscribe rowProps={headerRow.props()} let:rowProps>
-    {rowProps.sub}
-    {#each headerRow.cells as cell (cell.id)}
-      <Subscribe props={cell.props()} let:props>
-        {props.sub}
-      </Subscribe>
-    {/each}
-  </Subscribe>
+{#each vm.current.headerRows as headerRow (headerRow.id)}
+  {headerRow.current.props.sub}
+  {#each headerRow.cells as cell (cell.id)}
+    {cell.current.props.sub}
+  {/each}
 {/each}
 ```
 

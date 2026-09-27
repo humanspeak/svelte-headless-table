@@ -20,20 +20,35 @@ sidebar_title: TableViewModel
 
 # TableViewModel
 
-`TableViewModel` contains the `Readable` stores that describe the structure of the table. Apply the view model onto your markup.
+`TableViewModel` describes the structure of the table. `vm.current` exposes it as plain reactive values for your markup; the same values are also available as `Readable` stores for code that needs to subscribe.
 
 ```ts
-const {
-  headerRows,
-  rows,
-  tableAttrs,
-  tableHeadAttrs,
-  tableBodyAttrs,
-  ...
-} = table.createViewModel(columns);
+const vm = table.createViewModel(columns);
+// vm.current.headerRows, vm.current.rows, vm.current.tableAttrs, ...
+// vm.headerRows, vm.rows, vm.tableAttrs, ... (stores)
 ```
 
 ## Usage
+
+### `TableViewModel#current: ViewModelCurrent`
+
+Plain reactive values for runes-style templates: `tableAttrs`, `tableHeadAttrs`, `tableBodyAttrs`, `visibleColumns`, `headerRows`, `rows` and `pageRows`. Each is the current value of the matching store below and updates in place as data or plugin state changes. Combined with `row.current` and `cell.current`, a table needs no stores at all:
+
+```svelte
+<table {...vm.current.tableAttrs}>
+    <tbody {...vm.current.tableBodyAttrs}>
+        {#each vm.current.pageRows as row (row.id)}
+            <tr {...row.current.attrs}>
+                {#each row.cells as cell (cell.id)}
+                    <td {...cell.current.attrs}><Render of={cell.render()} /></td>
+                {/each}
+            </tr>
+        {/each}
+    </tbody>
+</table>
+```
+
+Reads outside a template or effect return the current value, and server rendering matches the store path. `current` is not passed to plugins; it is a read-side view for templates.
 
 ### Attributes
 
@@ -57,10 +72,8 @@ A `Readable` store with an array of <a href="/docs/api/header-row">`HeaderRow`</
 
 ```svelte
 <thead>
-    {#each $headerRows as headerRow (headerRow.id)}
-        <Subscribe attrs={headerRow.attrs()} let:attrs>
-            <tr {...attrs}>...</tr>
-        </Subscribe>
+    {#each vm.current.headerRows as headerRow (headerRow.id)}
+        <tr {...headerRow.current.attrs}>...</tr>
     {/each}
 </thead>
 ```
@@ -71,10 +84,8 @@ A `Readable` store with an array of <a href="/docs/api/body-row">`BodyRow`</a>s 
 
 ```svelte
 <tbody>
-    {#each $rows as row (row.id)}
-        <Subscribe attrs={row.attrs()} let:attrs>
-            <tr {...attrs}>...</tr>
-        </Subscribe>
+    {#each vm.current.rows as row (row.id)}
+        <tr {...row.current.attrs}>...</tr>
     {/each}
 </tbody>
 ```
@@ -87,10 +98,8 @@ A `Readable` store with an array of `BodyRow`s that represent `<tr>` elements **
 
 ```svelte
 <tbody>
-    {#each $pageRows as row (row.id)}
-        <Subscribe attrs={row.attrs()} let:attrs>
-            <tr {...attrs}>...</tr>
-        </Subscribe>
+    {#each vm.current.pageRows as row (row.id)}
+        <tr {...row.current.attrs}>...</tr>
     {/each}
 </tbody>
 ```

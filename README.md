@@ -67,7 +67,7 @@ Easily extend Svelte Headless Table with complex **sorting**, **filtering**, **g
 <!-- prettier-ignore -->
 ```svelte
 <script>
-  import { fromStore, readable } from 'svelte/store';
+  import { readable } from 'svelte/store';
   import { createTable, Render } from '@humanspeak/svelte-headless-table';
 
   const data = readable([
@@ -89,35 +89,26 @@ Easily extend Svelte Headless Table with complex **sorting**, **filtering**, **g
     }),
   ]);
 
-  const {
-    headerRows,
-    rows,
-    tableAttrs,
-    tableBodyAttrs,
-  } = table.createViewModel(columns);
+  const vm = table.createViewModel(columns);
 </script>
 
-<table {...$tableAttrs}>
+<table {...vm.current.tableAttrs}>
   <thead>
-    {#each $headerRows as headerRow (headerRow.id)}
-      {@const rowAttrs = fromStore(headerRow.attrs())}
-      <tr {...rowAttrs.current}>
+    {#each vm.current.headerRows as headerRow (headerRow.id)}
+      <tr {...headerRow.current.attrs}>
         {#each headerRow.cells as cell (cell.id)}
-          {@const attrs = fromStore(cell.attrs())}
-          <th {...attrs.current}>
+          <th {...cell.current.attrs}>
             <Render of={cell.render()} />
           </th>
         {/each}
       </tr>
     {/each}
   </thead>
-  <tbody {...$tableBodyAttrs}>
-    {#each $rows as row (row.id)}
-      {@const rowAttrs = fromStore(row.attrs())}
-      <tr {...rowAttrs.current}>
+  <tbody {...vm.current.tableBodyAttrs}>
+    {#each vm.current.pageRows as row (row.id)}
+      <tr {...row.current.attrs}>
         {#each row.cells as cell (cell.id)}
-          {@const attrs = fromStore(cell.attrs())}
-          <td {...attrs.current}>
+          <td {...cell.current.attrs}>
             <Render of={cell.render()} />
           </td>
         {/each}
@@ -127,7 +118,7 @@ Easily extend Svelte Headless Table with complex **sorting**, **filtering**, **g
 </table>
 ```
 
-`fromStore` comes from Svelte itself; its `current` property is reactive inside the template. The `Subscribe` component (`<Subscribe attrs={cell.attrs()} let:attrs>`) is still supported if you prefer slot props — see the [Subscribe docs](https://table.svelte.page/docs/api/subscribe).
+Every row, cell and the view model itself expose a `current` object whose values are plain and reactive: read them in the template and they update as plugins change state, with no stores, `$` syntax or wrapper components. The store API (`$tableAttrs`, `cell.attrs()`, the `Subscribe` component) is still supported — see the [view model docs](https://table.svelte.page/docs/api/table-view-model).
 
 ### Custom cells with snippets
 

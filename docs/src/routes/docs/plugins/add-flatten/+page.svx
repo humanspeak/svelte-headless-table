@@ -53,18 +53,14 @@ const columns = table.createColumns([
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>.</Admonition>
 
 ```svelte
-{#each $headerRows as headerRow (headerRow.id)}
-  <Subscribe rowProps={headerRow.props()} let:rowProps>
-    {rowProps.flatten}
-    {#each headerRow.cells as cell (cell.id)}
-      <Subscribe props={cell.props()} let:props>
-        {props.flatten}
-      </Subscribe>
-    {/each}
-  </Subscribe>
+{#each vm.current.headerRows as headerRow (headerRow.id)}
+  {headerRow.current.props.flatten}
+  {#each headerRow.cells as cell (cell.id)}
+    {cell.current.props.flatten}
+  {/each}
 {/each}
 ```
 
@@ -77,7 +73,8 @@ const columns = table.createColumns([
 <Admonition type="info">State provided by <code>addFlatten</code>.</Admonition>
 
 ```ts {3}
-const { headerRows, rows, pluginStates } = table.createViewModel(columns);
+const vm = table.createViewModel(columns);
+const { pluginStates } = vm;
 const { ... } = pluginStates.flatten;
 ```
 

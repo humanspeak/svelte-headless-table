@@ -1,6 +1,6 @@
 <script lang="ts">
     import { derived, readable } from 'svelte/store'
-    import { createTable, Subscribe, Render, createRender } from '@humanspeak/svelte-headless-table'
+    import { createTable, Render, createRender } from '@humanspeak/svelte-headless-table'
     import {
         addGroupBy,
         addExpandedRows,
@@ -97,69 +97,51 @@
         })
     ])
 
-    const { headerRows, rows, tableAttrs, tableBodyAttrs, pluginStates } =
-        table.createViewModel(columns)
+    const vm = table.createViewModel(columns)
+    const { pluginStates } = vm
     const { groupByIds } = pluginStates.group
 </script>
 
 <pre>{JSON.stringify({ $groupByIds }, null, 2)}</pre>
 
 <div class="overflow-x-auto">
-    <table class="demo my-0" {...$tableAttrs}>
+    <table class="demo my-0" {...vm.current.tableAttrs}>
         <thead>
-            {#each $headerRows as headerRow (headerRow.id)}
-                <Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
-                    <tr {...rowAttrs}>
-                        {#each headerRow.cells as cell (cell.id)}
-                            <Subscribe
-                                attrs={cell.attrs()}
-                                let:attrs
-                                props={cell.props()}
-                                let:props
-                            >
-                                <th {...attrs}>
-                                    <Render of={cell.render()} />
-                                    {#if !props.group.disabled}
-                                        <button onclick={props.group.toggle} class="demo">
-                                            {#if props.group.grouped}
-                                                ungroup
-                                            {:else}
-                                                group
-                                            {/if}
-                                        </button>
+            {#each vm.current.headerRows as headerRow (headerRow.id)}
+                <tr {...headerRow.current.attrs}>
+                    {#each headerRow.cells as cell (cell.id)}
+                        <th {...cell.current.attrs}>
+                            <Render of={cell.render()} />
+                            {#if !cell.current.props.group.disabled}
+                                <button onclick={cell.current.props.group.toggle} class="demo">
+                                    {#if cell.current.props.group.grouped}
+                                        ungroup
+                                    {:else}
+                                        group
                                     {/if}
-                                </th>
-                            </Subscribe>
-                        {/each}
-                    </tr>
-                </Subscribe>
+                                </button>
+                            {/if}
+                        </th>
+                    {/each}
+                </tr>
             {/each}
         </thead>
-        <tbody {...$tableBodyAttrs}>
-            {#each $rows as row (row.id)}
-                <Subscribe rowAttrs={row.attrs()} let:rowAttrs>
-                    <tr {...rowAttrs}>
-                        {#each row.cells as cell (cell.id)}
-                            <Subscribe
-                                attrs={cell.attrs()}
-                                let:attrs
-                                props={cell.props()}
-                                let:props
-                            >
-                                <td
-                                    {...attrs}
-                                    class:group={props.group.grouped}
-                                    class:aggregate={props.group.aggregated}
-                                    class:repeat={props.group.repeated}
-                                >
-                                    {#if !props.group.repeated}
-                                        <Render of={cell.render()} />
-                                    {/if}
-                                </td>
-                            </Subscribe>
-                        {/each}
-                    </tr>
-                </Subscribe>
+        <tbody {...vm.current.tableBodyAttrs}>
+            {#each vm.current.rows as row (row.id)}
+                <tr {...row.current.attrs}>
+                    {#each row.cells as cell (cell.id)}
+                        <td
+                            {...cell.current.attrs}
+                            class:group={cell.current.props.group.grouped}
+                            class:aggregate={cell.current.props.group.aggregated}
+                            class:repeat={cell.current.props.group.repeated}
+                        >
+                            {#if !cell.current.props.group.repeated}
+                                <Render of={cell.render()} />
+                            {/if}
+                        </td>
+                    {/each}
+                </tr>
             {/each}
         </tbody>
     </table>

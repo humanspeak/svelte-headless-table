@@ -66,15 +66,11 @@ const columns = table.createColumns([
 
 Now that we've defined our data source and columns, we can get the view model for our first table UI.
 
-<!-- prettier-ignore -->
 ```ts
-const {
-  headerRows,
-  rows,
-  tableAttrs,
-  tableBodyAttrs,
-} = table.createViewModel(columns);
+const vm = table.createViewModel(columns)
 ```
+
+`vm.current` holds the finished table as plain reactive values: `tableAttrs`, `tableBodyAttrs`, `headerRows`, `pageRows` and more. Read them in the template and they update as the data or any plugin state changes.
 
 ## Applying to markup
 
@@ -95,35 +91,30 @@ HTML tables have a standard structure.
 </table>
 ```
 
-We apply our view model over the structure. The `.attrs()` stores are created per row and per cell, so we read them with Svelte's `fromStore`, whose `current` property is reactive inside the template.
+We apply our view model over the structure. Each header row, body row and cell exposes a `current` object with its `attrs` (to spread onto the element) and `props` (state contributed by plugins), and `vm.current` exposes the table-level values.
 
 ```svelte
 <script>
-    import { fromStore } from 'svelte/store'
     import { Render } from '@humanspeak/svelte-headless-table'
 </script>
 
-<table {...$tableAttrs}>
+<table {...vm.current.tableAttrs}>
     <thead>
-        {#each $headerRows as headerRow (headerRow.id)}
-            {@const rowAttrs = fromStore(headerRow.attrs())}
-            <tr {...rowAttrs.current}>
+        {#each vm.current.headerRows as headerRow (headerRow.id)}
+            <tr {...headerRow.current.attrs}>
                 {#each headerRow.cells as cell (cell.id)}
-                    {@const attrs = fromStore(cell.attrs())}
-                    <th {...attrs.current}>
+                    <th {...cell.current.attrs}>
                         <Render of={cell.render()} />
                     </th>
                 {/each}
             </tr>
         {/each}
     </thead>
-    <tbody {...$tableBodyAttrs}>
-        {#each $rows as row (row.id)}
-            {@const rowAttrs = fromStore(row.attrs())}
-            <tr {...rowAttrs.current}>
+    <tbody {...vm.current.tableBodyAttrs}>
+        {#each vm.current.pageRows as row (row.id)}
+            <tr {...row.current.attrs}>
                 {#each row.cells as cell (cell.id)}
-                    {@const attrs = fromStore(cell.attrs())}
-                    <td {...attrs.current}>
+                    <td {...cell.current.attrs}>
                         <Render of={cell.render()} />
                     </td>
                 {/each}
@@ -133,9 +124,11 @@ We apply our view model over the structure. The `.attrs()` stores are created pe
 </table>
 ```
 
-### Using Subscribe
+That is the whole template: no stores, no `$` prefixes, no wrapper components. `Render` displays each cell's content, whether that is a plain value, a component or a snippet.
 
-Both approaches are supported; this is the same table using the `Subscribe` component, which exposes each store as a slot prop.
+### Using the store API instead
+
+The view model also exposes everything as Svelte stores (`$tableAttrs`, `$headerRows`, `cell.attrs()`, and so on). Because the per-row and per-cell stores are created inside `{#each}` blocks, they cannot use the `$` prefix; the `Subscribe` component exposes each one as a slot prop, or you can read them with Svelte's `fromStore`. This is the same table through `Subscribe`:
 
 ```svelte
 <table {...$tableAttrs}>
@@ -172,7 +165,7 @@ Both approaches are supported; this is the same table using the `Subscribe` comp
 </table>
 ```
 
-<Admonition type="info">`Render` is provided by Svelte Headless Table; `fromStore` comes from Svelte itself. If you prefer slot props, `Subscribe` is also provided — see <a href="/docs/api/subscribe">Subscribe</a> and <a href="/docs/api/render">Render</a>.</Admonition>
+<Admonition type="info">`current` and the store API are two views of the same data and can be mixed in one template. See <a href="/docs/api/table-view-model">TableViewModel</a>, <a href="/docs/api/subscribe">Subscribe</a> and <a href="/docs/api/render">Render</a>.</Admonition>
 
 ## Final result
 

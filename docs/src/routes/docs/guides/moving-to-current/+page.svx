@@ -1,0 +1,161 @@
+---
+title: Moving templates to current.*
+description: Convert Subscribe- and store-based table templates to the runes-native current API
+sidebar_title: Moving to current.*
+---
+
+<script>
+  import Admonition from '$lib/components/Admonition.svelte'
+  import { getSeoContext } from '@humanspeak/docs-kit'
+  const seo = getSeoContext()
+  if (seo) {
+      seo.title = 'Moving templates to current.* - Svelte Headless Table'
+      seo.description = 'Convert <Subscribe> and $store table templates to the runes-native current.attrs / current.props API, one template at a time, with no library or plugin changes.'
+      seo.ogTitle = 'Moving to current.*'
+      seo.ogTagline = 'From slot props and stores to plain reactive values.'
+      seo.ogFeatures = ['No breaking changes', 'One template at a time', 'Same plugins', 'SSR safe']
+      seo.ogSlug = 'guides-moving-to-current'
+  }
+</script>
+
+# Moving templates to `current.*`
+
+Since v6.4, every row, cell and the view model itself expose a `current` object whose values are plain and reactive. A template that reads them needs no `<Subscribe>` wrapper, no `fromStore`, and no `$` prefix. This guide converts an existing store-based template to `current.*`.
+
+<Admonition type="info">Nothing here is required. The store API (<code>$tableAttrs</code>, <code>cell.attrs()</code>, <code>cell.props()</code>, <code>&lt;Subscribe&gt;</code>) keeps working unchanged, and both views can be mixed in one template. Convert when it makes a template simpler.</Admonition>
+
+## What changes and what does not
+
+| Before                                       | After                          |
+| -------------------------------------------- | ------------------------------ |
+| `const { headerRows, rows, tableAttrs, … } = table.createViewModel(columns)` | `const vm = table.createViewModel(columns)` |
+| `{...$tableAttrs}` / `{...$tableBodyAttrs}`  | `{...vm.current.tableAttrs}` / `{...vm.current.tableBodyAttrs}` |
+| `{#each $headerRows as headerRow}`           | `{#each vm.current.headerRows as headerRow}` |
+| `{#each $rows as row}` / `{#each $pageRows as row}` | `{#each vm.current.rows as row}` / `{#each vm.current.pageRows as row}` |
+| `<Subscribe attrs={cell.attrs()} let:attrs>` … `{...attrs}` | `{...cell.current.attrs}` |
+| `<Subscribe props={cell.props()} let:props>` … `props.sort.order` | `cell.current.props.sort.order` |
+| `<Subscribe rowAttrs={row.attrs()} let:rowAttrs>` … `{...rowAttrs}` | `{...row.current.attrs}` |
+| `use:props.resize`                           | `use:cell.current.props.resize` |
+| `<Render of={cell.render()} />`              | unchanged                      |
+| `pluginStates.sort.sortKeys` and every other plugin store | unchanged (`$sortKeys` still works) |
+| Column definitions, `createRender`, snippets, plugins | unchanged                      |
+
+`current.props` has exactly the shape `props()` had: one key per plugin name, with that plugin's props inside. Only the way you read it changes.
+
+## Step by step
+
+### 1. Keep the view model in one variable
+
+Destructuring the stores is what forced `$`-prefixed reads at the top level of the script. Keep `vm` instead and pull out only what you still need as stores (usually plugin state):
+
+```svelte
+<script>
+    // before
+    const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates } =
+        table.createViewModel(columns)
+    const { sortKeys } = pluginStates.sort
+
+    // after
+    const vm = table.createViewModel(columns)
+    const { sortKeys } = vm.pluginStates.sort
+</script>
+```
+
+### 2. Replace the table-level stores
+
+```svelte
+<!-- before -->
+<table {...$tableAttrs}>
+    <tbody {...$tableBodyAttrs}>
+        {#each $pageRows as row (row.id)}
+
+<!-- after -->
+<table {...vm.current.tableAttrs}>
+    <tbody {...vm.current.tableBodyAttrs}>
+        {#each vm.current.pageRows as row (row.id)}
+```
+
+Use `vm.current.rows` where you used `$rows` and `vm.current.pageRows` where you used `$pageRows`; the pagination and virtual-scroll plugins act on `pageRows` exactly as before.
+
+### 3. Unwrap `<Subscribe>` and read `current` directly
+
+```svelte
+<!-- before -->
+<Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
+    <tr {...rowAttrs}>
+        {#each headerRow.cells as cell (cell.id)}
+            <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
+                <th {...attrs} onclick={props.sort.toggle} class:sorted={props.sort.order}>
+                    <Render of={cell.render()} />
+                </th>
+            </Subscribe>
+        {/each}
+    </tr>
+</Subscribe>
+
+<!-- after -->
+<tr {...headerRow.current.attrs}>
+    {#each headerRow.cells as cell (cell.id)}
+        <th
+            {...cell.current.attrs}
+            onclick={cell.current.props.sort.toggle}
+            class:sorted={cell.current.props.sort.order}
+        >
+            <Render of={cell.render()} />
+        </th>
+    {/each}
+</tr>
+```
+
+Every `let:` name maps to the matching `current` property on the same object: `attrs` → `x.current.attrs`, `props` → `x.current.props`. Body rows are identical with `row` in place of `headerRow` and `<td>` in place of `<th>`.
+
+### 4. Actions, class directives and conditionals
+
+They all read through `current.props` the same way:
+
+```svelte
+<th {...cell.current.attrs} use:cell.current.props.resize>
+    {#if cell.current.props.filter?.render}
+        <Render of={cell.current.props.filter.render} />
+    {/if}
+    {#if !cell.current.props.resize.disabled}
+        <div class="resizer" use:cell.current.props.resize.drag></div>
+    {/if}
+</th>
+
+<tr {...row.current.attrs} class:selected={row.current.props.select.selected}>
+```
+
+### 5. Delete the import
+
+Remove `Subscribe` from the import list once nothing in the file uses it. `Render` stays.
+
+## Reading `current` outside the template
+
+`current` values are also correct outside a template or effect; they simply do not track. That makes them safe in event handlers and plain functions:
+
+```ts
+const selectedNames = () =>
+    vm.current.rows.filter((row) => row.current.props.select.selected).map((row) => row.original.name)
+```
+
+Inside a `$derived` or `$effect`, the same reads track and re-run as state changes.
+
+## Things to know
+
+- **Plugin state is still stores.** `pluginStates.<plugin>` (`sortKeys`, `pageIndex`, `selectedDataIds`, `filterValue`, …) is unchanged, so `$pageIndex` and `pageIndex.set(…)` keep working. Only the view-model and component read side gained `current`.
+- **Server rendering** produces the same markup through `current` as through the stores. No change is needed for SvelteKit SSR.
+- **Mixing is fine.** A template can read `vm.current.pageRows` and still wrap one cell in `<Subscribe>`, or read `$pageRows` and use `row.current.attrs`. The two views are backed by the same derivation chain.
+- **`fromStore` is no longer needed** for table stores. If you adopted `{@const attrs = fromStore(cell.attrs())}` in the meantime, replace it with `cell.current.attrs`.
+- **Custom cell components** created with `createRender(Component, props)` receive whatever you pass; if you passed a store, keep passing it. `current` does not change how cell content is rendered.
+
+## Checklist
+
+1. `const vm = table.createViewModel(columns)`; pull plugin stores from `vm.pluginStates`.
+2. `$tableAttrs` → `vm.current.tableAttrs`; same for `tableHeadAttrs` and `tableBodyAttrs`.
+3. `$headerRows` / `$rows` / `$pageRows` → `vm.current.headerRows` / `rows` / `pageRows`.
+4. Remove each `<Subscribe … let:…>`; read `x.current.attrs` and `x.current.props`.
+5. Actions: `use:cell.current.props.<plugin>…`.
+6. Drop the `Subscribe` import. Leave `Render`, plugin state and column definitions alone.
+
+See <a href="/docs/api/table-view-model">TableViewModel</a>, <a href="/docs/api/body-cell">BodyCell</a> and the <a href="/docs/getting-started/quick-start">quick start</a> for the resulting template in full.
