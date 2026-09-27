@@ -35,12 +35,23 @@ export abstract class TableComponent<
     /** Unique identifier for the component. */
     id: string
 
-    // Bumped by applyHook so `current.*` re-derives over the new hook set.
+    // Bumped by applyHook so `current.*` re-reads over the new hook set.
     #hookVersion = $state(0)
+
+    // `fromStore` handles cached per hook version. A handle owns no reactive
+    // state of its own: its subscription is opened under whichever effect
+    // reads `.current` and closed when that effect goes away. Nothing here is
+    // owned by the context that constructed the component, so a row built
+    // inside a short-lived effect cannot go inert when that effect ends.
+    #attrsHandle?: { version: number; handle: { readonly current: Record<string, unknown> } }
+    #propsHandle?: {
+        version: number
+        handle: { readonly current: PluginTablePropSet<Plugins>[Key] }
+    }
 
     /**
      * Runes-native view of the same values the `attrs()` / `props()` stores
-     * expose. Read inside a template or `$derived` to track updates; reads
+     * expose. Read inside a template or an effect to track updates; reads
      * outside any effect return the current value (fromStore falls back to
      * `get(store)`), and the values are also correct under SSR.
      */
@@ -58,22 +69,27 @@ export abstract class TableComponent<
      */
     constructor({ id }: TableComponentInit) {
         this.id = id
-        // TS2729 forbids `$derived` referencing `this.#x` in a field initializer;
-        // Svelte 5 accepts the rune as an assignment in the constructor.
-        const attrs = $derived.by(() => {
-            void this.#hookVersion
-            return fromStore(this.attrs()).current
-        })
-        const props = $derived.by(() => {
-            void this.#hookVersion
-            return fromStore(this.props()).current
-        })
+        // Arrow functions keep `this` bound to the component inside the getters.
+        const readAttrs = () => {
+            const version = this.#hookVersion // tracked by the reading effect
+            if (this.#attrsHandle?.version !== version) {
+                this.#attrsHandle = { version, handle: fromStore(this.attrs()) }
+            }
+            return this.#attrsHandle.handle.current
+        }
+        const readProps = () => {
+            const version = this.#hookVersion // tracked by the reading effect
+            if (this.#propsHandle?.version !== version) {
+                this.#propsHandle = { version, handle: fromStore(this.props()) }
+            }
+            return this.#propsHandle.handle.current
+        }
         this.current = {
             get attrs() {
-                return attrs
+                return readAttrs()
             },
             get props() {
-                return props
+                return readProps()
             }
         }
     }

@@ -155,8 +155,8 @@ export interface TableViewModel<Item, Plugins extends AnyPlugins = AnyPlugins> {
     pageRows: Readable<DataBodyRow<Item, Plugins>[]>
     pluginStates: PluginStates<Plugins>
     /**
-     * Runes-native view of the stores above. Read inside a template or
-     * `$derived` to track updates; reads outside any effect (and under SSR)
+     * Runes-native view of the stores above. Read inside a template or an
+     * effect to track updates; reads outside any effect (and under SSR)
      * return the current value.
      */
     readonly current: ViewModelCurrent<Item, Plugins>
@@ -584,15 +584,17 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         }
     }
 
-    // Runes-native mirror of the finalized stores (mechanism A from the
-    // runes spike). `fromStore` subscribes only while a reading effect is
-    // alive and falls back to `get(store)` otherwise, so the derivation
-    // chain above is not driven any harder than `$store` would drive it.
+    // Runes-native view of the finalized stores. One `fromStore` handle per
+    // store, created here outside any derived: it subscribes only while a
+    // reading effect is alive (under that reader's effect) and falls back to
+    // `get(store)` otherwise, so the derivation chain above is not driven any
+    // harder than `$store` would drive it, and nothing it builds is owned by
+    // a short-lived effect.
     const live = <T>(store: Readable<T>) => {
-        const value = $derived.by(() => fromStore(store).current)
+        const handle = fromStore(store)
         return {
             get value() {
-                return value
+                return handle.current
             }
         }
     }

@@ -2,6 +2,7 @@
     import { readable } from 'svelte/store'
     import { createTable } from '$lib/createTable.js'
     import { addPagination } from '$lib/plugins/addPagination.js'
+    import { addSelectedRows } from '$lib/plugins/addSelectedRows.js'
     import { addSortBy } from '$lib/plugins/addSortBy.js'
     import { Render } from '$lib/render/index.js'
 
@@ -16,7 +17,8 @@
     ])
     const table = createTable(data, {
         sort: addSortBy(),
-        page: addPagination({ initialPageSize: 2 })
+        page: addPagination({ initialPageSize: 2 }),
+        select: addSelectedRows()
     })
     const columns = table.createColumns([
         table.column({ header: 'Name', accessor: 'name' }),
@@ -47,7 +49,11 @@
     </thead>
     <tbody {...vm.current.tableBodyAttrs}>
         {#each vm.current.pageRows as row (row.id)}
-            <tr {...row.current.attrs} data-testid="row">
+            <tr
+                {...row.current.attrs}
+                data-testid="row"
+                data-selected={String(row.current.props.select.selected)}
+            >
                 {#each row.cells as cell (cell.id)}
                     <td {...cell.current.attrs}><Render of={cell.render()} /></td>
                 {/each}
