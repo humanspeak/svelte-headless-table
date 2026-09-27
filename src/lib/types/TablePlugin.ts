@@ -7,7 +7,7 @@ import type {
     TableAttributes,
     TableBodyAttributes,
     TableHeadAttributes
-} from '../createViewModel.js'
+} from '../createViewModel.svelte.js'
 import type { HeaderCell, HeaderCellAttributes } from '../headerCells.js'
 import type { HeaderRow, HeaderRowAttributes } from '../headerRows.js'
 

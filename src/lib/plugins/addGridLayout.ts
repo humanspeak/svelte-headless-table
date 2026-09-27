@@ -3,7 +3,7 @@ import type {
     TableAttributes,
     TableBodyAttributes,
     TableHeadAttributes
-} from '../createViewModel.js'
+} from '../createViewModel.svelte.js'
 import type { DeriveFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 
 /**

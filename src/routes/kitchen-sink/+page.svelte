@@ -1,13 +1,7 @@
 <script lang="ts">
     import { page } from '$app/stores'
     import { derived, get, readable, writable } from 'svelte/store'
-    import {
-        Render,
-        Subscribe,
-        createRender,
-        createSnippetRender,
-        createTable
-    } from '../../lib/index.js'
+    import { Render, createRender, createSnippetRender, createTable } from '../../lib/index.js'
     import {
         addColumnFilters,
         addColumnOrder,
@@ -304,7 +298,7 @@
 
     // Auto-update debug snapshot when any of the main stores change
     $effect(() => {
-        // Subscribe to reactive stores to trigger updates (void to satisfy linter)
+        // Read reactive stores to trigger updates (void to satisfy linter)
         void $pageRows
         void $headerRows
         void $tableAttrs
@@ -411,60 +405,56 @@
     Export as CSV
 </button>
 
-<table {...$tableAttrs}>
+<table {...viewModel.current.tableAttrs}>
     <thead>
-        {#each $headerRows as headerRow (headerRow.id)}
-            <Subscribe attrs={headerRow.attrs()} let:attrs>
-                <tr {...attrs}>
-                    {#each headerRow.cells as cell (cell.id)}
-                        <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
-                            <th
-                                {...attrs}
-                                onclick={props.sort.toggle}
-                                class:sorted={props.sort.order !== undefined}
-                                use:props.resize
+        {#each viewModel.current.headerRows as headerRow (headerRow.id)}
+            <tr {...headerRow.current.attrs}>
+                {#each headerRow.cells as cell (cell.id)}
+                    <th
+                        {...cell.current.attrs}
+                        onclick={cell.current.props.sort.toggle}
+                        class:sorted={cell.current.props.sort.order !== undefined}
+                        use:cell.current.props.resize
+                    >
+                        <div>
+                            <Render of={cell.render()} />
+                            {#if cell.current.props.sort.order === 'asc'}
+                                ⬇️
+                            {:else if cell.current.props.sort.order === 'desc'}
+                                ⬆️
+                            {/if}
+                        </div>
+                        {#if !cell.current.props.group.disabled}
+                            <button
+                                onclick={(e) => {
+                                    e.stopPropagation()
+                                    cell.current.props.group.toggle(e)
+                                }}
                             >
-                                <div>
-                                    <Render of={cell.render()} />
-                                    {#if props.sort.order === 'asc'}
-                                        ⬇️
-                                    {:else if props.sort.order === 'desc'}
-                                        ⬆️
-                                    {/if}
-                                </div>
-                                {#if !props.group.disabled}
-                                    <button
-                                        onclick={(e) => {
-                                            e.stopPropagation()
-                                            props.group.toggle(e)
-                                        }}
-                                    >
-                                        {#if props.group.grouped}
-                                            ungroup
-                                        {:else}
-                                            group
-                                        {/if}
-                                    </button>
+                                {#if cell.current.props.group.grouped}
+                                    ungroup
+                                {:else}
+                                    group
                                 {/if}
-                                {#if props.filter?.render !== undefined}
-                                    <Render of={props.filter.render} />
-                                {/if}
-                                {#if !props.resize.disabled}
-                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                    <div
-                                        class="resizer"
-                                        role="button"
-                                        tabindex="0"
-                                        onclick={(e) => e.stopPropagation()}
-                                        use:props.resize.drag
-                                        use:props.resize.reset
-                                    ></div>
-                                {/if}
-                            </th>
-                        </Subscribe>
-                    {/each}
-                </tr>
-            </Subscribe>
+                            </button>
+                        {/if}
+                        {#if cell.current.props.filter?.render !== undefined}
+                            <Render of={cell.current.props.filter.render} />
+                        {/if}
+                        {#if !cell.current.props.resize.disabled}
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <div
+                                class="resizer"
+                                role="button"
+                                tabindex="0"
+                                onclick={(e) => e.stopPropagation()}
+                                use:cell.current.props.resize.drag
+                                use:cell.current.props.resize.reset
+                            ></div>
+                        {/if}
+                    </th>
+                {/each}
+            </tr>
         {/each}
         <tr>
             <th colspan={$visibleColumns.length}>
@@ -472,29 +462,29 @@
             </th>
         </tr>
     </thead>
-    <tbody {...$tableBodyAttrs}>
-        {#each $pageRows as row (row.id)}
-            <Subscribe attrs={row.attrs()} let:attrs rowProps={row.props()} let:rowProps>
-                <tr id={row.id} {...attrs} class:selected={rowProps.select.selected}>
-                    {#each row.cells as cell (cell.id)}
-                        <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
-                            <td
-                                {...attrs}
-                                class:sorted={props.sort.order !== undefined}
-                                class:matches={props.tableFilter.matches}
-                                class:group={props.group.grouped}
-                                class:aggregate={props.group.aggregated}
-                                class:repeat={props.group.repeated}
-                                data-value={row.original?.[cell.id as keyof Sample]}
-                            >
-                                {#if !props.group.repeated}
-                                    <Render of={cell.render()} />
-                                {/if}
-                            </td>
-                        </Subscribe>
-                    {/each}
-                </tr>
-            </Subscribe>
+    <tbody {...viewModel.current.tableBodyAttrs}>
+        {#each viewModel.current.pageRows as row (row.id)}
+            <tr
+                id={row.id}
+                {...row.current.attrs}
+                class:selected={row.current.props.select.selected}
+            >
+                {#each row.cells as cell (cell.id)}
+                    <td
+                        {...cell.current.attrs}
+                        class:sorted={cell.current.props.sort.order !== undefined}
+                        class:matches={cell.current.props.tableFilter.matches}
+                        class:group={cell.current.props.group.grouped}
+                        class:aggregate={cell.current.props.group.aggregated}
+                        class:repeat={cell.current.props.group.repeated}
+                        data-value={row.original?.[cell.id as keyof Sample]}
+                    >
+                        {#if !cell.current.props.group.repeated}
+                            <Render of={cell.render()} />
+                        {/if}
+                    </td>
+                {/each}
+            </tr>
         {/each}
     </tbody>
 </table>

@@ -8,7 +8,7 @@ export * from '$lib/bodyCells.js'
 export * from '$lib/bodyRows.js'
 export * from '$lib/columns.js'
 export { Table } from '$lib/createTable.js'
-export type * from '$lib/createViewModel.js'
+export type * from '$lib/createViewModel.svelte.js'
 export {
     DataHeaderCell,
     FlatDisplayHeaderCell,

@@ -1,5 +1,5 @@
 import type { DisplayBodyCell } from '$lib/bodyCells.js'
-import type { TableState } from '$lib/createViewModel.js'
+import type { TableState } from '$lib/createViewModel.svelte.js'
 import type { DataLabel, DisplayLabel, HeaderLabel } from '$lib/types/Label.js'
 import type { AnyPlugins, PluginColumnConfigs } from '$lib/types/TablePlugin.js'
 

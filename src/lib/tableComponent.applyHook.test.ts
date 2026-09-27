@@ -1,5 +1,5 @@
 import { get, readable } from 'svelte/store'
-import { TableComponent } from './tableComponent.js'
+import { TableComponent } from './tableComponent.svelte.js'
 import type { AnyPlugins } from './types/TablePlugin.js'
 
 class TestComponent<Item> extends TableComponent<Item, AnyPlugins, 'tbody.tr'> {
@@ -103,4 +103,14 @@ it('hooks and merges plugin attrs styles', () => {
     }
 
     expect(get(actual)).toStrictEqual(expected)
+})
+
+it('re-applying a hook for the same plugin replaces its attrs', () => {
+    const component = new TestComponent({ id: '0' })
+    component.applyHook('test', { attrs: readable({ a: 1 }) })
+    expect(get(component.attrs())).toStrictEqual({ a: 1 })
+
+    component.applyHook('test', { attrs: readable({ a: 2, b: 3 }) })
+
+    expect(get(component.attrs())).toStrictEqual({ a: 2, b: 3 })
 })

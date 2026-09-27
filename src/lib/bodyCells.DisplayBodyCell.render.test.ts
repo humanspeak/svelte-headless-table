@@ -1,7 +1,7 @@
 import { DisplayBodyCell } from './bodyCells.js'
 import { DataBodyRow } from './bodyRows.js'
 import { DisplayColumn } from './columns.js'
-import type { TableState } from './createViewModel.js'
+import type { TableState } from './createViewModel.svelte.js'
 
 interface User {
     firstName: string

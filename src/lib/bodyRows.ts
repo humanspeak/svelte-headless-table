@@ -1,9 +1,8 @@
 import { BodyCell, DataBodyCell, DisplayBodyCell } from '$lib/bodyCells.js'
 import type { DataColumn, DisplayColumn, FlatColumn } from '$lib/columns.js'
-import { TableComponent } from '$lib/tableComponent.js'
+import { TableComponent } from '$lib/tableComponent.svelte.js'
 import type { AnyPlugins } from '$lib/types/TablePlugin.js'
 import { nonUndefined } from '$lib/utils/filter.js'
-import { derived, type Readable } from 'svelte/store'
 
 /**
  * Initialization options for creating a BodyRow.
@@ -60,13 +59,17 @@ export abstract class BodyRow<Item, Plugins extends AnyPlugins = AnyPlugins> ext
         this.parentRow = parentRow
     }
 
-    attrs(): Readable<BodyRowAttributes<Item, Plugins>> {
-        return derived(super.attrs(), ($baseAttrs) => {
-            return {
-                ...$baseAttrs,
-                role: 'row' as const
-            }
-        })
+    /**
+     * Adds the body row's fixed attributes to the merged plugin attributes.
+     *
+     * @param attrs - The merged plugin attributes.
+     * @returns The attributes with `role` set.
+     */
+    protected decorateAttrs(attrs: Record<string, unknown>) {
+        return {
+            ...attrs,
+            role: 'row' as const
+        }
     }
 
     /* trunk-ignore(eslint/no-unused-vars) */

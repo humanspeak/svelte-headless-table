@@ -1,55 +1,45 @@
 <script lang="ts">
     /**
-     * Renders the currently-mounted view-model for the perf-bench
-     * fixture. Pulled out into a child component so each scenario's
-     * fresh `vm` can be destructured at module scope (where the
-     * `$store` auto-subscription syntax works) — the parent fixture
-     * keys this component on `vm` so a scenario change forces a clean
-     * remount, ensuring no stale subscriptions from the previous run.
+     * Default renderer for the perf-bench fixture. Reads the table-level
+     * values through `vm.current.*` and every row's and cell's attrs through
+     * the runes-backed `current.attrs` getter, with no `$store` reads and no
+     * store-subscription wrapper component. The
+     * store-path control lives in `_PerfTableStore.svelte` (`?renderer=store`).
+     *
+     * The parent fixture keys this component on `vm` so a scenario change
+     * forces a clean remount, ensuring no stale subscriptions from the
+     * previous run.
      */
-    import { Render, Subscribe } from '$lib/index.js'
-    import type { TableViewModel } from '$lib/createViewModel.js'
+    import { Render } from '$lib/index.js'
+    import type { TableViewModel } from '$lib/createViewModel.svelte.js'
     import type { AnyPlugins } from '$lib/types/TablePlugin.js'
 
     type AnyVm = TableViewModel<unknown, AnyPlugins>
-    // The parent fixture keys this component on `vm` so a scenario change
-    // forces a clean remount; within a single instance `vm` never changes.
-    // The store references destructured below stay live for the component's
-    // lifetime.
+    // Keyed on `vm` by the parent, so `vm` never changes within an instance.
     const { vm }: { vm: AnyVm } = $props()
-
-    const { headerRows, pageRows, tableAttrs, tableBodyAttrs } = vm
 </script>
 
-<table {...$tableAttrs}>
+<table {...vm.current.tableAttrs}>
     <thead>
-        {#each $headerRows as headerRow (headerRow.id)}
-            <Subscribe attrs={headerRow.attrs()} let:attrs>
-                <tr {...attrs}>
-                    {#each headerRow.cells as cell (cell.id)}
-                        <Subscribe attrs={cell.attrs()} let:attrs>
-                            <th {...attrs}>
-                                <Render of={cell.render()} />
-                            </th>
-                        </Subscribe>
-                    {/each}
-                </tr>
-            </Subscribe>
+        {#each vm.current.headerRows as headerRow (headerRow.id)}
+            <tr {...headerRow.current.attrs}>
+                {#each headerRow.cells as cell (cell.id)}
+                    <th {...cell.current.attrs}>
+                        <Render of={cell.render()} />
+                    </th>
+                {/each}
+            </tr>
         {/each}
     </thead>
-    <tbody {...$tableBodyAttrs}>
-        {#each $pageRows as row (row.id)}
-            <Subscribe attrs={row.attrs()} let:attrs>
-                <tr {...attrs} data-row-id={row.id} data-depth={row.depth}>
-                    {#each row.cells as cell (cell.id)}
-                        <Subscribe attrs={cell.attrs()} let:attrs>
-                            <td {...attrs}>
-                                <Render of={cell.render()} />
-                            </td>
-                        </Subscribe>
-                    {/each}
-                </tr>
-            </Subscribe>
+    <tbody {...vm.current.tableBodyAttrs}>
+        {#each vm.current.pageRows as row (row.id)}
+            <tr {...row.current.attrs} data-row-id={row.id} data-depth={row.depth}>
+                {#each row.cells as cell (cell.id)}
+                    <td {...cell.current.attrs}>
+                        <Render of={cell.render()} />
+                    </td>
+                {/each}
+            </tr>
         {/each}
     </tbody>
 </table>
