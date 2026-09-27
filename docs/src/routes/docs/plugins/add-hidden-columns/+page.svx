@@ -51,6 +51,11 @@ const table = createTable(data, {
 
 <Admonition type="note"><code>addHiddenColumns</code> does not extend the view model with any props.</Admonition>
 
+## Interactions
+
+- Hiding a column does not clear its filter. A value set through `addColumnFilters` keeps applying while the column is hidden.
+- `addTableFilter` skips hidden columns unless it was created with `includeHiddenColumns: true`.
+
 ## Plugin State
 
 <Admonition type="info">State provided by <code>addHiddenColumns</code>.</Admonition>

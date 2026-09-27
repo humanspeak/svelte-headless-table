@@ -89,6 +89,11 @@ const columns = table.createColumns([
 {/each}
 ```
 
+## Interactions
+
+- Page size counts every row `pageRows` receives: group header rows from `addGroupBy` and expanded children from `addExpandedRows` both take a slot.
+- Sorting and filtering run before pagination, so `pageCount` reflects the filtered, sorted set.
+
 ## Plugin State
 
 <Admonition type="info">State provided by <code>addPagination</code>.</Admonition>

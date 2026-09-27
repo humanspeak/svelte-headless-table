@@ -1,6 +1,6 @@
 import { derived, get, type Readable } from 'svelte/store'
 import type { BodyRow } from '../bodyRows.js'
-import type { TablePlugin } from '../types/TablePlugin.js'
+import type { NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { isReadable } from '../utils/store.js'
 
 /**
@@ -54,6 +54,9 @@ export interface DataExportColumnOptions {
     /** If true, this column is excluded from exports. */
     exclude?: boolean
 }
+
+/** addDataExport adds no per-component props; the key exists so `current.props` stays precisely typed. */
+export type DataExportPropSet = NewTablePropSet<never>
 
 /**
  * Converts rows to an array of plain objects.
@@ -140,7 +143,12 @@ export const addDataExport =
     <Item, F extends DataExportFormat = 'object'>({
         format = 'object' as F,
         childrenKey = 'children'
-    }: DataExportConfig<F> = {}): TablePlugin<Item, DataExportState<F>, DataExportColumnOptions> =>
+    }: DataExportConfig<F> = {}): TablePlugin<
+        Item,
+        DataExportState<F>,
+        DataExportColumnOptions,
+        DataExportPropSet
+    > =>
     ({ tableState, columnOptions }) => {
         const excludedIds = Object.entries(columnOptions)
             .filter(([, option]) => option.exclude === true)

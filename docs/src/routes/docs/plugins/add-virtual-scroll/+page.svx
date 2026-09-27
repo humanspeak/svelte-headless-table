@@ -6,6 +6,7 @@ sidebar_title: addVirtualScroll
 
 <script>
   import Admonition from '$lib/components/Admonition.svelte'
+  import PluginProps from '$lib/components/PluginProps.svelte'
   import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
   if (seo) {
@@ -243,6 +244,12 @@ Default `16_000_000`. Largest height, in pixels, to give the scroll container. S
 Fired whenever the visible range changes, so a caller can fetch the pages intersecting it and evict the ones that have scrolled away. In sparse mode the range is in absolute dataset indices. Invoked on a microtask, so it is safe to update stores from within it.
 
 `context.signal` is aborted as soon as a newer range supersedes this one, or when the scroll container is destroyed. Async handlers should pass it to `fetch` and re-check `signal.aborted` before publishing results.
+
+## Prop Set
+
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
+
+<PluginProps set="VirtualScrollPropSet" pluginKey="virtualScroll" />
 
 ## Plugin State
 

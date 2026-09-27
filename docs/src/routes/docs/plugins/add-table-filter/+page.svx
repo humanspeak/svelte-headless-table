@@ -6,6 +6,7 @@ sidebar_title: addTableFilter
 
 <script>
   import Admonition from '$lib/components/Admonition.svelte'
+  import PluginProps from '$lib/components/PluginProps.svelte'
   import SimpleTableFilteringDemo from './SimpleTableFilteringDemo.svelte'
   import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
@@ -69,19 +70,14 @@ Map a cell value to a filterable string. Default serializes value.
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
 
-```svelte
-{#each vm.current.headerRows as headerRow (headerRow.id)}
-  {headerRow.current.props.filter}
-  {#each headerRow.cells as cell (cell.id)}
-    {cell.current.props.filter}
-  {/each}
-{/each}
-```
+<PluginProps set="TableFilterPropSet" pluginKey="tableFilter" />
 
-### BodyCell
-`matches: boolean` — whether the cell matches the current filter value.
+## Interactions
+
+- Hidden columns are excluded from the search by default. Set `includeHiddenColumns: true` to search their values while they are hidden.
+- With `addSubRows`, a parent row is kept when any descendant matches, and only the matching descendants are shown under it.
 
 ## Plugin State
 

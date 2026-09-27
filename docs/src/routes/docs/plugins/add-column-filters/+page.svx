@@ -6,6 +6,7 @@ sidebar_title: addColumnFilters
 
 <script>
   import Admonition from '$lib/components/Admonition.svelte'
+  import PluginProps from '$lib/components/PluginProps.svelte'
   import SimpleFilteringDemo from './SimpleFilteringDemo.svelte'
   import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
@@ -84,16 +85,14 @@ Initial filter value.
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
 
-```svelte
-{#each vm.current.headerRows as headerRow (headerRow.id)}
-  {headerRow.current.props.colFilter}
-  {#each headerRow.cells as cell (cell.id)}
-    {cell.current.props.colFilter}
-  {/each}
-{/each}
-```
+<PluginProps set="ColumnFiltersPropSet" pluginKey="colFilter" />
+
+## Interactions
+
+- Filters on hidden columns still apply. `addHiddenColumns` removes the cell from `row.cells`, not from the row's filter data, so a column-filter value keeps narrowing the rows while the column is hidden.
+- With `addExpandedRows`, a sub-row is kept if it matches the filter itself or has a matching descendant (the default `matchMode`; use `'self'` to drop non-matching parents). Register `colFilter` before `expand` so filtering happens before the tree is flattened; either order produces the same visible rows for a plain tree, but filtering first is cheaper.
 
 ## Plugin State
 

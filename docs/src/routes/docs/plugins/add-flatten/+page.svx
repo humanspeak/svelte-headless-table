@@ -6,6 +6,7 @@ sidebar_title: addFlatten
 
 <script>
   import Admonition from '$lib/components/Admonition.svelte'
+  import PluginProps from '$lib/components/PluginProps.svelte'
   import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
   if (seo) {
@@ -53,20 +54,9 @@ const columns = table.createColumns([
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
 
-```svelte
-{#each vm.current.headerRows as headerRow (headerRow.id)}
-  {headerRow.current.props.flatten}
-  {#each headerRow.cells as cell (cell.id)}
-    {cell.current.props.flatten}
-  {/each}
-{/each}
-```
-
-### BodyCell props
-- `flatten(depth: number): void`
-- `unflatten(): void`
+<PluginProps set="FlattenPropSet" pluginKey="flatten" />
 
 ## Plugin State
 
