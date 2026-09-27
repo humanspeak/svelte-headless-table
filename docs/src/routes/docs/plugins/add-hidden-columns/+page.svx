@@ -56,7 +56,8 @@ const table = createTable(data, {
 <Admonition type="info">State provided by <code>addHiddenColumns</code>.</Admonition>
 
 ```ts {3}
-const { headerRows, rows, pluginStates } = table.createViewModel(columns);
+const vm = table.createViewModel(columns);
+const { pluginStates } = vm;
 const { hiddenColumnIds } = pluginStates.hide;
 ```
 

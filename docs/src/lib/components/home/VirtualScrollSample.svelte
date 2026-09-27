@@ -1,6 +1,6 @@
 <script lang="ts">
     import { writable } from 'svelte/store'
-    import { Render, Subscribe, createTable } from '@humanspeak/svelte-headless-table'
+    import { Render, createTable } from '@humanspeak/svelte-headless-table'
     import { addVirtualScroll, addSortBy } from '@humanspeak/svelte-headless-table/plugins'
     import { ChevronDown, ChevronUp, RotateCcw } from '@lucide/svelte'
 
@@ -84,8 +84,8 @@
         })
     ])
 
-    const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates, visibleColumns } =
-        table.createViewModel(columns)
+    const vm = table.createViewModel(columns)
+    const { pluginStates } = vm
 
     const {
         virtualScroll,
@@ -120,60 +120,52 @@
 </div>
 
 <div class="vs-body" use:virtualScroll>
-    <table {...$tableAttrs} class="vs-tbl">
+    <table {...vm.current.tableAttrs} class="vs-tbl">
         <thead>
-            {#each $headerRows as headerRow (headerRow.id)}
-                <Subscribe attrs={headerRow.attrs()} let:attrs>
-                    <tr {...attrs}>
-                        {#each headerRow.cells as cell (cell.id)}
-                            <Subscribe
-                                attrs={cell.attrs()}
-                                let:attrs
-                                props={cell.props()}
-                                let:props
-                            >
-                                <th
-                                    {...attrs}
-                                    onclick={props.sort.toggle}
-                                    class:sorted={props.sort.order !== undefined}
-                                >
-                                    <span class="th-inner">
-                                        <Render of={cell.render()} />
-                                        {#if props.sort.order === 'asc'}
-                                            <ChevronDown size={11} strokeWidth={2.5} />
-                                        {:else if props.sort.order === 'desc'}
-                                            <ChevronUp size={11} strokeWidth={2.5} />
-                                        {/if}
-                                    </span>
-                                </th>
-                            </Subscribe>
-                        {/each}
-                    </tr>
-                </Subscribe>
+            {#each vm.current.headerRows as headerRow (headerRow.id)}
+                <tr {...headerRow.current.attrs}>
+                    {#each headerRow.cells as cell (cell.id)}
+                        <th
+                            {...cell.current.attrs}
+                            onclick={cell.current.props.sort.toggle}
+                            class:sorted={cell.current.props.sort.order !== undefined}
+                        >
+                            <span class="th-inner">
+                                <Render of={cell.render()} />
+                                {#if cell.current.props.sort.order === 'asc'}
+                                    <ChevronDown size={11} strokeWidth={2.5} />
+                                {:else if cell.current.props.sort.order === 'desc'}
+                                    <ChevronUp size={11} strokeWidth={2.5} />
+                                {/if}
+                            </span>
+                        </th>
+                    {/each}
+                </tr>
             {/each}
         </thead>
-        <tbody {...$tableBodyAttrs}>
+        <tbody {...vm.current.tableBodyAttrs}>
             {#if $topSpacerHeight > 0}
                 <tr class="spacer">
-                    <td colspan={$visibleColumns.length} style="height: {$topSpacerHeight}px;"></td>
+                    <td
+                        colspan={vm.current.visibleColumns.length}
+                        style="height: {$topSpacerHeight}px;"
+                    ></td>
                 </tr>
             {/if}
-            {#each $pageRows as row (row.id)}
-                <Subscribe attrs={row.attrs()} let:attrs>
-                    <tr {...attrs} use:measureRowAction={row.id}>
-                        {#each row.cells as cell (cell.id)}
-                            <Subscribe attrs={cell.attrs()} let:attrs>
-                                <td {...attrs}>
-                                    <Render of={cell.render()} />
-                                </td>
-                            </Subscribe>
-                        {/each}
-                    </tr>
-                </Subscribe>
+            {#each vm.current.pageRows as row (row.id)}
+                <tr {...row.current.attrs} use:measureRowAction={row.id}>
+                    {#each row.cells as cell (cell.id)}
+                        <td {...cell.current.attrs}>
+                            <Render of={cell.render()} />
+                        </td>
+                    {/each}
+                </tr>
             {/each}
             {#if $bottomSpacerHeight > 0}
                 <tr class="spacer">
-                    <td colspan={$visibleColumns.length} style="height: {$bottomSpacerHeight}px;"
+                    <td
+                        colspan={vm.current.visibleColumns.length}
+                        style="height: {$bottomSpacerHeight}px;"
                     ></td>
                 </tr>
             {/if}

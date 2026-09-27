@@ -22,16 +22,16 @@ sidebar_title: addPagination
 
 `addPagination` paginates the table by page index.
 
-<Admonition type="note">Subscribe to <a href="/docs/api/table-view-model#tableviewmodel-pagerows-readable-bodyrow"><code>TableViewModel#pageRows</code></a> instead of <code>TableViewModel#rows</code>.</Admonition>
+<Admonition type="note">Render <code>vm.current.pageRows</code> — or subscribe to <a href="/docs/api/table-view-model#tableviewmodel-pagerows-readable-bodyrow"><code>TableViewModel#pageRows</code></a> instead of <code>TableViewModel#rows</code>.</Admonition>
 
 ```svelte {5,11}
 <script>
-  const { headerRows, pageRows } = table.createViewModel(columns)
+  const vm = table.createViewModel(columns)
 </script>
 
 <table>
   <tbody>
-    {#each $pageRows as row (row.id)}
+    {#each vm.current.pageRows as row (row.id)}
       ...
     {/each}
   </tbody>
@@ -78,18 +78,14 @@ const columns = table.createColumns([
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>.</Admonition>
 
 ```svelte
-{#each $headerRows as headerRow (headerRow.id)}
-  <Subscribe rowProps={headerRow.props()} let:rowProps>
-    {rowProps.page}
-    {#each headerRow.cells as cell (cell.id)}
-      <Subscribe props={cell.props()} let:props>
-        {props.page}
-      </Subscribe>
-    {/each}
-  </Subscribe>
+{#each vm.current.headerRows as headerRow (headerRow.id)}
+  {headerRow.current.props.page}
+  {#each headerRow.cells as cell (cell.id)}
+    {cell.current.props.page}
+  {/each}
 {/each}
 ```
 
@@ -98,7 +94,8 @@ const columns = table.createColumns([
 <Admonition type="info">State provided by <code>addPagination</code>.</Admonition>
 
 ```ts {3}
-const { headerRows, pageRows, pluginStates } = table.createViewModel(columns);
+const vm = table.createViewModel(columns);
+const { pluginStates } = vm;
 const { ... } = pluginStates.page;
 ```
 

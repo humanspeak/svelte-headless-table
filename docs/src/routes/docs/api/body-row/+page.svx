@@ -133,12 +133,10 @@ One common pattern is to define additional properties on the data items of the d
   ...
 </script>
 ...
-{#each $rows as row (row.id)}
-  <Subscribe attrs={row.attrs()} let:attrs>
-    <tr {...attrs} class:disabled={row.original.disabled}>
-      ...
-    </tr>
-  </Subscribe>
+{#each vm.current.rows as row (row.id)}
+  <tr {...row.current.attrs} class:disabled={row.original.disabled}>
+    ...
+  </tr>
 {/each}
 ```
 

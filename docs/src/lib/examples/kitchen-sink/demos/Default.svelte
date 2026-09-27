@@ -1,6 +1,6 @@
 <script lang="ts">
     import { derived, readable } from 'svelte/store'
-    import { Render, Subscribe, createTable, createRender } from '@humanspeak/svelte-headless-table'
+    import { Render, createTable, createRender } from '@humanspeak/svelte-headless-table'
     import {
         addColumnFilters,
         addColumnOrder,
@@ -231,15 +231,8 @@
         })
     ])
 
-    const {
-        flatColumns,
-        headerRows,
-        pageRows,
-        tableAttrs,
-        tableBodyAttrs,
-        visibleColumns,
-        pluginStates
-    } = table.createViewModel(columns)
+    const vm = table.createViewModel(columns)
+    const { flatColumns, pluginStates } = vm
     const ids = flatColumns.map((c) => c.id)
 
     const { groupByIds } = pluginStates.group
@@ -325,73 +318,61 @@
 </div>
 
 <div class="ks-shell">
-    <table {...$tableAttrs} class="ks-table">
+    <table {...vm.current.tableAttrs} class="ks-table">
         <thead>
-            {#each $headerRows as headerRow (headerRow.id)}
-                <Subscribe attrs={headerRow.attrs()} let:attrs>
-                    <tr {...attrs}>
-                        {#each headerRow.cells as cell (cell.id)}
-                            <Subscribe
-                                attrs={cell.attrs()}
-                                let:attrs
-                                props={cell.props()}
-                                let:props
-                            >
-                                <th
-                                    {...attrs}
-                                    onclick={props.sort.toggle}
-                                    class:sorted={props.sort.order !== undefined}
-                                    use:props.resize
-                                >
-                                    <div class="ks-th-inner">
-                                        <span class="ks-th-label">
-                                            <Render of={cell.render()} />
-                                        </span>
-                                        {#if props.sort.order === 'asc'}
-                                            <ChevronDown size={12} strokeWidth={2.5} />
-                                        {:else if props.sort.order === 'desc'}
-                                            <ChevronUp size={12} strokeWidth={2.5} />
-                                        {/if}
-                                        {#if !props.group.disabled}
-                                            <button
-                                                type="button"
-                                                class="ks-th-action"
-                                                title={props.group.grouped
-                                                    ? 'Ungroup'
-                                                    : 'Group by this column'}
-                                                onclick={(e) => {
-                                                    e.stopPropagation()
-                                                    props.group.toggle(e)
-                                                }}
-                                            >
-                                                <Layers size={12} strokeWidth={2.25} />
-                                                {props.group.grouped ? 'ungroup' : 'group'}
-                                            </button>
-                                        {/if}
-                                    </div>
-                                    {#if props.filter?.render !== undefined}
-                                        <div
-                                            class="ks-th-filter"
-                                            onclick={(e) => e.stopPropagation()}
-                                        >
-                                            <Render of={props.filter.render} />
-                                        </div>
-                                    {/if}
-                                    {#if !props.resize.disabled}
-                                        <div
-                                            class="ks-resizer"
-                                            onclick={(e) => e.stopPropagation()}
-                                            use:props.resize.drag
-                                        ></div>
-                                    {/if}
-                                </th>
-                            </Subscribe>
-                        {/each}
-                    </tr>
-                </Subscribe>
+            {#each vm.current.headerRows as headerRow (headerRow.id)}
+                <tr {...headerRow.current.attrs}>
+                    {#each headerRow.cells as cell (cell.id)}
+                        <th
+                            {...cell.current.attrs}
+                            onclick={cell.current.props.sort.toggle}
+                            class:sorted={cell.current.props.sort.order !== undefined}
+                            use:cell.current.props.resize
+                        >
+                            <div class="ks-th-inner">
+                                <span class="ks-th-label">
+                                    <Render of={cell.render()} />
+                                </span>
+                                {#if cell.current.props.sort.order === 'asc'}
+                                    <ChevronDown size={12} strokeWidth={2.5} />
+                                {:else if cell.current.props.sort.order === 'desc'}
+                                    <ChevronUp size={12} strokeWidth={2.5} />
+                                {/if}
+                                {#if !cell.current.props.group.disabled}
+                                    <button
+                                        type="button"
+                                        class="ks-th-action"
+                                        title={cell.current.props.group.grouped
+                                            ? 'Ungroup'
+                                            : 'Group by this column'}
+                                        onclick={(e) => {
+                                            e.stopPropagation()
+                                            cell.current.props.group.toggle(e)
+                                        }}
+                                    >
+                                        <Layers size={12} strokeWidth={2.25} />
+                                        {cell.current.props.group.grouped ? 'ungroup' : 'group'}
+                                    </button>
+                                {/if}
+                            </div>
+                            {#if cell.current.props.filter?.render !== undefined}
+                                <div class="ks-th-filter" onclick={(e) => e.stopPropagation()}>
+                                    <Render of={cell.current.props.filter.render} />
+                                </div>
+                            {/if}
+                            {#if !cell.current.props.resize.disabled}
+                                <div
+                                    class="ks-resizer"
+                                    onclick={(e) => e.stopPropagation()}
+                                    use:cell.current.props.resize.drag
+                                ></div>
+                            {/if}
+                        </th>
+                    {/each}
+                </tr>
             {/each}
             <tr class="ks-search-row">
-                <th colspan={$visibleColumns.length}>
+                <th colspan={vm.current.visibleColumns.length}>
                     <input
                         type="text"
                         bind:value={$filterValue}
@@ -401,33 +382,24 @@
                 </th>
             </tr>
         </thead>
-        <tbody {...$tableBodyAttrs}>
-            {#each $pageRows as row (row.id)}
-                <Subscribe attrs={row.attrs()} let:attrs rowProps={row.props()} let:rowProps>
-                    <tr {...attrs} class:selected={rowProps.select.selected}>
-                        {#each row.cells as cell (cell.id)}
-                            <Subscribe
-                                attrs={cell.attrs()}
-                                let:attrs
-                                props={cell.props()}
-                                let:props
-                            >
-                                <td
-                                    {...attrs}
-                                    class:sorted={props.sort.order !== undefined}
-                                    class:matches={props.tableFilter.matches}
-                                    class:group={props.group.grouped}
-                                    class:aggregate={props.group.aggregated}
-                                    class:repeat={props.group.repeated}
-                                >
-                                    {#if !props.group.repeated}
-                                        <Render of={cell.render()} />
-                                    {/if}
-                                </td>
-                            </Subscribe>
-                        {/each}
-                    </tr>
-                </Subscribe>
+        <tbody {...vm.current.tableBodyAttrs}>
+            {#each vm.current.pageRows as row (row.id)}
+                <tr {...row.current.attrs} class:selected={row.current.props.select.selected}>
+                    {#each row.cells as cell (cell.id)}
+                        <td
+                            {...cell.current.attrs}
+                            class:sorted={cell.current.props.sort.order !== undefined}
+                            class:matches={cell.current.props.tableFilter.matches}
+                            class:group={cell.current.props.group.grouped}
+                            class:aggregate={cell.current.props.group.aggregated}
+                            class:repeat={cell.current.props.group.repeated}
+                        >
+                            {#if !cell.current.props.group.repeated}
+                                <Render of={cell.render()} />
+                            {/if}
+                        </td>
+                    {/each}
+                </tr>
             {/each}
         </tbody>
     </table>

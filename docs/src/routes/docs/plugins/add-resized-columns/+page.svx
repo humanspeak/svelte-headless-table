@@ -62,36 +62,30 @@ Disable resizing for the column. If all child columns of a group are disabled, t
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Subscribe to <code>.props()</code>.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>.</Admonition>
 
 ```svelte
-{#each $headerRows as headerRow (headerRow.id)}
-  <Subscribe rowProps={headerRow.props()} let:rowProps>
-    {rowProps.resize}
-    {#each headerRow.cells as cell (cell.id)}
-      <Subscribe props={cell.props()} let:props>
-        {props.resize}
-      </Subscribe>
-    {/each}
-  </Subscribe>
+{#each vm.current.headerRows as headerRow (headerRow.id)}
+  {headerRow.current.props.resize}
+  {#each headerRow.cells as cell (cell.id)}
+    {cell.current.props.resize}
+  {/each}
 {/each}
 ```
 
 ### HeaderCell action
-Use `use:props.resize` on the `<th>` to initialize the plugin.
+Use `use:cell.current.props.resize` on the `<th>` to initialize the plugin.
 
-```svelte {7}
+```svelte {2}
 {#each headerRow.cells as cell (cell.id)}
-  <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
-    <th {...attrs} use:props.resize> ... </th>
-  </Subscribe>
+  <th {...cell.current.attrs} use:cell.current.props.resize> ... </th>
 {/each}
 ```
 
 #### `drag: Action`
-Drag-to-resize handle: `<div class="resizer" use:props.resize.drag />`
+Drag-to-resize handle: `<div class="resizer" use:cell.current.props.resize.drag />`
 
 #### `reset: Action`
-Reset width handle: `<div class="resizer" use:props.resize.reset />`
+Reset width handle: `<div class="resizer" use:cell.current.props.resize.reset />`
 
 

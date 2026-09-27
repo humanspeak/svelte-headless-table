@@ -23,7 +23,7 @@
 
 <script lang="ts">
     import { readable } from 'svelte/store'
-    import { createRender, createTable, Render, Subscribe } from '@humanspeak/svelte-headless-table'
+    import { createRender, createTable, Render } from '@humanspeak/svelte-headless-table'
     import {
         addColumnFilters,
         type ColumnFilterFn
@@ -116,49 +116,38 @@
         })
     ])
 
-    const { headerRows, rows, tableAttrs, tableBodyAttrs, pluginStates } =
-        table.createViewModel(columns)
+    const vm = table.createViewModel(columns)
+    const { pluginStates } = vm
     const { filterValues } = pluginStates.filter
 </script>
 
 <pre>$filterValues = {JSON.stringify($filterValues, null, 2)}</pre>
 
 <div class="overflow-x-auto">
-    <table class="demo my-0" {...$tableAttrs}>
+    <table class="demo my-0" {...vm.current.tableAttrs}>
         <thead>
-            {#each $headerRows as headerRow (headerRow.id)}
-                <Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
-                    <tr {...rowAttrs}>
-                        {#each headerRow.cells as cell (cell.id)}
-                            <Subscribe
-                                attrs={cell.attrs()}
-                                let:attrs
-                                props={cell.props()}
-                                let:props
-                            >
-                                <th {...attrs}>
-                                    <Render of={cell.render()} />
-                                    {#if props.filter?.render}
-                                        <div>
-                                            <Render of={props.filter.render} />
-                                        </div>
-                                    {/if}
-                                </th>
-                            </Subscribe>
-                        {/each}
-                    </tr>
-                </Subscribe>
+            {#each vm.current.headerRows as headerRow (headerRow.id)}
+                <tr {...headerRow.current.attrs}>
+                    {#each headerRow.cells as cell (cell.id)}
+                        <th {...cell.current.attrs}>
+                            <Render of={cell.render()} />
+                            {#if cell.current.props.filter?.render}
+                                <div>
+                                    <Render of={cell.current.props.filter.render} />
+                                </div>
+                            {/if}
+                        </th>
+                    {/each}
+                </tr>
             {/each}
         </thead>
-        <tbody {...$tableBodyAttrs}>
-            {#each $rows as row (row.id)}
-                <Subscribe rowAttrs={row.attrs()} let:rowAttrs>
-                    <tr {...rowAttrs}>
-                        {#each row.cells as cell (cell.id)}
-                            <td><Render of={cell.render()} /></td>
-                        {/each}
-                    </tr>
-                </Subscribe>
+        <tbody {...vm.current.tableBodyAttrs}>
+            {#each vm.current.rows as row (row.id)}
+                <tr {...row.current.attrs}>
+                    {#each row.cells as cell (cell.id)}
+                        <td><Render of={cell.render()} /></td>
+                    {/each}
+                </tr>
             {/each}
         </tbody>
     </table>

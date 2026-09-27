@@ -20,17 +20,12 @@ sidebar_title: TableViewModel
 
 # TableViewModel
 
-`TableViewModel` contains the `Readable` stores that describe the structure of the table. Apply the view model onto your markup.
+`TableViewModel` describes the structure of the table. `vm.current` exposes it as plain reactive values for your markup; the same values are also available as `Readable` stores for code that needs to subscribe.
 
 ```ts
-const {
-  headerRows,
-  rows,
-  tableAttrs,
-  tableHeadAttrs,
-  tableBodyAttrs,
-  ...
-} = table.createViewModel(columns);
+const vm = table.createViewModel(columns);
+// vm.current.headerRows, vm.current.rows, vm.current.tableAttrs, ...
+// vm.headerRows, vm.rows, vm.tableAttrs, ... (stores)
 ```
 
 ## Usage
@@ -77,10 +72,8 @@ A `Readable` store with an array of <a href="/docs/api/header-row">`HeaderRow`</
 
 ```svelte
 <thead>
-    {#each $headerRows as headerRow (headerRow.id)}
-        <Subscribe attrs={headerRow.attrs()} let:attrs>
-            <tr {...attrs}>...</tr>
-        </Subscribe>
+    {#each vm.current.headerRows as headerRow (headerRow.id)}
+        <tr {...headerRow.current.attrs}>...</tr>
     {/each}
 </thead>
 ```
@@ -91,10 +84,8 @@ A `Readable` store with an array of <a href="/docs/api/body-row">`BodyRow`</a>s 
 
 ```svelte
 <tbody>
-    {#each $rows as row (row.id)}
-        <Subscribe attrs={row.attrs()} let:attrs>
-            <tr {...attrs}>...</tr>
-        </Subscribe>
+    {#each vm.current.rows as row (row.id)}
+        <tr {...row.current.attrs}>...</tr>
     {/each}
 </tbody>
 ```
@@ -107,10 +98,8 @@ A `Readable` store with an array of `BodyRow`s that represent `<tr>` elements **
 
 ```svelte
 <tbody>
-    {#each $pageRows as row (row.id)}
-        <Subscribe attrs={row.attrs()} let:attrs>
-            <tr {...attrs}>...</tr>
-        </Subscribe>
+    {#each vm.current.pageRows as row (row.id)}
+        <tr {...row.current.attrs}>...</tr>
     {/each}
 </tbody>
 ```

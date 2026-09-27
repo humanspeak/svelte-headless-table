@@ -116,6 +116,8 @@ Beyond an actively maintained package with Svelte 5 support, three plugins ship 
 
 All 12 original plugins are here too — see the <a href="/docs/plugins/overview">plugin overview</a>.
 
+Once you are on Svelte 5 you can also drop `Subscribe` from your templates: every row and cell exposes `current.attrs` / `current.props`, and the view model exposes `vm.current.*`, as plain reactive values. The store API you migrated with keeps working, so this is optional and can be done one template at a time — see the <a href="/docs/getting-started/quick-start">quick start</a> and <a href="/docs/api/table-view-model">TableViewModel</a>.
+
 ## Troubleshooting
 
 ### `Cannot find module 'svelte-headless-table'`
