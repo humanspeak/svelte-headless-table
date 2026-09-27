@@ -55,6 +55,7 @@ Same table as plan 002. Plus: `pnpm dev` and the perf bench commands from plan 0
 - `src/routes/test/perf-bench/+page.svelte` (the `renderer` switch now selects a `_PerfTableStore.svelte` control: rename the old renderer to that file; default is the `current.*` renderer)
 - `src/routes/kitchen-sink/+page.svelte` (replace the `Subscribe` blocks with `current.*` reads; keep every `data-testid`, class binding and handler)
 - `src/routes/test/runes-spike/**` (delete)
+- `src/routes/test/runes-kitchen-sink/**` (delete — the spike's kitchen-sink copy imports from `runes-spike/`; the spike report and the page's own header say to delete them together)
 
 **Out of scope**: `src/lib/**`, `tests/**` assertions, `docs/**`.
 
@@ -84,7 +85,7 @@ Every attribute, class directive, action (`use:props.resize`) and
 
 ### Step 3: Remove the spike and gate
 
-Delete `src/routes/test/runes-spike/`. `trunk fmt`, `trunk check`, `pnpm check`, `pnpm test:only`, e2e.
+Delete `src/routes/test/runes-spike/` **and** `src/routes/test/runes-kitchen-sink/` (`git rm -r` both). `trunk fmt`, `trunk check`, `pnpm check`, `pnpm test:only`, e2e.
 
 **Verify**: all exit 0; `grep -rn "Subscribe" src/routes/kitchen-sink src/routes/test/perf-bench/_PerfTable.svelte` → no matches.
 
@@ -95,7 +96,7 @@ Delete `src/routes/test/runes-spike/`. `trunk fmt`, `trunk check`, `pnpm check`,
 ## Done criteria
 
 - [ ] `grep -rn "Subscribe" src/routes/kitchen-sink/+page.svelte src/routes/test/perf-bench/_PerfTable.svelte` → none
-- [ ] `test -f src/routes/test/perf-bench/_PerfTableStore.svelte && ! test -d src/routes/test/runes-spike`
+- [ ] `test -f src/routes/test/perf-bench/_PerfTableStore.svelte && ! test -d src/routes/test/runes-spike && ! test -d src/routes/test/runes-kitchen-sink`
 - [ ] `pnpm exec playwright test --project=chromium --project=mobile-chrome` exits 0 with the same test count as before
 - [ ] `pnpm check` / `pnpm test:only` exit 0
 - [ ] README status row for 003 updated
