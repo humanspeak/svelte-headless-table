@@ -8,8 +8,10 @@
 > and told you they maintain the index.
 >
 > **Drift check (run first)**:
-> `git diff --stat <002 snapshot SHA>..HEAD -- src/routes/test/perf-bench src/routes/kitchen-sink src/routes/test/runes-spike src/lib/tableComponent.svelte.ts`
-> (the reviewer fills in the SHA when 002 lands). On a mismatch, STOP.
+> `git diff --stat c557fe5..HEAD -- src/routes/test/perf-bench src/routes/kitchen-sink src/routes/test/runes-spike src/lib/tableComponent.svelte.ts`
+> On a mismatch, STOP.
+>
+> **Revision 2026-09-27 (guard, pre-flight)**: 002 landed at c557fe5. `current.attrs` / `current.props` are getters on every row and cell (see `src/lib/tableComponent.svelte.ts`). The spike left four trunk findings in `src/routes/test/runes-spike/runesComponent.svelte.ts`; deleting that directory in Step 3 clears them and makes `trunk check` fully green again — confirm that in the final gate. `tests/initial.test.ts` and `tests/performance.test.ts` are the kitchen-sink e2e specs.
 
 ## Status
 
@@ -18,7 +20,7 @@
 - **Risk**: LOW (dev fixtures only; e2e is the gate)
 - **Depends on**: 002-dual-mode-table-component.md
 - **Category**: migration
-- **Planned at**: commit `fdc76a8`, 2026-09-27 (re-baseline after 002)
+- **Planned at**: commit `c557fe5`, 2026-09-27 (re-baselined after 002)
 
 ## Why this matters
 
