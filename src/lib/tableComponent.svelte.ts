@@ -47,14 +47,17 @@ export abstract class TableComponent<
     // reads `.current` and closed when that effect goes away. Nothing here is
     // owned by the context that constructed the component, so a row built
     // inside a short-lived effect cannot go inert when that effect ends.
-    #attrsHandle?: { version: number; handle: { readonly current: Record<string, unknown> } }
+    #attrsHandle?: {
+        version: number
+        handle: { readonly current: AttributesForKey<Item, Plugins>[Key] }
+    }
     #propsHandle?: {
         version: number
         handle: { readonly current: PluginTablePropSet<Plugins>[Key] }
     }
 
     #currentView?: {
-        readonly attrs: Record<string, unknown>
+        readonly attrs: AttributesForKey<Item, Plugins>[Key]
         readonly props: PluginTablePropSet<Plugins>[Key]
     }
 
@@ -76,7 +79,7 @@ export abstract class TableComponent<
      */
     get current(): {
         /** The merged HTML attributes from all applied plugins. */
-        readonly attrs: Record<string, unknown>
+        readonly attrs: AttributesForKey<Item, Plugins>[Key]
         /** The plugin props keyed by plugin name. */
         readonly props: PluginTablePropSet<Plugins>[Key]
     } {
@@ -99,7 +102,7 @@ export abstract class TableComponent<
         // trunk-ignore(eslint/@typescript-eslint/no-this-alias)
         const component = this
         return {
-            get attrs(): Record<string, unknown> {
+            get attrs(): AttributesForKey<Item, Plugins>[Key] {
                 const version = component.#trackVersion()
                 if (component.#attrsHandle?.version !== version) {
                     component.#attrsHandle = { version, handle: fromStore(component.attrs()) }

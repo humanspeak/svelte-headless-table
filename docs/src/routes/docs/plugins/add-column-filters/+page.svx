@@ -39,6 +39,15 @@ If `true`, filtering will not change `$rows`. Control filtering by updating <a h
 
 _Defaults to `false`_.
 
+### `matchMode?: 'self-or-descendants' | 'self'`
+
+How rows that have sub-rows (see <a href="/docs/plugins/add-sub-rows">addSubRows</a>) are matched.
+
+- `'self-or-descendants'` keeps a row when it matches **or** when any of its descendants match, so a parent that does not match itself still appears above its matching children. This keeps the tree navigable but means a visible parent's own cell values may fall outside the filter.
+- `'self'` requires every kept row to match on its own values. A parent that does not match is removed together with its subtree.
+
+_Defaults to `'self-or-descendants'`_.
+
 ## Column Options
 
 <Admonition type="info">Options passed into column definitions.</Admonition>

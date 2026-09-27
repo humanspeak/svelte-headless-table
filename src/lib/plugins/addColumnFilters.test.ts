@@ -375,3 +375,52 @@ describe('column ids containing dots (regression)', () => {
         ])
     })
 })
+
+describe('matchMode with sub-rows', () => {
+    const treeData = [
+        {
+            name: 'Alice',
+            age: 25,
+            status: 'inactive',
+            children: [{ name: 'Amy', age: 3, status: 'active' }]
+        },
+        {
+            name: 'Bob',
+            age: 30,
+            status: 'active',
+            children: [{ name: 'Ben', age: 5, status: 'inactive' }]
+        },
+        { name: 'Cara', age: 35, status: 'inactive', children: [] }
+    ]
+    const build = (config?: { matchMode?: 'self-or-descendants' | 'self' }) => {
+        const table = createTable(readable(treeData), {
+            sub: addSubRows({ children: 'children' }),
+            colFilter: addColumnFilters(config)
+        })
+        const columns = table.createColumns([
+            table.column({ accessor: 'name', header: 'Name' }),
+            table.column({
+                accessor: 'status',
+                header: 'Status',
+                plugins: { colFilter: { fn: matchFilter } }
+            })
+        ])
+        const vm = table.createViewModel(columns)
+        vm.pluginStates.colFilter.filterValues.set({ status: 'active' })
+        return get(vm.rows).map((r) => ({
+            name: r.isData() ? r.original.name : '?',
+            subs: (r.subRows ?? []).map((s) => (s.isData() ? s.original.name : '?'))
+        }))
+    }
+
+    test('default keeps a parent whose descendant matches even if the parent does not', () => {
+        expect(build()).toEqual([
+            { name: 'Alice', subs: ['Amy'] },
+            { name: 'Bob', subs: [] }
+        ])
+    })
+
+    test('matchMode self requires every kept row to match on its own values', () => {
+        expect(build({ matchMode: 'self' })).toEqual([{ name: 'Bob', subs: [] }])
+    })
+})
