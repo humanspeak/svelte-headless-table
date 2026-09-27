@@ -99,7 +99,7 @@ export default [
         }
     },
     {
-        files: ['src/**/*.ts', 'src/**/*.svelte', 'tests/**/*.ts'],
+        files: ['src/**/*.ts', 'src/**/*.svelte', 'src/**/*.svelte.ts', 'tests/**/*.ts'],
         rules: {
             '@typescript-eslint/no-floating-promises': 'error',
             '@typescript-eslint/no-misused-promises': 'error'
@@ -127,7 +127,7 @@ export default [
         }
     },
     {
-        files: ['**/*.svelte'],
+        files: ['**/*.svelte', '**/*.svelte.ts'],
         languageOptions: {
             parserOptions: {
                 parser: ts.parser
@@ -136,7 +136,7 @@ export default [
     },
     {
         // Modified complexity counts each switch once, regardless of case count.
-        files: ['src/lib/**/*.{ts,js,svelte}'],
+        files: ['src/lib/**/*.{ts,js,svelte}', 'src/lib/**/*.svelte.ts'],
         ignores: ['src/lib/**/*.test.*', 'src/lib/**/*.spec.*', 'src/lib/**/*.d.ts'],
         rules: {
             complexity: ['error', { max: 15, variant: 'modified' }]

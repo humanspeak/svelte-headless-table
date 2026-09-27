@@ -1,7 +1,3 @@
-// trunk-ignore-all(eslint): eslint.config.mjs only gives `**/*.svelte` the TS
-// parser, so eslint-plugin-svelte parses `*.svelte.ts` without TypeScript and
-// fails with "Parsing error: Unexpected token {" on `import type`. Fixing the
-// config is out of scope for this spike (see the 001 report, Risks).
 /**
  * Design spike (plan runes-core/001): two candidate mechanisms for exposing a
  * store-based `TableComponent`'s `attrs()` / `props()` as plain reactive

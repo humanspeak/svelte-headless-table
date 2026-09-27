@@ -6,12 +6,11 @@ import {
     GroupHeaderCell,
     type HeaderCell
 } from '$lib/headerCells.js'
-import { TableComponent } from '$lib/tableComponent.js'
+import { TableComponent } from '$lib/tableComponent.svelte.js'
 import type { Matrix } from '$lib/types/Matrix.js'
 import type { AnyPlugins } from '$lib/types/TablePlugin.js'
 import { sum } from '$lib/utils/math.js'
 import { getNullMatrix, getTransposed } from '$lib/utils/matrix.js'
-import { derived } from 'svelte/store'
 
 /**
  * HTML attributes for a header row element.
@@ -62,17 +61,16 @@ export class HeaderRow<Item, Plugins extends AnyPlugins = AnyPlugins> extends Ta
     }
 
     /**
-     * Gets the HTML attributes for this header row.
+     * Adds the header row's fixed attributes to the merged plugin attributes.
      *
-     * @returns A readable store of row attributes.
+     * @param attrs - The merged plugin attributes.
+     * @returns The attributes with `role` set.
      */
-    attrs() {
-        return derived(super.attrs(), ($baseAttrs) => {
-            return {
-                ...$baseAttrs,
-                role: 'row' as const
-            }
-        })
+    protected decorateAttrs(attrs: Record<string, unknown>) {
+        return {
+            ...attrs,
+            role: 'row' as const
+        }
     }
 
     /**

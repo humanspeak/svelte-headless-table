@@ -1,10 +1,9 @@
 import { NBSP } from '$lib/constants.js'
 import type { TableState } from '$lib/createViewModel.js'
 import type { RenderConfig } from '$lib/render/createRender.js'
-import { TableComponent } from '$lib/tableComponent.js'
+import { TableComponent } from '$lib/tableComponent.svelte.js'
 import type { HeaderLabel } from '$lib/types/Label.js'
 import type { AnyPlugins } from '$lib/types/TablePlugin.js'
-import { derived } from 'svelte/store'
 
 /**
  * Initialization options for creating a HeaderCell.
@@ -86,18 +85,17 @@ export abstract class HeaderCell<
     }
 
     /**
-     * Gets the HTML attributes for this header cell.
+     * Adds the header cell's fixed attributes to the merged plugin attributes.
      *
-     * @returns A readable store of cell attributes.
+     * @param attrs - The merged plugin attributes.
+     * @returns The attributes with `role` and `colspan` set.
      */
-    attrs() {
-        return derived(super.attrs(), ($baseAttrs) => {
-            return {
-                ...$baseAttrs,
-                role: 'columnheader' as const,
-                colspan: this.colspan
-            }
-        })
+    protected decorateAttrs(attrs: Record<string, unknown>) {
+        return {
+            ...attrs,
+            role: 'columnheader' as const,
+            colspan: this.colspan
+        }
     }
 
     abstract clone(): HeaderCell<Item, Plugins>

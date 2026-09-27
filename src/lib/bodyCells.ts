@@ -1,10 +1,9 @@
 import type { BodyRow } from '$lib/bodyRows.js'
 import type { DataColumn, DisplayColumn, FlatColumn } from '$lib/columns.js'
 import type { RenderConfig } from '$lib/render/createRender.js'
-import { TableComponent } from '$lib/tableComponent.js'
+import { TableComponent } from '$lib/tableComponent.svelte.js'
 import type { DataLabel, DisplayLabel } from '$lib/types/Label.js'
 import type { AnyPlugins } from '$lib/types/TablePlugin.js'
-import { derived, type Readable } from 'svelte/store'
 
 /**
  * Initialization options for creating a BodyCell.
@@ -48,13 +47,17 @@ export abstract class BodyCell<
 
     abstract render(): RenderConfig
 
-    attrs(): Readable<BodyCellAttributes<Item, Plugins>> {
-        return derived(super.attrs(), ($baseAttrs) => {
-            return {
-                ...$baseAttrs,
-                role: 'cell' as const
-            }
-        })
+    /**
+     * Adds the body cell's fixed attributes to the merged plugin attributes.
+     *
+     * @param attrs - The merged plugin attributes.
+     * @returns The attributes with `role` set.
+     */
+    protected decorateAttrs(attrs: Record<string, unknown>) {
+        return {
+            ...attrs,
+            role: 'cell' as const
+        }
     }
 
     abstract clone(): BodyCell<Item, Plugins>
