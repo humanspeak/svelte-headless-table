@@ -44,6 +44,12 @@
     import type { TableViewModel } from '$lib/createViewModel.js'
     import type { AnyPlugins } from '$lib/types/TablePlugin.js'
     import PerfTable from './_PerfTable.svelte'
+    import PerfTableRunes from './_PerfTableRunes.svelte'
+    import { page } from '$app/state'
+
+    // Spike (plan runes-core/001): `?renderer=runes` swaps in the runes
+    // renderer. Read once at init; the store renderer stays the default.
+    const useRunesRenderer = page.url.searchParams.get('renderer') === 'runes'
 
     const ROLLING_WINDOW_MS = 10_000
     const LONG_TASK_THRESHOLD_MS = 50
@@ -1376,7 +1382,11 @@
     >
         {#if currentVm}
             {#key currentVm}
-                <PerfTable vm={currentVm} />
+                {#if useRunesRenderer}
+                    <PerfTableRunes vm={currentVm} />
+                {:else}
+                    <PerfTable vm={currentVm} />
+                {/if}
             {/key}
         {/if}
     </div>
