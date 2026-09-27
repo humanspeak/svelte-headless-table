@@ -9,3 +9,16 @@
 - Classification: **plan defect** (002's mechanism is unsafe for objects created inside store derivations), surfaced by 004 — not executor drift. Executor conduct: exemplary; it stopped with evidence rather than weakening tests.
 - Executor's listed results reproduced by guard at 5252d33: `pnpm check` 0 errors; `pnpm test` 56 files / 596 tests; exports snapshot unchanged; the eight `$`-prefixed local renames in `createViewModel.svelte.ts` are mechanical.
 - Action: 004 amended — scope gains `src/lib/tableComponent.svelte.ts`; new Step 3c replaces the constructor `$derived`s with getters over a `fromStore` instance cached per `#hookVersion` (no class-level deriveds); `vm.current` getters likewise read a `fromStore` instance created once per store; a red regression test (select after sort through `vm.current.pageRows`) is required first. Fix-dispatched to the same executor (round 1 of 3). 002's guard log gets an addendum.
+
+## Checkpoint 2 — 2026-09-27 05:36 — DRIFTING → PLAN AMENDED (fix round 2)
+
+bfa0d6d · fix round 1 verified correct (guard's independent probe: select → sort → select → sort stays live, no `derived_inert`; full suite 597/597 with 0 `derived_inert` lines; e2e 36/2; package + exports clean). **But** a same-machine, back-to-back bench exposed a construction-cost regression that 004's before/after gate could not see because its baseline (815c91d) already contained plan 002:
+
+| rows-10k firstPaint median | spike commit e5fbb85 | now (bfa0d6d) |
+| -------------------------- | -------------------- | ------------- |
+| store control renderer     | 201 ms               | 439 ms        |
+| current.* / runes renderer | 188 ms               | 475 ms        |
+
+- Attribution (guard microbench, throwaway vitest probe run on both trees, deleted): building 10k rows × 8 cells on first subscribe = **103 ms at e5fbb85 vs 390 ms now**; `createViewModel` itself unchanged (~1 ms). Both renderers regress equally → the cost is in `TableComponent`'s constructor (plan 002): a `$state` signal and a two-getter `current` object with bound closures created eagerly per instance, ×80k.
+- Classification: plan defect (002's mechanism again; 004's own gate was blind to it). Executor conduct in round 1: clean.
+- Action: 004 amended with Step 3d — lazy per-instance rune state (plain counter; signal and `current` view created on first `current` read; prototype getter), a construction microbench as the red/green check, and a batch-level perf gate: rows-10k first paint within 15% of the spike commit's store renderer on the same machine. Fix-dispatched (round 2 of 3).

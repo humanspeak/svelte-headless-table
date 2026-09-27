@@ -9,6 +9,18 @@
 >
 > **Read first**: `.agents/.plans/runes-core/001-runes-spike.report.md` and `src/lib/tableComponent.svelte.ts` (plan 002's `current` implementation is the exemplar).
 >
+> **Revision 2026-09-27 (guard, fix round 2)**: round 1 fixed the freeze,
+> but a same-machine bench against the spike commit shows rows-10k first
+> paint at ~440–475 ms versus ~190–200 ms at e5fbb85, on **both**
+> renderers. A microbench attributes it to construction: building 10k rows
+> × 8 cells takes 390 ms now vs 103 ms at the spike, because
+> `TableComponent` eagerly creates a `$state` signal and a `current` view
+> object with two bound closures per instance (≈80k instances). **New
+> Step 3d** makes that state lazy and prototype-based. The perf gate is
+> now absolute, not relative to 815c91d: rows-10k `firstPaintMs.median`
+> on the default renderer must be within 15% of the spike commit's store
+> renderer measured back to back on the same machine.
+>
 > **Revision 2026-09-27 (guard, fix round 1)**: the first execution passed
 > every gate but exposed a correctness defect: rows/cells reached through
 > `vm.current.pageRows` freeze after a re-derive (`derived_inert`). Cause:
@@ -258,6 +270,94 @@ return `{ get value() { return handle.current } }`.
 → all pass, including the Step 2b case, with no `derived_inert` output;
 `pnpm check` → 0 errors; `grep -n "\$derived" src/lib/tableComponent.svelte.ts src/lib/createViewModel.svelte.ts` → no matches.
 
+### Step 3d: Make per-instance rune state lazy in `TableComponent`
+
+Goal: constructing a row or cell must allocate nothing reactive and no
+closures. Only the first read of `component.current` pays for a signal and
+a view object. In `src/lib/tableComponent.svelte.ts`:
+
+1. Replace `#hookVersion = $state(0)` with a plain `#hookVersion = 0`, and
+   add `#versionSignal?: { v: number }` (undefined until first use).
+2. Remove the `current` field and everything the constructor does except
+   `this.id = id`.
+3. Add a prototype getter:
+
+```ts
+#currentView?: { readonly attrs: Record<string, unknown>; readonly props: PluginTablePropSet<Plugins>[Key] }
+
+/** Runes-native view of `attrs()` / `props()`; created on first access. */
+get current() {
+    return (this.#currentView ??= this.#createCurrentView())
+}
+
+#trackVersion(): number {
+    if (this.#versionSignal === undefined) {
+        const signal = $state({ v: this.#hookVersion }) // local rune declaration is allowed in a method
+        this.#versionSignal = signal
+    }
+    return this.#versionSignal.v
+}
+
+#createCurrentView() {
+    const component = this
+    return {
+        get attrs() {
+            const version = component.#trackVersion()
+            if (component.#attrsHandle?.version !== version) {
+                component.#attrsHandle = { version, handle: fromStore(component.attrs()) }
+            }
+            return component.#attrsHandle.handle.current
+        },
+        get props() { /* same shape with props */ }
+    }
+}
+```
+
+4. In `applyHook`, after storing the hook: `this.#hookVersion += 1` and, if
+   `this.#versionSignal` exists, `this.#versionSignal.v = this.#hookVersion`.
+
+If the compiler rejects `$state` inside a method, fall back to importing
+`createSubscriber`-free primitives is NOT allowed; instead declare the
+signal with `$state` in a tiny standalone helper function in the same
+file (`const makeVersionSignal = (v: number) => { const s = $state({ v }); return s }`)
+and call that from `#trackVersion`.
+
+**Verify (red → green)**: put this throwaway test at
+`src/lib/ctorProbe.test.ts` (delete it before finishing):
+
+```ts
+import { get, readable } from 'svelte/store'
+import { createTable } from '$lib/createTable.js'
+import { addSortBy } from '$lib/plugins/addSortBy.js'
+it('builds 10k x 8 cells', () => {
+    const items = Array.from({ length: 10000 }, (_, i) => ({
+        a: i,
+        b: i,
+        c: i,
+        d: i,
+        e: i,
+        f: i,
+        g: i,
+        h: i
+    }))
+    const table = createTable(readable(items), { sort: addSortBy() })
+    const columns = table.createColumns(
+        (['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] as const).map((k) =>
+            table.column({ header: k, accessor: k })
+        )
+    )
+    const vm = table.createViewModel(columns)
+    const t = performance.now()
+    get(vm.pageRows)
+    console.log('BUILD ms', (performance.now() - t).toFixed(1))
+})
+```
+
+Before Step 3d it prints roughly 350–400 ms on this machine; after, it must
+print under 150 ms (the spike commit measured 103 ms). Then
+`pnpm exec vitest run src/lib/createViewModel.current.test.ts src/lib/tableComponent.current.test.ts src/lib/tableComponent.ssr.test.ts src/lib/createViewModel.current.ssr.test.ts`
+→ all pass with no `derived_inert`.
+
 ### Step 4: Fixtures
 
 Switch the table-level reads in `_PerfTable.svelte` and the kitchen sink from
@@ -289,14 +389,15 @@ the commit before this plan (`git stash` is not allowed; use `git worktree add /
 - [ ] `grep -rn "derived_inert" <full vitest output>` → no matches; `grep -n "\$derived" src/lib/tableComponent.svelte.ts src/lib/createViewModel.svelte.ts` → none
 - [ ] `src/lib/index.exports.test.ts` snapshot unchanged
 - [ ] e2e chromium + mobile-chrome exit 0
-- [ ] `rows10k` `firstPaintMs.median` within 10% of the pre-plan run (numbers recorded in README)
+- [ ] `rows10k` `firstPaintMs.median` on the default renderer within 15% of the spike commit's (`e5fbb85`) **store** renderer, measured back to back on the same machine (guard's reference: 201 ms); numbers recorded in README
+- [ ] the Step 3d probe prints under 150 ms after the change, and the probe file is deleted
 - [ ] `git status --porcelain` lists only in-scope files; README row for 004 updated
 
 ## STOP conditions
 
 - `$derived.by` inside the `createViewModel` function body is rejected by the compiler — report; the fallback is a small `.svelte.ts` class holding the deriveds.
 - The Step 1 counter assertion changes value after Step 3 (the mirror is triggering extra derivations).
-- `rows10k` median regresses by more than 10%.
+- `rows10k` first paint stays more than 15% above the spike commit's store renderer after Step 3d — report the numbers; do not tune thresholds.
 - `createTable`'s cached view model returns an object without `current` (cache path missed).
 - Any importer outside the 15 listed needs to change (means the excerpt is stale).
 
