@@ -10,32 +10,43 @@ sidebar_title: TableViewModel
   const seo = getSeoContext()
   if (seo) {
       seo.title = 'TableViewModel API - Svelte Headless Table'
-      seo.description = 'Understand the TableViewModel API containing readable stores that describe table structure including header rows, body rows, and attributes to spread on markup'
+      seo.description = 'Understand the TableViewModel API: reactive current values that describe table structure including header rows, body rows, and attributes to spread on markup'
       seo.ogTitle = 'TableViewModel API'
-      seo.ogTagline = 'Readable stores describing table structure.'
-      seo.ogFeatures = ['headerRows', 'bodyRows', 'tableAttrs', 'Stores']
+      seo.ogTagline = 'Reactive values describing table structure.'
+      seo.ogFeatures = ['headerRows', 'pageRows', 'tableAttrs', 'pluginStates']
       seo.ogSlug = 'api-table-view-model'
   }
 </script>
 
 # TableViewModel
 
-`TableViewModel` describes the structure of the table. `vm.current` exposes it as plain reactive values for your markup; the same values are also available as `Readable` stores for code that needs to subscribe.
+`TableViewModel` describes the structure of the table. Everything you render reads from `vm.current`: plain reactive values backed by `$derived`, so a template that reads them updates when the data or any plugin state changes.
 
 ```ts
-const vm = table.createViewModel(columns);
-// vm.current.headerRows, vm.current.rows, vm.current.tableAttrs, ...
-// vm.headerRows, vm.rows, vm.tableAttrs, ... (stores)
+const vm = table.createViewModel(columns)
+// vm.current.headerRows, vm.current.pageRows, vm.current.tableAttrs, ...
+// vm.flatColumns, vm.pluginStates, vm._debug
 ```
+
+<Admonition type="info">v7 removed the store fields (<code>vm.rows</code>, <code>vm.headerRows</code>, ...). <code>Subscribe</code> was removed in v7; see <a href="/docs/guides/migrating-to-v7">Migrating to v7</a>.</Admonition>
 
 ## Usage
 
 ### `TableViewModel#current: ViewModelCurrent`
 
-Plain reactive values for runes-style templates: `tableAttrs`, `tableHeadAttrs`, `tableBodyAttrs`, `visibleColumns`, `headerRows`, `rows` and `pageRows`. Each is the current value of the matching store below and updates in place as data or plugin state changes. Combined with `row.current` and `cell.current`, a table needs no stores at all:
+The reactive values of the table: `tableAttrs`, `tableHeadAttrs`, `tableBodyAttrs`, `visibleColumns`, `headerRows`, `originalRows`, `rows` and `pageRows`. Combined with `row.current` and `cell.current`, that is the whole rendering surface:
 
 ```svelte
 <table {...vm.current.tableAttrs}>
+    <thead {...vm.current.tableHeadAttrs}>
+        {#each vm.current.headerRows as headerRow (headerRow.id)}
+            <tr {...headerRow.current.attrs}>
+                {#each headerRow.cells as cell (cell.id)}
+                    <th {...cell.current.attrs}><Render of={cell.render()} /></th>
+                {/each}
+            </tr>
+        {/each}
+    </thead>
     <tbody {...vm.current.tableBodyAttrs}>
         {#each vm.current.pageRows as row (row.id)}
             <tr {...row.current.attrs}>
@@ -48,27 +59,27 @@ Plain reactive values for runes-style templates: `tableAttrs`, `tableHeadAttrs`,
 </table>
 ```
 
-Reads outside a template or effect return the current value, and server rendering matches the store path. `current` is not passed to plugins; it is a read-side view for templates.
+A read inside a template, `$derived` or `$effect` is tracked. A read anywhere else (a `load` function, a test, server rendering) returns the current value.
 
 ### Attributes
 
-#### `TableViewModel#tableAttrs: Readable<TableAttributes>`
+#### `TableViewModel#current.tableAttrs: TableAttributes`
 
-A `Readable` store with attributes to apply onto the `<table>` element.
+Attributes to spread onto the `<table>` element.
 
-#### `TableViewModel#tableHeadAttrs: Readable<TableHeadAttributes>`
+#### `TableViewModel#current.tableHeadAttrs: TableHeadAttributes`
 
-A `Readable` store with attributes to apply onto the `<thead>` element.
+Attributes to spread onto the `<thead>` element.
 
-#### `TableViewModel#tableBodyAttrs: Readable<TableBodyAttributes>`
+#### `TableViewModel#current.tableBodyAttrs: TableBodyAttributes`
 
-A `Readable` store with attributes to apply onto the `<tbody>` element.
+Attributes to spread onto the `<tbody>` element.
 
 ### Rows
 
-#### `TableViewModel#headerRows: Readable<HeaderRow[]>`
+#### `TableViewModel#current.headerRows: HeaderRow[]`
 
-A `Readable` store with an array of <a href="/docs/api/header-row">`HeaderRow`</a>s that represent `<tr>` elements in `<thead>`.
+The <a href="/docs/api/header-row">`HeaderRow`</a>s that represent `<tr>` elements in `<thead>`.
 
 ```svelte
 <thead>
@@ -78,9 +89,9 @@ A `Readable` store with an array of <a href="/docs/api/header-row">`HeaderRow`</
 </thead>
 ```
 
-#### `TableViewModel#rows: Readable<BodyRow[]>`
+#### `TableViewModel#current.rows: BodyRow[]`
 
-A `Readable` store with an array of <a href="/docs/api/body-row">`BodyRow`</a>s that represent `<tr>` elements in `<tbody>`.
+The <a href="/docs/api/body-row">`BodyRow`</a>s that represent `<tr>` elements in `<tbody>`, after every plugin's row transformation.
 
 ```svelte
 <tbody>
@@ -90,11 +101,11 @@ A `Readable` store with an array of <a href="/docs/api/body-row">`BodyRow`</a>s 
 </tbody>
 ```
 
-#### `TableViewModel#pageRows: Readable<BodyRow[]>`
+#### `TableViewModel#current.pageRows: BodyRow[]`
 
-A `Readable` store with an array of `BodyRow`s that represent `<tr>` elements **of the current page** in `<tbody>`.
+The `BodyRow`s **of the current page**.
 
-`$pageRows` is affected by pagination plugins while `$rows` is not. If no pagination plugin is used, `$pageRows` is equal to `$rows`.
+`current.pageRows` is affected by pagination plugins while `current.rows` is not. Without a pagination plugin the two are equal.
 
 ```svelte
 <tbody>
@@ -104,21 +115,23 @@ A `Readable` store with an array of `BodyRow`s that represent `<tr>` elements **
 </tbody>
 ```
 
-#### `TableViewModel#originalRows: Readable<BodyRow[]>`
+#### `TableViewModel#current.originalRows: BodyRow[]`
 
-A `Readable` store with an array of `BodyRow`s that represent `<tr>` elements in `<tbody>` before plugin transformations.
+The `BodyRow`s built from the data, before any plugin transformation.
 
 ### Columns
 
-#### `TableViewModel#visibleColumns: Readable<DataColumn[]>`
+#### `TableViewModel#current.visibleColumns: FlatColumn[]`
 
-A `Readable` store with an array of `DataColumn`s that represent the currently visible data columns of the table after plugin transformations.
+The flat columns left after every plugin's column transformation (hidden columns removed, order applied). Useful for a `colspan` that spans the whole table:
 
-`$visibleColumns` is useful if you need to know how many columns are currently displayed on the table.
+```svelte
+<th colspan={vm.current.visibleColumns.length}>...</th>
+```
 
 #### `TableViewModel#flatColumns: FlatColumn[]`
 
-An array of `FlatColumn`s that represent the flat columns of the table before plugin transformations.
+The flat columns of the table before plugin transformations. This is a plain array, not reactive: the column definitions do not change after the view model is built.
 
 Flat columns usually represent the last row of columns in your header, which includes data columns and display columns. They are distinct from group columns which must by definition be one row above other columns.
 
@@ -126,8 +139,17 @@ Flat columns usually represent the last row of columns in your header, which inc
 
 #### `TableViewModel#pluginStates: PluginStates`
 
-An object of plugin states exposed by each plugin used.
+The state each plugin exposes, keyed by the name you gave the plugin in `createTable`. Plugin state is made of `Box`, `ReadonlyBox`, `RecordSet` and `ArraySet` values: read and write their `current` property.
+
+```ts
+const { pageIndex, hasNextPage } = vm.pluginStates.page
+if (hasNextPage.current) pageIndex.current += 1
+```
 
 <Admonition type="tip">See also <a href="/docs/plugins/overview#controlling-plugin-state">Plugin State</a>.</Admonition>
 
+### Debugging
 
+#### `TableViewModel#_debug: ViewModelDebug`
+
+Counters for performance work: `pluginCount`, `pluginNames`, `derivedCount` (derivations per chain, e.g. `derivedCount.rows`), `derivationCalls` and `derivationTimings` per derivation, plus `resetCounters()`, `getTotalCalls()` and `getTotalMs()`. The shape may change between minor versions; do not build features on it.

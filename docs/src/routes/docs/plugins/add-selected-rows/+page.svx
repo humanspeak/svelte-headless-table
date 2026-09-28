@@ -58,14 +58,14 @@ const columns = table.createColumns([
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
 
 <PluginProps set="SelectedRowsPropSet" pluginKey="select" />
 
 ## Interactions
 
 - `allPageRowsSelected` and `somePageRowsSelected` are scoped to the current page from `addPagination`, not the whole data set. Use `allRowsSelected` for the entire table.
-- The page-scoped stores read the view model's `pageRows` store, which is only populated while something subscribes to it. In a template that is always the case; in tests or headless code, subscribe to `vm.pageRows` (or read `vm.current.pageRows`) before setting `allPageRowsSelected`.
+- The page-scoped values read the view model's `current.pageRows`, which is computed on demand, so they work the same in a template, a test or headless code.
 - With `addSubRows`, selecting a parent selects its sub-rows, and `someSubRowsSelected` / `allSubRowsSelected` on the parent reflect the children's state.
 
 ## Plugin State
@@ -73,17 +73,59 @@ const columns = table.createColumns([
 <Admonition type="info">State provided by <code>addSelectedRows</code>.</Admonition>
 
 ```ts {3}
-const vm = table.createViewModel(columns);
-const { pluginStates } = vm;
-const { ... } = pluginStates.select;
+const vm = table.createViewModel(columns)
+const { pluginStates } = vm
+const { selectedDataIds, allRowsSelected, getRowState } = pluginStates.select
 ```
 
-### `selectedDataIds: Writable<Record<string, boolean>>`
-### `allRowsSelected: Writable<boolean>`
-### `someRowsSelected: Readable<boolean>`
-### `allPageRowsSelected: Writable<boolean>`
-### `somePageRowsSelected: Readable<boolean>`
+### `selectedDataIds: RecordSet`
+The selected data ids (`row.dataId`). Read `selectedDataIds.current` (a `Record<string, boolean>` holding only `true` entries), or change it with `add(id)`, `remove(id)`, `toggle(id)`, `addAll(ids)`, `removeAll(ids)`, `clear()` and `has(id)`.
+
+```svelte
+{Object.keys(selectedDataIds.current).length} row(s) selected.
+<button onclick={() => selectedDataIds.clear()}>Clear selection</button>
+```
+
+### `allRowsSelected: Box<boolean>`
+Whether every row is selected. Writing `true` selects every row; `false` clears the selection.
+
+### `someRowsSelected: ReadonlyBox<boolean>`
+
+### `allPageRowsSelected: Box<boolean>`
+Whether every row on the current page is selected. Writing selects or deselects the page's rows.
+
+### `somePageRowsSelected: ReadonlyBox<boolean>`
+
 ### `getRowState: (row) => SelectedRowsRowState`
+Returns the selection state of a `BodyRow`:
+
+- `isSelected: Box<boolean>`: writing selects or deselects the row (and, with `linkDataSubRows`, its sub-rows)
+- `isSomeSubRowsSelected: ReadonlyBox<boolean>`
+- `isAllSubRowsSelected: ReadonlyBox<boolean>`
+
+The views hold no state of their own (they read `selectedDataIds`), so they never go stale; the same row object always returns the same views.
+
+<Admonition type="info">v7 removed <code>invalidate()</code>: there is no per-row cache to clear.</Admonition>
+
+A checkbox takes the boxes as props:
+
+```svelte
+<!-- SelectIndicator.svelte, rendered with createRender(SelectIndicator, getRowState(row)) -->
+<script lang="ts">
+    import type { Box, ReadonlyBox } from '@humanspeak/svelte-headless-table'
+    const { isSelected, isSomeSubRowsSelected }: {
+        isSelected: Box<boolean>
+        isSomeSubRowsSelected: ReadonlyBox<boolean>
+    } = $props()
+</script>
+
+<input
+    type="checkbox"
+    checked={isSelected.current}
+    indeterminate={isSomeSubRowsSelected.current}
+    onchange={(e) => (isSelected.current = e.currentTarget.checked)}
+/>
+```
 
 ## Examples
 

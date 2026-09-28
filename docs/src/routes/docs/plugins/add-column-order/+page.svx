@@ -56,7 +56,7 @@ const columns = table.createColumns([
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components.</Admonition>
 
 ```svelte
 {#each vm.current.headerRows as headerRow (headerRow.id)}
@@ -72,12 +72,16 @@ const columns = table.createColumns([
 <Admonition type="info">State provided by <code>addColumnOrder</code>.</Admonition>
 
 ```ts {3}
-const vm = table.createViewModel(columns);
-const { pluginStates } = vm;
-const { ... } = pluginStates.colOrder;
+const vm = table.createViewModel(columns)
+const { pluginStates } = vm
+const { columnIdOrder } = pluginStates.colOrder
 ```
 
-### `columnIdOrder: Writable<string[]>`
-Active column id order.
+### `columnIdOrder: Box<string[]>`
+Active column id order. Assign a new array to reorder:
+
+```ts
+columnIdOrder.current = ['email', 'name', 'age']
+```
 
 

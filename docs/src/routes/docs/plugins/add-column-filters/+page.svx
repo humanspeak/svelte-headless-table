@@ -36,7 +36,7 @@ const table = createTable(data, {
 
 ### `serverSide?: boolean`
 
-If `true`, filtering will not change `$rows`. Control filtering by updating <a href="/docs/api/create-table#createtable-data-plugins-table">`$data`</a> and use plugin state to drive your fetch.
+If `true`, filtering will not change `vm.current.rows`. Control filtering by updating the table's <a href="/docs/api/create-table#createtable-data-plugins-table">data</a> and use plugin state to drive your fetch.
 
 _Defaults to `false`_.
 
@@ -71,21 +71,43 @@ Defines filter behavior for the column. Return `true` to keep the row.
 
 ### `render?: (renderProps) => RenderConfig`
 
-Renders a control on `HeaderCell->props.[pluginName].render`. `renderProps` extends <a href="/docs/api/table-state">`TableState`</a> and includes:
+Renders a control on `cell.current.props.[pluginName].render`. `renderProps` extends <a href="/docs/api/table-state">`TableState`</a> and includes:
 
 - `id: string`
-- `filterValue: Writable<any>`
-- `values: Readable<any[]>`
-- `preFilteredValues: Readable<any[]>`
-- `preFilteredRows: Readable<BodyRow[]>`
+- `filterValue: Box<any>`: the column's filter value; writing `undefined` clears it
+- `values: ReadonlyBox<any[]>`: the column's values after filtering
+- `preFilteredValues: ReadonlyBox<any[]>`: the column's values before filtering
+- `preFilteredRows: ReadonlyBox<BodyRow[]>`
+
+`render` is called once per header cell. Pass the boxes to your component and read their `current` there, so the control stays reactive:
+
+```ts
+render: ({ filterValue, values }) => createRender(TextFilter, { filterValue, values })
+```
+
+```svelte
+<!-- TextFilter.svelte -->
+<script lang="ts">
+    import type { Box, ReadonlyBox } from '@humanspeak/svelte-headless-table'
+
+    const { filterValue, values }: {
+        filterValue: Box<string | undefined>
+        values: ReadonlyBox<unknown[]>
+    } = $props()
+</script>
+
+<input bind:value={filterValue.current} placeholder="Search {values.current.length} rows..." />
+```
 
 ### `initialFilterValue?: any`
 
-Initial filter value.
+Initial filter value, applied when the view model is created.
+
+<Admonition type="warning">Changed in v7: the initial value is applied as soon as the view model is built. 6.x applied it lazily, the first time a header cell's props were read, so an initial value on a column whose header props were never rendered had no effect. An <code>initialFilterValue: ''</code> on a <code>matchFilter</code> column now filters every row out; use <code>undefined</code> (or omit the option) for "no filter".</Admonition>
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
 
 <PluginProps set="ColumnFiltersPropSet" pluginKey="colFilter" />
 
@@ -99,16 +121,20 @@ Initial filter value.
 <Admonition type="info">State provided by <code>addColumnFilters</code>.</Admonition>
 
 ```ts {3}
-const vm = table.createViewModel(columns);
-const { pluginStates } = vm;
-const { ... } = pluginStates.colFilter;
+const vm = table.createViewModel(columns)
+const { pluginStates } = vm
+const { filterValues } = pluginStates.colFilter
 ```
 
-### `preFilteredRows: Readable<BodyRow<Item>[]>`
-Rows before filtering.
+### `filterValues: Box<Record<string, unknown>>`
+Active filter values by column id. Assign a new record to change them; a column without a value (or with `undefined`) is not filtered.
 
-### `filterValues: Writable<Record<Id, FilterValue>>`
-Active filter values by column id.
+```ts
+filterValues.current = { ...filterValues.current, status: 'single' }
+```
+
+### `preFilteredRows: ReadonlyBox<BodyRow<Item>[]>`
+Rows before filtering.
 
 ## Examples
 

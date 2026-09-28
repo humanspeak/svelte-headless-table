@@ -74,7 +74,7 @@ Custom body cell for grouped rows; receives the row, column, value, and <a href=
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
 
 <PluginProps set="GroupByPropSet" pluginKey="group" />
 
@@ -88,11 +88,16 @@ Custom body cell for grouped rows; receives the row, column, value, and <a href=
 <Admonition type="info">State provided by <code>addGroupBy</code>.</Admonition>
 
 ```ts {3}
-const vm = table.createViewModel(columns);
-const { pluginStates } = vm;
-const { ... } = pluginStates.group;
+const vm = table.createViewModel(columns)
+const { pluginStates } = vm
+const { groupByIds } = pluginStates.group
 ```
 
-### `groupByIds: ArraySetStore<string>`
-Active grouping keys.
+### `groupByIds: ArraySet<string>`
+The column ids to group by, in grouping order. Read `groupByIds.current`, or change it with `add(id)`, `remove(id)`, `toggle(id, { clearOthers })`, `has(id)` and `clear()`. Assigning `groupByIds.current` replaces the list.
+
+```ts
+groupByIds.current = ['status']
+groupByIds.toggle('age')
+```
 

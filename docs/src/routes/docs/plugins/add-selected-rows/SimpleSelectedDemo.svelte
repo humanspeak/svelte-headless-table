@@ -1,5 +1,4 @@
 <script>
-    import { derived, readable } from 'svelte/store'
     import { createTable, Render, createRender } from '@humanspeak/svelte-headless-table'
     import {
         addSubRows,
@@ -10,7 +9,7 @@
     import ExpandIndicator from '../add-expanded-rows/ExpandIndicator.svelte'
     import SelectIndicator from './SelectIndicator.svelte'
 
-    const data = readable(createSamples(3, 2, 2, { seed: 8 }))
+    const data = createSamples(3, 2, 2, { seed: 8 })
 
     const table = createTable(data, {
         sub: addSubRows({ children: 'children' }),
@@ -42,7 +41,10 @@
             }
         }),
         table.group({
-            header: (_, { rows }) => derived(rows, (_rows) => `Name (${_rows.length} users)`),
+            header:
+                (_, { rows }) =>
+                () =>
+                    `Name (${rows().length} users)`,
             columns: [
                 table.column({ header: 'First Name', accessor: 'firstName' }),
                 table.column({ header: 'Last Name', accessor: 'lastName' })
@@ -91,7 +93,7 @@
     </table>
 </div>
 
-<pre>{JSON.stringify({ $selectedDataIds }, null, 2)}</pre>
+<pre>{JSON.stringify({ selectedDataIds: selectedDataIds.current }, null, 2)}</pre>
 
 <style>
     .selected {

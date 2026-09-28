@@ -54,7 +54,7 @@ const columns = table.createColumns([
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
 
 <PluginProps set="FlattenPropSet" pluginKey="flatten" />
 
@@ -63,12 +63,12 @@ const columns = table.createColumns([
 <Admonition type="info">State provided by <code>addFlatten</code>.</Admonition>
 
 ```ts {3}
-const vm = table.createViewModel(columns);
-const { pluginStates } = vm;
-const { ... } = pluginStates.flatten;
+const vm = table.createViewModel(columns)
+const { pluginStates } = vm
+const { depth } = pluginStates.flatten
 ```
 
-### `depth: Writable<number>`
-Current flatten depth.
+### `depth: Box<number>`
+Current flatten depth. Assign to change it: `depth.current = 1`.
 
 

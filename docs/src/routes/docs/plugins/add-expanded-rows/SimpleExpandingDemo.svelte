@@ -1,12 +1,11 @@
 <script>
     import { dev } from '$app/environment'
-    import { derived, readable } from 'svelte/store'
     import { createTable, Render, createRender } from '@humanspeak/svelte-headless-table'
     import { addSubRows, addExpandedRows } from '@humanspeak/svelte-headless-table/plugins'
     import { createSamples } from '$lib/utils/createSamples'
     import ExpandIndicator from './ExpandIndicator.svelte'
 
-    const data = readable(createSamples(10, 2, 3, { seed: 6 }))
+    const data = createSamples(10, 2, 3, { seed: 6 })
 
     const table = createTable(data, {
         sub: addSubRows({ children: 'children' }),
@@ -29,7 +28,10 @@
             }
         }),
         table.group({
-            header: (_, { rows }) => derived(rows, (_rows) => `Name (${_rows.length} users)`),
+            header:
+                (_, { rows }) =>
+                () =>
+                    `Name (${rows().length} users)`,
             columns: [
                 table.column({ header: 'First Name', accessor: 'firstName' }),
                 table.column({ header: 'Last Name', accessor: 'lastName' })
@@ -52,7 +54,7 @@
 </script>
 
 {#if dev}
-    <pre>{JSON.stringify({ $expandedIds }, null, 2)}</pre>
+    <pre>{JSON.stringify({ expandedIds: expandedIds.current }, null, 2)}</pre>
 {/if}
 
 <div class="overflow-x-auto">

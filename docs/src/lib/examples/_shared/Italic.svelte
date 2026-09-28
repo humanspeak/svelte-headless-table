@@ -1,5 +1,5 @@
 <script lang="ts">
-    export let text: string
+    const { text }: { text: string } = $props()
 </script>
 
 <i>{text}</i>

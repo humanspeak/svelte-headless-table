@@ -1,7 +1,17 @@
 <script lang="ts">
-    import type { Readable, Writable } from 'svelte/store'
-    export let filterValue: Writable<string>
-    export let values: Readable<Array<string | number>>
+    import type { Box, ReadonlyBox } from '@humanspeak/svelte-headless-table'
+
+    type Props = {
+        filterValue: Box<string | undefined>
+        values: ReadonlyBox<unknown[]>
+    }
+
+    const { filterValue }: Props = $props()
 </script>
 
-<input class="demo" bind:value={$filterValue} placeholder="Filter..." />
+<input
+    class="demo"
+    value={filterValue.current ?? ''}
+    oninput={(e) => (filterValue.current = e.currentTarget.value)}
+    placeholder="Filter..."
+/>

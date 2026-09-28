@@ -5,6 +5,7 @@ sidebar_title: createTable
 ---
 
 <script>
+  import Admonition from '$lib/components/Admonition.svelte'
   import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
   if (seo) {
@@ -19,26 +20,54 @@ sidebar_title: createTable
 
 # createTable
 
-Every Svelte Headless Table starts with `createTable`. It takes a data source and plugin configuration, and returns a <a href="/docs/api/table">Table</a> instance.
+Every Svelte Headless Table starts with `createTable`. It takes your data and a plugin configuration, and returns a <a href="/docs/api/table">Table</a> instance.
 
 ## Usage
 
 ---
 
-### `createTable: (data, plugins) => Table`
+### `createTable: (data, plugins?) => Table`
 
-`data` is a Svelte store containing an array of data to present on the table. If data needs to be updated (e.g. when editing the table or lazy-fetching data from the server), use a `Writable` store.
+`data` is either:
 
-`plugins` is an object of plugin names to plugins. Refer to <a href="/docs/plugins/overview">the plugin system</a> for how to use Svelte Headless Table plugins.
+- **an array** (`Item[]`) for data that never changes, or
+- **a getter** (`() => Item[]`) for data that does. The getter is read inside the view model's derivations, so when it reads rune state the table updates on its own.
 
 ```ts
-const table = createTable(data, {
+// Static data
+const table = createTable(people)
+
+// Reactive data: keep it in $state and pass a getter
+let people = $state.raw(await fetchPeople())
+const table = createTable(() => people, {
     sort: addSortBy(),
     filter: addColumnFilters()
 })
+
+// Later: assign a new array and the table follows
+people = [...people, newPerson]
 ```
 
+<Admonition type="tip">Use <code>$state.raw</code> for row data you replace wholesale: it skips the deep proxy, and the table only needs to see a new array.</Admonition>
 
+`plugins` is an optional object of plugin names to plugins. Refer to <a href="/docs/plugins/overview">the plugin system</a> for how to use Svelte Headless Table plugins.
 
+<Admonition type="warning">A Svelte store is not accepted: <code>createTable</code> throws with a message pointing at the <a href="/docs/guides/migrating-to-v7">migration guide</a>. The library imports nothing from <code>svelte/store</code>.</Admonition>
 
+### Converting v6 data
 
+| v6 | v7 |
+| --- | --- |
+| `createTable(readable(items))` | `createTable(items)` |
+| `const data = writable(items)` + `createTable(data)` | `let data = $state.raw(items)` + `createTable(() => data)` |
+| `data.set(next)` / `$data = next` | `data = next` |
+| a store you cannot replace (it comes from another library) | wrap it in your own code, see below |
+
+If the data lives in a store you do not own, convert it in your component with Svelte's `fromStore` and read its `current` in the getter:
+
+```ts
+import { fromStore } from 'svelte/store'
+
+const rows = fromStore(externalStore)
+const table = createTable(() => rows.current)
+```

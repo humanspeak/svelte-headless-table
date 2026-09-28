@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { derived, readable } from 'svelte/store'
     import { createTable, Render, createRender } from '@humanspeak/svelte-headless-table'
     import {
         addGroupBy,
@@ -11,7 +10,7 @@
     import { getDistinct } from '$lib/utils/array'
     import { mean, sum } from '$lib/utils/math'
 
-    const data = readable(createSamples(30, 1, 0, { seed: 7 }))
+    const data = createSamples(30, 1, 0, { seed: 7 })
 
     const table = createTable(data, {
         group: addGroupBy(),
@@ -35,7 +34,10 @@
             }
         }),
         table.group({
-            header: (_, { rows }) => derived([rows], ([_rows]) => `Name (${_rows.length} users)`),
+            header:
+                (_, { rows }) =>
+                () =>
+                    `Name (${rows().length} users)`,
             columns: [
                 table.column({
                     header: 'First Name',
@@ -102,7 +104,7 @@
     const { groupByIds } = pluginStates.group
 </script>
 
-<pre>{JSON.stringify({ $groupByIds }, null, 2)}</pre>
+<pre>{JSON.stringify({ groupByIds: groupByIds.current }, null, 2)}</pre>
 
 <div class="overflow-x-auto">
     <table class="demo my-0" {...vm.current.tableAttrs}>

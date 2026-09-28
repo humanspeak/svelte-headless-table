@@ -1,13 +1,18 @@
 <script lang="ts">
-    import type { Readable, Writable } from 'svelte/store'
-    export let filterValue: Writable<string | number | undefined | null>
-    export let preFilteredValues: Readable<Array<string | number>>
+    import type { Box, ReadonlyBox } from '@humanspeak/svelte-headless-table'
+
+    type Props = {
+        filterValue: Box<string | number | undefined | null>
+        preFilteredValues: ReadonlyBox<unknown[]>
+    }
+
+    const { filterValue, preFilteredValues }: Props = $props()
 
     // Column values repeat across rows; the keyed each needs each option once.
-    $: uniqueValues = [...new Set($preFilteredValues)]
+    const uniqueValues = $derived([...new Set(preFilteredValues.current)])
 </script>
 
-<select class="demo" bind:value={$filterValue}>
+<select class="demo" bind:value={filterValue.current}>
     <option value={undefined}>All</option>
     {#each uniqueValues as v (v)}
         <option value={v}>{v}</option>

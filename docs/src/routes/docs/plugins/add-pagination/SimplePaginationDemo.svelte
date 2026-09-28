@@ -1,10 +1,9 @@
 <script>
-    import { derived, readable } from 'svelte/store'
     import { createTable, Render } from '@humanspeak/svelte-headless-table'
     import { addPagination } from '@humanspeak/svelte-headless-table/plugins'
     import { createSamples } from '$lib/utils/createSamples'
 
-    const data = readable(createSamples(100, 1, 0, { seed: 10 }))
+    const data = createSamples(100, 1, 0, { seed: 10 })
 
     const table = createTable(data, {
         page: addPagination()
@@ -12,8 +11,10 @@
 
     const columns = table.createColumns([
         table.group({
-            header: (_, { pageRows }) =>
-                derived([pageRows], ([_pageRows]) => `Name (${_pageRows.length} on page)`),
+            header:
+                (_, { pageRows }) =>
+                () =>
+                    `Name (${pageRows().length} on page)`,
             columns: [
                 table.column({
                     header: 'First Name',
@@ -55,23 +56,27 @@
 
 <pre>{JSON.stringify(
         {
-            $pageIndex: $pageIndex,
-            $pageCount: $pageCount,
-            $pageSize: $pageSize
+            pageIndex: pageIndex.current,
+            pageCount: pageCount.current,
+            pageSize: pageSize.current
         },
         null,
         2
     )}</pre>
 
 <div class="mb-4 flex items-baseline gap-4">
-    <button onclick={() => $pageIndex--} disabled={!$hasPreviousPage} class="demo"
-        >Previous page</button
+    <button
+        onclick={() => (pageIndex.current -= 1)}
+        disabled={!hasPreviousPage.current}
+        class="demo">Previous page</button
     >
-    {$pageIndex + 1} out of {$pageCount}
-    <button onclick={() => $pageIndex++} disabled={!$hasNextPage} class="demo">Next page</button>
+    {pageIndex.current + 1} out of {pageCount.current}
+    <button onclick={() => (pageIndex.current += 1)} disabled={!hasNextPage.current} class="demo"
+        >Next page</button
+    >
 </div>
 <label for="page-size">Page size</label>
-<input id="page-size" type="number" min={1} bind:value={$pageSize} class="demo mb-4" />
+<input id="page-size" type="number" min={1} bind:value={pageSize.current} class="demo mb-4" />
 
 <div class="overflow-x-auto">
     <table class="demo my-0" {...vm.current.tableAttrs}>

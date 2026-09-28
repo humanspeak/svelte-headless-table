@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { writable } from 'svelte/store'
     import { Render, createTable } from '@humanspeak/svelte-headless-table'
     import { addVirtualScroll, addSortBy } from '@humanspeak/svelte-headless-table/plugins'
     import { ChevronDown, ChevronUp, RotateCcw } from '@lucide/svelte'
@@ -60,9 +59,10 @@
         return out
     }
 
-    const data = writable<Person[]>(seedPeople())
+    // Replaced wholesale on reset, so `$state.raw` (no deep proxy) is enough.
+    let people = $state.raw<Person[]>(seedPeople())
 
-    const table = createTable(data, {
+    const table = createTable(() => people, {
         sort: addSortBy(),
         virtualScroll: addVirtualScroll<Person>({
             estimatedRowHeight: 36,
@@ -99,19 +99,22 @@
     const { sortKeys } = pluginStates.sort
 
     const reset = () => {
-        $sortKeys = []
-        data.set(seedPeople())
+        sortKeys.current = []
+        people = seedPeople()
     }
 </script>
 
 <div class="vs-bar">
     <span><span class="lbl">file</span> · <span class="v">virtual-scroll-sample.svelte</span></span>
-    <span><span class="lbl">total</span> <span class="v">{$totalRows.toLocaleString()}</span></span>
+    <span
+        ><span class="lbl">total</span>
+        <span class="v">{totalRows.current.toLocaleString()}</span></span
+    >
     <span
         ><span class="lbl">window</span>
-        <span class="v">{$visibleRange.start}–{$visibleRange.end}</span></span
+        <span class="v">{visibleRange.current.start}–{visibleRange.current.end}</span></span
     >
-    <span><span class="lbl">rendered</span> <span class="v">{$renderedRows}</span></span>
+    <span><span class="lbl">rendered</span> <span class="v">{renderedRows.current}</span></span>
     <span class="grow"></span>
     <button type="button" class="ctrl" onclick={reset} title="Reset sort + reseed data">
         <RotateCcw size={11} strokeWidth={2.25} />
@@ -144,11 +147,11 @@
             {/each}
         </thead>
         <tbody {...vm.current.tableBodyAttrs}>
-            {#if $topSpacerHeight > 0}
+            {#if topSpacerHeight.current > 0}
                 <tr class="spacer">
                     <td
                         colspan={vm.current.visibleColumns.length}
-                        style="height: {$topSpacerHeight}px;"
+                        style="height: {topSpacerHeight.current}px;"
                     ></td>
                 </tr>
             {/if}
@@ -161,11 +164,11 @@
                     {/each}
                 </tr>
             {/each}
-            {#if $bottomSpacerHeight > 0}
+            {#if bottomSpacerHeight.current > 0}
                 <tr class="spacer">
                     <td
                         colspan={vm.current.visibleColumns.length}
-                        style="height: {$bottomSpacerHeight}px;"
+                        style="height: {bottomSpacerHeight.current}px;"
                     ></td>
                 </tr>
             {/if}
@@ -174,9 +177,9 @@
 </div>
 
 <div class="vs-foot">
-    <div>rows · <span class="v">{$totalRows.toLocaleString()}</span></div>
+    <div>rows · <span class="v">{totalRows.current.toLocaleString()}</span></div>
     <div>cols · <span class="v">{columns.length}</span></div>
-    <div>mounted · <span class="v">{$renderedRows}</span></div>
+    <div>mounted · <span class="v">{renderedRows.current}</span></div>
     <div>plugins · <span class="v">addVirtualScroll · addSortBy</span></div>
     <div>status · <span class="v accent">live</span></div>
 </div>

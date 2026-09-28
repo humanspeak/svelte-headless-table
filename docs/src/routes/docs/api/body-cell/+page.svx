@@ -28,25 +28,15 @@ sidebar_title: BodyCell
 
 A constant `id` that uniquely identifies the body cell in the row.
 
-### `attrs: () => Readable<BodyCellAttributes>`
-
-A `Readable` store with attributes to apply onto the `<td>` element.
-
-### `props: () => Readable<BodyCellProps>`
-
-A `Readable` store with additional properties derived from plugin view model extensions.
-
-<Admonition type="tip">See also <a href="/docs/plugins/overview">Plugin View Model Extensions</a>.</Admonition>
-
 ### `current: { attrs: BodyCellAttributes; props: BodyCellProps }`
 
-The same attributes and props as plain reactive values, for runes-style templates. `current.attrs` is ready to spread onto the `td` element and `current.props` holds the plugin state; both update in place as state changes, with no store subscription, `$` prefix or `Subscribe` wrapper. Reads outside a template or effect return the current value, and server rendering produces the same markup as the store path.
+The attributes and plugin props of the `<td>` element as plain reactive values. `current.attrs` is ready to spread onto the element; `current.props` holds each plugin's props, keyed by plugin name. Both update in place as table and plugin state change. Reads outside a template or effect return the current value, and server rendering produces the same markup.
 
 ```svelte
-<td {...cell.current.attrs}>
+<td {...cell.current.attrs} class:matches={cell.current.props.tableFilter.matches}>
 ```
 
-<Admonition type="tip">`current.*` and the `attrs()` / `props()` stores are two views of the same data; mix them freely.</Admonition>
+<Admonition type="tip">See also <a href="/docs/plugins/overview">Plugin View Model Extensions</a>. v7 removed the <code>attrs()</code> and <code>props()</code> store methods; see <a href="/docs/guides/migrating-to-v7">Migrating to v7</a>.</Admonition>
 
 ### `render: () => RenderConfig`
 

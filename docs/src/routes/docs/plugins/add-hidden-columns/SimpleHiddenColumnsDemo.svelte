@@ -1,10 +1,9 @@
 <script lang="ts">
-    import { readable } from 'svelte/store'
     import { createTable, Render } from '@humanspeak/svelte-headless-table'
     import { addHiddenColumns } from '@humanspeak/svelte-headless-table/plugins'
     import { createSamples } from '$lib/utils/createSamples'
 
-    const data = readable(createSamples(30, 1, 0, { seed: 4 }))
+    const data = createSamples(30, 1, 0, { seed: 4 })
 
     const table = createTable(data, {
         hideCols: addHiddenColumns()
@@ -52,24 +51,24 @@
     const { hiddenColumnIds } = pluginStates.hideCols
     const ids = flatColumns.map((c) => c.id)
 
-    // Use $state for reactive checkbox bindings
-    const hideForId: Record<string, boolean> = $state(
-        Object.fromEntries(ids.map((id) => [id, false]))
-    )
-
-    // Update hidden columns when checkboxes change
-    $effect(() => {
-        $hiddenColumnIds = Object.entries(hideForId)
-            .filter(([, hide]) => hide)
-            .map(([id]) => id)
-    })
+    // Assign a new array to change the hidden columns; the table updates on its own.
+    const setHidden = (id: string, hide: boolean) => {
+        hiddenColumnIds.current = hide
+            ? [...hiddenColumnIds.current, id]
+            : hiddenColumnIds.current.filter((hiddenId) => hiddenId !== id)
+    }
 </script>
 
-<pre>$hiddenColumnIds = {JSON.stringify($hiddenColumnIds, null, 2)}</pre>
+<pre>hiddenColumnIds.current = {JSON.stringify(hiddenColumnIds.current, null, 2)}</pre>
 
 {#each ids as id (id)}
     <div class="flex items-center gap-4">
-        <input id="hide-{id}" type="checkbox" bind:checked={hideForId[id]} />
+        <input
+            id="hide-{id}"
+            type="checkbox"
+            checked={hiddenColumnIds.current.includes(id)}
+            onchange={(e) => setHidden(id, e.currentTarget.checked)}
+        />
         <label for="hide-{id}">{id}</label>
     </div>
 {/each}

@@ -66,7 +66,6 @@ export const docsSections: NavSection[] = [
             { title: 'TableState', href: '/docs/api/table-state', icon: Database },
             { title: 'Render', href: '/docs/api/render', icon: Shapes },
             { title: 'createRender', href: '/docs/api/create-render', icon: WandSparkles },
-            { title: 'Subscribe', href: '/docs/api/subscribe', icon: Zap },
             { title: 'HeaderRow', href: '/docs/api/header-row', icon: GripHorizontal },
             { title: 'HeaderCell', href: '/docs/api/header-cell', icon: LayoutGrid },
             { title: 'BodyRow', href: '/docs/api/body-row', icon: List },
@@ -127,6 +126,7 @@ export const docsSections: NavSection[] = [
         title: 'Guides',
         icon: Compass,
         items: [
+            { title: 'Migrating to v7', href: '/docs/guides/migrating-to-v7', icon: Zap },
             { title: 'Moving to current.*', href: '/docs/guides/moving-to-current', icon: Zap },
             { title: 'shadcn-svelte', href: '/docs/guides/shadcn-svelte', icon: BookOpen },
             {

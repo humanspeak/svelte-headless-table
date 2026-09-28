@@ -87,9 +87,9 @@ Create your column definitions in a separate file:
 // src/routes/payments/columns.ts
 import { createTable, createRender } from "@humanspeak/svelte-headless-table";
 import type { Payment } from "./schema";
-import type { Readable } from "svelte/store";
 
-export function createPaymentTable(data: Readable<Payment[]>) {
+// `data` is a getter, so the table follows whatever it reads.
+export function createPaymentTable(data: () => Payment[]) {
   const table = createTable(data);
 
   const columns = table.createColumns([
@@ -118,7 +118,6 @@ Now create the table component:
 ```svelte
 <!-- src/routes/payments/data-table.svelte -->
 <script lang="ts">
-  import { readable } from "svelte/store";
   import { Render } from "@humanspeak/svelte-headless-table";
   import * as Table from "$lib/components/ui/table";
   import { createPaymentTable } from "./columns";
@@ -126,8 +125,8 @@ Now create the table component:
 
   let { data }: { data: Payment[] } = $props();
 
-  const store = readable(data);
-  const { table, columns } = createPaymentTable(store);
+  // A getter over the prop: the table updates when the parent passes new data.
+  const { table, columns } = createPaymentTable(() => data);
   const vm = table.createViewModel(columns);
 </script>
 
@@ -317,6 +316,7 @@ Extract the pagination state from the view model:
 const vm = table.createViewModel(columns);
 const { pluginStates } = vm;
 
+// Boxes: read and write their `current` property.
 const { hasNextPage, hasPreviousPage, pageIndex } = pluginStates.page;
 ```
 
@@ -327,16 +327,16 @@ Add pagination controls to your table component:
   <Button
     variant="outline"
     size="sm"
-    on:click={() => ($pageIndex = $pageIndex - 1)}
-    disabled={!$hasPreviousPage}
+    onclick={() => (pageIndex.current -= 1)}
+    disabled={!hasPreviousPage.current}
   >
     Previous
   </Button>
   <Button
     variant="outline"
     size="sm"
-    on:click={() => ($pageIndex = $pageIndex + 1)}
-    disabled={!$hasNextPage}
+    onclick={() => (pageIndex.current += 1)}
+    disabled={!hasNextPage.current}
   >
     Next
   </Button>
@@ -438,7 +438,7 @@ Add a filter input:
     class="max-w-sm"
     placeholder="Filter emails..."
     type="text"
-    bind:value={$filterValue}
+    bind:value={filterValue.current}
   />
 </div>
 ```
@@ -486,12 +486,12 @@ Create a columns visibility dropdown:
     {#each flatColumns as col}
       {#if col.id !== "actions"}
         <DropdownMenu.CheckboxItem
-          checked={!$hiddenColumnIds.includes(col.id)}
-          on:click={() => {
-            if ($hiddenColumnIds.includes(col.id)) {
-              $hiddenColumnIds = $hiddenColumnIds.filter((id) => id !== col.id);
+          checked={!hiddenColumnIds.current.includes(col.id)}
+          onclick={() => {
+            if (hiddenColumnIds.current.includes(col.id)) {
+              hiddenColumnIds.current = hiddenColumnIds.current.filter((id) => id !== col.id);
             } else {
-              $hiddenColumnIds = [...$hiddenColumnIds, col.id];
+              hiddenColumnIds.current = [...hiddenColumnIds.current, col.id];
             }
           }}
         >
@@ -533,12 +533,14 @@ Create a checkbox component for row selection:
 ```svelte
 <!-- src/routes/payments/data-table-checkbox.svelte -->
 <script lang="ts">
+  import type { Box } from "@humanspeak/svelte-headless-table";
   import { Checkbox } from "$lib/components/ui/checkbox";
 
-  export let checked: boolean = false;
+  // A plugin state box: `allPageRowsSelected` or a row's `isSelected`.
+  let { checked }: { checked: Box<boolean> } = $props();
 </script>
 
-<Checkbox bind:checked />
+<Checkbox bind:checked={checked.current} />
 ```
 
 Add a select column:
@@ -564,11 +566,11 @@ table.column({
 }),
 ```
 
-Display the selection count:
+Display the selection count (`const { selectedDataIds } = pluginStates.select`):
 
 ```svelte
 <div class="flex-1 text-sm text-muted-foreground">
-  {Object.keys($selectedDataIds).length} of {vm.current.rows.length} row(s) selected.
+  {Object.keys(selectedDataIds.current).length} of {vm.current.rows.length} row(s) selected.
 </div>
 ```
 
@@ -587,11 +589,11 @@ import {
   addSelectedRows,
 } from "@humanspeak/svelte-headless-table/plugins";
 import type { Payment } from "./schema";
-import type { Readable } from "svelte/store";
 import DataTableActions from "./data-table-actions.svelte";
 import DataTableCheckbox from "./data-table-checkbox.svelte";
 
-export function createPaymentTable(data: Readable<Payment[]>) {
+// `data` is a getter, so the table follows whatever it reads.
+export function createPaymentTable(data: () => Payment[]) {
   const table = createTable(data, {
     page: addPagination(),
     sort: addSortBy({ disableMultiSort: true }),

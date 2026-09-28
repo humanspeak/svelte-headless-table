@@ -34,7 +34,7 @@ Svelte Headless Table is designed to work **seamlessly** with Svelte. If you lov
 
 - **Full TypeScript support**
 - Compatible with **SvelteKit** and SSR
-- Manage state with Svelte stores
+- Runes-native: plain reactive values, no stores
 - Headless and fully customizable
 - Intuitive column-first declarative model
 - Highly performant
@@ -62,19 +62,26 @@ Easily extend Svelte Headless Table with complex **sorting**, **filtering**, **g
 - [x] [addGridLayout](https://table.svelte.page/docs/plugins/add-grid-layout)
 - [x] [addVirtualScroll](https://table.svelte.page/docs/plugins/add-virtual-scroll)
 
+## Installation
+
+```bash
+npm install @humanspeak/svelte-headless-table
+```
+
+Requires Svelte 5.30 or later. Upgrading from 6.x? Follow the [migration guide](https://table.svelte.page/docs/guides/migrating-to-v7).
+
 ## Examples
 
 <!-- prettier-ignore -->
 ```svelte
 <script>
-  import { readable } from 'svelte/store';
   import { createTable, Render } from '@humanspeak/svelte-headless-table';
 
-  const data = readable([
+  const data = [
     { name: 'Ada Lovelace', age: 21 },
     { name: 'Barbara Liskov', age: 52 },
     { name: 'Richard Hamming', age: 38 },
-  ]);
+  ];
 
   const table = createTable(data);
 
@@ -118,7 +125,9 @@ Easily extend Svelte Headless Table with complex **sorting**, **filtering**, **g
 </table>
 ```
 
-Every row, cell and the view model itself expose a `current` object whose values are plain and reactive: read them in the template and they update as plugins change state, with no stores, `$` syntax or wrapper components. The store API (`$tableAttrs`, `cell.attrs()`, the `Subscribe` component) is still supported — see the [view model docs](https://table.svelte.page/docs/api/table-view-model).
+Every row, cell and the view model itself expose a `current` object whose values are plain and reactive: read them in the template and they update as plugins change state, with no stores, `$` syntax or wrapper components. For data that changes, keep it in `$state` and pass a getter: `createTable(() => items)`.
+
+Coming from 6.x, where tables were built on Svelte stores? See [Migrating to v7](https://table.svelte.page/docs/guides/migrating-to-v7).
 
 ### Custom cells with snippets
 

@@ -44,7 +44,7 @@ Default `''`.
 Whether hidden columns are included. Default `false`.
 
 ### `serverSide?: boolean`
-If `true`, use server-side filtering by updating <a href="/docs/api/create-table#createtable-data-plugins-table">`$data`</a>.
+If `true`, use server-side filtering by updating the table's <a href="/docs/api/create-table#createtable-data-plugins-table">data</a>.
 
 ## Column Options
 
@@ -70,7 +70,7 @@ Map a cell value to a filterable string. Default serializes value.
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
 
 <PluginProps set="TableFilterPropSet" pluginKey="tableFilter" />
 
@@ -84,13 +84,20 @@ Map a cell value to a filterable string. Default serializes value.
 <Admonition type="info">State provided by <code>addTableFilter</code>.</Admonition>
 
 ```ts {3}
-const vm = table.createViewModel(columns);
-const { pluginStates } = vm;
-const { ... } = pluginStates.filter;
+const vm = table.createViewModel(columns)
+const { pluginStates } = vm
+const { filterValue } = pluginStates.filter
 ```
 
-### `preFilteredRows: Readable<BodyRow<Item>[]>`
-### `filterValue: Writable<string>`
+### `filterValue: Box<string>`
+The current filter text. Bind an input to it directly:
+
+```svelte
+<input bind:value={filterValue.current} placeholder="Search rows..." />
+```
+
+### `preFilteredRows: ReadonlyBox<BodyRow<Item>[]>`
+The rows before filtering was applied.
 
 ## Examples
 

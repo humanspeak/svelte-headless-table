@@ -55,7 +55,7 @@ const columns = table.createColumns([
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components.</Admonition>
 
 ```svelte
 {#each vm.current.headerRows as headerRow (headerRow.id)}
@@ -76,20 +76,38 @@ const columns = table.createColumns([
 <Admonition type="info">State provided by <code>addExpandedRows</code>.</Admonition>
 
 ```ts {3}
-const vm = table.createViewModel(columns);
-const { pluginStates } = vm;
-const { ... } = pluginStates.expand;
+const vm = table.createViewModel(columns)
+const { pluginStates } = vm
+const { expandedIds, getRowState } = pluginStates.expand
 ```
 
-### `expandedIds: Writable<Record<string, boolean>>`
-Active expanded rows mapping.
+### `expandedIds: RecordSet`
+The expanded row ids. Read `expandedIds.current` (a `Record<string, boolean>` holding only `true` entries), or change it with `add(id)`, `remove(id)`, `toggle(id)`, `addAll(ids)`, `removeAll(ids)` and `clear()`. Assigning `expandedIds.current` replaces the whole set.
 
 ### `getRowState: (row) => ExpandedRowsRowState`
-Returns state for a given `BodyRow` with:
+Returns the expansion state of a `BodyRow`:
 
-- `isExpanded: Writable<boolean>`
-- `canExpand: Readable<boolean>`
-- `isAllSubRowsExpanded: Readable<boolean>`
+- `isExpanded: Box<boolean>`: writing adds or removes the row's id in `expandedIds`
+- `canExpand: boolean`: whether the row had sub-rows when the view was created
+- `isAllSubRowsExpanded: ReadonlyBox<boolean>`
+
+The state holds nothing of its own (it reads `expandedIds`), so it is safe to call anywhere, including in a template. The same row object always returns the same view.
+
+<Admonition type="info">v7 removed <code>invalidate()</code>: there is no per-row cache to clear.</Admonition>
+
+```svelte
+<!-- ExpandIndicator.svelte, rendered with createRender(ExpandIndicator, getRowState(row)) -->
+<script lang="ts">
+    import type { Box } from '@humanspeak/svelte-headless-table'
+    const { isExpanded, canExpand }: { isExpanded: Box<boolean>; canExpand: boolean } = $props()
+</script>
+
+{#if canExpand}
+    <button onclick={() => (isExpanded.current = !isExpanded.current)}>
+        {isExpanded.current ? 'Collapse' : 'Expand'}
+    </button>
+{/if}
+```
 
 ## Examples
 

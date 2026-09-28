@@ -28,9 +28,9 @@ Svelte Headless Table is a headless, composable table library for Svelte. It giv
 
 ## Core concepts
 
-- **createTable(data, plugins)**: Builds a table instance from your data source and plugin config
+- **createTable(data, plugins)**: Builds a table instance from your data (an array, or a getter for reactive data) and plugin config
 - **createColumns([...])**: Declares how to read and present fields from your data items
-- **createViewModel(columns)**: Derives header rows, body rows, and attributes to spread on markup
+- **createViewModel(columns)**: Derives header rows, body rows, and attributes to spread on markup, as plain reactive values under `vm.current`
 
 ## Installation
 
@@ -48,20 +48,19 @@ yarn add -D @humanspeak/svelte-headless-table
 pnpm add -D @humanspeak/svelte-headless-table
 ```
 
-Requires Svelte 5.
+Requires Svelte 5.30 or later. Upgrading from 6.x? See [Migrating to v7](/docs/guides/migrating-to-v7).
 
 ## Minimal example
 
 ```svelte
 <script lang="ts">
-  import { readable } from 'svelte/store'
   import { createTable, Render } from '@humanspeak/svelte-headless-table'
 
-  const data = readable([
+  const data = [
     { name: 'Ada Lovelace', age: 21 },
     { name: 'Barbara Liskov', age: 52 },
     { name: 'Richard Hamming', age: 38 }
-  ])
+  ]
 
   const table = createTable(data)
   const columns = table.createColumns([
