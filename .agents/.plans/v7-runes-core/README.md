@@ -23,8 +23,8 @@ committing. Executors never push, tag, bump the version or open the PR.
 | 001  | Prove the v7 runes mechanism on real code before the rewrite (spike + report) | P1       | M      | —          | TODO                                                                                 |
 | 002  | Replace the store core with runes and ship the v7 plugin contract (core + 11) | P1       | L      | 001 report | DONE (PASS ceb30df + bde2ca6; report in 002-runes-core-and-contract.guard-report.md) |
 | 003  | Port the four DOM-driven plugins to the v7 contract and un-park them          | P1       | L      | 002        | DONE (PASS 727a7fb + a52550d; report in 003-complex-plugins.guard-report.md)         |
-| 004  | Un-park the routes, perf bench and Playwright; prove v7 is not slower than v6 | P1       | M      | 003        | IN PROGRESS (dispatched to opus 2026-09-28)                                          |
-| 005  | Document v7 — migration guide, API and plugin pages, demos, README            | P1       | L      | 004        | TODO                                                                                 |
+| 004  | Un-park the routes, perf bench and Playwright; prove v7 is not slower than v6 | P1       | M      | 003        | DONE (PASS cb970fe; report in 004-routes-bench-e2e.guard-report.md)                  |
+| 005  | Document v7 — migration guide, API and plugin pages, demos, README            | P1       | L      | 004        | IN PROGRESS (dispatched to opus 2026-09-28)                                          |
 | 006  | Freeze the v7 public surface and prepare the major release                    | P1       | S      | 005        | TODO                                                                                 |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale)

@@ -15,6 +15,28 @@
 > `src/routes/kitchen-sink/+page.svelte` (the idiomatic v7 template). The
 > docs must describe what shipped, not what this plan assumed.
 >
+> Revision 2026-09-28 (guard, after plan 004 PASS at `cb970fe`): document
+> what shipped, verified against the code — `createTable(data, plugins)`
+> takes `Item[]` or `() => Item[]` and throws on a store; `vm.current.*`,
+> `vm.flatColumns`, `vm.pluginStates`, `vm._debug` (`derivedCount`);
+> plugin state is `Box` / `ReadonlyBox` / `RecordSet` / `ArraySet` from the
+> root (`box`, `derivedBox`, `keyedBox` also exported); `SortKeys` box with
+> `toggleId` / `clearId` via `createSortKeys` (was `createSortKeysStore`);
+> `createPageState` (was `createPageStore`); `pageIndex` clamps at read;
+> `addExpandedRows` / `addSelectedRows` per-row views are cached per row
+> object with no `invalidate()`; virtual-scroll config takes
+> `hasMore: boolean | Box<boolean>`, `totalRows` / `dataOffset: number | Getter | ReadonlyBox`;
+> `createRender` has no `.on()` / `eventHandlers`; render values, component
+> props and snippet args may be getters, never stores. **Behaviour change to
+> call out in the migration guide and release notes:** `addColumnFilters`
+> applies `initialFilterValue` when the view model is built (v6 applied it
+> lazily on the first read of a header's props), so an `initialFilterValue: ''`
+> on a `matchFilter` column now filters everything out — use `undefined` for
+> "no filter". Bench numbers for the guide: rows-10k first paint 0.58×,
+> sort interaction 0.70×, kitchen-sink-1k 0.90× (`scripts/perf-v6-vs-v7.md`).
+> `Planned at` re-stamped to `cb970fe`; `docs/` and `README.md` are unchanged
+> since `61c36ee`.
+>
 > **Drift check (run first)**: `git diff --stat 61c36ee..HEAD -- docs/ README.md`
 > Nothing under `docs/` or `README.md` should have changed on this branch
 > before this plan. If it has, compare against "Current state" before
@@ -27,7 +49,7 @@
 - **Risk**: LOW (docs only; the docs build and smoke tests are the gate)
 - **Depends on**: 004-routes-bench-e2e.md
 - **Category**: docs
-- **Planned at**: commit `61c36ee`, 2026-09-28
+- **Planned at**: commit `cb970fe`, 2026-09-28
 
 ## Why this matters
 
