@@ -12,6 +12,23 @@
 > headline scenarios are `rows-10k`, `sort-cycle-1k` and `kitchen-sink-1k`
 > (the preset names the bench emits, with a `-done` suffix in the JSON).
 >
+> Revision 2026-09-28 (guard, after plan 003 PASS at `a52550d`): the v7
+> library is complete under `src/lib`. Facts to use: `createTable(data, plugins)`
+> throws on a store argument (pass an array or `() => items`); `vm._debug.derivedCount`
+> replaced `derivedStoreCount`; virtual-scroll config accepts `hasMore: boolean | Box<boolean>`
+> and `totalRows` / `dataOffset: number | Getter<number> | ReadonlyBox<number>`
+> (a store throws); `box`, `RecordSet`, `ArraySet` are exported from the root;
+> `pluginStates.sort.sortKeys` is a `SortKeys` box with `toggleId` / `clearId`,
+> `pluginStates.page.pageIndex` / `pageSize` are boxes, `pageCount` /
+> `hasNextPage` / `hasPreviousPage` are read-only boxes; per-row
+> `getRowState(row).isSelected` / `isExpanded` are `Box<boolean>`. `PARKED.md`
+> lists the remaining parked entries to remove in Step 1: the `src/routes/**`
+> exclude in `tsconfig.json`, the `testIgnore` in `playwright.config.ts`, the
+> `src/routes/**` ignore in `eslint.config.mjs`, and the `src/routes/**`
+> coverage exclude in `vite.config.ts` if present. `Planned at` re-stamped to
+> `a52550d`; the route files are unchanged since `61c36ee` except plan 001's
+> spike additions under `src/routes/test/`.
+>
 > **Drift check (run first)**: `git diff --stat 61c36ee..HEAD -- src/routes/ tests/ playwright.config.ts scripts/`
 > Only `src/routes/test/v7-spike/**` and `src/routes/test/perf-bench/**`
 > should differ (plan 001). Anything else changed → compare the "Current
@@ -24,7 +41,7 @@
 - **Risk**: MED
 - **Depends on**: 003-complex-plugins.md
 - **Category**: migration (major, v7) + perf
-- **Planned at**: commit `61c36ee`, 2026-09-28
+- **Planned at**: commit `a52550d`, 2026-09-28
 
 ## Why this matters
 
@@ -70,7 +87,7 @@ claim in the release notes would be a guess.
 
 **In scope**:
 
-- `src/routes/**` (all files listed above), `tsconfig.json` (remove the route exclude), `playwright.config.ts` (remove `testIgnore`), `tests/**` only where an assertion names a renamed debug field
+- `src/routes/**` (all files listed above), `tsconfig.json` (remove the route exclude), `playwright.config.ts` (remove `testIgnore`), `eslint.config.mjs` (remove the `src/routes/**` ignore), `vite.config.ts` (remove any route coverage exclude added by parking), `tests/**` only where an assertion names a renamed debug field
 - `src/routes/test/perf-bench/_PerfTableStore.svelte` (delete), `_PerfTableSpike.svelte` (delete), `src/routes/test/v7-spike/**` (delete)
 - `scripts/perf-baseline.json` (replace with the v7 run) and a new `scripts/perf-v6-vs-v7.md` (the comparison table)
 - `.agents/.plans/v7-runes-core/PARKED.md` (delete when empty)
