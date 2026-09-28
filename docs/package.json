@@ -51,7 +51,7 @@
         "@typescript-eslint/eslint-plugin": "^8.67.0",
         "@typescript-eslint/parser": "^8.67.0",
         "autoprefixer": "^10.5.4",
-        "bits-ui": "^2.19.0",
+        "bits-ui": "^2.19.3",
         "chokidar-cli": "^3.0.0",
         "clsx": "^2.1.1",
         "embla-carousel-svelte": "^8.6.0",
