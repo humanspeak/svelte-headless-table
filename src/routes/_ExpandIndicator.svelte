@@ -1,16 +1,24 @@
 <script lang="ts">
-    import type { Readable, Writable } from 'svelte/store'
+    import type { Box, ReadonlyBox } from '../lib/index.js'
 
-    export let isExpanded: Writable<boolean>
-    export let canExpand: Readable<boolean>
-    export let isAllSubRowsExpanded: Readable<boolean>
-    export let depth: number
+    interface Props {
+        isExpanded: Box<boolean>
+        canExpand: boolean
+        isAllSubRowsExpanded: ReadonlyBox<boolean>
+        depth: number
+    }
+
+    const { isExpanded, canExpand, isAllSubRowsExpanded, depth }: Props = $props()
 </script>
 
-{#if $canExpand}
-    <button type="button" onclick={() => ($isExpanded = !$isExpanded)} style:--depth={depth}>
-        {#if $isExpanded}
-            {#if $isAllSubRowsExpanded}
+{#if canExpand}
+    <button
+        type="button"
+        onclick={() => (isExpanded.current = !isExpanded.current)}
+        style:--depth={depth}
+    >
+        {#if isExpanded.current}
+            {#if isAllSubRowsExpanded.current}
                 ⬇️
             {:else}
                 ↘️

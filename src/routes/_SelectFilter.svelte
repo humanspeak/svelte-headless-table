@@ -1,14 +1,17 @@
 <script lang="ts">
+    import type { Box, ReadonlyBox } from '../lib/index.js'
     import { getDistinct } from '../lib/utils/array.js'
 
-    import type { Readable, Writable } from 'svelte/store'
+    interface Props {
+        filterValue: Box<string | undefined>
+        preFilteredValues: ReadonlyBox<unknown[]>
+    }
 
-    export let filterValue: Writable<string>
-    export let preFilteredValues: Readable<unknown[]>
-    $: uniqueValues = getDistinct($preFilteredValues)
+    const { filterValue, preFilteredValues }: Props = $props()
+    const uniqueValues = $derived(getDistinct(preFilteredValues.current))
 </script>
 
-<select bind:value={$filterValue} onclick={(e) => e.stopPropagation()}>
+<select bind:value={filterValue.current} onclick={(e) => e.stopPropagation()}>
     <option value={undefined}>All</option>
     {#each uniqueValues as value (value)}
         <option {value}>{value}</option>

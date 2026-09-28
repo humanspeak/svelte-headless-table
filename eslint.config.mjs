@@ -43,9 +43,7 @@ export default [
             '**/*.d.ts',
             'docs-old/**',
             'docs-new/**',
-            'docs/**',
-            // PARKED by plan 002 (v7): excluded from the tsconfigs until plan 004 restores them
-            'src/routes/**'
+            'docs/**'
         ]
     },
     js.configs.recommended,

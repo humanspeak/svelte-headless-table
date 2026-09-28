@@ -1,6 +1,5 @@
 <script lang="ts">
-    import { page } from '$app/stores'
-    import { derived, get, writable } from 'svelte/store'
+    import { page } from '$app/state'
     import { Render, createRender, createSnippetRender, createTable } from '../../lib/index.js'
     import {
         addColumnFilters,
@@ -30,9 +29,9 @@
     import TextFilter from '../_TextFilter.svelte'
     import Tick from '../_Tick.svelte'
 
-    const seed = $page.url.searchParams.get('seed')
-    const rowCountParam = $page.url.searchParams.get('rows')
-    const subRowsParam = $page.url.searchParams.get('subrows')
+    const seed = page.url.searchParams.get('seed')
+    const rowCountParam = page.url.searchParams.get('rows')
+    const subRowsParam = page.url.searchParams.get('subrows')
     const initialRowCount = rowCountParam ? Number(rowCountParam) : 100
     const initialSubRows = subRowsParam !== 'false' // default true unless explicitly false
 
@@ -51,11 +50,13 @@
         return result
     }
 
-    const data = writable(generateData(initialRowCount, initialSubRows))
+    // `$state.raw`: the rows are replaced wholesale, never mutated, so there is
+    // no need to deep-proxy every sample object.
+    let items = $state.raw(generateData(initialRowCount, initialSubRows))
 
     const serverSide = false
 
-    const table = createTable(data, {
+    const table = createTable(() => items, {
         subRows: addSubRows({
             children: 'children'
         }),
@@ -83,7 +84,7 @@
         hideColumns: addHiddenColumns(),
         page: addPagination({
             initialPageSize: 20,
-            // Server-side pagination also needs `serverItemCount: readable(<total>)`.
+            // Server-side pagination also needs `serverItemCount: <total>` (a number or a getter).
             serverSide: serverSide
         }),
         resize: addResizedColumns(),
@@ -114,7 +115,7 @@
                 })
             },
             data: ({ row }, state) => {
-                return state?.pluginStates.select.getRowState(row).isSelected
+                return state?.pluginStates.select.getRowState(row).isSelected.current
             },
             plugins: {
                 resize: {
@@ -136,7 +137,7 @@
                 })
             },
             data: ({ row }, state) => {
-                return state?.pluginStates.expand.getRowState(row).isExpanded
+                return state?.pluginStates.expand.getRowState(row).isExpanded.current
             },
             plugins: {
                 resize: {
@@ -159,21 +160,16 @@
             }
         }),
         table.group({
-            header: (_, { rows, pageRows }) =>
-                derived(
-                    [rows, pageRows],
-                    ([_rows, _pageRows]) =>
-                        `Name (${_rows.length} records, ${_pageRows.length} in page)`
-                ),
+            header:
+                (_, { rows, pageRows }) =>
+                () =>
+                    `Name (${rows().length} records, ${pageRows().length} in page)`,
             columns: [
                 table.column({
                     header: (cell) => {
-                        return createRender(
-                            Italic,
-                            derived(cell.props(), (_props) => ({
-                                text: `First Name ${_props.sort.order}`
-                            }))
-                        )
+                        return createRender(Italic, () => ({
+                            text: `First Name ${cell.current.props.sort.order}`
+                        }))
                     },
                     accessor: 'firstName',
                     plugins: {
@@ -209,10 +205,7 @@
         }),
         table.group({
             header: (_, { rows }) =>
-                createRender(
-                    Italic,
-                    derived(rows, (_rows) => ({ text: `Info (${_rows.length} samples)` }))
-                ),
+                createRender(Italic, () => ({ text: `Info (${rows().length} samples)` })),
             columns: [
                 table.column({
                     header: 'Age',
@@ -281,28 +274,27 @@
     ])
 
     const viewModel = table.createViewModel(columns)
-    const {
-        headerRows,
-        pageRows,
-        tableAttrs,
-        tableBodyAttrs,
-        visibleColumns,
-        pluginStates,
-        _debug
-    } = viewModel
+    const { pluginStates, _debug } = viewModel
 
-    // Debug state for reactive updates - refresh whenever stores change
+    // Debug state for reactive updates - refresh whenever the view model changes
     let debugSnapshot = $state({ ...(_debug.derivationCalls as Record<string, number>) })
     let totalCalls = $state(_debug.getTotalCalls())
 
     /** Registers its arguments as dependencies of the enclosing effect. */
     const track = (..._deps: unknown[]): undefined => undefined
 
-    // Auto-update debug snapshot when any of the main stores change
+    // Auto-update debug snapshot when any of the main view-model values change
     $effect(() => {
-        // Read the stores so the effect re-runs when any of them change.
-        track($pageRows, $headerRows, $tableAttrs, $tableBodyAttrs, $visibleColumns)
-        // Update snapshot after stores have processed
+        // Read the values so the effect re-runs when any of them change.
+        const { current } = viewModel
+        track(
+            current.pageRows,
+            current.headerRows,
+            current.tableAttrs,
+            current.tableBodyAttrs,
+            current.visibleColumns
+        )
+        // Update snapshot after the derivations have run
         debugSnapshot = { ...(_debug.derivationCalls as Record<string, number>) }
         totalCalls = _debug.getTotalCalls()
     })
@@ -321,9 +313,9 @@
     const { pageIndex, pageCount, pageSize, hasPreviousPage, hasNextPage } = pluginStates.page
     const { expandedIds } = pluginStates.expand
     const { columnIdOrder } = pluginStates.orderColumns
-    // $: $columnIdOrder = ['expanded', ...$groupByIds];
+    // columnIdOrder.current = ['expanded', ...groupByIds.current]
     const { hiddenColumnIds } = pluginStates.hideColumns
-    $hiddenColumnIds = ['progress']
+    hiddenColumnIds.current = ['progress']
     const { columnWidths } = pluginStates.resize
     const { exportedData } = pluginStates.export
     const { exportedData: exportedJson } = pluginStates.exportJson
@@ -361,7 +353,7 @@
             onclick={() => {
                 _debug.resetCounters()
                 const start = performance.now()
-                data.set(generateData(rowCount, includeSubRows))
+                items = generateData(rowCount, includeSubRows)
                 const elapsed = performance.now() - start
                 lastOperationTime = `Data set in ${elapsed.toFixed(2)}ms (${rowCount} rows${includeSubRows ? ' + sub-rows' : ''})`
             }}
@@ -372,7 +364,7 @@
             onclick={() => {
                 _debug.resetCounters()
                 const start = performance.now()
-                data.update((d) => [...d])
+                items = [...items]
                 const elapsed = performance.now() - start
                 lastOperationTime = `Shallow update in ${elapsed.toFixed(2)}ms`
             }}
@@ -386,20 +378,22 @@
 </div>
 
 <div>
-    <button onclick={() => $pageIndex--} disabled={!$hasPreviousPage}>Previous page</button>
-    {$pageIndex + 1} of {$pageCount}
-    <button onclick={() => $pageIndex++} disabled={!$hasNextPage}>Next page</button>
+    <button onclick={() => pageIndex.current--} disabled={!hasPreviousPage.current}>
+        Previous page
+    </button>
+    {pageIndex.current + 1} of {pageCount.current}
+    <button onclick={() => pageIndex.current++} disabled={!hasNextPage.current}>Next page</button>
     <label for="page-size">Page size</label>
-    <input id="page-size" type="number" min={1} bind:value={$pageSize} />
+    <input id="page-size" type="number" min={1} bind:value={pageSize.current} />
 </div>
 
-<button data-testid="export-as-object-button" onclick={() => console.log(get(exportedData))}>
+<button data-testid="export-as-object-button" onclick={() => console.log(exportedData.current)}>
     Export as object
 </button>
-<button data-testid="export-as-json-button" onclick={() => console.log(get(exportedJson))}>
+<button data-testid="export-as-json-button" onclick={() => console.log(exportedJson.current)}>
     Export as JSON
 </button>
-<button data-testid="export-as-csv-button" onclick={() => console.log(get(exportedCsv))}>
+<button data-testid="export-as-csv-button" onclick={() => console.log(exportedCsv.current)}>
     Export as CSV
 </button>
 
@@ -440,7 +434,7 @@
                             <Render of={cell.current.props.filter.render} />
                         {/if}
                         {#if !cell.current.props.resize.disabled}
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <!-- svelte-ignore a11y_click_events_have_key_events -->
                             <div
                                 class="resizer"
                                 role="button"
@@ -455,8 +449,12 @@
             </tr>
         {/each}
         <tr>
-            <th colspan={$visibleColumns.length}>
-                <input type="text" bind:value={$filterValue} placeholder="Search all data..." />
+            <th colspan={viewModel.current.visibleColumns.length}>
+                <input
+                    type="text"
+                    bind:value={filterValue.current}
+                    placeholder="Search all data..."
+                />
             </th>
         </tr>
     </thead>
@@ -491,15 +489,15 @@
 
 <pre>{JSON.stringify(
         {
-            groupByIds: $groupByIds,
-            sortKeys: $sortKeys,
-            filterValues: $filterValues,
-            filterValue: $filterValue,
-            selectedDataIds: $selectedDataIds,
-            columnIdOrder: $columnIdOrder,
-            hiddenColumnIds: $hiddenColumnIds,
-            expandedIds: $expandedIds,
-            columnWidths: $columnWidths
+            groupByIds: groupByIds.current,
+            sortKeys: sortKeys.current,
+            filterValues: filterValues.current,
+            filterValue: filterValue.current,
+            selectedDataIds: selectedDataIds.current,
+            columnIdOrder: columnIdOrder.current,
+            hiddenColumnIds: hiddenColumnIds.current,
+            expandedIds: expandedIds.current,
+            columnWidths: columnWidths.current
         },
         null,
         2
@@ -507,7 +505,7 @@
 serverSide: {serverSide}</pre>
 
 <div class="debug-panel">
-    <h2>Debug: Store Derivation Metrics</h2>
+    <h2>Debug: Derivation Metrics</h2>
     <div class="debug-info">
         <div class="debug-section">
             <h3>Plugin Info</h3>
@@ -515,14 +513,14 @@ serverSide: {serverSide}</pre>
             <p><strong>Names:</strong> {_debug.pluginNames.join(', ')}</p>
         </div>
         <div class="debug-section">
-            <h3>Derived Store Chain Depths</h3>
+            <h3>Derivation Chain Depths</h3>
             <ul>
-                <li>tableAttrs: {_debug.derivedStoreCount.tableAttrs}</li>
-                <li>tableHeadAttrs: {_debug.derivedStoreCount.tableHeadAttrs}</li>
-                <li>tableBodyAttrs: {_debug.derivedStoreCount.tableBodyAttrs}</li>
-                <li>visibleColumns: {_debug.derivedStoreCount.visibleColumns}</li>
-                <li>rows: {_debug.derivedStoreCount.rows}</li>
-                <li>pageRows: {_debug.derivedStoreCount.pageRows}</li>
+                <li>tableAttrs: {_debug.derivedCount.tableAttrs}</li>
+                <li>tableHeadAttrs: {_debug.derivedCount.tableHeadAttrs}</li>
+                <li>tableBodyAttrs: {_debug.derivedCount.tableBodyAttrs}</li>
+                <li>visibleColumns: {_debug.derivedCount.visibleColumns}</li>
+                <li>rows: {_debug.derivedCount.rows}</li>
+                <li>pageRows: {_debug.derivedCount.pageRows}</li>
             </ul>
         </div>
         <div class="debug-section">

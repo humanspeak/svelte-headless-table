@@ -1,14 +1,12 @@
 <script lang="ts">
     /**
-     * Default renderer for the perf-bench fixture. Reads the table-level
-     * values through `vm.current.*` and every row's and cell's attrs through
-     * the runes-backed `current.attrs` getter, with no `$store` reads and no
-     * store-subscription wrapper component. The
-     * store-path control lives in `_PerfTableStore.svelte` (`?renderer=store`).
+     * Renderer for the perf-bench fixture. Reads the table-level values
+     * through `vm.current.*` and every row's and cell's attrs through the
+     * runes-backed `current.attrs` getter.
      *
      * The parent fixture keys this component on `vm` so a scenario change
-     * forces a clean remount, ensuring no stale subscriptions from the
-     * previous run.
+     * forces a clean remount, ensuring nothing from the previous run stays
+     * tracked.
      */
     import { Render } from '$lib/index.js'
     import type { TableViewModel } from '$lib/createViewModel.svelte.js'

@@ -1,7 +1,6 @@
 <script lang="ts">
     import { resolve } from '$app/paths'
-    import { writable } from 'svelte/store'
-    import { Render, Subscribe, createTable } from '../../lib/index.js'
+    import { Render, box, createTable } from '../../lib/index.js'
     import { addVirtualScroll, addSortBy } from '../../lib/plugins/index.js'
 
     // Simple data item - no faker for fast generation
@@ -83,15 +82,16 @@
     // State - start with 1000 rows (fast to generate)
     const initialSize = 1000
     let totalItemsLoaded = $state(initialSize)
-    const hasMore = writable(true)
-    const data = writable<DataItem[]>(generateItems(initialSize))
+    const hasMore = box(true)
+    // Replaced wholesale on every load, so `$state.raw` (no deep proxy) is enough.
+    let items = $state.raw<DataItem[]>(generateItems(initialSize))
 
     // Track loading state for infinite scroll
     let loadingMore = $state(false)
 
     // Create table with virtual scroll
     // estimatedRowHeight is just for initial render - actual heights are measured automatically
-    const table = createTable(data, {
+    const table = createTable(() => items, {
         sort: addSortBy(),
         virtualScroll: addVirtualScroll<DataItem>({
             estimatedRowHeight: 40,
@@ -112,12 +112,12 @@
         await new Promise((resolve) => setTimeout(resolve, delayMs))
 
         const newItems = generateItems(1000, totalItemsLoaded)
-        data.update((d) => [...d, ...newItems])
+        items = [...items, ...newItems]
         totalItemsLoaded += 1000
 
         // Stop after 50,000 items for demo
         if (totalItemsLoaded >= 50000) {
-            hasMore.set(false)
+            hasMore.current = false
         }
 
         loadingMore = false
@@ -127,9 +127,9 @@
     function loadLargeBatch(size: number) {
         const start = performance.now()
         const newData = generateItems(size)
-        data.set(newData)
+        items = newData
         totalItemsLoaded = size
-        hasMore.set(size < 50000)
+        hasMore.current = size < 50000
         const elapsed = performance.now() - start
         console.log(`Generated ${size} rows in ${elapsed.toFixed(2)}ms`)
     }
@@ -173,8 +173,8 @@
         })
     ])
 
-    const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates, visibleColumns } =
-        table.createViewModel(columns)
+    const viewModel = table.createViewModel(columns)
+    const { pluginStates } = viewModel
 
     const {
         virtualScroll,
@@ -199,12 +199,12 @@
     // DEBUG: Log when pageRows changes
     $effect(() => {
         console.log('[Template] pageRows updated', {
-            count: $pageRows.length,
+            count: viewModel.current.pageRows.length,
             rowIds:
-                $pageRows
+                viewModel.current.pageRows
                     .slice(0, 5)
                     .map((r) => r.id)
-                    .join(',') + ($pageRows.length > 5 ? '...' : '')
+                    .join(',') + (viewModel.current.pageRows.length > 5 ? '...' : '')
         })
     })
 </script>
@@ -228,7 +228,12 @@
             <div class="control-group">
                 <label>
                     Jump to row:
-                    <input type="number" min={0} max={$totalRows - 1} bind:value={jumpToRow} />
+                    <input
+                        type="number"
+                        min={0}
+                        max={totalRows.current - 1}
+                        bind:value={jumpToRow}
+                    />
                     <button onclick={handleJumpToRow}>Go</button>
                 </label>
             </div>
@@ -240,31 +245,37 @@
         <div class="stat-grid">
             <div class="stat">
                 <span class="stat-label">Total Rows:</span>
-                <span class="stat-value">{$totalRows.toLocaleString()}</span>
+                <span class="stat-value">{totalRows.current.toLocaleString()}</span>
             </div>
             <div class="stat">
                 <span class="stat-label">Rendered Rows:</span>
-                <span class="stat-value">{$renderedRows}</span>
+                <span class="stat-value">{renderedRows.current}</span>
             </div>
             <div class="stat">
                 <span class="stat-label">Visible Range:</span>
-                <span class="stat-value">{$visibleRange.start} - {$visibleRange.end}</span>
+                <span class="stat-value"
+                    >{visibleRange.current.start} - {visibleRange.current.end}</span
+                >
             </div>
             <div class="stat">
                 <span class="stat-label">Total Height:</span>
-                <span class="stat-value">{Math.round($totalHeight).toLocaleString()}px</span>
+                <span class="stat-value">{Math.round(totalHeight.current).toLocaleString()}px</span>
             </div>
             <div class="stat">
                 <span class="stat-label">Top Spacer:</span>
-                <span class="stat-value">{Math.round($topSpacerHeight).toLocaleString()}px</span>
+                <span class="stat-value"
+                    >{Math.round(topSpacerHeight.current).toLocaleString()}px</span
+                >
             </div>
             <div class="stat">
                 <span class="stat-label">Bottom Spacer:</span>
-                <span class="stat-value">{Math.round($bottomSpacerHeight).toLocaleString()}px</span>
+                <span class="stat-value"
+                    >{Math.round(bottomSpacerHeight.current).toLocaleString()}px</span
+                >
             </div>
             <div class="stat">
                 <span class="stat-label">Loading More:</span>
-                <span class="stat-value">{$isLoading ? 'Yes' : 'No'}</span>
+                <span class="stat-value">{isLoading.current ? 'Yes' : 'No'}</span>
             </div>
         </div>
     </section>
@@ -276,7 +287,7 @@
             datasets.
         </p>
         <div class="table-container" use:virtualScroll>
-            <table {...$tableAttrs}>
+            <table {...viewModel.current.tableAttrs}>
                 <colgroup>
                     <col style="width: 8%" />
                     <col style="width: 14%" />
@@ -287,75 +298,75 @@
                     <col style="width: 12%" />
                 </colgroup>
                 <thead>
-                    {#each $headerRows as headerRow (headerRow.id)}
-                        <Subscribe attrs={headerRow.attrs()} let:attrs>
-                            <tr {...attrs}>
-                                {#each headerRow.cells as cell (cell.id)}
-                                    <!-- Props come from typed `current`; Subscribe's slot props are untyped. -->
-                                    <Subscribe attrs={cell.attrs()} let:attrs>
-                                        <th
-                                            {...attrs}
-                                            onclick={cell.current.props.sort.toggle}
-                                            class:sorted={cell.current.props.sort.order !==
-                                                undefined}
-                                        >
-                                            <Render of={cell.render()} />
-                                            {#if cell.current.props.sort.order === 'asc'}
-                                                <span class="sort-indicator">▲</span>
-                                            {:else if cell.current.props.sort.order === 'desc'}
-                                                <span class="sort-indicator">▼</span>
-                                            {/if}
-                                        </th>
-                                    </Subscribe>
-                                {/each}
-                            </tr>
-                        </Subscribe>
+                    {#each viewModel.current.headerRows as headerRow (headerRow.id)}
+                        <tr {...headerRow.current.attrs}>
+                            {#each headerRow.cells as cell (cell.id)}
+                                <th
+                                    {...cell.current.attrs}
+                                    onclick={cell.current.props.sort.toggle}
+                                    class:sorted={cell.current.props.sort.order !== undefined}
+                                >
+                                    <Render of={cell.render()} />
+                                    {#if cell.current.props.sort.order === 'asc'}
+                                        <span class="sort-indicator">▲</span>
+                                    {:else if cell.current.props.sort.order === 'desc'}
+                                        <span class="sort-indicator">▼</span>
+                                    {/if}
+                                </th>
+                            {/each}
+                        </tr>
                     {/each}
                 </thead>
-                <tbody {...$tableBodyAttrs}>
+                <tbody {...viewModel.current.tableBodyAttrs}>
                     <!-- Top spacer row -->
-                    {#if $topSpacerHeight > 0}
-                        <tr class="spacer-row" data-spacer="top" data-height={$topSpacerHeight}>
+                    {#if topSpacerHeight.current > 0}
+                        <tr
+                            class="spacer-row"
+                            data-spacer="top"
+                            data-height={topSpacerHeight.current}
+                        >
                             <td
-                                colspan={$visibleColumns.length}
-                                style="height: {$topSpacerHeight}px; padding: 0; border: none; background: #ffe0e0;"
+                                colspan={viewModel.current.visibleColumns.length}
+                                style="height: {topSpacerHeight.current}px; padding: 0; border: none; background: #ffe0e0;"
                             ></td>
                         </tr>
                     {/if}
 
                     <!-- Visible rows -->
-                    {#each $pageRows as row (row.id)}
-                        <Subscribe attrs={row.attrs()} let:attrs>
-                            <tr {...attrs} data-row-id={row.id} use:measureRowAction={row.id}>
-                                {#each row.cells as cell (cell.id)}
-                                    <Subscribe attrs={cell.attrs()} let:attrs>
-                                        <td {...attrs}>
-                                            <Render of={cell.render()} />
-                                        </td>
-                                    </Subscribe>
-                                {/each}
-                            </tr>
-                        </Subscribe>
+                    {#each viewModel.current.pageRows as row (row.id)}
+                        <tr
+                            {...row.current.attrs}
+                            data-row-id={row.id}
+                            use:measureRowAction={row.id}
+                        >
+                            {#each row.cells as cell (cell.id)}
+                                <td {...cell.current.attrs}>
+                                    <Render of={cell.render()} />
+                                </td>
+                            {/each}
+                        </tr>
                     {/each}
 
                     <!-- Bottom spacer row -->
-                    {#if $bottomSpacerHeight > 0}
+                    {#if bottomSpacerHeight.current > 0}
                         <tr
                             class="spacer-row"
                             data-spacer="bottom"
-                            data-height={$bottomSpacerHeight}
+                            data-height={bottomSpacerHeight.current}
                         >
                             <td
-                                colspan={$visibleColumns.length}
-                                style="height: {$bottomSpacerHeight}px; padding: 0; border: none; background: #e0e0ff;"
+                                colspan={viewModel.current.visibleColumns.length}
+                                style="height: {bottomSpacerHeight.current}px; padding: 0; border: none; background: #e0e0ff;"
                             ></td>
                         </tr>
                     {/if}
 
                     <!-- Loading indicator -->
-                    {#if $isLoading}
+                    {#if isLoading.current}
                         <tr class="loading-row">
-                            <td colspan={$visibleColumns.length}> Loading more rows... </td>
+                            <td colspan={viewModel.current.visibleColumns.length}>
+                                Loading more rows...
+                            </td>
                         </tr>
                     {/if}
                 </tbody>
@@ -366,42 +377,45 @@
     <section class="usage">
         <h2>Usage</h2>
         <pre><code
-                >{`const table = createTable(data, {
+                >{`let items = $state.raw(initialItems)
+const hasMore = box(true)
+
+const table = createTable(() => items, {
     virtualScroll: addVirtualScroll({
         estimatedRowHeight: 48,
         bufferSize: 10,
         onLoadMore: async () => {
             const more = await fetchMoreItems()
-            data.update(d => [...d, ...more])
+            items = [...items, ...more]
+            hasMore.current = more.length > 0
         },
-        hasMore: hasMoreStore
+        hasMore
     })
 })
 
 const columns = table.createColumns([...])
 
-const { headerRows, pageRows, pluginStates, visibleColumns } =
-    table.createViewModel(columns)
+const vm = table.createViewModel(columns)
 
 const {
     virtualScroll,
     topSpacerHeight,
     bottomSpacerHeight,
     measureRowAction
-} = pluginStates.virtualScroll
+} = vm.pluginStates.virtualScroll
 
 // In template:
 <div class="table-container" use:virtualScroll>
-    <table>
-        <tbody>
-            {#if $topSpacerHeight > 0}
-                <tr><td colspan={$visibleColumns.length} style="height: {$topSpacerHeight}px" /></tr>
+    <table {...vm.current.tableAttrs}>
+        <tbody {...vm.current.tableBodyAttrs}>
+            {#if topSpacerHeight.current > 0}
+                <tr><td colspan={vm.current.visibleColumns.length} style="height: {topSpacerHeight.current}px"></td></tr>
             {/if}
-            {#each $pageRows as row (row.id)}
-                <tr use:measureRowAction={row.id}>...</tr>
+            {#each vm.current.pageRows as row (row.id)}
+                <tr {...row.current.attrs} use:measureRowAction={row.id}>...</tr>
             {/each}
-            {#if $bottomSpacerHeight > 0}
-                <tr><td colspan={$visibleColumns.length} style="height: {$bottomSpacerHeight}px" /></tr>
+            {#if bottomSpacerHeight.current > 0}
+                <tr><td colspan={vm.current.visibleColumns.length} style="height: {bottomSpacerHeight.current}px"></td></tr>
             {/if}
         </tbody>
     </table>

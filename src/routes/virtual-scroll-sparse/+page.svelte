@@ -1,7 +1,6 @@
 <script lang="ts">
     import { SvelteMap } from 'svelte/reactivity'
-    import { writable } from 'svelte/store'
-    import { Render, Subscribe, createTable } from '../../lib/index.js'
+    import { Render, box, createTable } from '../../lib/index.js'
     import { addVirtualScroll } from '../../lib/plugins/index.js'
 
     interface DataItem {
@@ -50,9 +49,10 @@
     let publishedFirstPage = -1
     let publishedLastPage = -1
 
-    const datasetRows = writable(DATASET_SIZE)
-    const dataOffset = writable(0)
-    const data = writable<DataItem[]>([])
+    const datasetRows = box(DATASET_SIZE)
+    const dataOffset = box(0)
+    // The resident slab is replaced wholesale, so `$state.raw` (no deep proxy) is enough.
+    let items = $state.raw<DataItem[]>([])
 
     /**
      * Fetch every page intersecting the range, evict the pages that have
@@ -95,11 +95,11 @@
         }
         publishedFirstPage = firstPage
         publishedLastPage = lastPage
-        dataOffset.set(firstPage * PAGE_SIZE)
-        data.set(rows)
+        dataOffset.current = firstPage * PAGE_SIZE
+        items = rows
     }
 
-    const table = createTable(data, {
+    const table = createTable(() => items, {
         virtualScroll: addVirtualScroll<DataItem>({
             estimatedRowHeight: 40,
             bufferSize: 10,
@@ -121,8 +121,8 @@
         })
     ])
 
-    const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates, visibleColumns } =
-        table.createViewModel(columns)
+    const viewModel = table.createViewModel(columns)
+    const { pluginStates } = viewModel
 
     const {
         virtualScroll,
@@ -166,7 +166,7 @@
         <div class="stat-grid">
             <div class="stat">
                 <span class="stat-label">Total Rows:</span>
-                <span class="stat-value">{$totalRows.toLocaleString()}</span>
+                <span class="stat-value">{totalRows.current.toLocaleString()}</span>
             </div>
             <div class="stat">
                 <span class="stat-label">Rows in Memory:</span>
@@ -174,12 +174,12 @@
             </div>
             <div class="stat">
                 <span class="stat-label">Rendered Rows:</span>
-                <span class="stat-value">{$renderedRows}</span>
+                <span class="stat-value">{renderedRows.current}</span>
             </div>
             <div class="stat">
                 <span class="stat-label">Visible Range:</span>
                 <span class="stat-value"
-                    >{$visibleRange.start.toLocaleString()} - {$visibleRange.end.toLocaleString()}</span
+                    >{visibleRange.current.start.toLocaleString()} - {visibleRange.current.end.toLocaleString()}</span
                 >
             </div>
             <div class="stat">
@@ -192,22 +192,26 @@
             </div>
             <div class="stat">
                 <span class="stat-label">Total Height:</span>
-                <span class="stat-value">{Math.round($totalHeight).toLocaleString()}px</span>
+                <span class="stat-value">{Math.round(totalHeight.current).toLocaleString()}px</span>
             </div>
             <div class="stat">
                 <span class="stat-label">Top Spacer:</span>
-                <span class="stat-value">{Math.round($topSpacerHeight).toLocaleString()}px</span>
+                <span class="stat-value"
+                    >{Math.round(topSpacerHeight.current).toLocaleString()}px</span
+                >
             </div>
             <div class="stat">
                 <span class="stat-label">Bottom Spacer:</span>
-                <span class="stat-value">{Math.round($bottomSpacerHeight).toLocaleString()}px</span>
+                <span class="stat-value"
+                    >{Math.round(bottomSpacerHeight.current).toLocaleString()}px</span
+                >
             </div>
         </div>
     </section>
 
     <section class="table-section">
         <div class="table-container" use:virtualScroll>
-            <table {...$tableAttrs}>
+            <table {...viewModel.current.tableAttrs}>
                 <colgroup>
                     <col style="width: 15%" />
                     <col style="width: 40%" />
@@ -215,53 +219,45 @@
                     <col style="width: 20%" />
                 </colgroup>
                 <thead>
-                    {#each $headerRows as headerRow (headerRow.id)}
-                        <Subscribe attrs={headerRow.attrs()} let:attrs>
-                            <tr {...attrs}>
-                                {#each headerRow.cells as cell (cell.id)}
-                                    <Subscribe attrs={cell.attrs()} let:attrs>
-                                        <th {...attrs}>
-                                            <Render of={cell.render()} />
-                                        </th>
-                                    </Subscribe>
-                                {/each}
-                            </tr>
-                        </Subscribe>
+                    {#each viewModel.current.headerRows as headerRow (headerRow.id)}
+                        <tr {...headerRow.current.attrs}>
+                            {#each headerRow.cells as cell (cell.id)}
+                                <th {...cell.current.attrs}>
+                                    <Render of={cell.render()} />
+                                </th>
+                            {/each}
+                        </tr>
                     {/each}
                 </thead>
-                <tbody {...$tableBodyAttrs}>
-                    {#if $topSpacerHeight > 0}
+                <tbody {...viewModel.current.tableBodyAttrs}>
+                    {#if topSpacerHeight.current > 0}
                         <tr class="spacer-row" data-spacer="top">
                             <td
-                                colspan={$visibleColumns.length}
-                                style="height: {$topSpacerHeight}px; padding: 0; border: none;"
+                                colspan={viewModel.current.visibleColumns.length}
+                                style="height: {topSpacerHeight.current}px; padding: 0; border: none;"
                             ></td>
                         </tr>
                     {/if}
 
-                    {#each $pageRows as row (row.id)}
-                        <Subscribe attrs={row.attrs()} let:attrs>
-                            <tr
-                                {...attrs}
-                                data-virtual-index={row.current.props.virtualScroll.virtualIndex}
-                                use:measureRowAction={row.id}
-                            >
-                                {#each row.cells as cell (cell.id)}
-                                    <Subscribe attrs={cell.attrs()} let:attrs>
-                                        <td {...attrs}>
-                                            <Render of={cell.render()} />
-                                        </td>
-                                    </Subscribe>
-                                {/each}
-                            </tr>
-                        </Subscribe>
+                    {#each viewModel.current.pageRows as row (row.id)}
+                        <tr
+                            {...row.current.attrs}
+                            data-virtual-index={row.current.props.virtualScroll.virtualIndex}
+                            use:measureRowAction={row.id}
+                        >
+                            {#each row.cells as cell (cell.id)}
+                                <td {...cell.current.attrs}>
+                                    <Render of={cell.render()} />
+                                </td>
+                            {/each}
+                        </tr>
                     {/each}
 
-                    {#if $bottomSpacerHeight > 0}
+                    {#if bottomSpacerHeight.current > 0}
                         <tr class="spacer-row" data-spacer="bottom">
                             <td
-                                colspan={$visibleColumns.length}
-                                style="height: {$bottomSpacerHeight}px; padding: 0; border: none;"
+                                colspan={viewModel.current.visibleColumns.length}
+                                style="height: {bottomSpacerHeight.current}px; padding: 0; border: none;"
                             ></td>
                         </tr>
                     {/if}
