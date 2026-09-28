@@ -42,7 +42,7 @@ Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJE
 
 - 001 is a throwaway spike under `src/routes/test/v7-spike/` whose **report** settles three things 002 needs: component memoisation (memo-free vs lazy `$derived`), the ownership rule for view models created outside components, and the plugin patterns for "pre-X rows" and clamping without state writes during derivation. 002 must read the report before starting.
 - 002 parks four plugins (`_parked/`), the routes and Playwright so its gate (library unit suite) is honest; the branch is **intentionally incomplete** between 002 and 004. `PARKED.md` in this folder is the source of truth while that lasts.
-- 003 un-parks the plugins; 004 un-parks routes/e2e and produces `scripts/perf-v6-vs-v7.md` (the perf evidence the release notes cite; v7 must be ≤ 1.05 × v6 on rows-10k, sortCycle1k, pageCycle).
+- 003 un-parks the plugins; 004 un-parks routes/e2e and produces `scripts/perf-v6-vs-v7.md` (the perf evidence the release notes cite; v7 must be ≤ 1.05 × v6 on rows-10k, sort-cycle-1k, kitchen-sink-1k).
 - 005 documents what shipped (it verifies API facts against the code first) and fixes the docs props generator, which stops matching once plugins are `.svelte.ts`.
 - 006 pins the public surface, runs a fresh-consumer packaging test, and writes the release notes + checklist. The publish workflow bumps **patch by default**; the PR must carry the `major` label.
 

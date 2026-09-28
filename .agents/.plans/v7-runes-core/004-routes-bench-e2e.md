@@ -8,6 +8,10 @@
 > (`.agents/.plans/v7-runes-core/README.md`) — unless a reviewer dispatched
 > you and told you they maintain the index.
 >
+> Revision 2026-09-28 (guard): the bench has no `pageCycle` preset; the
+> headline scenarios are `rows-10k`, `sort-cycle-1k` and `kitchen-sink-1k`
+> (the preset names the bench emits, with a `-done` suffix in the JSON).
+>
 > **Drift check (run first)**: `git diff --stat 61c36ee..HEAD -- src/routes/ tests/ playwright.config.ts scripts/`
 > Only `src/routes/test/v7-spike/**` and `src/routes/test/perf-bench/**`
 > should differ (plan 001). Anything else changed → compare the "Current
@@ -28,7 +32,7 @@ Plans 002–003 delivered the library with the dev routes, the perf bench and
 the Playwright suites parked. This plan brings them back on the v7 API,
 deletes the v6 store control renderer and the plan 001 spike, and produces
 the performance evidence the release needs: v7 must be at least as fast as
-v6.5 on the rows-10k, sortCycle1k and pageCycle presets, measured back to
+v6.5 on the rows-10k, sort-cycle-1k and kitchen-sink-1k presets, measured back to
 back on the same machine. Without that number the "runes are faster"
 claim in the release notes would be a guess.
 
@@ -158,10 +162,10 @@ markup only (never the tests' expectations) until the counts match v6.5:
 1. Start the v7 dev server on 8417 from the branch.
 2. Create a v6 worktree from `origin/main` and start its dev server on 8418 (see Commands).
 3. Run the bench three times each, alternating (v7, v6, v7, v6, v7, v6), 30 cold iterations per run: `/tmp/v7-{1,2,3}.json`, `/tmp/v6-{1,2,3}.json`.
-4. Write `scripts/perf-v6-vs-v7.md`: per scenario (`rows-10k`, `sortCycle1k`, `pageCycle`, and every other preset the bench emits) the median-of-medians and p95 for v6 and v7, the ratio, Svelte version (`node -p "require('svelte/package.json').version"`), machine note, date. Replace `scripts/perf-baseline.json` with `/tmp/v7-2.json` (the middle run).
+4. Write `scripts/perf-v6-vs-v7.md`: per scenario (`rows-10k`, `sort-cycle-1k`, `kitchen-sink-1k`, and every other preset the bench emits) the median-of-medians and p95 for v6 and v7, the ratio, Svelte version (`node -p "require('svelte/package.json').version"`), machine note, date. Replace `scripts/perf-baseline.json` with `/tmp/v7-2.json` (the middle run).
 5. Remove the worktree: `git worktree remove /tmp/shd-v6`.
 
-**Verify**: the markdown table exists; for `rows-10k`, `sortCycle1k` and `pageCycle` the v7 median-of-medians is ≤ 1.05 × v6. If a scenario is slower than that, do not tune blindly: record the `_debug.derivationTimings` breakdown for both versions in the report and STOP (see conditions).
+**Verify**: the markdown table exists; for `rows-10k`, `sort-cycle-1k` and `kitchen-sink-1k` the v7 median-of-medians is ≤ 1.05 × v6. If a scenario is slower than that, do not tune blindly: record the `_debug.derivationTimings` breakdown for both versions in the report and STOP (see conditions).
 
 ### Step 7: Full gate
 
@@ -190,7 +194,7 @@ rm .agents/.plans/v7-runes-core/PARKED.md   # nothing is parked any more
 - [ ] Playwright Chromium + Firefox: 36 passed, 2 skipped, 0 failed
 - [ ] `grep -rn "Subscribe\|svelte/store" src/routes` returns nothing
 - [ ] `src/routes/test/v7-spike` and `_PerfTableStore.svelte` / `_PerfTableSpike.svelte` are gone
-- [ ] `scripts/perf-v6-vs-v7.md` exists; v7 ≤ 1.05 × v6 on rows-10k, sortCycle1k, pageCycle
+- [ ] `scripts/perf-v6-vs-v7.md` exists; v7 ≤ 1.05 × v6 on rows-10k, sort-cycle-1k, kitchen-sink-1k
 - [ ] `PARKED.md` deleted; README status row updated
 
 ## STOP conditions

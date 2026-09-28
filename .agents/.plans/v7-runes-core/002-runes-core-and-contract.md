@@ -12,7 +12,23 @@
 > Its "Decisions" section overrides the defaults stated in this plan where
 > they differ (component memoisation, ownership rule, box shape).
 >
-> **Drift check (run first)**: `git diff --stat 61c36ee..HEAD -- src/lib/`
+> Revision 2026-09-28 (guard, after plan 001 PASS at `6a992eb`): (a) the
+> ownership rule is binding — never build a view model or plugin instance
+> inside a transient `$effect` / `$effect.root` that is destroyed before the
+> view model is dropped (deriveds go `derived_inert`); the `withEffectRoot`
+> test helper must therefore only _observe_ an already-built view model,
+> never construct one. (b) A hook applied after `current` was first read is
+> visible to the next plain read but does not re-render the DOM by itself:
+> Step 6 no longer says "keep the v6 test" — hooks are applied only inside
+> the view model's derivations, `applyHook` becomes `@internal`, and the
+> migrated test asserts the observed semantics as the spike's test 7 does.
+> (c) Sort _interaction_ paint was 1.29–1.33× slower memo-free in the spike;
+> Step 11 gains a bench check and permits a lazily created `$derived` for
+> `current.props` if the regression survives the real implementation.
+> (d) `Planned at` re-stamped to `6a992eb`; `src/lib/` is unchanged since
+> `61c36ee`.
+>
+> **Drift check (run first)**: `git diff --stat 6a992eb..HEAD -- src/lib/`
 > Files under `src/routes/test/v7-spike/` and `src/routes/test/perf-bench/`
 > are expected to have changed (plan 001). If anything else under `src/lib/`
 > changed, compare the "Current state" excerpts against the live code before
@@ -25,7 +41,7 @@
 - **Risk**: HIGH (rewrites the core; the branch is intentionally partial until plan 003 lands)
 - **Depends on**: 001-v7-design-spike.md (its report)
 - **Category**: migration (major, v7)
-- **Planned at**: commit `61c36ee`, 2026-09-28
+- **Planned at**: commit `6a992eb`, 2026-09-28
 
 ## Why this matters
 
@@ -449,7 +465,7 @@ Rewrite `src/lib/tableComponent.svelte.ts` per the spike decision:
 
 - `#hooks: Record<string, ElementHook<unknown, Record<string, unknown>>>` filled by `applyHook(pluginName, hook)`.
 - `get current()` lazily creates `{ get attrs(), get props() }`. Default (memo-free): `attrs` merges `hook.attrs?.()` of every hook via `mergeAttributes`, then `this.decorateAttrs(...)` then `finalizeAttributes`; `props` returns `Object.fromEntries(entries.map(([name, hook]) => [name, hook.props?.()]))`. If the report chose the lazy-`$derived` variant, implement that instead and say so in the commit message.
-- Delete `attrs()`, `props()`, `attrsForName`, `propsForName`, `#hookVersion`, `#version`, `#attrsHandle`, `#propsHandle`, the `derivedKeys` import and the `fromStore` import. Since `current.*` reads the hook set live, the "hook applied after first read" case needs no invalidation counter — keep the test for it.
+- Delete `attrs()`, `props()`, `attrsForName`, `propsForName`, `#hookVersion`, `#version`, `#attrsHandle`, `#propsHandle`, the `derivedKeys` import and the `fromStore` import. Hooks are applied only inside the view model's derivations (`injectedRows`, `headerRows`), so `current.*` always reads the complete hook set for the derivation that produced the row; mark `applyHook` `@internal`. Rewrite `tableComponent.current.test.ts`'s "hook applied after current was first read" case to assert the spike's observed semantics (`src/routes/test/v7-spike/spike.test.ts:120-140`): a plain read after `applyHook` sees the new attrs; the DOM reflects it after the next re-render of that cell.
 - `injectState(state: TableState<Item, Plugins>)` unchanged in shape.
 - `clone()` implementations in the subclasses copy `#hooks` the way they copied `attrsForName` today (check `bodyRows.ts` / `bodyCells.ts` / `headerCells.ts` `clone` methods and the `cloneCellsInto` helper).
 
@@ -524,6 +540,15 @@ Expected: lint clean; 0 type errors; unit suite green with coverage
 thresholds met (parked files excluded); dist contains `.svelte.js` modules
 with runes (`svelte-package` preserves rune syntax for the consumer's
 compiler); the store grep returns nothing.
+
+Then a bench sanity check (routes are parked, so use the spike renderer's
+bench harness only if it still compiles; otherwise skip and say so): if you
+can run `PERF_BENCH_ITERATIONS=10 PERF_BENCH_COLD_ONLY=1 npx -y pnpm@11.24.0 perf:bench`
+against `/test/perf-bench`, record `rows-10k` and `sort-cycle-1k`
+first-paint and interaction-paint medians in your report. If sort
+interaction paint is more than 1.10× the plan 001 "current" numbers
+(61.05 ms interaction), you may cache `current.props` in a lazily created
+`$derived` inside the getter and re-measure; say which variant shipped.
 
 ## Test plan
 
