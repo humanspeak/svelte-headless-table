@@ -82,7 +82,7 @@ export type ReadOrWritableKeys<T> = {
  * The Readable store type produced by {@link derivedKeys} for a given map of stores.
  * @template S - The map of stores, keyed by name.
  */
-export type DerivedKeys<S extends ReadOrWritableKeys<unknown>> =
+export type DerivedKeys<S extends Record<string, ReadOrWritable<unknown>>> =
     S extends ReadOrWritableKeys<infer T> ? Readable<T> : never
 
 /**
@@ -101,7 +101,9 @@ export type DerivedKeys<S extends ReadOrWritableKeys<unknown>> =
  * get(merged) // { a: 1, b: 'x' }
  * ```
  */
-export const derivedKeys = <S extends ReadOrWritableKeys<unknown>>(storeMap: S): DerivedKeys<S> => {
+export const derivedKeys = <S extends Record<string, ReadOrWritable<unknown>>>(
+    storeMap: S
+): DerivedKeys<S> => {
     // Freeze the order of entries.
     const entries: [string, Readable<unknown>][] = Object.entries(storeMap)
     const keys = entries.map(([key]) => key)

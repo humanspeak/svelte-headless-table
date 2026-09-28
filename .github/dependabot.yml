@@ -7,3 +7,7 @@ updates:
       open-pull-requests-limit: 10
       labels:
           - dependencies
+      ignore:
+          # docs-kit is pinned to a CalVer GitHub tag (YYYY.M.D); Dependabot
+          # compares it as semver and proposes downgrades (e.g. 2026.9.8 -> 2026.9.1).
+          - dependency-name: '@humanspeak/docs-kit'

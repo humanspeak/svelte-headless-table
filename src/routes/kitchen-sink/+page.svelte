@@ -295,14 +295,13 @@
     let debugSnapshot = $state({ ...(_debug.derivationCalls as Record<string, number>) })
     let totalCalls = $state(_debug.getTotalCalls())
 
+    /** Registers its arguments as dependencies of the enclosing effect. */
+    const track = (..._deps: unknown[]): undefined => undefined
+
     // Auto-update debug snapshot when any of the main stores change
     $effect(() => {
-        // Read reactive stores to trigger updates (void to satisfy linter)
-        void $pageRows
-        void $headerRows
-        void $tableAttrs
-        void $tableBodyAttrs
-        void $visibleColumns
+        // Read the stores so the effect re-runs when any of them change.
+        track($pageRows, $headerRows, $tableAttrs, $tableBodyAttrs, $visibleColumns)
         // Update snapshot after stores have processed
         debugSnapshot = { ...(_debug.derivationCalls as Record<string, number>) }
         totalCalls = _debug.getTotalCalls()
