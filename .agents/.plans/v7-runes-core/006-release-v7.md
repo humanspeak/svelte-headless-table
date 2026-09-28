@@ -8,7 +8,25 @@
 > (`.agents/.plans/v7-runes-core/README.md`) — unless a reviewer dispatched
 > you and told you they maintain the index.
 >
-> **Drift check (run first)**: `git diff --stat 61c36ee..HEAD -- package.json .github/workflows/npm-publish.yml src/lib/index.exports.test.ts`
+> Revision 2026-09-28 (guard, after plan 005 PASS at `bb648f7`): plans 002–005
+> are DONE on this branch. Facts: `package.json` changed once (plan 003
+> removed `@humanspeak/memory-cache`); `src/lib/index.exports.test.ts` was
+> updated by plans 002/003 and already lists the v7 surface — verify, do not
+> assume. Renames to assert: `createSortKeys` (was `createSortKeysStore`),
+> `createPageState` (was `createPageStore`). `box` / `RecordSet` / `ArraySet`
+> use `$state.raw`, so the dist grep is `grep -lE '\$state(\.raw)?\(' dist/*.svelte.js dist/plugins/*.svelte.js`.
+> The release notes must include the eager `initialFilterValue` behaviour
+> change (see the migration guide's "Column filter initial values" section)
+> and the bench table from `scripts/perf-v6-vs-v7.md` (rows-10k 0.58×,
+> sort interaction 0.70×, kitchen-sink-1k 0.90×). Known items to list under
+> "Deferred": docs `pnpm test:unit` lacks `test.globals` (pre-existing on
+> `main`); Trunk's local sandbox flags `$props()` destructures in
+> `src/routes/_*.svelte` while plain ESLint is clean. The consumer smoke test
+> (Step 3) needs network for `sv create`; if offline, build the consumer by
+> hand from a minimal SvelteKit skeleton and say so. `Planned at` re-stamped
+> to `bb648f7`.
+>
+> **Drift check (run first)**: `git diff --stat 61c36ee..HEAD -- .github/workflows/npm-publish.yml` (expect empty) and `git diff --stat 61c36ee..HEAD -- package.json` (expect only the memory-cache removal)
 > Only the `@humanspeak/memory-cache` removal (plan 003, if it happened)
 > should have touched `package.json`. Anything else → compare before
 > proceeding; on a mismatch, STOP.
@@ -20,7 +38,7 @@
 - **Risk**: MED (a wrong label ships v7 as a patch)
 - **Depends on**: 005-docs-and-migration-guide.md
 - **Category**: migration (release)
-- **Planned at**: commit `61c36ee`, 2026-09-28
+- **Planned at**: commit `bb648f7`, 2026-09-28
 
 ## Why this matters
 
