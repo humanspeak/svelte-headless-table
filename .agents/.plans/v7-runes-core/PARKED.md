@@ -30,6 +30,7 @@ Config entries (remove in plan 003):
 - `tsconfig.lib.json` `exclude`: `src/lib/plugins/_parked/**`
 - `tsconfig.json` `exclude`: `src/lib/plugins/_parked/**`
 - `vite.config.ts` `test.exclude` and `test.coverage.exclude`: `src/lib/plugins/_parked/**`
+- `eslint.config.mjs` top-level `ignores`: `src/lib/plugins/_parked/**` (typescript-eslint's project service cannot parse tsconfig-excluded files)
 - `src/lib/plugins/index.ts`: the four `export * from './addX'` lines were removed
 
 ## Parked in place (restored by plan 003)
@@ -48,6 +49,7 @@ Config entries: `tsconfig.lib.json` `exclude` (`scrollAlign.ts`), `tsconfig.json
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `src/routes/**`         | `tsconfig.json` `exclude` (the array also repeats SvelteKit's generated excludes, which a local `exclude` replaces) |
 | `tests/**` (Playwright) | `playwright.config.ts` `testIgnore: ['**/*']`                                                                       |
+| `src/routes/**` (lint)  | `eslint.config.mjs` top-level `ignores` (typescript-eslint's project service cannot parse tsconfig-excluded files)  |
 
 `pnpm dev` routes (for example `/kitchen-sink`, `/test/perf-bench`) are expected
 to fail to render until plan 004. `src/routes/test/v7-spike/spike.test.ts` still

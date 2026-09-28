@@ -8,7 +8,7 @@ import {
     addSortBy
 } from './plugins/index.js'
 import { box } from './reactivity.svelte.js'
-import { withEffectRoot } from './test/effectRoot.svelte.js'
+import { withEffectRoot } from './test/effectRoot.test.svelte.js'
 
 interface TestItem {
     id: string
