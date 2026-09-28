@@ -13,7 +13,9 @@
         "strict": true,
         "module": "ESNext",
         "moduleResolution": "bundler",
-        "types": ["vitest/globals"]
+        "types": ["vitest/globals"],
+        "noImplicitOverride": true,
+        "exactOptionalPropertyTypes": true
     },
     "extends": "./.svelte-kit/tsconfig.json"
 }

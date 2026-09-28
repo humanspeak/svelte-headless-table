@@ -1,5 +1,4 @@
 import { NBSP } from '$lib/constants.js'
-import type { TableState } from '$lib/createViewModel.svelte.js'
 import type { RenderConfig } from '$lib/render/createRender.js'
 import { TableComponent } from '$lib/tableComponent.svelte.js'
 import type { HeaderLabel } from '$lib/types/Label.js'
@@ -28,9 +27,7 @@ export type HeaderCellInit<Item, Plugins extends AnyPlugins = AnyPlugins> = {
  * @template Item - The type of data items in the table.
  * @template Plugins - The plugins used by the table.
  */
-/* trunk-ignore(eslint/@typescript-eslint/no-unused-vars) */
-/* trunk-ignore(eslint/no-unused-vars) */
-export type HeaderCellAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = {
+export type HeaderCellAttributes<_Item, _Plugins extends AnyPlugins = AnyPlugins> = {
     role: 'columnheader'
     colspan: number
 }
@@ -76,10 +73,7 @@ export abstract class HeaderCell<
             if (this.state === undefined) {
                 throw new Error('Missing `state` reference')
             }
-            return this.label(
-                this as HeaderCell<Item, Plugins>,
-                this.state as TableState<Item, Plugins>
-            )
+            return this.label(this, this.state)
         }
         return this.label
     }
@@ -90,7 +84,7 @@ export abstract class HeaderCell<
      * @param attrs - The merged plugin attributes.
      * @returns The attributes with `role` and `colspan` set.
      */
-    protected decorateAttrs(attrs: Record<string, unknown>) {
+    protected override decorateAttrs(attrs: Record<string, unknown>) {
         return {
             ...attrs,
             role: 'columnheader' as const,
@@ -98,7 +92,7 @@ export abstract class HeaderCell<
         }
     }
 
-    abstract clone(): HeaderCell<Item, Plugins>
+    abstract override clone(): HeaderCell<Item, Plugins>
 
     /**
      * Type guard to check if this is a flat header cell.
@@ -221,10 +215,9 @@ export type DataHeaderCellInit<Item, Plugins extends AnyPlugins = AnyPlugins> = 
     Plugins
 > & {
     /** The key used to access data from the item. */
-    accessorKey?: keyof Item
+    accessorKey?: keyof Item | undefined
     /** Function to extract data from the item. */
-    /* trunk-ignore(eslint/no-unused-vars) */
-    accessorFn?: (item: Item) => unknown
+    accessorFn?: ((item: Item) => unknown) | undefined
 }
 
 /**
@@ -242,10 +235,9 @@ export class DataHeaderCell<Item, Plugins extends AnyPlugins = AnyPlugins> exten
     __data = true
 
     /** The key used to access data from the item. */
-    accessorKey?: keyof Item
+    accessorKey?: keyof Item | undefined
     /** Function to extract data from the item. */
-    /* trunk-ignore(eslint/no-unused-vars) */
-    accessorFn?: (item: Item) => unknown
+    accessorFn?: ((item: Item) => unknown) | undefined
 
     /**
      * Creates a new DataHeaderCell.
@@ -269,7 +261,7 @@ export class DataHeaderCell<Item, Plugins extends AnyPlugins = AnyPlugins> exten
      *
      * @returns A cloned DataHeaderCell.
      */
-    clone(): DataHeaderCell<Item, Plugins> {
+    override clone(): DataHeaderCell<Item, Plugins> {
         return new DataHeaderCell({
             id: this.id,
             label: this.label,
@@ -291,7 +283,7 @@ export type FlatDisplayHeaderCellInit<Item, Plugins extends AnyPlugins = AnyPlug
     'label'
 > & {
     /** Optional label content (defaults to non-breaking space). */
-    label?: HeaderLabel<Item, Plugins>
+    label?: HeaderLabel<Item, Plugins> | undefined
 }
 
 /**
@@ -322,7 +314,7 @@ export class FlatDisplayHeaderCell<
      *
      * @returns A cloned FlatDisplayHeaderCell.
      */
-    clone(): FlatDisplayHeaderCell<Item, Plugins> {
+    override clone(): FlatDisplayHeaderCell<Item, Plugins> {
         return new FlatDisplayHeaderCell({
             id: this.id,
             label: this.label,
@@ -427,9 +419,9 @@ export type GroupDisplayHeaderCellInit<Item, Plugins extends AnyPlugins = AnyPlu
     'label' | 'colspan'
 > & {
     /** Optional label content (defaults to non-breaking space). */
-    label?: HeaderLabel<Item, Plugins>
+    label?: HeaderLabel<Item, Plugins> | undefined
     /** Optional colspan (defaults to 1). */
-    colspan?: number
+    colspan?: number | undefined
 }
 
 /**
@@ -466,7 +458,7 @@ export class GroupDisplayHeaderCell<
      *
      * @returns A cloned GroupDisplayHeaderCell.
      */
-    clone(): GroupDisplayHeaderCell<Item, Plugins> {
+    override clone(): GroupDisplayHeaderCell<Item, Plugins> {
         return new GroupDisplayHeaderCell({
             label: this.label,
             ids: this.ids,

@@ -99,22 +99,27 @@ export abstract class TableComponent<
     }
 
     #createCurrentView() {
-        // trunk-ignore(eslint/@typescript-eslint/no-this-alias)
-        const component = this
+        // Arrow functions capture `this`, so the getters below can delegate to them.
+        const readAttrs = (): AttributesForKey<Item, Plugins>[Key] => {
+            const version = this.#trackVersion()
+            if (this.#attrsHandle?.version !== version) {
+                this.#attrsHandle = { version, handle: fromStore(this.attrs()) }
+            }
+            return this.#attrsHandle.handle.current
+        }
+        const readProps = (): PluginTablePropSet<Plugins>[Key] => {
+            const version = this.#trackVersion()
+            if (this.#propsHandle?.version !== version) {
+                this.#propsHandle = { version, handle: fromStore(this.props()) }
+            }
+            return this.#propsHandle.handle.current
+        }
         return {
-            get attrs(): AttributesForKey<Item, Plugins>[Key] {
-                const version = component.#trackVersion()
-                if (component.#attrsHandle?.version !== version) {
-                    component.#attrsHandle = { version, handle: fromStore(component.attrs()) }
-                }
-                return component.#attrsHandle.handle.current
+            get attrs() {
+                return readAttrs()
             },
-            get props(): PluginTablePropSet<Plugins>[Key] {
-                const version = component.#trackVersion()
-                if (component.#propsHandle?.version !== version) {
-                    component.#propsHandle = { version, handle: fromStore(component.props()) }
-                }
-                return component.#propsHandle.handle.current
+            get props() {
+                return readProps()
             }
         }
     }

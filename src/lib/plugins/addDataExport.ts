@@ -1,4 +1,5 @@
 import { derived, get, type Readable } from 'svelte/store'
+import type { BodyCell } from '../bodyCells.js'
 import type { BodyRow } from '../bodyRows.js'
 import type { NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { isReadable } from '../utils/store.js'
@@ -70,7 +71,10 @@ const getObjectsFromRows = <Item>(
     return rows.map((row) => {
         const dataObject = Object.fromEntries(
             ids.map((id) => {
-                const cell = row.cellForId[id]
+                const cell = row.cellForId[id] as BodyCell<Item> | undefined
+                if (cell === undefined) {
+                    return [id, null]
+                }
                 if (cell.isData()) {
                     return [id, cell.value]
                 }
@@ -98,7 +102,10 @@ const getObjectsFromRows = <Item>(
 const getCsvFromRows = <Item>(rows: BodyRow<Item>[], ids: string[]): string => {
     const dataLines = rows.map((row) => {
         const line = ids.map((id) => {
-            const cell = row.cellForId[id]
+            const cell = row.cellForId[id] as BodyCell<Item> | undefined
+            if (cell === undefined) {
+                return null
+            }
             if (cell.isData()) {
                 return cell.value
             }
@@ -168,6 +175,7 @@ export const addDataExport =
                     ) as DataExport<F>
                 case 'csv':
                     return getCsvFromRows($rows, $exportedIds) as DataExport<F>
+                case 'object':
                 default:
                     return getObjectsFromRows($rows, $exportedIds, childrenKey) as DataExport<F>
             }

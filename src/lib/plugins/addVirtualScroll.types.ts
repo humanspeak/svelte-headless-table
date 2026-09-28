@@ -16,39 +16,39 @@ export interface VirtualScrollConfig<Item> {
      * compressed container height and mean something other than documented.
      * Use `onRangeChange` there instead.
      */
-    onLoadMore?: () => void | Promise<void>
+    onLoadMore?: (() => void | Promise<void>) | undefined
 
     /**
      * Whether there is more data available to load.
      * Can be a boolean or a Writable store.
      */
-    hasMore?: Writable<boolean> | boolean
+    hasMore?: Writable<boolean> | boolean | undefined
 
     /**
      * Number of pixels from the bottom to trigger onLoadMore.
      * @default 200
      */
-    loadMoreThreshold?: number
+    loadMoreThreshold?: number | undefined
 
     /**
      * Estimated height of each row in pixels.
      * Used for initial calculations before rows are measured.
      * @default 40
      */
-    estimatedRowHeight?: number
+    estimatedRowHeight?: number | undefined
 
     /**
      * Number of rows to render above and below the visible area.
      * Higher values reduce flicker during fast scrolling but render more DOM nodes.
      * @default 10
      */
-    bufferSize?: number
+    bufferSize?: number | undefined
 
     /**
      * Optional function to get the height of a specific row.
      * If provided, enables variable row heights.
      */
-    getRowHeight?: (_item: Item) => number
+    getRowHeight?: ((_item: Item) => number) | undefined
 
     /**
      * Total number of rows in the full dataset, independent of how many are
@@ -67,7 +67,7 @@ export interface VirtualScrollConfig<Item> {
      * measured — per-row heights from `getRowHeight` feed that average but do
      * not position individual rows.
      */
-    totalRows?: Readable<number> | number
+    totalRows?: Readable<number> | number | undefined
 
     /**
      * Absolute index of the first row held in the table's `data` store.
@@ -78,7 +78,7 @@ export interface VirtualScrollConfig<Item> {
      *
      * @default 0
      */
-    dataOffset?: Readable<number> | number
+    dataOffset?: Readable<number> | number | undefined
 
     /**
      * Fired whenever the visible range changes, so a caller can fetch the pages
@@ -91,7 +91,7 @@ export interface VirtualScrollConfig<Item> {
      * must not assume it is still current when its fetch resolves — see
      * {@link RangeChangeContext.signal}.
      */
-    onRangeChange?: (_range: VisibleRange, _context: RangeChangeContext) => void
+    onRangeChange?: ((_range: VisibleRange, _context: RangeChangeContext) => void) | undefined
 
     /**
      * Largest height, in pixels, to give the scroll container.
@@ -109,7 +109,7 @@ export interface VirtualScrollConfig<Item> {
      *
      * @default 16_000_000
      */
-    maxScrollHeight?: number
+    maxScrollHeight?: number | undefined
 }
 
 /**
@@ -144,19 +144,17 @@ export interface VisibleRange {
  */
 export interface ScrollToIndexOptions {
     /** Alignment of the target row within the viewport. */
-    align?: 'start' | 'center' | 'end' | 'auto'
+    align?: 'start' | 'center' | 'end' | 'auto' | undefined
     /** Scroll behavior. */
-    behavior?: ScrollBehavior
+    behavior?: ScrollBehavior | undefined
 }
 
 /**
  * State exposed by the addVirtualScroll plugin.
  *
- * @template Item - The type of data items in the table.
+ * @template _Item - The type of data items (unused; kept so the state type mirrors the config).
  */
-// trunk-ignore(eslint/@typescript-eslint/no-unused-vars)
-// trunk-ignore(eslint/no-unused-vars)
-export interface VirtualScrollState<Item> {
+export interface VirtualScrollState<_Item> {
     /**
      * Current scroll position of the container.
      */
@@ -233,7 +231,7 @@ export interface VirtualScrollState<Item> {
      * Svelte action to attach to the scroll container.
      * Handles scroll event listeners and viewport tracking.
      */
-    virtualScroll: Action<HTMLElement>
+    virtualScroll: Action
 
     /**
      * Scroll to a specific row index.
@@ -269,7 +267,7 @@ export interface VirtualScrollState<Item> {
      * away with them is measured automatically; attaching this to one is
      * harmless, since it reports no overlap once out of view.
      */
-    measureHeaderAction: Action<HTMLElement>
+    measureHeaderAction: Action
 
     /**
      * Total number of rows (before virtualization).

@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store'
-import { DataColumn, getFlatColumns } from './columns.js'
+import { type DataColumn, getFlatColumns } from './columns.js'
 import { createTable } from './createTable.js'
 
 interface User {

@@ -13,11 +13,11 @@ export interface ColumnInit<Item, Plugins extends AnyPlugins = AnyPlugins> {
     /** The header label or render function. */
     header: HeaderLabel<Item, Plugins>
     /** Optional footer label or render function. */
-    footer?: HeaderLabel<Item, Plugins>
+    footer?: HeaderLabel<Item, Plugins> | undefined
     /** The height of the column in header rows (for grouping). */
     height: number
     /** Plugin-specific column configuration. */
-    plugins?: PluginColumnConfigs<Plugins>
+    plugins?: PluginColumnConfigs<Plugins> | undefined
 }
 
 /**
@@ -31,11 +31,11 @@ export class Column<Item, Plugins extends AnyPlugins = AnyPlugins> {
     /** The header label or render function. */
     header: HeaderLabel<Item, Plugins>
     /** Optional footer label or render function. */
-    footer?: HeaderLabel<Item, Plugins>
+    footer?: HeaderLabel<Item, Plugins> | undefined
     /** The height of the column in header rows. */
     height: number
     /** Plugin-specific column configuration. */
-    plugins?: PluginColumnConfigs<Plugins>
+    plugins?: PluginColumnConfigs<Plugins> | undefined
 
     /**
      * Creates a new Column instance.
@@ -101,11 +101,10 @@ export class Column<Item, Plugins extends AnyPlugins = AnyPlugins> {
 export type FlatColumnInit<
     Item,
     Plugins extends AnyPlugins = AnyPlugins,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Id extends string = any
+    Id extends string = string
 > = Omit<ColumnInit<Item, Plugins>, 'height'> & {
     /** Optional unique identifier for the column. Defaults to the header string. */
-    id?: Id
+    id?: Id | undefined
 }
 
 /**
@@ -119,8 +118,7 @@ export type FlatColumnInit<
 export class FlatColumn<
     Item,
     Plugins extends AnyPlugins = AnyPlugins,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Id extends string = any
+    Id extends string = string
 > extends Column<Item, Plugins> {
     // TODO Workaround for https://github.com/vitejs/vite/issues/9528
     __flat = true
@@ -133,11 +131,26 @@ export class FlatColumn<
      *
      * @param init - The column initialization options.
      */
-    constructor({ header, footer, plugins, id }: FlatColumnInit<Item, Plugins>) {
+    constructor({ header, footer, plugins, id }: FlatColumnInit<Item, Plugins, Id>) {
         super({ header, footer, plugins, height: 1 })
-        this.id = id ?? String(header)
+        // Without an explicit id, the header's string form stands in for it.
+        this.id = id ?? (defaultColumnId(header) as Id)
     }
 }
+
+/**
+ * Derives a fallback column id from a header label.
+ *
+ * @param header - The column header label.
+ * @returns The header's string form.
+ */
+const defaultColumnId = <Item, Plugins extends AnyPlugins>(
+    header: HeaderLabel<Item, Plugins>
+): string =>
+    // Non-string headers (components, snippets, functions) stringify as-is; callers
+    // using them are expected to pass an explicit `id`.
+    // trunk-ignore(eslint/@typescript-eslint/no-base-to-string)
+    String(header)
 
 /**
  * Full initialization type for a DataColumn.
@@ -173,7 +186,7 @@ export type DataColumnInitBase<
     Value = unknown
 > = Omit<ColumnInit<Item, Plugins>, 'height'> & {
     /** Optional custom cell renderer. */
-    cell?: DataLabel<Item, Plugins, Value>
+    cell?: DataLabel<Item, Plugins, Value> | undefined
 }
 
 /**
@@ -186,7 +199,7 @@ export type DataColumnInitKey<Item, Id extends keyof Item> = {
     /** The property key to access on each item. */
     accessor: Id
     /** Optional ID override. Defaults to accessor key. */
-    id?: Id
+    id?: Id | undefined
 }
 
 /**
@@ -200,7 +213,7 @@ export type DataColumnInitIdAndKey<Item, Id extends string, Key extends keyof It
     /** The property key to access on each item. */
     accessor: Key
     /** Optional custom ID for the column. */
-    id?: Id
+    id?: Id | undefined
 }
 
 /**
@@ -212,10 +225,9 @@ export type DataColumnInitIdAndKey<Item, Id extends string, Key extends keyof It
  */
 export type DataColumnInitFnAndId<Item, Id extends string, Value> = {
     /** Function to extract the value from each item, or a property key. */
-    /* trunk-ignore(eslint/no-unused-vars) */
     accessor: keyof Item | ((item: Item) => Value)
     /** Optional custom ID for the column. */
-    id?: Id
+    id?: Id | undefined
 }
 
 /**
@@ -230,20 +242,19 @@ export type DataColumnInitFnAndId<Item, Id extends string, Value> = {
 export class DataColumn<
     Item,
     Plugins extends AnyPlugins = AnyPlugins,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Id extends string = any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Id extends string = string,
+    // Labels are contravariant in `Value`; `any` lets typed columns widen to the default.
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
     Value = any
 > extends FlatColumn<Item, Plugins, Id> {
     // TODO Workaround for https://github.com/vitejs/vite/issues/9528
     __data = true
 
     /** Optional custom cell renderer. */
-    cell?: DataLabel<Item, Plugins, Value>
+    cell?: DataLabel<Item, Plugins, Value> | undefined
     /** The property key used to access values (if using key accessor). */
     accessorKey?: keyof Item
     /** The function used to extract values (if using function accessor). */
-    /* trunk-ignore(eslint/no-unused-vars) */
     accessorFn?: (item: Item) => Value
 
     /**
@@ -260,18 +271,26 @@ export class DataColumn<
         accessor,
         id
     }: DataColumnInit<Item, Plugins, Id, Value>) {
-        super({ header, footer, plugins, id: 'Initialization not complete' })
+        const accessorKey = accessor instanceof Function ? undefined : accessor
+        // Runtime guard for untyped callers; `header` is required by the type.
+        // trunk-ignore(eslint/@typescript-eslint/no-unnecessary-condition)
+        if (id === undefined && accessorKey === undefined && header === undefined) {
+            throw new Error('A column id, string accessor, or header is required')
+        }
+        const accessorKeyId = typeof accessorKey === 'string' ? accessorKey : null
+        // A string accessor key doubles as the id, so it is assignable to `Id`.
+        super({
+            header,
+            footer,
+            plugins,
+            id: (id ?? accessorKeyId ?? defaultColumnId(header)) as Id
+        })
         this.cell = cell
         if (accessor instanceof Function) {
             this.accessorFn = accessor
         } else {
             this.accessorKey = accessor
         }
-        if (id === undefined && this.accessorKey === undefined && header === undefined) {
-            throw new Error('A column id, string accessor, or header is required')
-        }
-        const accessorKeyId = typeof this.accessorKey === 'string' ? this.accessorKey : null
-        this.id = (id ?? accessorKeyId ?? String(header)) as Id
     }
 
     /**
@@ -280,8 +299,7 @@ export class DataColumn<
      * @param item - The data item to extract the value from.
      * @returns The extracted value, or undefined if no accessor is configured.
      */
-    /* trunk-ignore(eslint/@typescript-eslint/no-explicit-any) */
-    getValue(item: Item): any {
+    getValue(item: Item): unknown {
         if (this.accessorFn !== undefined) {
             return this.accessorFn(item)
         }
@@ -299,9 +317,7 @@ export class DataColumn<
  * @template Plugins - The plugins configuration type.
  */
 export type DisplayColumnDataGetter<Item, Plugins extends AnyPlugins = AnyPlugins> = (
-    /* trunk-ignore(eslint/no-unused-vars) */
     cell: DisplayBodyCell<Item>,
-    /* trunk-ignore(eslint/no-unused-vars) */
     state?: TableState<Item, Plugins>
 ) => unknown
 
@@ -315,13 +331,12 @@ export type DisplayColumnDataGetter<Item, Plugins extends AnyPlugins = AnyPlugin
 export type DisplayColumnInit<
     Item,
     Plugins extends AnyPlugins = AnyPlugins,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Id extends string = any
+    Id extends string = string
 > = FlatColumnInit<Item, Plugins, Id> & {
     /** The cell renderer function. */
     cell: DisplayLabel<Item, Plugins>
     /** Optional function to provide custom data to the cell. */
-    data?: DisplayColumnDataGetter<Item, Plugins>
+    data?: DisplayColumnDataGetter<Item, Plugins> | undefined
 }
 
 /**
@@ -335,8 +350,7 @@ export type DisplayColumnInit<
 export class DisplayColumn<
     Item,
     Plugins extends AnyPlugins = AnyPlugins,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Id extends string = any
+    Id extends string = string
 > extends FlatColumn<Item, Plugins, Id> {
     // TODO Workaround for https://github.com/vitejs/vite/issues/9528
     __display = true
@@ -344,7 +358,7 @@ export class DisplayColumn<
     /** The cell renderer function. */
     cell: DisplayLabel<Item, Plugins>
     /** Optional function to provide custom data to the cell. */
-    data?: DisplayColumnDataGetter<Item, Plugins>
+    data?: DisplayColumnDataGetter<Item, Plugins> | undefined
 
     /**
      * Creates a new DisplayColumn instance.

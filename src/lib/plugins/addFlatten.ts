@@ -23,7 +23,6 @@ export interface FlattenState {
  *
  * @template _Item - The type of data items (unused).
  */
-/* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
 export type FlattenColumnOptions<_Item> = Record<string, never>
 
 /**
@@ -55,8 +54,10 @@ export const getFlattenedRows = <Item, Row extends BodyRow<Item>>(
     const flattenedRows: Row[] = []
     for (const row of rows) {
         if (row.subRows === undefined) continue
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        flattenedRows.push(...(getFlattenedRows(row.subRows as any, depth - 1) as Row[]))
+        // Sub-rows share their parent's concrete row type.
+        flattenedRows.push(
+            ...(getFlattenedRows<Item, BodyRow<Item>>(row.subRows, depth - 1) as Row[])
+        )
     }
     return flattenedRows
 }

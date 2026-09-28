@@ -22,8 +22,7 @@ export type BodyCellInit<Item, Plugins extends AnyPlugins = AnyPlugins> = {
  * @template Item - The type of data items in the table.
  * @template Plugins - The plugins used by the table.
  */
-/* trunk-ignore(eslint/@typescript-eslint/no-unused-vars,eslint/no-unused-vars) */
-export type BodyCellAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = {
+export type BodyCellAttributes<_Item, _Plugins extends AnyPlugins = AnyPlugins> = {
     role: 'cell'
 }
 
@@ -53,14 +52,14 @@ export abstract class BodyCell<
      * @param attrs - The merged plugin attributes.
      * @returns The attributes with `role` set.
      */
-    protected decorateAttrs(attrs: Record<string, unknown>) {
+    protected override decorateAttrs(attrs: Record<string, unknown>) {
         return {
             ...attrs,
             role: 'cell' as const
         }
     }
 
-    abstract clone(): BodyCell<Item, Plugins>
+    abstract override clone(): BodyCell<Item, Plugins>
 
     /**
      * Gets a unique identifier combining the row ID and column ID.
@@ -119,7 +118,7 @@ export type DataBodyCellInit<Item, Plugins extends AnyPlugins = AnyPlugins, Valu
     /** The data column this cell belongs to. */
     column: DataColumn<Item, Plugins>
     /** Optional custom label renderer for the cell. */
-    label?: DataLabel<Item, Plugins, Value>
+    label?: DataLabel<Item, Plugins, Value> | undefined
     /** The cell's value. */
     value: Value
 }
@@ -154,7 +153,7 @@ export class DataBodyCell<
     /** The data column this cell belongs to. */
     column: DataColumn<Item, Plugins>
     /** Optional custom label renderer for the cell. */
-    label?: DataLabel<Item, Plugins, Value>
+    label?: DataLabel<Item, Plugins, Value> | undefined
     /** The cell's value. */
     value: Value
 
@@ -178,12 +177,12 @@ export class DataBodyCell<
      */
     render(): RenderConfig {
         if (this.label === undefined) {
-            return `${this.value}`
+            return String(this.value)
         }
         if (this.state === undefined) {
             throw new Error('Missing `state` reference')
         }
-        return this.label(this as DataBodyCell<Item, AnyPlugins, Value>, this.state)
+        return this.label(this, this.state)
     }
 
     /**

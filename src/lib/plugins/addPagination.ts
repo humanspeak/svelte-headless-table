@@ -8,9 +8,9 @@ import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TableP
  */
 export type PaginationConfig = {
     /** Initial page index (0-based). Defaults to 0. */
-    initialPageIndex?: number
+    initialPageIndex?: number | undefined
     /** Initial page size. Defaults to 10. */
-    initialPageSize?: number
+    initialPageSize?: number | undefined
 } & (
     | {
           /** Client-side pagination mode. */
@@ -117,13 +117,13 @@ export interface PageStoreConfig {
     /** Readable store of items to paginate. */
     items: Readable<unknown[]>
     /** Initial page size. */
-    initialPageSize?: number
+    initialPageSize?: number | undefined
     /** Initial page index (0-based). */
-    initialPageIndex?: number
+    initialPageIndex?: number | undefined
     /** Whether pagination is server-side. */
-    serverSide?: boolean
+    serverSide?: boolean | undefined
     /** Total item count from server (for server-side pagination). */
-    serverItemCount?: Readable<number>
+    serverItemCount?: Readable<number> | undefined
 }
 
 /**

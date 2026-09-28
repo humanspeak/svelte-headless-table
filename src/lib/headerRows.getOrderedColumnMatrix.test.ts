@@ -1,4 +1,4 @@
-import { DataHeaderCell, GroupHeaderCell, HeaderCell } from './headerCells.js'
+import { DataHeaderCell, GroupHeaderCell, type HeaderCell } from './headerCells.js'
 import { getOrderedColumnMatrix } from './headerRows.js'
 import type { Matrix } from './types/Matrix.js'
 

@@ -2,16 +2,30 @@ import { includeIgnoreFile } from '@eslint/compat'
 import js from '@eslint/js'
 import prettier from 'eslint-config-prettier'
 import svelte from 'eslint-plugin-svelte'
+import unusedImports from 'eslint-plugin-unused-imports'
 import globals from 'globals'
 import { fileURLToPath } from 'node:url'
 import ts from 'typescript-eslint'
+
 const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url))
+
+// Files that get the type-aware rule set. Everything under `src/` and the
+// Playwright specs are covered by `tsconfig.json`, so the type checker can
+// back the `no-unsafe-*` family and friends.
+const TYPED_FILES = ['src/**/*.ts', 'src/**/*.svelte.ts', 'src/**/*.svelte', 'tests/**/*.ts']
+
+// Presets ship parser/plugin wiring alongside their rules. Only the rules are
+// wanted here: the parser for `.svelte` files is configured further down and
+// must not be overridden by the TypeScript preset.
+const rulesOnly = (configs, files) =>
+    configs.map((config) => ({ files, rules: config.rules ?? {} }))
 
 export default [
     includeIgnoreFile(gitignorePath),
     {
         ignores: [
             '**/.DS_Store',
+            '.trunk/**',
             '**/node_modules',
             'postcss.config.cjs',
             'coverage',
@@ -49,29 +63,39 @@ export default [
                 tsconfigRootDir: import.meta.dirname
             }
         },
+        plugins: {
+            'unused-imports': unusedImports
+        },
         rules: {
-            semi: ['warn', 'never'],
-            quotes: ['error', 'single'],
-            'dot-location': ['warn', 'property'],
-            'guard-for-in': ['warn'],
-            'no-multi-spaces': ['warn'],
-            yoda: ['warn', 'never'],
-            camelcase: ['error'],
-            'comma-style': ['warn'],
-            'comma-dangle': ['off', 'always-multiline'],
-            'block-spacing': ['warn'],
-            'keyword-spacing': ['warn'],
-            'no-trailing-spaces': ['warn'],
-            'no-unneeded-ternary': ['warn'],
-            'no-whitespace-before-property': ['warn'],
-            'object-curly-spacing': ['warn', 'always'],
-            'space-before-blocks': ['warn'],
-            'space-in-parens': ['warn'],
-            'arrow-spacing': ['warn'],
-            'no-duplicate-imports': ['error'],
-            'no-var': ['error'],
-            'prefer-const': ['error'],
+            // Formatting is Prettier's job (see eslint-config-prettier above);
+            // only correctness and consistency rules live here.
+            camelcase: 'error',
+            'guard-for-in': 'error',
+            'no-duplicate-imports': ['error', { allowSeparateTypeImports: true }],
+            'no-unneeded-ternary': 'error',
+            'no-var': 'error',
+            'prefer-const': 'error',
+            yoda: 'error',
 
+            // Unused imports are auto-fixable; unused variables are not, so the
+            // two are reported separately. Leading underscores opt a binding out.
+            'no-unused-vars': 'off',
+            'unused-imports/no-unused-imports': 'error',
+            '@typescript-eslint/no-unused-vars': [
+                'error',
+                {
+                    argsIgnorePattern: '^_',
+                    varsIgnorePattern: '^_',
+                    caughtErrorsIgnorePattern: '^_',
+                    ignoreRestSiblings: true
+                }
+            ],
+
+            '@typescript-eslint/consistent-type-imports': [
+                'error',
+                { prefer: 'type-imports', fixStyle: 'inline-type-imports' }
+            ],
+            '@typescript-eslint/no-import-type-side-effects': 'error',
             '@typescript-eslint/no-unused-expressions': [
                 'error',
                 {
@@ -79,37 +103,48 @@ export default [
                     allowTernary: true,
                     allowTaggedTemplates: true
                 }
-            ],
+            ]
+        }
+    },
+    // Type-aware strictness for everything the type checker can see.
+    ...rulesOnly(ts.configs.strictTypeChecked, TYPED_FILES),
+    ...rulesOnly(ts.configs.stylisticTypeChecked, TYPED_FILES),
+    {
+        files: TYPED_FILES,
+        rules: {
+            '@typescript-eslint/no-floating-promises': 'error',
+            '@typescript-eslint/no-misused-promises': 'error',
+            '@typescript-eslint/switch-exhaustiveness-check': 'error',
 
-            'no-unused-vars': [
-                'warn',
-                {
-                    argsIgnorePattern: '^_',
-                    ignoreRestSiblings: true
-                }
+            // The codebase deliberately mixes `interface` (public shapes) and
+            // `type` (unions, mapped types); forcing one form is churn, not safety.
+            '@typescript-eslint/consistent-type-definitions': 'off',
+            // Arrow callbacks that forward a void call are idiomatic in Svelte code.
+            '@typescript-eslint/no-confusing-void-expression': [
+                'error',
+                { ignoreArrowShorthand: true }
             ],
-
-            '@typescript-eslint/no-unused-vars': [
-                'warn',
-                {
-                    argsIgnorePattern: '^_',
-                    ignoreRestSiblings: true
-                }
+            // Numbers and booleans interpolate unambiguously.
+            '@typescript-eslint/restrict-template-expressions': [
+                'error',
+                { allowNumber: true, allowBoolean: true }
             ]
         }
     },
     {
-        files: ['src/**/*.ts', 'src/**/*.svelte', 'src/**/*.svelte.ts', 'tests/**/*.ts'],
+        files: ['**/*.test.ts', '**/*.test.svelte', 'vitest.setup.ts'],
         rules: {
-            '@typescript-eslint/no-floating-promises': 'error',
-            '@typescript-eslint/no-misused-promises': 'error'
-        }
-    },
-    {
-        files: ['**/*.test.ts'],
-        rules: {
+            // Tests poke at internals and build fixtures loosely on purpose.
             '@typescript-eslint/no-explicit-any': 'off',
-            '@typescript-eslint/no-non-null-assertion': 'off'
+            '@typescript-eslint/no-non-null-assertion': 'off',
+            '@typescript-eslint/no-empty-function': 'off',
+            '@typescript-eslint/no-unsafe-argument': 'off',
+            '@typescript-eslint/no-unsafe-assignment': 'off',
+            '@typescript-eslint/no-unsafe-call': 'off',
+            '@typescript-eslint/no-unsafe-member-access': 'off',
+            '@typescript-eslint/no-unsafe-return': 'off',
+            '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+            '@typescript-eslint/no-deprecated': 'off'
         }
     },
     {

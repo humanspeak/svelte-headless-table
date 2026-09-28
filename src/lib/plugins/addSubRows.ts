@@ -1,5 +1,5 @@
 import { derived } from 'svelte/store'
-import { DataBodyRow, getSubRows } from '../bodyRows.js'
+import { type DataBodyRow, getSubRows } from '../bodyRows.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 
 /**

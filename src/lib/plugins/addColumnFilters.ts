@@ -1,5 +1,5 @@
 import { derived, writable, type Readable, type Writable } from 'svelte/store'
-import type { DataBodyCell } from '../bodyCells.js'
+import type { BodyCell, DataBodyCell } from '../bodyCells.js'
 import type { BodyRow } from '../bodyRows.js'
 import type { PluginInitTableState } from '../createViewModel.svelte.js'
 import type { RenderConfig } from '../render/createRender.js'
@@ -45,14 +45,15 @@ export interface ColumnFiltersState<Item> {
  * @template Item - The type of data items in the table.
  * @template FilterValue - The type of the filter value.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// `any` default: column options are not tied to the column's value type, so user
+// callbacks must be free to treat the filter value as their own type.
+// trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
 export interface ColumnFiltersColumnOptions<Item, FilterValue = any> {
     /** The filter function to use for this column. */
     fn: ColumnFilterFn<FilterValue>
     /** Initial filter value for this column. */
     initialFilterValue?: FilterValue
     /** Optional render function for custom filter UI. */
-    /* trunk-ignore(eslint/no-unused-vars) */
     render?: (props: ColumnRenderConfigPropArgs<Item, FilterValue>) => RenderConfig
 }
 
@@ -65,9 +66,10 @@ export interface ColumnFiltersColumnOptions<Item, FilterValue = any> {
  */
 interface ColumnRenderConfigPropArgs<
     Item,
-    /* trunk-ignore(eslint/@typescript-eslint/no-explicit-any) */
+    // `any` defaults: user render callbacks read these as their own filter/cell value types.
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
     FilterValue = any,
-    /* trunk-ignore(eslint/@typescript-eslint/no-explicit-any) */
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
     Value = any
 > extends PluginInitTableState<Item> {
     /** The column ID. */
@@ -88,9 +90,9 @@ interface ColumnRenderConfigPropArgs<
  * @template FilterValue - The type of the filter value.
  * @template Value - The type of cell values.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// `any` defaults: user filter functions read these as their own filter/cell value types.
+// trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
 export type ColumnFilterFn<FilterValue = any, Value = any> = (
-    /* trunk-ignore(eslint/no-unused-vars) */
     props: ColumnFilterFnProps<FilterValue, Value>
 ) => boolean
 
@@ -100,7 +102,7 @@ export type ColumnFilterFn<FilterValue = any, Value = any> = (
  * @template FilterValue - The type of the filter value.
  * @template Value - The type of cell values.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
 export type ColumnFilterFnProps<FilterValue = any, Value = any> = {
     /** The current filter value for this column. */
     filterValue: FilterValue
@@ -115,7 +117,7 @@ export type ColumnFiltersPropSet = NewTablePropSet<{
     'thead.tr.th':
         | {
               /** The rendered filter component. */
-              render?: RenderConfig
+              render?: RenderConfig | undefined
           }
         | undefined
 }>
@@ -147,8 +149,8 @@ const getFilteredRows = <Item, Row extends BodyRow<Item>>(
                 return true
             }
             for (const [columnId, columnOption] of Object.entries(columnOptions)) {
-                const bodyCell = row.cellForId[columnId]
-                if (!bodyCell.isData()) {
+                const bodyCell = row.cellForId[columnId] as BodyCell<Item> | undefined
+                if (!bodyCell?.isData()) {
                     continue
                 }
                 const { value } = bodyCell
@@ -233,7 +235,9 @@ export const addColumnFilters =
                 'thead.tr.th': (headerCell) => {
                     const filterValue = keyedProp(filterValues, headerCell.id)
                     const props = derived([], () => {
-                        const columnOption = columnOptions[headerCell.id]
+                        // Display columns and columns without filter options have no entry.
+                        const columnOption = columnOptions[headerCell.id] as
+                            ColumnFiltersColumnOptions<Item> | undefined
                         if (columnOption === undefined) {
                             return undefined
                         }
@@ -242,7 +246,8 @@ export const addColumnFilters =
                             if (headerCell.isData()) {
                                 return $rows.map((row) => {
                                     // TODO check and handle different BodyCell types
-                                    const cell = row.cellForId[headerCell.id] as DataBodyCell<Item>
+                                    const cell = row.cellForId[headerCell.id] as
+                                        DataBodyCell<Item> | undefined
                                     return cell?.value
                                 })
                             }
@@ -252,7 +257,8 @@ export const addColumnFilters =
                             if (headerCell.isData()) {
                                 return $rows.map((row) => {
                                     // TODO check and handle different BodyCell types
-                                    const cell = row.cellForId[headerCell.id] as DataBodyCell<Item>
+                                    const cell = row.cellForId[headerCell.id] as
+                                        DataBodyCell<Item> | undefined
                                     return cell?.value
                                 })
                             }
@@ -295,7 +301,7 @@ export const matchFilter: ColumnFilterFn<unknown, unknown> = ({ filterValue, val
  * @param props - The filter props containing filterValue and value.
  * @returns True if the value starts with the filter text.
  */
-export const textPrefixFilter: ColumnFilterFn<string, string> = ({ filterValue, value }) => {
+export const textPrefixFilter: ColumnFilterFn<unknown, unknown> = ({ filterValue, value }) => {
     if (filterValue === '') {
         return true
     }

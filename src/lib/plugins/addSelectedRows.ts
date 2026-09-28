@@ -11,7 +11,6 @@ import { DEFAULT_ROW_STATE_CACHE_CONFIG } from './cacheConfig.js'
  *
  * @template _Item - The type of data items (unused but required for type inference).
  */
-/* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
 export interface SelectedRowsConfig<_Item> {
     /** Initial selection state keyed by data ID. */
     initialSelectedDataIds?: Record<string, boolean>
@@ -68,17 +67,31 @@ export type SelectedRowsPropSet = NewTablePropSet<{
 }>
 
 /**
+ * Selection record as read by the helpers below. Keys that were never selected
+ * are absent, so every lookup may yield `undefined`.
+ * @internal
+ */
+type SelectionRecord = Partial<Record<string, boolean>>
+
+/**
+ * Whether `dataId` is marked as selected in `$selectedDataIds`.
+ * @internal
+ */
+const isDataIdSelected = ($selectedDataIds: SelectionRecord, dataId: string): boolean =>
+    $selectedDataIds[dataId] === true
+
+/**
  * Recursively checks if all sub-rows of a row are selected.
  * @internal
  */
 const isAllSubRowsSelectedForRow = <Item>(
     row: BodyRow<Item>,
-    $selectedDataIds: Record<string, boolean>,
+    $selectedDataIds: SelectionRecord,
     linkDataSubRows: boolean
 ): boolean => {
     if (row.isData()) {
         if (!linkDataSubRows || row.subRows === undefined) {
-            return $selectedDataIds[row.dataId] === true
+            return isDataIdSelected($selectedDataIds, row.dataId)
         }
     }
     if (row.subRows === undefined) {
@@ -95,12 +108,12 @@ const isAllSubRowsSelectedForRow = <Item>(
  */
 const isSomeSubRowsSelectedForRow = <Item>(
     row: BodyRow<Item>,
-    $selectedDataIds: Record<string, boolean>,
+    $selectedDataIds: SelectionRecord,
     linkDataSubRows: boolean
 ): boolean => {
     if (row.isData()) {
         if (!linkDataSubRows || row.subRows === undefined) {
-            return $selectedDataIds[row.dataId] === true
+            return isDataIdSelected($selectedDataIds, row.dataId)
         }
     }
     if (row.subRows === undefined) {
@@ -118,7 +131,7 @@ const isSomeSubRowsSelectedForRow = <Item>(
 const writeSelectedDataIds = <Item>(
     row: BodyRow<Item>,
     value: boolean,
-    $selectedDataIds: Record<string, boolean>,
+    $selectedDataIds: SelectionRecord,
     linkDataSubRows: boolean
 ): void => {
     if (row.isData()) {
@@ -147,9 +160,9 @@ const getRowIsSelectedStore = <Item>(
     const { subscribe } = derived(selectedDataIds, ($selectedDataIds) => {
         if (row.isData()) {
             if (!linkDataSubRows) {
-                return $selectedDataIds[row.dataId] === true
+                return isDataIdSelected($selectedDataIds, row.dataId)
             }
-            if ($selectedDataIds[row.dataId] === true) {
+            if (isDataIdSelected($selectedDataIds, row.dataId)) {
                 return true
             }
         }
@@ -160,7 +173,7 @@ const getRowIsSelectedStore = <Item>(
             const oldValue = isAllSubRowsSelectedForRow(row, $selectedDataIds, linkDataSubRows)
             const $updatedSelectedDataIds = { ...$selectedDataIds }
             writeSelectedDataIds(row, fn(oldValue), $updatedSelectedDataIds, linkDataSubRows)
-            if (row.parentRow !== undefined && row.parentRow.isData()) {
+            if (row.parentRow?.isData()) {
                 $updatedSelectedDataIds[row.parentRow.dataId] = isAllSubRowsSelectedForRow(
                     row.parentRow,
                     $updatedSelectedDataIds,
@@ -268,7 +281,7 @@ export const addSelectedRows =
                     if (!row.isData()) {
                         return true
                     }
-                    return $selectedDataIds[row.dataId] === true
+                    return isDataIdSelected($selectedDataIds, row.dataId)
                 })
             }
         )
@@ -299,7 +312,7 @@ export const addSelectedRows =
                     if (!row.isData()) {
                         return false
                     }
-                    return $selectedDataIds[row.dataId] === true
+                    return isDataIdSelected($selectedDataIds, row.dataId)
                 })
             }
         )
@@ -312,7 +325,7 @@ export const addSelectedRows =
                     if (!row.isData()) {
                         return true
                     }
-                    return $selectedDataIds[row.dataId] === true
+                    return isDataIdSelected($selectedDataIds, row.dataId)
                 })
             }
         )
@@ -343,7 +356,7 @@ export const addSelectedRows =
                     if (!row.isData()) {
                         return false
                     }
-                    return $selectedDataIds[row.dataId] === true
+                    return isDataIdSelected($selectedDataIds, row.dataId)
                 })
             }
         )
@@ -374,7 +387,7 @@ export const addSelectedRows =
                             linkDataSubRows
                         )
                         const selected = row.isData()
-                            ? $selectedDataIds[row.dataId] === true
+                            ? isDataIdSelected($selectedDataIds, row.dataId)
                             : allSubRowsSelected
                         return {
                             selected,

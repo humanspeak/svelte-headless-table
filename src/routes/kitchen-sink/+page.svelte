@@ -1,6 +1,6 @@
 <script lang="ts">
     import { page } from '$app/stores'
-    import { derived, get, readable, writable } from 'svelte/store'
+    import { derived, get, writable } from 'svelte/store'
     import { Render, createRender, createSnippetRender, createTable } from '../../lib/index.js'
     import {
         addColumnFilters,
@@ -83,9 +83,8 @@
         hideColumns: addHiddenColumns(),
         page: addPagination({
             initialPageSize: 20,
-            serverSide: serverSide,
-            /* trunk-ignore(eslint/@typescript-eslint/no-explicit-any) */
-            serverItemCount: serverSide ? readable(40) : (undefined as any)
+            // Server-side pagination also needs `serverItemCount: readable(<total>)`.
+            serverSide: serverSide
         }),
         resize: addResizedColumns(),
         export: addDataExport(),
@@ -148,14 +147,14 @@
         table.column({
             header: 'Summary',
             id: 'summary',
-            accessor: (item) => item,
+            accessor: (item: Sample) => item,
             cell: ({ value }) => createSnippetRender(summaryCell, value),
             plugins: {
                 sort: {
-                    getSortValue: (i) => i.lastName
+                    getSortValue: (i: Sample) => i.lastName
                 },
                 tableFilter: {
-                    getFilterValue: (i) => i.progress
+                    getFilterValue: (i: Sample) => String(i.progress)
                 }
             }
         }),
@@ -179,7 +178,7 @@
                     accessor: 'firstName',
                     plugins: {
                         group: {
-                            getAggregateValue: (values) => getDistinct(values).length,
+                            getAggregateValue: (values: string[]) => getDistinct(values).length,
                             cell: ({ value }) => `${value} unique`
                         },
                         sort: {
@@ -201,7 +200,7 @@
                     accessor: 'lastName',
                     plugins: {
                         group: {
-                            getAggregateValue: (values) => getDistinct(values).length,
+                            getAggregateValue: (values: string[]) => getDistinct(values).length,
                             cell: ({ value }) => `${value} unique`
                         }
                     }
@@ -220,7 +219,7 @@
                     accessor: 'age',
                     plugins: {
                         group: {
-                            getAggregateValue: (values) => mean(values),
+                            getAggregateValue: (values: number[]) => mean(values),
                             cell: ({ value }) => `${(value as number).toFixed(2)} (avg)`
                         },
                         resize: {
@@ -256,7 +255,7 @@
                     accessor: 'visits',
                     plugins: {
                         group: {
-                            getAggregateValue: (values) => sum(values),
+                            getAggregateValue: (values: number[]) => sum(values),
                             cell: ({ value }) => `${value} (total)`
                         },
                         filter: {
@@ -272,7 +271,7 @@
                     accessor: 'progress',
                     plugins: {
                         group: {
-                            getAggregateValue: (values) => mean(values),
+                            getAggregateValue: (values: number[]) => mean(values),
                             cell: ({ value }) => `${(value as number).toFixed(2)} (avg)`
                         }
                     }
@@ -477,7 +476,9 @@
                         class:group={cell.current.props.group.grouped}
                         class:aggregate={cell.current.props.group.aggregated}
                         class:repeat={cell.current.props.group.repeated}
-                        data-value={row.original?.[cell.id as keyof Sample]}
+                        data-value={row.isData()
+                            ? row.original[cell.id as keyof Sample]
+                            : undefined}
                     >
                         {#if !cell.current.props.group.repeated}
                             <Render of={cell.render()} />

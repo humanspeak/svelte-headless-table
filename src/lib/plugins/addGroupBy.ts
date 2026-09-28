@@ -1,6 +1,6 @@
-import { derived, writable, type Readable } from 'svelte/store'
-import { DataBodyCell } from '../bodyCells.js'
-import { BodyRow, DisplayBodyRow } from '../bodyRows.js'
+import { derived, type Readable, writable } from 'svelte/store'
+import { type BodyCell, DataBodyCell } from '../bodyCells.js'
+import { type BodyRow, DisplayBodyRow } from '../bodyRows.js'
 import type { DataColumn } from '../columns.js'
 import type { DataLabel } from '../types/Label.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
@@ -38,11 +38,12 @@ export interface GroupByState {
  */
 export interface GroupByColumnOptions<
     Item,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // `any` defaults keep user callbacks free to treat the cell value as their own type.
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
     Value = any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
     GroupOn extends string | number = any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
     Aggregate = any
 > {
     /** If true, grouping is disabled for this column. */
@@ -80,13 +81,19 @@ export type GroupByPropSet = NewTablePropSet<{
 }>
 
 /**
+ * Flags keyed by `rowColId`. Only flagged cells have an entry.
+ * @internal
+ */
+type CellIdFlags = Partial<Record<string, boolean>>
+
+/**
  * Internal options for getGroupedRows.
  * @internal
  */
 interface GetGroupedRowsProps {
-    repeatCellIds: Record<string, boolean>
-    aggregateCellIds: Record<string, boolean>
-    groupCellIds: Record<string, boolean>
+    repeatCellIds: CellIdFlags
+    aggregateCellIds: CellIdFlags
+    groupCellIds: CellIdFlags
     allGroupByIds: string[]
 }
 
@@ -106,8 +113,7 @@ const getIdPrefix = (id: string): string => {
  * Recursively updates row IDs and depths for nested grouped rows.
  * @internal
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const deepenIdAndDepth = <Row extends BodyRow<any, any>>(row: Row, parentId: string) => {
+const deepenIdAndDepth = (row: BodyRow<unknown>, parentId: string) => {
     row.id = `${parentId}>${row.id}`
     row.depth = row.depth + 1
     row.subRows?.forEach((subRow) => deepenIdAndDepth(subRow, parentId))
@@ -119,42 +125,39 @@ const deepenIdAndDepth = <Row extends BodyRow<any, any>>(row: Row, parentId: str
  *
  * @template Item - The type of data items.
  * @template Row - The row type.
- * @template GroupOn - The grouping key type.
  * @param rows - The rows to group.
  * @param groupByIds - Column IDs to group by, in order.
  * @param columnOptions - Per-column grouping configuration.
  * @param props - Internal state tracking objects.
  * @returns The grouped rows array.
  */
-export const getGroupedRows = <
-    Item,
-    Row extends BodyRow<Item>,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    GroupOn extends string | number = any
->(
+export const getGroupedRows = <Item, Row extends BodyRow<Item>>(
     rows: Row[],
     groupByIds: string[],
     columnOptions: Record<string, GroupByColumnOptions<Item>>,
     { repeatCellIds, aggregateCellIds, groupCellIds, allGroupByIds }: GetGroupedRowsProps
 ): Row[] => {
-    if (groupByIds.length === 0) {
+    const groupById = groupByIds.at(0)
+    if (groupById === undefined) {
         return rows
     }
-    if (rows.length === 0) {
+    const firstInputRow = rows.at(0)
+    if (firstInputRow === undefined) {
         return rows
     }
-    const idPrefix = getIdPrefix(rows[0].id)
-    const [groupById, ...restIds] = groupByIds
+    const idPrefix = getIdPrefix(firstInputRow.id)
+    const restIds = groupByIds.slice(1)
 
-    const subRowsForGroupOnValue = new Map<GroupOn, Row[]>()
+    // Keys are whatever `getGroupOn` (or the raw cell value) yields; Map compares them by identity.
+    const subRowsForGroupOnValue = new Map<unknown, Row[]>()
     for (const row of rows) {
-        const cell = row.cellForId[groupById]
-        if (!cell.isData()) {
+        const cell = row.cellForId[groupById] as BodyCell<Item> | undefined
+        if (!cell?.isData()) {
             break
         }
         const columnOption = columnOptions[groupById] ?? {}
         const { getGroupOn } = columnOption
-        const groupOnValue = getGroupOn?.(cell.value) ?? cell.value
+        const groupOnValue: unknown = getGroupOn?.(cell.value) ?? cell.value
         if (typeof groupOnValue === 'function' || typeof groupOnValue === 'object') {
             console.warn(
                 `Missing \`getGroupOn\` column option to aggregate column "${groupById}" with object values`
@@ -171,8 +174,11 @@ export const getGroupedRows = <
     const groupedRows: Row[] = []
     let groupRowIdx = 0
     for (const [groupOnValue, subRows] of subRowsForGroupOnValue.entries()) {
-        // Guaranteed to have at least one subRow.
-        const firstRow = subRows[0]
+        // Every group is created together with its first row, so this never skips.
+        const firstRow = subRows.at(0)
+        if (firstRow === undefined) {
+            continue
+        }
         const groupRow = new DisplayBodyRow<Item>({
             id: `${idPrefix}${groupRowIdx++}`,
             // TODO Differentiate data rows and grouped rows.
@@ -190,17 +196,19 @@ export const getGroupedRows = <
                     })
                     return [id, newCell]
                 }
-                const columnCells = subRows.map((row) => row.cellForId[id]).filter(nonUndefined)
-                if (!columnCells[0].isData()) {
-                    const clonedCell = columnCells[0].clone()
+                // `cell` is `firstRow`'s cell, i.e. the first entry of `columnCells`.
+                if (!cell.isData()) {
+                    const clonedCell = cell.clone()
                     clonedCell.row = groupRow
                     return [id, clonedCell]
                 }
+                const columnCells = subRows.map((row) => row.cellForId[id]).filter(nonUndefined)
                 const { cell: label, getAggregateValue } = columnOptions[id] ?? {}
                 const columnValues = (columnCells as DataBodyCell<Item>[]).map((cell) => cell.value)
-                const value = getAggregateValue === undefined ? '' : getAggregateValue(columnValues)
+                const value: unknown =
+                    getAggregateValue === undefined ? '' : getAggregateValue(columnValues)
                 const newCell = new DataBodyCell({
-                    column: cell.column as DataColumn<Item>,
+                    column: cell.column,
                     row: groupRow,
                     value,
                     label
@@ -208,9 +216,9 @@ export const getGroupedRows = <
                 return [id, newCell]
             })
         )
-        const groupRowCells = firstRow.cells.map((cell) => {
-            return groupRowCellForId[cell.id]
-        })
+        const groupRowCells = firstRow.cells
+            .map((cell) => groupRowCellForId[cell.id])
+            .filter(nonUndefined)
         groupRow.cellForId = groupRowCellForId
         groupRow.cells = groupRowCells
         const groupRowSubRows = subRows.map((subRow) => {
@@ -289,9 +297,9 @@ export const addGroupBy =
 
         const groupByIds = arraySetStore(initialGroupByIds)
 
-        const repeatCellIds = writable<Record<string, boolean>>({})
-        const aggregateCellIds = writable<Record<string, boolean>>({})
-        const groupCellIds = writable<Record<string, boolean>>({})
+        const repeatCellIds = writable<CellIdFlags>({})
+        const aggregateCellIds = writable<CellIdFlags>({})
+        const groupCellIds = writable<CellIdFlags>({})
 
         const pluginState: GroupByState = {
             groupByIds
@@ -299,9 +307,9 @@ export const addGroupBy =
 
         const deriveRows: DeriveRowsFn<Item> = (rows) => {
             return derived([rows, groupByIds], ([$rows, $groupByIds]) => {
-                const $repeatCellIds = {}
-                const $aggregateCellIds = {}
-                const $groupCellIds = {}
+                const $repeatCellIds: CellIdFlags = {}
+                const $aggregateCellIds: CellIdFlags = {}
+                const $groupCellIds: CellIdFlags = {}
                 const $groupedRows = getGroupedRows($rows, $groupByIds, columnOptions, {
                     repeatCellIds: $repeatCellIds,
                     aggregateCellIds: $aggregateCellIds,

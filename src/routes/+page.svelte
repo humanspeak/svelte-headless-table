@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { resolve } from '$app/paths'
+
     const examples = [
         {
             name: 'Kitchen Sink',
@@ -18,7 +20,7 @@
             description:
                 'Sparse windowing over a 4,000,000-row server-paged dataset, holding only the pages you look at.'
         }
-    ]
+    ] as const
 </script>
 
 <main>
@@ -31,8 +33,7 @@
         <h2>Examples</h2>
         <div class="example-grid">
             {#each examples as example (example.href)}
-                <!-- trunk-ignore(eslint/svelte/no-navigation-without-resolve) -->
-                <a href={example.href} class="example-card">
+                <a href={resolve(example.href)} class="example-card">
                     <h3>{example.name}</h3>
                     <p>{example.description}</p>
                 </a>

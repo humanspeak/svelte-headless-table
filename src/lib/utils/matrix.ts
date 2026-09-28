@@ -16,7 +16,7 @@ export const getNullMatrix = (width: number, height: number): Matrix<null> => {
     const result: Matrix<null> = []
     // Use a loop to create a new array instance per row.
     for (let i = 0; i < height; i++) {
-        result.push(Array(width).fill(null))
+        result.push(Array<null>(width).fill(null))
     }
     return result
 }
@@ -34,17 +34,16 @@ export const getNullMatrix = (width: number, height: number): Matrix<null> => {
  * ```
  */
 export const getTransposed = <T>(matrix: Matrix<T>): Matrix<T> => {
-    const height = matrix.length
-    if (height === 0) {
+    const firstRow = matrix.at(0)
+    if (firstRow === undefined) {
         return matrix
     }
-    const width = matrix[0].length
-    const result: Matrix<T | null> = getNullMatrix(height, width)
-    for (let i = 0; i < width; i++) {
-        for (let j = 0; j < height; j++) {
-            result[i][j] = matrix[j][i]
-        }
+    // One output row per input column; rows are assumed rectangular.
+    const result: Matrix<T> = firstRow.map(() => [])
+    for (const row of matrix) {
+        row.forEach((value, i) => {
+            result.at(i)?.push(value)
+        })
     }
-    // We guarantee that all elements are filled.
-    return result as Matrix<T>
+    return result
 }

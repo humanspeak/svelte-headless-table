@@ -525,14 +525,14 @@ test('tracks matching cells in tableCellMatches', () => {
     // Get the first row and check that the matching cell has matches=true
     expect(rows).toHaveLength(1)
     const row = rows[0]
-    const firstNameCell = row.cellForId['firstName']
+    const firstNameCell = row.cellForId.firstName
 
     // Access the cell props through the hook
     const cellProps = get(firstNameCell.props())
     expect(cellProps.filter.matches).toBe(true)
 
     // lastName should not have matches=true
-    const lastNameCell = row.cellForId['lastName']
+    const lastNameCell = row.cellForId.lastName
     const lastNameProps = get(lastNameCell.props())
     expect(lastNameProps.filter.matches).toBe(false)
 })

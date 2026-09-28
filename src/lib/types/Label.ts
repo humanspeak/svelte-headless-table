@@ -12,7 +12,7 @@ import type { AnyPlugins } from './TablePlugin.js'
  * @template Plugins - The plugins used by the table.
  * @template Value - The type of the cell value.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// trunk-ignore(eslint/@typescript-eslint/no-explicit-any): `any` keeps labels bivariant in the cell value type
 export type DataLabel<Item, Plugins extends AnyPlugins = AnyPlugins, Value = any> = (
     _cell: DataBodyCell<Item, AnyPlugins, Value>,
     _state: TableState<Item, Plugins>

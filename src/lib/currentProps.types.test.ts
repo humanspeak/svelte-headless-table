@@ -18,6 +18,8 @@ import { addTableFilter } from './plugins/addTableFilter.js'
 import { addVirtualScroll } from './plugins/addVirtualScroll.js'
 
 type IsAny<T> = 0 extends 1 & T ? true : false
+// `true` if any key of T is typed `any`.
+type AnyLeak<T> = { [K in keyof T]: IsAny<T[K]> }[keyof T]
 
 // `cell.current.props.<plugin>` must be exactly typed for every shipped
 // plugin: a plugin that omits its prop-set generic falls back to
@@ -49,15 +51,11 @@ it('current.props is precisely typed for every plugin', () => {
     const tr = vm.current.pageRows[0]
     const td = tr.cells[0]
 
-    type Header = typeof th.current.props
-    type Row = typeof tr.current.props
-    type Cell = typeof td.current.props
-    type Keys = keyof Header
-    type AnyLeak =
-        | { [K in Keys]: IsAny<Header[K]> }[Keys]
-        | { [K in keyof Row]: IsAny<Row[K]> }[keyof Row]
-        | { [K in keyof Cell]: IsAny<Cell[K]> }[keyof Cell]
-    expectTypeOf<AnyLeak>().toEqualTypeOf<false>()
+    // Checked per component: a single union of the three would collapse to
+    // `false` before any leak could surface in it.
+    expectTypeOf<AnyLeak<typeof th.current.props>>().toEqualTypeOf<false>()
+    expectTypeOf<AnyLeak<typeof tr.current.props>>().toEqualTypeOf<false>()
+    expectTypeOf<AnyLeak<typeof td.current.props>>().toEqualTypeOf<false>()
 
     // Spot checks on the shapes consumers actually read.
     expectTypeOf(th.current.props.sort.order).toEqualTypeOf<'asc' | 'desc' | undefined>()

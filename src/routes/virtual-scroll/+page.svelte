@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { resolve } from '$app/paths'
     import { writable } from 'svelte/store'
     import { Render, Subscribe, createTable } from '../../lib/index.js'
     import { addVirtualScroll, addSortBy } from '../../lib/plugins/index.js'
@@ -60,7 +61,7 @@
         'CodeBase'
     ]
 
-    function generateItems(count: number, startId: number = 0): DataItem[] {
+    function generateItems(count: number, startId = 0): DataItem[] {
         const items: DataItem[] = []
         for (let i = 0; i < count; i++) {
             const id = startId + i
@@ -162,12 +163,9 @@
         }),
         table.column({
             header: 'Salary',
-            accessor: (item) => `$${item.salary.toLocaleString()}`,
-            plugins: {
-                sort: {
-                    getSortValue: (item) => item.salary
-                }
-            }
+            // Sort on the raw number; format only for display.
+            accessor: 'salary',
+            cell: ({ value }) => `$${value.toLocaleString()}`
         }),
         table.column({
             header: 'Start Date',
@@ -214,8 +212,7 @@
 <main>
     <h1>Virtual Scroll Example</h1>
     <p>
-        <!-- trunk-ignore(eslint/svelte/no-navigation-without-resolve) -->
-        <a href="/">&larr; Back to examples</a>
+        <a href={resolve('/')}>&larr; Back to examples</a>
     </p>
 
     <section class="controls">
@@ -294,21 +291,18 @@
                         <Subscribe attrs={headerRow.attrs()} let:attrs>
                             <tr {...attrs}>
                                 {#each headerRow.cells as cell (cell.id)}
-                                    <Subscribe
-                                        attrs={cell.attrs()}
-                                        let:attrs
-                                        props={cell.props()}
-                                        let:props
-                                    >
+                                    <!-- Props come from typed `current`; Subscribe's slot props are untyped. -->
+                                    <Subscribe attrs={cell.attrs()} let:attrs>
                                         <th
                                             {...attrs}
-                                            onclick={props.sort.toggle}
-                                            class:sorted={props.sort.order !== undefined}
+                                            onclick={cell.current.props.sort.toggle}
+                                            class:sorted={cell.current.props.sort.order !==
+                                                undefined}
                                         >
                                             <Render of={cell.render()} />
-                                            {#if props.sort.order === 'asc'}
+                                            {#if cell.current.props.sort.order === 'asc'}
                                                 <span class="sort-indicator">▲</span>
-                                            {:else if props.sort.order === 'desc'}
+                                            {:else if cell.current.props.sort.order === 'desc'}
                                                 <span class="sort-indicator">▼</span>
                                             {/if}
                                         </th>

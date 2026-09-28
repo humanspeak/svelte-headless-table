@@ -11,19 +11,17 @@ export interface Sample {
 }
 
 type CreateSamplesOptions = {
-    seed?: number
+    seed?: number | undefined
 }
 
 export const createSamples = (options?: CreateSamplesOptions, ...lengths: number[]) => {
     if (options?.seed !== undefined) faker.seed(options.seed)
     const createSamplesLevel = (depth = 0): Sample[] => {
         const length = lengths[depth]
-        return [...Array(length)].map(() => {
+        return Array.from({ length }, () => {
             return {
                 ...getSample(),
-                ...(lengths[depth + 1] !== undefined
-                    ? { children: createSamplesLevel(depth + 1) }
-                    : {})
+                ...(depth + 1 < lengths.length ? { children: createSamplesLevel(depth + 1) } : {})
             }
         })
     }

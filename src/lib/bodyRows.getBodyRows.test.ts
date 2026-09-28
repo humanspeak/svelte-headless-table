@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store'
 import { DataBodyCell, DisplayBodyCell } from './bodyCells.js'
-import { BodyRow, DataBodyRow, getBodyRows } from './bodyRows.js'
+import { type BodyRow, DataBodyRow, getBodyRows } from './bodyRows.js'
 import { createTable } from './createTable.js'
 
 interface User {

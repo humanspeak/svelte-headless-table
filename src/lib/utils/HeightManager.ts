@@ -72,7 +72,7 @@ export class HeightManager {
      *
      * @param estimatedRowHeight - Initial estimated height for unmeasured rows.
      */
-    constructor(estimatedRowHeight: number = 40) {
+    constructor(estimatedRowHeight = 40) {
         this.estimatedRowHeight = estimatedRowHeight
     }
 
@@ -166,8 +166,8 @@ export class HeightManager {
         const avgHeight = this.getAverageHeight()
         let offset = 0
 
-        for (let i = 0; i < index && i < rowIds.length; i++) {
-            offset += this.heightCache.get(rowIds[i]) ?? avgHeight
+        for (const rowId of rowIds.slice(0, Math.max(0, Math.ceil(index)))) {
+            offset += this.heightCache.get(rowId) ?? avgHeight
         }
 
         return offset

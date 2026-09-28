@@ -3,6 +3,12 @@ import { fireEvent, render, screen } from '@testing-library/svelte'
 import { tick } from 'svelte'
 import { get, writable } from 'svelte/store'
 import CurrentHost from './CurrentHost.test.svelte'
+import type { HeaderRow } from './headerRows.js'
+
+interface CurrentHostItem {
+    name: string
+    age: number
+}
 
 // `current.attrs` / `current.props` are the runes-native view of the same
 // values `attrs()` / `props()` expose. These mirror fromStore.test.ts and
@@ -42,7 +48,8 @@ it('picks up a hook applied after current was first read', async () => {
     const { component } = render(CurrentHost)
     expect(screen.getByTestId('th-name')).not.toHaveAttribute('data-late')
 
-    const cell = get(component.viewHeaderRows)[0].cells.find((c) => c.id === 'name')!
+    const headerRows = get<HeaderRow<CurrentHostItem>[]>(component.viewHeaderRows)
+    const cell = headerRows[0].cells.find((c) => c.id === 'name')!
     cell.applyHook('late', { attrs: writable({ 'data-late': '1' }) })
     await tick()
 
