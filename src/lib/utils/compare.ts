@@ -36,12 +36,12 @@ export const compare = <T extends string | number>(a: T | T[], b: T | T[]): numb
  * ```
  */
 export const compareArray = <T extends string | number>(a: T[], b: T[]): number => {
-    // Walk both arrays in lockstep; stops at the end of the shorter one.
-    const bValues = b.values()
-    for (const aValue of a) {
-        const next = bValues.next()
-        if (next.done === true) break
-        const order = compare(aValue, next.value)
+    const length = Math.min(a.length, b.length)
+    for (let i = 0; i < length; i++) {
+        const aValue = a[i]
+        const bValue = b[i]
+        if (aValue === undefined || bValue === undefined) break
+        const order = compare(aValue, bValue)
         if (order !== 0) return order
     }
     return 0

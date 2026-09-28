@@ -143,16 +143,16 @@ export const getHeaderRowMatrix = <Item, Plugins extends AnyPlugins = AnyPlugins
 }
 
 /**
- * Writes a value into a matrix cell.
+ * Returns a matrix row, or throws when the matrix is shorter than expected.
  *
  * @throws RangeError if the row does not exist.
  */
-const setMatrixCell = <T>(matrix: Matrix<T>, rowIdx: number, columnIdx: number, value: T) => {
+const matrixRow = <T>(matrix: Matrix<T>, rowIdx: number): T[] => {
     const row = matrix.at(rowIdx)
     if (row === undefined) {
         throw new RangeError(`Header row ${rowIdx} is out of bounds`)
     }
-    row[columnIdx] = value
+    return row
 }
 
 const loadHeaderRowMatrix = <Item, Plugins extends AnyPlugins = AnyPlugins>(
@@ -163,48 +163,34 @@ const loadHeaderRowMatrix = <Item, Plugins extends AnyPlugins = AnyPlugins>(
 ) => {
     if (column.isData()) {
         // `DataHeaderCell` should always be in the last row.
-        setMatrixCell(
-            rowMatrix,
-            rowMatrix.length - 1,
-            cellOffset,
-            new DataHeaderCell<Item, Plugins>({
-                label: column.header,
-                accessorFn: column.accessorFn,
-                accessorKey: column.accessorKey,
-                id: column.id,
-                colstart: cellOffset
-            })
-        )
+        matrixRow(rowMatrix, -1)[cellOffset] = new DataHeaderCell<Item, Plugins>({
+            label: column.header,
+            accessorFn: column.accessorFn,
+            accessorKey: column.accessorKey,
+            id: column.id,
+            colstart: cellOffset
+        })
         return
     }
     if (column.isDisplay()) {
-        setMatrixCell(
-            rowMatrix,
-            rowMatrix.length - 1,
-            cellOffset,
-            new FlatDisplayHeaderCell<Item, Plugins>({
-                id: column.id,
-                label: column.header,
-                colstart: cellOffset
-            })
-        )
+        matrixRow(rowMatrix, -1)[cellOffset] = new FlatDisplayHeaderCell<Item, Plugins>({
+            id: column.id,
+            label: column.header,
+            colstart: cellOffset
+        })
         return
     }
     if (column.isGroup()) {
         // Fill multi-colspan cells.
+        const groupRow = matrixRow(rowMatrix, rowOffset)
         for (let i = 0; i < column.ids.length; i++) {
-            setMatrixCell(
-                rowMatrix,
-                rowOffset,
-                cellOffset + i,
-                new GroupHeaderCell<Item, Plugins>({
-                    label: column.header,
-                    colspan: 1,
-                    allIds: column.ids,
-                    ids: [],
-                    colstart: cellOffset
-                })
-            )
+            groupRow[cellOffset + i] = new GroupHeaderCell<Item, Plugins>({
+                label: column.header,
+                colspan: 1,
+                allIds: column.ids,
+                ids: [],
+                colstart: cellOffset
+            })
         }
         let childCellOffset = 0
         column.columns.forEach((c) => {
@@ -304,26 +290,19 @@ export const getMergedRow = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         return cells
     }
     const mergedCells: HeaderCell<Item, Plugins>[] = []
-    // The group cell currently absorbing adjacent cells of the same group.
-    let openGroup: GroupHeaderCell<Item, Plugins> | undefined
-    let openIds: string[] = []
     for (const cell of cells) {
-        if (openGroup !== undefined && cell.isGroup() && cell.allId === openGroup.allId) {
-            openIds.push(...cell.ids)
-            openGroup.setIds(openIds)
-            openGroup.colspan += 1
+        // Adjacent cells of the same group fold into the last pushed cell.
+        const last = mergedCells.at(-1)
+        if (last?.isGroup() && cell.isGroup() && cell.allId === last.allId) {
+            last.setIds([...last.ids, ...cell.ids])
+            last.colspan += 1
             continue
         }
         const clonedCell = cell.clone()
-        mergedCells.push(clonedCell)
         if (clonedCell.isGroup()) {
-            openGroup = clonedCell
-            openIds = [...clonedCell.ids]
-            openGroup.setIds(openIds)
-            openGroup.colspan = 1
-        } else {
-            openGroup = undefined
+            clonedCell.colspan = 1
         }
+        mergedCells.push(clonedCell)
     }
     return mergedCells
 }

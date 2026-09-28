@@ -1,5 +1,5 @@
 import { derived, type Readable, writable } from 'svelte/store'
-import { type BodyCell, DataBodyCell } from '../bodyCells.js'
+import { DataBodyCell } from '../bodyCells.js'
 import { type BodyRow, DisplayBodyRow } from '../bodyRows.js'
 import type { DataColumn } from '../columns.js'
 import type { DataLabel } from '../types/Label.js'
@@ -81,19 +81,13 @@ export type GroupByPropSet = NewTablePropSet<{
 }>
 
 /**
- * Flags keyed by `rowColId`. Only flagged cells have an entry.
- * @internal
- */
-type CellIdFlags = Partial<Record<string, boolean>>
-
-/**
  * Internal options for getGroupedRows.
  * @internal
  */
 interface GetGroupedRowsProps {
-    repeatCellIds: CellIdFlags
-    aggregateCellIds: CellIdFlags
-    groupCellIds: CellIdFlags
+    repeatCellIds: Record<string, boolean>
+    aggregateCellIds: Record<string, boolean>
+    groupCellIds: Record<string, boolean>
     allGroupByIds: string[]
 }
 
@@ -137,21 +131,17 @@ export const getGroupedRows = <Item, Row extends BodyRow<Item>>(
     columnOptions: Record<string, GroupByColumnOptions<Item>>,
     { repeatCellIds, aggregateCellIds, groupCellIds, allGroupByIds }: GetGroupedRowsProps
 ): Row[] => {
-    const groupById = groupByIds.at(0)
-    if (groupById === undefined) {
-        return rows
-    }
-    const firstInputRow = rows.at(0)
-    if (firstInputRow === undefined) {
+    const [groupById, ...restIds] = groupByIds
+    const firstInputRow = rows[0]
+    if (groupById === undefined || firstInputRow === undefined) {
         return rows
     }
     const idPrefix = getIdPrefix(firstInputRow.id)
-    const restIds = groupByIds.slice(1)
 
     // Keys are whatever `getGroupOn` (or the raw cell value) yields; Map compares them by identity.
     const subRowsForGroupOnValue = new Map<unknown, Row[]>()
     for (const row of rows) {
-        const cell = row.cellForId[groupById] as BodyCell<Item> | undefined
+        const cell = row.cellForId[groupById]
         if (!cell?.isData()) {
             break
         }
@@ -297,9 +287,9 @@ export const addGroupBy =
 
         const groupByIds = arraySetStore(initialGroupByIds)
 
-        const repeatCellIds = writable<CellIdFlags>({})
-        const aggregateCellIds = writable<CellIdFlags>({})
-        const groupCellIds = writable<CellIdFlags>({})
+        const repeatCellIds = writable<Record<string, boolean>>({})
+        const aggregateCellIds = writable<Record<string, boolean>>({})
+        const groupCellIds = writable<Record<string, boolean>>({})
 
         const pluginState: GroupByState = {
             groupByIds
@@ -307,9 +297,9 @@ export const addGroupBy =
 
         const deriveRows: DeriveRowsFn<Item> = (rows) => {
             return derived([rows, groupByIds], ([$rows, $groupByIds]) => {
-                const $repeatCellIds: CellIdFlags = {}
-                const $aggregateCellIds: CellIdFlags = {}
-                const $groupCellIds: CellIdFlags = {}
+                const $repeatCellIds: Record<string, boolean> = {}
+                const $aggregateCellIds: Record<string, boolean> = {}
+                const $groupCellIds: Record<string, boolean> = {}
                 const $groupedRows = getGroupedRows($rows, $groupByIds, columnOptions, {
                     repeatCellIds: $repeatCellIds,
                     aggregateCellIds: $aggregateCellIds,

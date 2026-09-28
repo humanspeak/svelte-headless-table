@@ -133,7 +133,6 @@ export class FlatColumn<
      */
     constructor({ header, footer, plugins, id }: FlatColumnInit<Item, Plugins, Id>) {
         super({ header, footer, plugins, height: 1 })
-        // Without an explicit id, the header's string form stands in for it.
         this.id = id ?? (defaultColumnId(header) as Id)
     }
 }
@@ -253,9 +252,9 @@ export class DataColumn<
     /** Optional custom cell renderer. */
     cell?: DataLabel<Item, Plugins, Value> | undefined
     /** The property key used to access values (if using key accessor). */
-    accessorKey?: keyof Item
+    accessorKey?: keyof Item | undefined
     /** The function used to extract values (if using function accessor). */
-    accessorFn?: (item: Item) => Value
+    accessorFn?: ((item: Item) => Value) | undefined
 
     /**
      * Creates a new DataColumn instance.
@@ -271,6 +270,7 @@ export class DataColumn<
         accessor,
         id
     }: DataColumnInit<Item, Plugins, Id, Value>) {
+        const accessorFn = accessor instanceof Function ? accessor : undefined
         const accessorKey = accessor instanceof Function ? undefined : accessor
         // Runtime guard for untyped callers; `header` is required by the type.
         // trunk-ignore(eslint/@typescript-eslint/no-unnecessary-condition)
@@ -286,11 +286,8 @@ export class DataColumn<
             id: (id ?? accessorKeyId ?? defaultColumnId(header)) as Id
         })
         this.cell = cell
-        if (accessor instanceof Function) {
-            this.accessorFn = accessor
-        } else {
-            this.accessorKey = accessor
-        }
+        this.accessorFn = accessorFn
+        this.accessorKey = accessorKey
     }
 
     /**

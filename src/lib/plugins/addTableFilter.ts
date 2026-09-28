@@ -117,7 +117,7 @@ export const rowMatchesFilter = <Item>(
     const visibleCellIds = new Set(row.cells.map((c) => c.id))
 
     const rowCellMatches = Object.values(row.cellForId).map((cell) => {
-        const cellOptions = columnOptions[cell.id] as TableFilterColumnOptions<Item> | undefined
+        const cellOptions = columnOptions[cell.id]
         if (cellOptions?.exclude === true) {
             return false
         }

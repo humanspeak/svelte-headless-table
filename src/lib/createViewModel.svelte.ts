@@ -2,14 +2,12 @@ import type { BodyCell } from '$lib/bodyCells.js'
 import { getBodyRows, getColumnedBodyRows, type BodyRow, type DataBodyRow } from '$lib/bodyRows.js'
 import { getFlatColumns, type Column, type FlatColumn } from '$lib/columns.js'
 import type { Table } from '$lib/createTable.js'
-import type { HeaderCell } from '$lib/headerCells.js'
 import { getHeaderRows, type HeaderRow } from '$lib/headerRows.js'
 import type {
     AnyPlugins,
     DeriveFlatColumnsFn,
     DeriveFn,
     DeriveRowsFn,
-    ElementHook,
     PluginStates,
     TablePluginInstance
 } from '$lib/types/TablePlugin.js'
@@ -451,27 +449,14 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     // shape is static after createTable, so it's safe to resolve
     // these once at view-model build time.
     //
-    // Hook functions are typed against `Components<Item>` (default plugins),
-    // and components are invariant in `Plugins` (labels take the table state
-    // as a parameter), so each hook is re-read against this table's
-    // `Plugins`. This is the one typed seam between plugin instances and the
-    // components they decorate.
-    type TrHookFn = NonNullable<
-        NonNullable<ReturnType<Plugins[keyof Plugins]>['hooks']>['tbody.tr']
-    >
-    type TdHookFn = NonNullable<
-        NonNullable<ReturnType<Plugins[keyof Plugins]>['hooks']>['tbody.tr.td']
-    >
-    type ThHookFn = (
-        cell: HeaderCell<Item, Plugins>
-    ) => ElementHook<Record<string, unknown>, Record<string, unknown>>
-    const trHookEntries: [string, TrHookFn][] = []
-    const tdHookEntries: [string, TdHookFn][] = []
+    type Hooks = NonNullable<TablePluginInstance<Item, unknown, unknown>['hooks']>
+    const trHookEntries: [string, NonNullable<Hooks['tbody.tr']>][] = []
+    const tdHookEntries: [string, NonNullable<Hooks['tbody.tr.td']>][] = []
     for (const [name, instance] of pluginEntries) {
         const trHook = instance.hooks?.['tbody.tr']
-        if (trHook !== undefined) trHookEntries.push([name, trHook as TrHookFn])
+        if (trHook !== undefined) trHookEntries.push([name, trHook])
         const tdHook = instance.hooks?.['tbody.tr.td']
-        if (tdHook !== undefined) tdHookEntries.push([name, tdHook as TdHookFn])
+        if (tdHook !== undefined) tdHookEntries.push([name, tdHook])
     }
 
     // Hoisted out of the per-row loop so we don't allocate a fresh
@@ -536,7 +521,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
                 if (trHook !== undefined) {
                     row.applyHook(pluginName, trHook(row))
                 }
-                const thHook = pluginInstance.hooks?.['thead.tr.th'] as ThHookFn | undefined
+                const thHook = pluginInstance.hooks?.['thead.tr.th']
                 if (thHook !== undefined) {
                     row.cells.forEach((cell) => cell.applyHook(pluginName, thHook(cell)))
                 }

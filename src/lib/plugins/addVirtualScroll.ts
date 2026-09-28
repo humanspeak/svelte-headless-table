@@ -584,10 +584,11 @@ export const addVirtualScroll = <Item>({
         // offsetting an already-compressed position by natural row and
         // viewport heights would land far from the requested row — at 8x
         // compression, centring would overshoot by dozens of rows.
-        // Outside sparse mode `index` was bounds-checked against `$rowIds` above.
-        const rowId = isSparse ? undefined : $rowIds.at(index)
+        const rowId = $rowIds[index]
         const rowHeight =
-            rowId === undefined ? heightManager.getAverageHeight() : heightManager.getHeight(rowId)
+            isSparse || rowId === undefined
+                ? heightManager.getAverageHeight()
+                : heightManager.getHeight(rowId)
         const rowStart = isSparse
             ? index * rowHeight
             : heightManager.getOffsetForIndex($rowIds, index)
@@ -782,14 +783,12 @@ export const addVirtualScroll = <Item>({
             const index = new Map<string, number>()
             const currentIds = get(rowIds)
             let changed = $rows.length !== currentIds.length
-            let i = 0
-            for (const { id } of $rows) {
+            for (const [i, { id }] of $rows.entries()) {
                 ids[i] = id
                 index.set(id, i)
                 if (!changed && id !== currentIds[i]) {
                     changed = true
                 }
-                i++
             }
 
             // Cache rows for lookup in measureRow

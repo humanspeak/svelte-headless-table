@@ -39,5 +39,17 @@ export type DisplayLabel<Item, Plugins extends AnyPlugins = AnyPlugins> = (
  * @template Plugins - The plugins used by the table.
  */
 export type HeaderLabel<Item, Plugins extends AnyPlugins = AnyPlugins> =
-    | RenderConfig
-    | ((_cell: HeaderCell<Item, Plugins>, _state: TableState<Item, Plugins>) => RenderConfig)
+    RenderConfig | HeaderLabelFn<Item, Plugins>
+
+/**
+ * The render-function form of {@link HeaderLabel}, declared through a method
+ * signature so it is bivariant in its parameters. A plain function type would
+ * make `HeaderCell` invariant in `Plugins`, and plugin hooks (typed against the
+ * default plugins) could no longer accept a table's concrete header cells.
+ */
+export type HeaderLabelFn<Item, Plugins extends AnyPlugins = AnyPlugins> = {
+    bivarianceHack(
+        _cell: HeaderCell<Item, Plugins>,
+        _state: TableState<Item, Plugins>
+    ): RenderConfig
+}['bivarianceHack']

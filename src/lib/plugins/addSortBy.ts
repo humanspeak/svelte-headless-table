@@ -1,6 +1,6 @@
 import { MemoryCache } from '@humanspeak/memory-cache'
 import { derived, writable, type Readable, type Writable } from 'svelte/store'
-import type { BodyCell, DataBodyCell } from '../bodyCells.js'
+import type { DataBodyCell } from '../bodyCells.js'
 import type { BodyRow } from '../bodyRows.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { compare } from '../utils/compare.js'
@@ -104,7 +104,7 @@ export const createSortKeysStore = (initKeys: SortKey[]): WritableSortKeys => {
     ) => {
         update(($sortKeys) => {
             const keyIdx = $sortKeys.findIndex((key) => key.id === id)
-            const order = $sortKeys.find((key) => key.id === id)?.order
+            const order = keyIdx === -1 ? undefined : $sortKeys[keyIdx]?.order
             const orderIdx = toggleOrder.findIndex((o) => o === order)
             const nextOrderIdx = (orderIdx + 1) % toggleOrder.length
             const nextOrder = toggleOrder[nextOrderIdx]
@@ -184,8 +184,7 @@ const getSortedRows = <Item, Row extends BodyRow<Item>>(
 ): Row[] => {
     // Pre-compute sort config for each key to avoid repeated lookups during comparison
     const sortConfig = sortKeys.map((key) => {
-        // Columns without sort options have no entry.
-        const options = columnOptions[key.id] as SortByColumnOptions | undefined
+        const options = columnOptions[key.id]
         return {
             id: key.id,
             order: key.order,
@@ -201,7 +200,7 @@ const getSortedRows = <Item, Row extends BodyRow<Item>>(
     $sortedRows.sort((a, b) => {
         for (const config of sortConfig) {
             // TODO check why cellForId returns `undefined`.
-            const cellA = a.cellForId[config.id] as BodyCell<Item> | undefined
+            const cellA = a.cellForId[config.id]
             const cellB = b.cellForId[config.id]
             // Only need to check properties of `cellA` as both should have the same
             // properties.
@@ -231,16 +230,17 @@ const getSortedRows = <Item, Row extends BodyRow<Item>>(
         }
         return 0
     })
-    return $sortedRows.map((row) => {
+    for (const [i, row] of $sortedRows.entries()) {
         const { subRows } = row
         if (subRows === undefined) {
-            return row
+            continue
         }
         const sortedSubRows = getSortedRows<Item, Row>(subRows as Row[], sortKeys, columnOptions)
         const clonedRow = row.clone() as Row
         clonedRow.subRows = sortedSubRows
-        return clonedRow
-    })
+        $sortedRows[i] = clonedRow
+    }
+    return $sortedRows
 }
 
 /**

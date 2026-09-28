@@ -11,9 +11,10 @@ import type { Readable } from 'svelte/store'
  *
  * @template TComponent - The Svelte component type.
  */
-// Component props are contravariant; `any` is the only default every component is assignable to
-// trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-export type RenderConfig<TComponent extends Component = Component<any>> =
+// trunk-ignore(eslint/@typescript-eslint/no-explicit-any): props are contravariant; `any` is the only default every component is assignable to
+type AnyComponent = Component<any>
+
+export type RenderConfig<TComponent extends Component = AnyComponent> =
     | ComponentRenderConfig<TComponent>
     // Snippet args are contravariant; `any` accepts a snippet of any argument type
     // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
@@ -27,9 +28,7 @@ export type RenderConfig<TComponent extends Component = Component<any>> =
  *
  * @template TComponent - The Svelte component type.
  */
-// Component props are contravariant; `any` is the only default every component is assignable to
-// trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-export class ComponentRenderConfig<TComponent extends Component = Component<any>> {
+export class ComponentRenderConfig<TComponent extends Component = AnyComponent> {
     /**
      * The Svelte component to render.
      */
@@ -118,9 +117,7 @@ export class ComponentRenderConfig<TComponent extends Component = Component<any>
  * const reactive = createRender(MyComponent, derived(store, ($s) => ({ name: $s })))
  * ```
  */
-// Component props are contravariant; `any` is the only default every component is assignable to
-// trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-export function createRender<TComponent extends Component<any>>(
+export function createRender<TComponent extends AnyComponent>(
     component: TComponent,
     props?: Partial<ComponentProps<TComponent>> | Readable<ComponentProps<TComponent>>
 ): ComponentRenderConfig<TComponent> {

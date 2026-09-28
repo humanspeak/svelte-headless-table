@@ -1,5 +1,4 @@
 import { derived, writable, type Readable, type Writable } from 'svelte/store'
-import type { BodyCell, DataBodyCell } from '../bodyCells.js'
 import type { BodyRow } from '../bodyRows.js'
 import type { PluginInitTableState } from '../createViewModel.svelte.js'
 import type { RenderConfig } from '../render/createRender.js'
@@ -149,7 +148,7 @@ const getFilteredRows = <Item, Row extends BodyRow<Item>>(
                 return true
             }
             for (const [columnId, columnOption] of Object.entries(columnOptions)) {
-                const bodyCell = row.cellForId[columnId] as BodyCell<Item> | undefined
+                const bodyCell = row.cellForId[columnId]
                 if (!bodyCell?.isData()) {
                     continue
                 }
@@ -235,9 +234,7 @@ export const addColumnFilters =
                 'thead.tr.th': (headerCell) => {
                     const filterValue = keyedProp(filterValues, headerCell.id)
                     const props = derived([], () => {
-                        // Display columns and columns without filter options have no entry.
-                        const columnOption = columnOptions[headerCell.id] as
-                            ColumnFiltersColumnOptions<Item> | undefined
+                        const columnOption = columnOptions[headerCell.id]
                         if (columnOption === undefined) {
                             return undefined
                         }
@@ -245,10 +242,8 @@ export const addColumnFilters =
                         const preFilteredValues = derived(preFilteredRows, ($rows) => {
                             if (headerCell.isData()) {
                                 return $rows.map((row) => {
-                                    // TODO check and handle different BodyCell types
-                                    const cell = row.cellForId[headerCell.id] as
-                                        DataBodyCell<Item> | undefined
-                                    return cell?.value
+                                    const cell = row.cellForId[headerCell.id]
+                                    return cell?.isData() ? cell.value : undefined
                                 })
                             }
                             return []
@@ -256,10 +251,8 @@ export const addColumnFilters =
                         const values = derived(filteredRows, ($rows) => {
                             if (headerCell.isData()) {
                                 return $rows.map((row) => {
-                                    // TODO check and handle different BodyCell types
-                                    const cell = row.cellForId[headerCell.id] as
-                                        DataBodyCell<Item> | undefined
-                                    return cell?.value
+                                    const cell = row.cellForId[headerCell.id]
+                                    return cell?.isData() ? cell.value : undefined
                                 })
                             }
                             return []

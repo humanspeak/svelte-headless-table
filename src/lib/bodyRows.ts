@@ -117,10 +117,7 @@ const cloneCellsInto = <Item, Plugins extends AnyPlugins>(clonedRow: BodyRow<Ite
         clonedCell.row = clonedRow
         clonedCellsForId[id] = clonedCell
     }
-    // Every visible cell is also in `cellForId`, so no lookup comes back empty.
-    const clonedCellForId = (id: string): BodyCell<Item, Plugins> | undefined =>
-        clonedCellsForId[id]
-    clonedRow.cells = clonedRow.cells.map(({ id }) => clonedCellForId(id)).filter(nonUndefined)
+    clonedRow.cells = clonedRow.cells.map(({ id }) => clonedCellsForId[id]).filter(nonUndefined)
     clonedRow.cellForId = clonedCellsForId
 }
 
@@ -420,9 +417,7 @@ export const getSubRows = <Item, Plugins extends AnyPlugins = AnyPlugins>(
             cellForId[column.id] = createBodyCell(subRow, column, item)
         }
         subRow.cellForId = cellForId
-        // Visible cells are a subset of `cellForId`, so no lookup comes back empty.
-        const cellFor = (id: string): BodyCell<Item, Plugins> | undefined => cellForId[id]
-        subRow.cells = parentRow.cells.map((cell) => cellFor(cell.id)).filter(nonUndefined)
+        subRow.cells = parentRow.cells.map((cell) => cellForId[cell.id]).filter(nonUndefined)
     }
     return subRows
 }

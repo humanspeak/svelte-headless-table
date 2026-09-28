@@ -10,15 +10,15 @@ import ts from 'typescript-eslint'
 const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url))
 
 // Files that get the type-aware rule set. Everything under `src/` and the
-// Playwright specs are covered by `tsconfig.json`, so the type checker can
-// back the `no-unsafe-*` family and friends.
+// Playwright specs are covered by a tsconfig, so the type checker can back the
+// `no-unsafe-*` family and friends.
 const TYPED_FILES = ['src/**/*.ts', 'src/**/*.svelte.ts', 'src/**/*.svelte', 'tests/**/*.ts']
 
-// Presets ship parser/plugin wiring alongside their rules. Only the rules are
-// wanted here: the parser for `.svelte` files is configured further down and
-// must not be overridden by the TypeScript preset.
-const rulesOnly = (configs, files) =>
-    configs.map((config) => ({ files, rules: config.rules ?? {} }))
+// Library sources are type-checked with `tsconfig.lib.json` (adds
+// `noUncheckedIndexedAccess`). Linting them against the same config keeps
+// ESLint and `pnpm check:lib` in agreement about what an index read returns.
+const LIB_FILES = ['src/lib/**/*.ts', 'src/lib/**/*.svelte.ts', 'src/lib/**/*.svelte']
+const LIB_TEST_FILES = ['src/lib/**/*.test.ts', 'src/lib/**/*.test.svelte', 'src/lib/**/*.d.ts']
 
 export default [
     includeIgnoreFile(gitignorePath),
@@ -47,7 +47,8 @@ export default [
         ]
     },
     js.configs.recommended,
-    ...ts.configs.recommended,
+    ...ts.configs.strictTypeChecked,
+    ...ts.configs.stylisticTypeChecked,
     ...svelte.configs['flat/recommended'],
     prettier,
     ...svelte.configs['flat/prettier'],
@@ -106,9 +107,20 @@ export default [
             ]
         }
     },
-    // Type-aware strictness for everything the type checker can see.
-    ...rulesOnly(ts.configs.strictTypeChecked, TYPED_FILES),
-    ...rulesOnly(ts.configs.stylisticTypeChecked, TYPED_FILES),
+    {
+        files: LIB_FILES,
+        ignores: LIB_TEST_FILES,
+        languageOptions: {
+            parserOptions: {
+                projectService: false,
+                project: './tsconfig.lib.json',
+                // Resolved from the working directory rather than this file's
+                // location: Trunk lints a sandbox whose config files are symlinks,
+                // and a realpath-based root would not contain the linted copies.
+                tsconfigRootDir: process.cwd()
+            }
+        }
+    },
     {
         files: TYPED_FILES,
         rules: {
@@ -155,11 +167,7 @@ export default [
             'scripts/*.mjs',
             'vitest.setup.ts'
         ],
-        languageOptions: {
-            parserOptions: {
-                projectService: false
-            }
-        }
+        ...ts.configs.disableTypeChecked
     },
     {
         files: ['**/*.svelte', '**/*.svelte.ts'],

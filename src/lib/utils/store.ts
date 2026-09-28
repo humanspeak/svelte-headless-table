@@ -108,7 +108,7 @@ export const derivedKeys = <S extends ReadOrWritableKeys<unknown>>(storeMap: S):
     return derived(
         entries.map(([, store]) => store),
         ($stores) => {
-            return Object.fromEntries($stores.map((store, idx) => [keys[idx], store]))
+            return Object.fromEntries(keys.map((key, idx) => [key, $stores[idx]]))
         }
     ) as DerivedKeys<S>
 }
@@ -261,17 +261,27 @@ export interface RecordSetStore<T extends string | number> extends Writable<Reco
  * expandedIds.toggle('row1') // Removes 'row1'
  * ```
  */
+/**
+ * Returns a copy of `record` without `key`. The input is not mutated.
+ */
+export const withoutKey = <T>(record: Record<string, T>, key: string): Record<string, T> => {
+    const { [key]: _removed, ...rest } = record
+    return rest
+}
+
+/**
+ * Returns a copy of `record` without any of `keys`. The input is not mutated.
+ */
+export const withoutKeys = <T>(record: Record<string, T>, keys: string[]): Record<string, T> => {
+    const removed = new Set(keys)
+    return Object.fromEntries(Object.entries(record).filter(([key]) => !removed.has(key)))
+}
+
 export const recordSetStore = <T extends string | number>(
     initial: Record<T, boolean> = {} as Record<T, boolean>
 ): RecordSetStore<T> => {
     const withFalseRemoved = (record: Record<T, boolean>): Record<T, true> => {
         return Object.fromEntries(Object.entries(record).filter(([, v]) => v)) as Record<T, true>
-    }
-    const withoutKeys = (record: Record<T, boolean>, items: T[]): Record<T, boolean> => {
-        const removed = new Set(items.map(String))
-        return Object.fromEntries(
-            Object.entries(record).filter(([key]) => !removed.has(key))
-        ) as Record<T, boolean>
     }
     const { subscribe, update, set } = writable<Record<T, boolean>>(withFalseRemoved(initial))
     const updateAndRemoveFalse = (fn: Updater<Record<T, boolean>>) => {
@@ -283,7 +293,7 @@ export const recordSetStore = <T extends string | number>(
     const toggle = (item: T) => {
         update(($recordSet) => {
             if ($recordSet[item] === true) {
-                return withoutKeys($recordSet, [item])
+                return withoutKey($recordSet, String(item)) as Record<T, boolean>
             }
             return {
                 ...$recordSet,
@@ -304,10 +314,10 @@ export const recordSetStore = <T extends string | number>(
         }))
     }
     const remove = (item: T) => {
-        update(($recordSet) => withoutKeys($recordSet, [item]))
+        update(($recordSet) => withoutKey($recordSet, String(item)) as Record<T, boolean>)
     }
     const removeAll = (items: T[]) => {
-        update(($recordSet) => withoutKeys($recordSet, items))
+        update(($recordSet) => withoutKeys($recordSet, items.map(String)) as Record<T, boolean>)
     }
     const clear = () => {
         set({} as Record<T, boolean>)

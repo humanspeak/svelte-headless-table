@@ -1,9 +1,7 @@
 import { derived, writable, type Writable } from 'svelte/store'
 import type { HeaderCell } from '../headerCells.js'
 import type { NewTableAttributeSet, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
-import { nonUndefined } from '../utils/filter.js'
-import { sum } from '../utils/math.js'
-import { keyedProp } from '../utils/store.js'
+import { keyedProp, withoutKey } from '../utils/store.js'
 
 /**
  * Configuration options for the addResizedColumns plugin.
@@ -92,13 +90,6 @@ const isCellDisabled = <Item>(cell: HeaderCell<Item>, disabledIds: string[]) => 
 }
 
 /**
- * Reads a column width. Width records are sparse: columns that have not been
- * measured or given an initial width have no entry.
- * @internal
- */
-const widthOf = (widths: Record<string, number>, id: string): number | undefined => widths[id]
-
-/**
  * Returns a copy of `widths` with `id` set to `width`, or with `id` removed
  * when `width` is undefined.
  * @internal
@@ -111,8 +102,7 @@ const withWidth = (
     if (width !== undefined) {
         return { ...widths, [id]: width }
     }
-    const { [id]: _removed, ...rest } = widths
-    return rest
+    return withoutKey(widths, id)
 }
 
 /**
@@ -123,7 +113,7 @@ const withWidth = (
 const groupWidth = (widths: Record<string, number>, ids: string[]): number | undefined => {
     let total = 0
     for (const id of ids) {
-        const width = widthOf(widths, id)
+        const width = widths[id]
         if (width === undefined) return undefined
         total += width
     }
@@ -212,13 +202,13 @@ export const addResizedColumns =
                             cell.ids.forEach((id) => {
                                 if (nodeForId.has(id)) {
                                     columnWidths.update(($columnWidths) =>
-                                        withWidth($columnWidths, id, widthOf(initialWidths, id))
+                                        withWidth($columnWidths, id, initialWidths[id])
                                     )
                                 }
                             })
                         } else if (nodeForId.has(cell.id)) {
                             columnWidths.update(($columnWidths) =>
-                                withWidth($columnWidths, cell.id, widthOf(initialWidths, cell.id))
+                                withWidth($columnWidths, cell.id, initialWidths[cell.id])
                             )
                         }
                     }
@@ -244,10 +234,10 @@ export const addResizedColumns =
                         columnsWidthState.update(($columnsWidthState) => {
                             const { current } = $columnsWidthState
                             const ids = cell.isGroup() ? cell.ids : [cell.id]
-                            const start = ids.reduce(
-                                (acc, id) => withWidth(acc, id, widthOf(current, id)),
-                                $columnsWidthState.start
-                            )
+                            let start = $columnsWidthState.start
+                            for (const id of ids) {
+                                start = withWidth(start, id, current[id])
+                            }
                             return { ...$columnsWidthState, start }
                         })
                         if (event instanceof MouseEvent) {
@@ -274,13 +264,12 @@ export const addResizedColumns =
                                 const enabledIds = cell.ids.filter(
                                     (id) => !disabledResizeIds.includes(id)
                                 )
-                                const totalStartWidth = sum(
-                                    enabledIds
-                                        .map((id) => widthOf($columnsWidthState.start, id))
-                                        .filter(nonUndefined)
-                                )
+                                let totalStartWidth = 0
+                                for (const id of enabledIds) {
+                                    totalStartWidth += $columnsWidthState.start[id] ?? 0
+                                }
                                 enabledIds.forEach((id) => {
-                                    const startWidth = widthOf($columnsWidthState.start, id)
+                                    const startWidth = $columnsWidthState.start[id]
                                     if (startWidth !== undefined) {
                                         $updatedState.current[id] = Math.max(
                                             0,
@@ -289,7 +278,7 @@ export const addResizedColumns =
                                     }
                                 })
                             } else {
-                                const startWidth = widthOf($columnsWidthState.start, cell.id)
+                                const startWidth = $columnsWidthState.start[cell.id]
                                 const { minWidth = 0, maxWidth } = columnOptions[cell.id] ?? {}
                                 if (startWidth !== undefined) {
                                     $updatedState.current[cell.id] = Math.min(
@@ -308,19 +297,25 @@ export const addResizedColumns =
                             cell.ids.forEach((id) => {
                                 const node = nodeForId.get(id)
                                 if (node !== undefined) {
-                                    columnWidths.update(($columnWidths) => ({
-                                        ...$columnWidths,
-                                        [id]: node.getBoundingClientRect().width
-                                    }))
+                                    columnWidths.update(($columnWidths) =>
+                                        withWidth(
+                                            $columnWidths,
+                                            id,
+                                            node.getBoundingClientRect().width
+                                        )
+                                    )
                                 }
                             })
                         } else {
                             const node = nodeForId.get(cell.id)
                             if (node !== undefined) {
-                                columnWidths.update(($columnWidths) => ({
-                                    ...$columnWidths,
-                                    [cell.id]: node.getBoundingClientRect().width
-                                }))
+                                columnWidths.update(($columnWidths) =>
+                                    withWidth(
+                                        $columnWidths,
+                                        cell.id,
+                                        node.getBoundingClientRect().width
+                                    )
+                                )
                             }
                         }
                         onResizeEnd?.(event)
@@ -335,10 +330,13 @@ export const addResizedColumns =
                     const $props = (node: Element) => {
                         nodeForId.set(cell.id, node)
                         if (cell.isFlat()) {
-                            columnWidths.update(($columnWidths) => ({
-                                ...$columnWidths,
-                                [cell.id]: node.getBoundingClientRect().width
-                            }))
+                            columnWidths.update(($columnWidths) =>
+                                withWidth(
+                                    $columnWidths,
+                                    cell.id,
+                                    node.getBoundingClientRect().width
+                                )
+                            )
                         }
                         return {
                             destroy() {
@@ -373,7 +371,7 @@ export const addResizedColumns =
                     const attrs = derived(columnWidths, ($columnWidths) => {
                         const width = cell.isGroup()
                             ? groupWidth($columnWidths, cell.ids)
-                            : widthOf($columnWidths, cell.id)
+                            : $columnWidths[cell.id]
                         if (width === undefined) {
                             return {}
                         }
@@ -391,7 +389,7 @@ export const addResizedColumns =
                 },
                 'tbody.tr.td': (cell) => {
                     const attrs = derived(columnWidths, ($columnWidths) => {
-                        const width = widthOf($columnWidths, cell.id)
+                        const width = $columnWidths[cell.id]
                         if (width === undefined) {
                             return {}
                         }

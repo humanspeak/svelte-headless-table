@@ -1,5 +1,4 @@
 import { derived, get, type Readable } from 'svelte/store'
-import type { BodyCell } from '../bodyCells.js'
 import type { BodyRow } from '../bodyRows.js'
 import type { NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { isReadable } from '../utils/store.js'
@@ -71,7 +70,7 @@ const getObjectsFromRows = <Item>(
     return rows.map((row) => {
         const dataObject = Object.fromEntries(
             ids.map((id) => {
-                const cell = row.cellForId[id] as BodyCell<Item> | undefined
+                const cell = row.cellForId[id]
                 if (cell === undefined) {
                     return [id, null]
                 }
@@ -102,7 +101,7 @@ const getObjectsFromRows = <Item>(
 const getCsvFromRows = <Item>(rows: BodyRow<Item>[], ids: string[]): string => {
     const dataLines = rows.map((row) => {
         const line = ids.map((id) => {
-            const cell = row.cellForId[id] as BodyCell<Item> | undefined
+            const cell = row.cellForId[id]
             if (cell === undefined) {
                 return null
             }
