@@ -1,5 +1,6 @@
 import { includeIgnoreFile } from '@eslint/compat'
 import js from '@eslint/js'
+import tsParser from '@typescript-eslint/parser'
 import prettier from 'eslint-config-prettier'
 import svelte from 'eslint-plugin-svelte'
 import unusedImports from 'eslint-plugin-unused-imports'
@@ -173,7 +174,14 @@ export default [
         files: ['**/*.svelte', '**/*.svelte.ts'],
         languageOptions: {
             parserOptions: {
-                parser: ts.parser
+                // The full `@typescript-eslint/parser` module, not `ts.parser`:
+                // svelte-eslint-parser recognises it by shape. Given only
+                // `ts.parser` it probes with `parseForESLint('', {})`, which
+                // throws once a second config (docs/) has registered its own
+                // tsconfigRootDir in the same process, as in Trunk's batched
+                // runs. The probe failing drops the rune typings, so every
+                // `$props()` becomes `any`.
+                parser: tsParser
             }
         }
     },
