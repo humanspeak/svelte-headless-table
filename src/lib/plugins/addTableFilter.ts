@@ -36,12 +36,13 @@ export interface TableFilterState<Item> {
  * @template _Item - The type of data items (unused but required for type inference).
  */
 // Item generic needed to infer type on `getFilteredRows`
-/* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
 export interface TableFilterColumnOptions<_Item> {
     /** If true, this column is excluded from filtering. */
     exclude?: boolean
     /** Custom function to extract the filter value from the cell value. */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // `any` is the user-facing cell value: column options are not tied to the column's
+    // value type, and callbacks such as `(item) => item.progress` must keep compiling.
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
     getFilterValue?: (_value: any) => string
 }
 
@@ -116,7 +117,7 @@ export const rowMatchesFilter = <Item>(
     const visibleCellIds = new Set(row.cells.map((c) => c.id))
 
     const rowCellMatches = Object.values(row.cellForId).map((cell) => {
-        const cellOptions = columnOptions[cell.id] as TableFilterColumnOptions<Item> | undefined
+        const cellOptions = columnOptions[cell.id]
         if (cellOptions?.exclude === true) {
             return false
         }

@@ -42,7 +42,6 @@
         textPrefixFilter
     } from '$lib/plugins/index.js'
     import type { TableViewModel } from '$lib/createViewModel.svelte.js'
-    import type { AnyPlugins } from '$lib/types/TablePlugin.js'
     import PerfTable from './_PerfTable.svelte'
     import PerfTableStore from './_PerfTableStore.svelte'
     import { page } from '$app/state'
@@ -117,7 +116,7 @@
     const DEPTS = ['Eng', 'Sales', 'Marketing', 'HR', 'Finance', 'Ops', 'Legal', 'Support']
 
     const buildFlatRows = (count: number, seed = 0): Row[] => {
-        const out: Row[] = new Array(count)
+        const out: Row[] = new Array<Row>(count)
         for (let i = 0; i < count; i++) {
             const idx = seed + i
             out[i] = {
@@ -136,7 +135,7 @@
     }
 
     const buildTreeRows = (parents: number, kids: number): Row[] => {
-        const out: Row[] = new Array(parents)
+        const out: Row[] = new Array<Row>(parents)
         for (let p = 0; p < parents; p++) {
             const [parent] = buildFlatRows(1, p)
             parent.children = buildFlatRows(kids, p * kids + 100_000)
@@ -147,7 +146,7 @@
 
     type WideRow = Record<string, string | number>
     const buildWideRows = (count: number, cols: number): WideRow[] => {
-        const out: WideRow[] = new Array(count)
+        const out: WideRow[] = new Array<WideRow>(count)
         for (let i = 0; i < count; i++) {
             const row: WideRow = { id: `r${i}` }
             for (let c = 0; c < cols; c++) {
@@ -167,7 +166,7 @@
     // The Item generic is washed to `unknown` because the render template
     // only uses the surface every scenario exposes (headerRows, pageRows,
     // tableAttrs, ...) — no Item-typed methods are called.
-    type AnyVm = TableViewModel<unknown, AnyPlugins>
+    type AnyVm = TableViewModel<unknown>
     let currentVm = $state<AnyVm | null>(null)
     let renderVariant = $state<'flat' | 'tree' | 'wide' | 'grouped'>('flat')
 
@@ -572,7 +571,7 @@
             colDefs.push(
                 table.column({
                     header: `Col ${c}`,
-                    accessor: id as keyof WideRow
+                    accessor: id
                 })
             )
         }
@@ -666,7 +665,7 @@
             colDefs.push(
                 table.column({
                     header: `Col ${c}`,
-                    accessor: id as keyof WideRow
+                    accessor: id
                 })
             )
         }
@@ -1199,7 +1198,7 @@
     // ---- Observer wiring (verbatim from svelte-markdown perf-bench) ----------
 
     onMount(() => {
-        const cleanups: Array<() => void> = []
+        const cleanups: (() => void)[] = []
 
         try {
             const po = new PerformanceObserver((list) => {

@@ -7,9 +7,7 @@
     `createRender`) as the configured component with its props and slotted
     children.
 -->
-<!-- trunk-ignore(eslint/@typescript-eslint/no-explicit-any) -->
-<script lang="ts" generics="TComponent extends Component<any>">
-    import type { Component } from 'svelte'
+<script lang="ts">
     import { readable, type Readable } from 'svelte/store'
     import { isReadable } from '$lib/utils/store.js'
     import Render from './Render.svelte'
@@ -19,7 +17,7 @@
         type RenderConfig
     } from './createRender.js'
 
-    const { of: config }: { of: RenderConfig<TComponent> } = $props()
+    const { of: config }: { of: RenderConfig } = $props()
 
     // Primitive-or-store branch: a store that always exists lets the template
     // use `$` auto-subscription on a $derived value (same trick the
@@ -45,7 +43,7 @@
     // spread `$propsStore` whether the caller passed a plain object or a Readable.
     const componentConfig = $derived(
         typeof config === 'object' && !isReadable(config) && snippetConfig === undefined
-            ? (config as ComponentRenderConfig<TComponent>)
+            ? (config as ComponentRenderConfig)
             : undefined
     )
     const propsStore: Readable<Record<string, unknown>> = $derived(

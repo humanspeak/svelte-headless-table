@@ -43,10 +43,12 @@ export interface SortByColumnOptions {
     /** If true, this column cannot be sorted. */
     disable?: boolean
     /** Custom function to extract the sortable value from the cell value. */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // `any` is the user-facing cell value: column options are not tied to the column's
+    // value type, and callbacks such as `(item) => item.salary` must keep compiling.
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
     getSortValue?: (_value: any) => string | number | (string | number)[]
     /** Custom comparison function for sorting. */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
     compareFn?: (_left: any, _right: any) => number
     /** If true, inverts the sort order for this column. */
     invert?: boolean
@@ -102,8 +104,7 @@ export const createSortKeysStore = (initKeys: SortKey[]): WritableSortKeys => {
     ) => {
         update(($sortKeys) => {
             const keyIdx = $sortKeys.findIndex((key) => key.id === id)
-            const key = $sortKeys[keyIdx]
-            const order = key?.order
+            const order = keyIdx === -1 ? undefined : $sortKeys[keyIdx]?.order
             const orderIdx = toggleOrder.findIndex((o) => o === order)
             const nextOrderIdx = (orderIdx + 1) % toggleOrder.length
             const nextOrder = toggleOrder[nextOrderIdx]
@@ -149,9 +150,9 @@ export const createSortKeysStore = (initKeys: SortKey[]): WritableSortKeys => {
  */
 interface ToggleOptions {
     /** Whether to allow multiple sort keys. */
-    multiSort?: boolean
-    /** Custom toggle order cycle. */
-    toggleOrder?: ('asc' | 'desc' | undefined)[]
+    multiSort?: boolean | undefined
+    /** Custom toggle order cycle. Undefined uses the default order. */
+    toggleOrder?: ('asc' | 'desc' | undefined)[] | undefined
 }
 
 /**
@@ -182,14 +183,17 @@ const getSortedRows = <Item, Row extends BodyRow<Item>>(
     columnOptions: Record<string, SortByColumnOptions>
 ): Row[] => {
     // Pre-compute sort config for each key to avoid repeated lookups during comparison
-    const sortConfig = sortKeys.map((key) => ({
-        id: key.id,
-        order: key.order,
-        invert: columnOptions[key.id]?.invert ?? false,
-        compareFn: columnOptions[key.id]?.compareFn,
-        getSortValue: columnOptions[key.id]?.getSortValue,
-        orderFactor: (key.order === 'desc' ? -1 : 1) * (columnOptions[key.id]?.invert ? -1 : 1)
-    }))
+    const sortConfig = sortKeys.map((key) => {
+        const options = columnOptions[key.id]
+        return {
+            id: key.id,
+            order: key.order,
+            invert: options?.invert ?? false,
+            compareFn: options?.compareFn,
+            getSortValue: options?.getSortValue,
+            orderFactor: (key.order === 'desc' ? -1 : 1) * (options?.invert ? -1 : 1)
+        }
+    })
 
     // Shallow clone to prevent sort affecting `preSortedRows`.
     const $sortedRows = [...rows] as typeof rows
@@ -200,7 +204,7 @@ const getSortedRows = <Item, Row extends BodyRow<Item>>(
             const cellB = b.cellForId[config.id]
             // Only need to check properties of `cellA` as both should have the same
             // properties.
-            if (!cellA.isData()) {
+            if (!cellA?.isData()) {
                 return 0
             }
             const valueA = cellA.value
@@ -226,13 +230,13 @@ const getSortedRows = <Item, Row extends BodyRow<Item>>(
         }
         return 0
     })
-    for (let i = 0; i < $sortedRows.length; i++) {
-        const { subRows } = $sortedRows[i]
+    for (const [i, row] of $sortedRows.entries()) {
+        const { subRows } = row
         if (subRows === undefined) {
             continue
         }
         const sortedSubRows = getSortedRows<Item, Row>(subRows as Row[], sortKeys, columnOptions)
-        const clonedRow = $sortedRows[i].clone() as Row
+        const clonedRow = row.clone() as Row
         clonedRow.subRows = sortedSubRows
         $sortedRows[i] = clonedRow
     }

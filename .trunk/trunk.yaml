@@ -58,6 +58,10 @@ lint:
               - typescript
               - svelte
               - javascript
+          # Library sources are linted against tsconfig.lib.json (see
+          # eslint.config.mjs); it must exist in Trunk's sandbox copy.
+          affects_cache:
+              - tsconfig.lib.json
     enabled:
         - grype@0.119.0
         - sort-package-json@4.0.0

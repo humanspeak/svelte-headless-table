@@ -482,7 +482,7 @@ export const addVirtualScroll = <Item>({
     /**
      * Svelte action to attach to the scroll container.
      */
-    const virtualScroll: Action<HTMLElement> = (node) => {
+    const virtualScroll: Action = (node) => {
         attachedNodes.add(node)
         scrollContainer = node
 
@@ -584,9 +584,11 @@ export const addVirtualScroll = <Item>({
         // offsetting an already-compressed position by natural row and
         // viewport heights would land far from the requested row — at 8x
         // compression, centring would overshoot by dozens of rows.
-        const rowHeight = isSparse
-            ? heightManager.getAverageHeight()
-            : heightManager.getHeight($rowIds[index])
+        const rowId = $rowIds[index]
+        const rowHeight =
+            isSparse || rowId === undefined
+                ? heightManager.getAverageHeight()
+                : heightManager.getHeight(rowId)
         const rowStart = isSparse
             ? index * rowHeight
             : heightManager.getOffsetForIndex($rowIds, index)
@@ -641,7 +643,7 @@ export const addVirtualScroll = <Item>({
      *
      * Usage: `<thead class="sticky top-0" use:measureHeaderAction>`
      */
-    const measureHeaderAction: Action<HTMLElement> = (node) => {
+    const measureHeaderAction: Action = (node) => {
         headerNode = node
         measureHeaderOverlap()
 
@@ -670,7 +672,8 @@ export const addVirtualScroll = <Item>({
     const measureRow = (rowId: string, height: number) => {
         // If getRowHeight is provided, prefer that
         if (getRowHeight) {
-            const row = allRowsCache[get(rowIndexById).get(rowId) ?? -1]
+            const rowIndex = get(rowIndexById).get(rowId)
+            const row = rowIndex === undefined ? undefined : allRowsCache[rowIndex]
             if (row?.isData() && row.original) {
                 const specifiedHeight = getRowHeight(row.original)
                 if (specifiedHeight !== height) {
@@ -780,8 +783,7 @@ export const addVirtualScroll = <Item>({
             const index = new Map<string, number>()
             const currentIds = get(rowIds)
             let changed = $rows.length !== currentIds.length
-            for (let i = 0; i < $rows.length; i++) {
-                const id = $rows[i].id
+            for (const [i, { id }] of $rows.entries()) {
                 ids[i] = id
                 index.set(id, i)
                 if (!changed && id !== currentIds[i]) {

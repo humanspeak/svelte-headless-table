@@ -12,7 +12,7 @@ import type { AnyPlugins } from './TablePlugin.js'
  * @template Plugins - The plugins used by the table.
  * @template Value - The type of the cell value.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// trunk-ignore(eslint/@typescript-eslint/no-explicit-any): `any` keeps labels bivariant in the cell value type
 export type DataLabel<Item, Plugins extends AnyPlugins = AnyPlugins, Value = any> = (
     _cell: DataBodyCell<Item, AnyPlugins, Value>,
     _state: TableState<Item, Plugins>
@@ -39,5 +39,17 @@ export type DisplayLabel<Item, Plugins extends AnyPlugins = AnyPlugins> = (
  * @template Plugins - The plugins used by the table.
  */
 export type HeaderLabel<Item, Plugins extends AnyPlugins = AnyPlugins> =
-    | RenderConfig
-    | ((_cell: HeaderCell<Item, Plugins>, _state: TableState<Item, Plugins>) => RenderConfig)
+    RenderConfig | HeaderLabelFn<Item, Plugins>
+
+/**
+ * The render-function form of {@link HeaderLabel}, declared through a method
+ * signature so it is bivariant in its parameters. A plain function type would
+ * make `HeaderCell` invariant in `Plugins`, and plugin hooks (typed against the
+ * default plugins) could no longer accept a table's concrete header cells.
+ */
+export type HeaderLabelFn<Item, Plugins extends AnyPlugins = AnyPlugins> = {
+    bivarianceHack(
+        _cell: HeaderCell<Item, Plugins>,
+        _state: TableState<Item, Plugins>
+    ): RenderConfig
+}['bivarianceHack']

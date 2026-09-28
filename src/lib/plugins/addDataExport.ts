@@ -71,6 +71,9 @@ const getObjectsFromRows = <Item>(
         const dataObject = Object.fromEntries(
             ids.map((id) => {
                 const cell = row.cellForId[id]
+                if (cell === undefined) {
+                    return [id, null]
+                }
                 if (cell.isData()) {
                     return [id, cell.value]
                 }
@@ -99,6 +102,9 @@ const getCsvFromRows = <Item>(rows: BodyRow<Item>[], ids: string[]): string => {
     const dataLines = rows.map((row) => {
         const line = ids.map((id) => {
             const cell = row.cellForId[id]
+            if (cell === undefined) {
+                return null
+            }
             if (cell.isData()) {
                 return cell.value
             }
@@ -168,6 +174,7 @@ export const addDataExport =
                     ) as DataExport<F>
                 case 'csv':
                     return getCsvFromRows($rows, $exportedIds) as DataExport<F>
+                case 'object':
                 default:
                     return getObjectsFromRows($rows, $exportedIds, childrenKey) as DataExport<F>
             }

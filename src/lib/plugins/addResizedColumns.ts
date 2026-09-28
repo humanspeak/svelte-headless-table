@@ -1,8 +1,7 @@
 import { derived, writable, type Writable } from 'svelte/store'
 import type { HeaderCell } from '../headerCells.js'
 import type { NewTableAttributeSet, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
-import { sum } from '../utils/math.js'
-import { keyedProp } from '../utils/store.js'
+import { keyedProp, withoutKey } from '../utils/store.js'
 
 /**
  * Configuration options for the addResizedColumns plugin.
@@ -78,17 +77,47 @@ export type ResizedColumnsAttributeSet = NewTableAttributeSet<{
  */
 const getDragXPos = (event: Event): number => {
     if (event instanceof MouseEvent) return event.clientX
-    if (event instanceof TouchEvent) return event.targetTouches[0].pageX
+    if (event instanceof TouchEvent) return event.targetTouches.item(0)?.pageX ?? 0
     return 0
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const isCellDisabled = (cell: HeaderCell<any>, disabledIds: string[]) => {
+const isCellDisabled = <Item>(cell: HeaderCell<Item>, disabledIds: string[]) => {
     if (disabledIds.includes(cell.id)) return true
     if (cell.isGroup() && cell.ids.every((id) => disabledIds.includes(id))) {
         return true
     }
     return false
+}
+
+/**
+ * Returns a copy of `widths` with `id` set to `width`, or with `id` removed
+ * when `width` is undefined.
+ * @internal
+ */
+const withWidth = (
+    widths: Record<string, number>,
+    id: string,
+    width: number | undefined
+): Record<string, number> => {
+    if (width !== undefined) {
+        return { ...widths, [id]: width }
+    }
+    return withoutKey(widths, id)
+}
+
+/**
+ * Sums the widths of a group's columns. Undefined until every column has a width
+ * (a partial sum would be wrong, and the old NaN result was not valid CSS).
+ * @internal
+ */
+const groupWidth = (widths: Record<string, number>, ids: string[]): number | undefined => {
+    let total = 0
+    for (const id of ids) {
+        const width = widths[id]
+        if (width === undefined) return undefined
+        total += width
+    }
+    return total
 }
 
 /**
@@ -142,10 +171,10 @@ export const addResizedColumns =
             .filter(([, option]) => option.disable === true)
             .map(([columnId]) => columnId)
 
-        const initialWidths = Object.fromEntries(
-            Object.entries(columnOptions)
-                .filter(([, option]) => option.initialWidth !== undefined)
-                .map(([columnId, { initialWidth }]) => [columnId, initialWidth as number])
+        const initialWidths: Record<string, number> = Object.fromEntries(
+            Object.entries(columnOptions).flatMap(([columnId, { initialWidth }]) =>
+                initialWidth === undefined ? [] : [[columnId, initialWidth] as const]
+            )
         )
 
         const columnsWidthState = writable<ColumnsWidthState>({
@@ -156,8 +185,8 @@ export const addResizedColumns =
 
         const pluginState = { columnWidths }
 
-        const dragStartXPosForId: Record<string, number> = {}
-        const nodeForId: Record<string, Element> = {}
+        const dragStartXPosForId = new Map<string, number>()
+        const nodeForId = new Map<string, Element>()
 
         return {
             pluginState,
@@ -171,22 +200,16 @@ export const addResizedColumns =
                         event.preventDefault()
                         if (cell.isGroup()) {
                             cell.ids.forEach((id) => {
-                                const node = nodeForId[id]
-                                if (node !== undefined) {
-                                    columnWidths.update(($columnWidths) => ({
-                                        ...$columnWidths,
-                                        [id]: initialWidths[id]
-                                    }))
+                                if (nodeForId.has(id)) {
+                                    columnWidths.update(($columnWidths) =>
+                                        withWidth($columnWidths, id, initialWidths[id])
+                                    )
                                 }
                             })
-                        } else {
-                            const node = nodeForId[cell.id]
-                            if (node !== undefined) {
-                                columnWidths.update(($columnWidths) => ({
-                                    ...$columnWidths,
-                                    [cell.id]: initialWidths[cell.id]
-                                }))
-                            }
+                        } else if (nodeForId.has(cell.id)) {
+                            columnWidths.update(($columnWidths) =>
+                                withWidth($columnWidths, cell.id, initialWidths[cell.id])
+                            )
                         }
                     }
                     let tapedTwice = false
@@ -207,20 +230,15 @@ export const addResizedColumns =
                         if (target === null) return
                         event.stopPropagation()
                         event.preventDefault()
-                        dragStartXPosForId[cell.id] = getDragXPos(event)
+                        dragStartXPosForId.set(cell.id, getDragXPos(event))
                         columnsWidthState.update(($columnsWidthState) => {
-                            const $updatedState = {
-                                ...$columnsWidthState,
-                                start: { ...$columnsWidthState.start }
+                            const { current } = $columnsWidthState
+                            const ids = cell.isGroup() ? cell.ids : [cell.id]
+                            let start = $columnsWidthState.start
+                            for (const id of ids) {
+                                start = withWidth(start, id, current[id])
                             }
-                            if (cell.isGroup()) {
-                                cell.ids.forEach((id) => {
-                                    $updatedState.start[id] = $columnsWidthState.current[id]
-                                })
-                            } else {
-                                $updatedState.start[cell.id] = $columnsWidthState.current[cell.id]
-                            }
-                            return $updatedState
+                            return { ...$columnsWidthState, start }
                         })
                         if (event instanceof MouseEvent) {
                             window.addEventListener('mousemove', dragMove)
@@ -233,7 +251,10 @@ export const addResizedColumns =
                     const dragMove = (event: Event) => {
                         event.stopPropagation()
                         event.preventDefault()
-                        const deltaWidth = getDragXPos(event) - dragStartXPosForId[cell.id]
+                        // Always set by `dragStart`, which registers this listener.
+                        const dragStartXPos = dragStartXPosForId.get(cell.id)
+                        if (dragStartXPos === undefined) return
+                        const deltaWidth = getDragXPos(event) - dragStartXPos
                         columnsWidthState.update(($columnsWidthState) => {
                             const $updatedState = {
                                 ...$columnsWidthState,
@@ -243,9 +264,10 @@ export const addResizedColumns =
                                 const enabledIds = cell.ids.filter(
                                     (id) => !disabledResizeIds.includes(id)
                                 )
-                                const totalStartWidth = sum(
-                                    enabledIds.map((id) => $columnsWidthState.start[id])
-                                )
+                                let totalStartWidth = 0
+                                for (const id of enabledIds) {
+                                    totalStartWidth += $columnsWidthState.start[id] ?? 0
+                                }
                                 enabledIds.forEach((id) => {
                                     const startWidth = $columnsWidthState.start[id]
                                     if (startWidth !== undefined) {
@@ -273,21 +295,27 @@ export const addResizedColumns =
                         event.preventDefault()
                         if (cell.isGroup()) {
                             cell.ids.forEach((id) => {
-                                const node = nodeForId[id]
+                                const node = nodeForId.get(id)
                                 if (node !== undefined) {
-                                    columnWidths.update(($columnWidths) => ({
-                                        ...$columnWidths,
-                                        [id]: node.getBoundingClientRect().width
-                                    }))
+                                    columnWidths.update(($columnWidths) =>
+                                        withWidth(
+                                            $columnWidths,
+                                            id,
+                                            node.getBoundingClientRect().width
+                                        )
+                                    )
                                 }
                             })
                         } else {
-                            const node = nodeForId[cell.id]
+                            const node = nodeForId.get(cell.id)
                             if (node !== undefined) {
-                                columnWidths.update(($columnWidths) => ({
-                                    ...$columnWidths,
-                                    [cell.id]: node.getBoundingClientRect().width
-                                }))
+                                columnWidths.update(($columnWidths) =>
+                                    withWidth(
+                                        $columnWidths,
+                                        cell.id,
+                                        node.getBoundingClientRect().width
+                                    )
+                                )
                             }
                         }
                         onResizeEnd?.(event)
@@ -300,16 +328,19 @@ export const addResizedColumns =
                         }
                     }
                     const $props = (node: Element) => {
-                        nodeForId[cell.id] = node
+                        nodeForId.set(cell.id, node)
                         if (cell.isFlat()) {
-                            columnWidths.update(($columnWidths) => ({
-                                ...$columnWidths,
-                                [cell.id]: node.getBoundingClientRect().width
-                            }))
+                            columnWidths.update(($columnWidths) =>
+                                withWidth(
+                                    $columnWidths,
+                                    cell.id,
+                                    node.getBoundingClientRect().width
+                                )
+                            )
                         }
                         return {
                             destroy() {
-                                delete nodeForId[cell.id]
+                                nodeForId.delete(cell.id)
                             }
                         }
                     }
@@ -339,7 +370,7 @@ export const addResizedColumns =
                     })
                     const attrs = derived(columnWidths, ($columnWidths) => {
                         const width = cell.isGroup()
-                            ? sum(cell.ids.map((id) => $columnWidths[id]))
+                            ? groupWidth($columnWidths, cell.ids)
                             : $columnWidths[cell.id]
                         if (width === undefined) {
                             return {}

@@ -80,9 +80,9 @@ export type TablePluginInstance<
  * Used as a type constraint for the plugins parameter.
  */
 export type AnyPlugins = Record<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
     any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
     TablePlugin<any, any, any, any, any>
 >
 
@@ -91,9 +91,9 @@ export type AnyPlugins = Record<
  * Used internally after plugins are initialized.
  */
 export type AnyPluginInstances = Record<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
     any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
     TablePluginInstance<any, any, any, any, any>
 >
 
@@ -160,12 +160,7 @@ export type AttributesForKey<Item, Plugins extends AnyPlugins = AnyPlugins> = {
  */
 export type ComponentKeys = keyof Components<unknown>
 
-type TablePropSet<
-    PropSet extends {
-        /* trunk-ignore(eslint/no-unused-vars) */
-        [_K in ComponentKeys]?: unknown
-    }
-> = {
+type TablePropSet<PropSet extends Partial<Record<ComponentKeys, unknown>>> = {
     [K in ComponentKeys]: PropSet[K]
 }
 
@@ -174,31 +169,21 @@ type TablePropSet<
  *
  * @template PropSet - The prop set definition.
  */
-export type NewTablePropSet<
-    PropSet extends {
-        /* trunk-ignore(eslint/no-unused-vars) */
-        [_K in ComponentKeys]?: unknown
-    }
-> = {
+export type NewTablePropSet<PropSet extends Partial<Record<ComponentKeys, unknown>>> = {
     [K in ComponentKeys]: unknown extends PropSet[K] ? never : PropSet[K]
 }
 
 /**
  * A table prop set with any types. Used as a type constraint.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
 export type AnyTablePropSet = TablePropSet<any>
 
 /**
  * Internal type for mapping component keys to attribute sets.
  * @internal
  */
-type TableAttributeSet<
-    AttributeSet extends {
-        /* trunk-ignore(eslint/no-unused-vars) */
-        [_K in ComponentKeys]?: unknown
-    }
-> = {
+type TableAttributeSet<AttributeSet extends Partial<Record<ComponentKeys, unknown>>> = {
     [K in ComponentKeys]: AttributeSet[K]
 }
 
@@ -207,19 +192,14 @@ type TableAttributeSet<
  *
  * @template AttributeSet - The attribute set definition.
  */
-export type NewTableAttributeSet<
-    AttributeSet extends {
-        /* trunk-ignore(eslint/no-unused-vars) */
-        [_K in ComponentKeys]?: unknown
-    }
-> = {
+export type NewTableAttributeSet<AttributeSet extends Partial<Record<ComponentKeys, unknown>>> = {
     [K in ComponentKeys]: unknown extends AttributeSet[K] ? never : AttributeSet[K]
 }
 
 /**
  * A table attribute set with any types. Used as a type constraint.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
 export type AnyTableAttributeSet = TableAttributeSet<any>
 
 /**
@@ -269,7 +249,7 @@ export type PluginStates<Plugins extends AnyPlugins> = {
  */
 type TablePropSetForPluginKey<Plugins extends AnyPlugins> = {
     // Plugins[K] does not extend TablePlugin<unknown, unknown, unknown, infer TablePropSet>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
     [K in keyof Plugins]: Plugins[K] extends TablePlugin<any, any, any, infer TablePropSet>
         ? TablePropSet
         : never

@@ -2,6 +2,7 @@ import { includeIgnoreFile } from '@eslint/compat'
 import js from '@eslint/js'
 import prettier from 'eslint-config-prettier'
 import svelte from 'eslint-plugin-svelte'
+import unusedImports from 'eslint-plugin-unused-imports'
 import globals from 'globals'
 import { fileURLToPath } from 'node:url'
 import ts from 'typescript-eslint'
@@ -26,7 +27,8 @@ export default [
             '**/yarn.lock',
             'src/routes/poc',
             '**/dist',
-            '**/*.test.ts'
+            '**/*.test.ts',
+            '**/*.d.ts'
         ]
     },
     js.configs.recommended,
@@ -44,28 +46,19 @@ export default [
                 tsconfigRootDir: import.meta.dirname
             }
         },
+        plugins: {
+            'unused-imports': unusedImports
+        },
         rules: {
-            semi: ['warn', 'never'],
-            quotes: ['error', 'single'],
-            'dot-location': ['warn', 'property'],
-            'guard-for-in': ['warn'],
-            'no-multi-spaces': ['warn'],
-            yoda: ['warn', 'never'],
-            camelcase: ['error'],
-            'comma-style': ['warn'],
-            'comma-dangle': ['off', 'always-multiline'],
-            'block-spacing': ['warn'],
-            'keyword-spacing': ['warn'],
-            'no-trailing-spaces': ['warn'],
-            'no-unneeded-ternary': ['warn'],
-            'no-whitespace-before-property': ['warn'],
-            'object-curly-spacing': ['warn', 'always'],
-            'space-before-blocks': ['warn'],
-            'space-in-parens': ['warn'],
-            'arrow-spacing': ['warn'],
-            'no-duplicate-imports': ['error'],
-            'no-var': ['error'],
-            'prefer-const': ['error'],
+            // Formatting is Prettier's job (see eslint-config-prettier above);
+            // only correctness and consistency rules live here.
+            camelcase: 'error',
+            'guard-for-in': 'error',
+            'no-duplicate-imports': ['error', { allowSeparateTypeImports: true }],
+            'no-unneeded-ternary': 'error',
+            'no-var': 'error',
+            'prefer-const': 'error',
+            yoda: 'error',
 
             // The newer eslint-plugin-svelte ships a strict rule requiring
             // every internal `href` to flow through SvelteKit's typed
@@ -83,18 +76,14 @@ export default [
                 }
             ],
 
-            'no-unused-vars': [
-                'warn',
-                {
-                    argsIgnorePattern: '^_',
-                    ignoreRestSiblings: true
-                }
-            ],
-
+            'no-unused-vars': 'off',
+            'unused-imports/no-unused-imports': 'error',
             '@typescript-eslint/no-unused-vars': [
-                'warn',
+                'error',
                 {
                     argsIgnorePattern: '^_',
+                    varsIgnorePattern: '^_',
+                    caughtErrorsIgnorePattern: '^_',
                     ignoreRestSiblings: true
                 }
             ]

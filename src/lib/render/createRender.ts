@@ -11,9 +11,12 @@ import type { Readable } from 'svelte/store'
  *
  * @template TComponent - The Svelte component type.
  */
-// trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-export type RenderConfig<TComponent extends Component = Component<any>> =
+// trunk-ignore(eslint/@typescript-eslint/no-explicit-any): props are contravariant; `any` is the only default every component is assignable to
+type AnyComponent = Component<any>
+
+export type RenderConfig<TComponent extends Component = AnyComponent> =
     | ComponentRenderConfig<TComponent>
+    // Snippet args are contravariant; `any` accepts a snippet of any argument type
     // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
     | SnippetRenderConfig<any>
     | string
@@ -25,8 +28,7 @@ export type RenderConfig<TComponent extends Component = Component<any>> =
  *
  * @template TComponent - The Svelte component type.
  */
-// trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-export class ComponentRenderConfig<TComponent extends Component = Component<any>> {
+export class ComponentRenderConfig<TComponent extends Component = AnyComponent> {
     /**
      * The Svelte component to render.
      */
@@ -35,7 +37,7 @@ export class ComponentRenderConfig<TComponent extends Component = Component<any>
     /**
      * Optional props to pass to the component.
      */
-    props?: Record<string, unknown>
+    props?: Record<string, unknown> | undefined
 
     /**
      * Creates a new component render configuration.
@@ -52,7 +54,8 @@ export class ComponentRenderConfig<TComponent extends Component = Component<any>
      * @deprecated This method will be removed in the next major release. Please use svelte-5 event syntax instead.
      * List of event handlers to attach to the component.
      */
-    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any,eslint/no-unused-vars)
+    // Deprecated API; handlers of any event type are stored together
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
     eventHandlers: [string, (ev: any) => void][] = []
 
     /**
@@ -65,15 +68,18 @@ export class ComponentRenderConfig<TComponent extends Component = Component<any>
      * @param handler - The event handler function.
      * @returns this - For method chaining.
      */
-    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+    // Type parameters kept so callers passing explicit type arguments to this
+    // deprecated method still compile; `any` is the untyped-handler default.
+    // trunk-ignore(eslint/@typescript-eslint/no-unnecessary-type-parameters,eslint/@typescript-eslint/no-explicit-any)
     on<TEventType extends string, TEvent = any>(
         type: TEventType,
-        // trunk-ignore(eslint/no-unused-vars)
         handler: (ev: TEvent) => void
     ): this {
+        // The deprecated method maintains its own deprecated field
+        // trunk-ignore(eslint/@typescript-eslint/no-deprecated)
         this.eventHandlers.push([type, handler])
         this.props ??= {}
-        this.props[`on${String(type)}`] = handler
+        this.props[`on${type}`] = handler
         return this
     }
 
@@ -97,45 +103,21 @@ export class ComponentRenderConfig<TComponent extends Component = Component<any>
 }
 
 /**
- * Creates a render configuration for a Svelte component without props.
+ * Creates a render configuration for a Svelte component, optionally with props.
  *
  * @template TComponent - The Svelte component type.
  * @param component - The component to render.
+ * @param props - Optional props to pass to the component, either static or a `Readable` store.
  * @returns A new {@link ComponentRenderConfig} instance.
  *
  * @example
  * ```ts
  * const config = createRender(MyComponent)
- * ```
- */
-// trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-export function createRender<TComponent extends Component<any>>(
-    // trunk-ignore(eslint/no-unused-vars)
-    component: TComponent
-): ComponentRenderConfig<TComponent>
-/**
- * Creates a render configuration for a Svelte component with props.
- *
- * @template TComponent - The Svelte component type.
- * @param component - The component to render.
- * @param props - The props to pass to the component, either static or a `Readable` store.
- * @returns A new {@link ComponentRenderConfig} instance.
- *
- * @example
- * ```ts
- * const config = createRender(MyComponent, { name: 'World' })
+ * const withProps = createRender(MyComponent, { name: 'World' })
  * const reactive = createRender(MyComponent, derived(store, ($s) => ({ name: $s })))
  * ```
  */
-// trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-export function createRender<TComponent extends Component<any>>(
-    // trunk-ignore(eslint/no-unused-vars)
-    component: TComponent,
-    // trunk-ignore(eslint/no-unused-vars)
-    props: Partial<ComponentProps<TComponent>> | Readable<ComponentProps<TComponent>>
-): ComponentRenderConfig<TComponent>
-// trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-export function createRender<TComponent extends Component<any>>(
+export function createRender<TComponent extends AnyComponent>(
     component: TComponent,
     props?: Partial<ComponentProps<TComponent>> | Readable<ComponentProps<TComponent>>
 ): ComponentRenderConfig<TComponent> {
@@ -151,10 +133,8 @@ export function createRender<TComponent extends Component<any>>(
 export class SnippetRenderConfig<Args = void> {
     constructor(
         /** The snippet to render. */
-        // trunk-ignore(eslint/no-unused-vars)
         public snippet: Snippet<[Args]>,
         /** The single argument passed to the snippet, static or reactive. */
-        // trunk-ignore(eslint/no-unused-vars)
         public args: Args | Readable<Args>
     ) {}
 }

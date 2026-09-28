@@ -10,7 +10,6 @@ import { DEFAULT_ROW_STATE_CACHE_CONFIG } from './cacheConfig.js'
  *
  * @template _Item - The type of data items (unused but required for type inference).
  */
-/* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
 export interface ExpandedRowsConfig<_Item> {
     /** Initial expanded state keyed by row ID. */
     initialExpandedIds?: Record<string, boolean>
@@ -53,7 +52,7 @@ const withExpandedRows = <Item, Row extends BodyRow<Item>>(
     if (row.subRows === undefined) {
         return [row]
     }
-    if (expandedIds[row.id] !== true) {
+    if (!expandedIds[row.id]) {
         return [row]
     }
     const expandedSubRows = row.subRows.flatMap((subRow) =>

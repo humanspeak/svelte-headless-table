@@ -1,14 +1,15 @@
 import type { BodyCell } from '$lib/bodyCells.js'
-import { BodyRow, DataBodyRow, getBodyRows, getColumnedBodyRows } from '$lib/bodyRows.js'
-import { FlatColumn, getFlatColumns, type Column } from '$lib/columns.js'
+import { getBodyRows, getColumnedBodyRows, type BodyRow, type DataBodyRow } from '$lib/bodyRows.js'
+import { getFlatColumns, type Column, type FlatColumn } from '$lib/columns.js'
 import type { Table } from '$lib/createTable.js'
-import { getHeaderRows, HeaderRow } from '$lib/headerRows.js'
+import { getHeaderRows, type HeaderRow } from '$lib/headerRows.js'
 import type {
     AnyPlugins,
     DeriveFlatColumnsFn,
     DeriveFn,
     DeriveRowsFn,
-    PluginStates
+    PluginStates,
+    TablePluginInstance
 } from '$lib/types/TablePlugin.js'
 import { finalizeAttributes } from '$lib/utils/attributes.js'
 import { nonUndefined } from '$lib/utils/filter.js'
@@ -20,8 +21,7 @@ import { derived, fromStore, readable, writable, type Readable, type Writable } 
  * @template Item - The type of data items in the table.
  * @template Plugins - The plugins used by the table.
  */
-/* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
-export type TableAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = Record<
+export type TableAttributes<_Item, _Plugins extends AnyPlugins = AnyPlugins> = Record<
     string,
     unknown
 > & {
@@ -34,8 +34,7 @@ export type TableAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = Rec
  * @template Item - The type of data items in the table.
  * @template Plugins - The plugins used by the table.
  */
-/* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
-export type TableHeadAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = Record<
+export type TableHeadAttributes<_Item, _Plugins extends AnyPlugins = AnyPlugins> = Record<
     string,
     unknown
 >
@@ -46,8 +45,7 @@ export type TableHeadAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> =
  * @template Item - The type of data items in the table.
  * @template Plugins - The plugins used by the table.
  */
-/* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
-export type TableBodyAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = Record<
+export type TableBodyAttributes<_Item, _Plugins extends AnyPlugins = AnyPlugins> = Record<
     string,
     unknown
 > & {
@@ -212,8 +210,7 @@ export interface TableState<Item, Plugins extends AnyPlugins = AnyPlugins> exten
  */
 export interface CreateViewModelOptions<Item> {
     /** Optional function to generate a unique ID for each data item. */
-    /* trunk-ignore(eslint/no-unused-vars) */
-    rowDataId?: (item: Item, index: number) => string
+    rowDataId?: ((item: Item, index: number) => string) | undefined
     /**
      * Opt into reusing the previously built view model.
      *
@@ -227,7 +224,7 @@ export interface CreateViewModelOptions<Item> {
      * Honored by `Table#createViewModel` only; the standalone `createViewModel`
      * function has nowhere to cache and ignores it.
      */
-    reuseKey?: string
+    reuseKey?: string | undefined
 }
 
 /**
@@ -312,32 +309,24 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         pageRows: _pageRows
     }
 
-    const pluginInstances = Object.fromEntries(
-        Object.entries(plugins).map(([pluginName, plugin]) => {
-            const columnOptions = Object.fromEntries(
-                flatColumnsValue
-                    .map((c) => {
-                        const option = c.plugins?.[pluginName]
-                        if (option === undefined) return undefined
-                        return [c.id, option] as const
-                    })
-                    .filter(nonUndefined)
-            )
-            return [
-                pluginName,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                plugin({ pluginName, tableState: pluginInitTableState as any, columnOptions })
-            ]
-        })
-    ) as {
-        [K in keyof Plugins]: ReturnType<Plugins[K]>
-    }
+    const pluginEntries: [string, TablePluginInstance<Item, unknown, unknown>][] = Object.entries(
+        plugins
+    ).map(([pluginName, plugin]) => {
+        const columnOptions = Object.fromEntries(
+            flatColumnsValue
+                .map((c) => {
+                    const option = c.plugins?.[pluginName]
+                    if (option === undefined) return undefined
+                    return [c.id, option] as const
+                })
+                .filter(nonUndefined)
+        )
+        return [pluginName, plugin({ pluginName, tableState: pluginInitTableState, columnOptions })]
+    })
+    const pluginInstances = pluginEntries.map(([, pluginInstance]) => pluginInstance)
 
     const pluginStates = Object.fromEntries(
-        Object.entries(pluginInstances).map(([key, pluginInstance]) => [
-            key,
-            pluginInstance.pluginState
-        ])
+        pluginEntries.map(([key, pluginInstance]) => [key, pluginInstance.pluginState])
     ) as PluginStates<Plugins>
 
     const tableState: TableState<Item, Plugins> = {
@@ -355,7 +344,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         pluginStates
     }
 
-    const deriveTableAttrsFns: DeriveFn<TableAttributes<Item>>[] = Object.values(pluginInstances)
+    const deriveTableAttrsFns: DeriveFn<TableAttributes<Item>>[] = pluginInstances
         .map((pluginInstance) => pluginInstance.deriveTableAttrs)
         .filter(nonUndefined)
     let tableAttrs = readable<TableAttributes<Item>>({
@@ -373,10 +362,8 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         return finalizedAttrsValue
     })
 
-    const deriveTableHeadAttrsFns: DeriveFn<TableHeadAttributes<Item>>[] = Object.values(
-        pluginInstances
-    )
-        .map((pluginInstance) => pluginInstance.deriveTableBodyAttrs)
+    const deriveTableHeadAttrsFns: DeriveFn<TableHeadAttributes<Item>>[] = pluginInstances
+        .map((pluginInstance) => pluginInstance.deriveTableHeadAttrs)
         .filter(nonUndefined)
     let tableHeadAttrs = readable<TableHeadAttributes<Item>>({})
     deriveTableHeadAttrsFns.forEach((fn) => {
@@ -393,9 +380,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         return finalizedAttrsValue
     })
 
-    const deriveTableBodyAttrsFns: DeriveFn<TableBodyAttributes<Item>>[] = Object.values(
-        pluginInstances
-    )
+    const deriveTableBodyAttrsFns: DeriveFn<TableBodyAttributes<Item>>[] = pluginInstances
         .map((pluginInstance) => pluginInstance.deriveTableBodyAttrs)
         .filter(nonUndefined)
     let tableBodyAttrs = readable<TableBodyAttributes<Item>>({
@@ -415,15 +400,13 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         return finalizedAttrsValue
     })
 
-    const deriveFlatColumnsFns: DeriveFlatColumnsFn<Item>[] = Object.values(pluginInstances)
+    const deriveFlatColumnsFns: DeriveFlatColumnsFn<Item>[] = pluginInstances
         .map((pluginInstance) => pluginInstance.deriveFlatColumns)
         .filter(nonUndefined)
 
     let visibleColumns = flatColumns
     deriveFlatColumnsFns.forEach((fn) => {
-        // Variance of generic type here is unstable. Not sure how to fix.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        visibleColumns = fn(visibleColumns as any) as any
+        visibleColumns = fn(visibleColumns)
     })
 
     const injectedColumns = derived(visibleColumns, (visibleColumnsValue) => {
@@ -448,17 +431,14 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         }
     )
 
-    const deriveRowsFns: DeriveRowsFn<Item>[] = Object.values(pluginInstances)
+    const deriveRowsFns: DeriveRowsFn<Item>[] = pluginInstances
         .map((pluginInstance) => pluginInstance.deriveRows)
         .filter(nonUndefined)
 
     let rows = columnedRows
     deriveRowsFns.forEach((fn) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        rows = fn(rows as any) as any
+        rows = fn(rows)
     })
-
-    const pluginEntries = Object.entries(pluginInstances)
 
     // Pre-filter to plugins that actually define each body hook.
     // The previous shape walked every plugin per row and did two
@@ -468,19 +448,15 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     // for plugins that have nothing to contribute here. Plugin
     // shape is static after createTable, so it's safe to resolve
     // these once at view-model build time.
-    type TrHookFn = NonNullable<
-        NonNullable<ReturnType<Plugins[keyof Plugins]>['hooks']>['tbody.tr']
-    >
-    type TdHookFn = NonNullable<
-        NonNullable<ReturnType<Plugins[keyof Plugins]>['hooks']>['tbody.tr.td']
-    >
-    const trHookEntries: [string, TrHookFn][] = []
-    const tdHookEntries: [string, TdHookFn][] = []
+    //
+    type Hooks = NonNullable<TablePluginInstance<Item, unknown, unknown>['hooks']>
+    const trHookEntries: [string, NonNullable<Hooks['tbody.tr']>][] = []
+    const tdHookEntries: [string, NonNullable<Hooks['tbody.tr.td']>][] = []
     for (const [name, instance] of pluginEntries) {
         const trHook = instance.hooks?.['tbody.tr']
-        if (trHook !== undefined) trHookEntries.push([name, trHook as TrHookFn])
+        if (trHook !== undefined) trHookEntries.push([name, trHook])
         const tdHook = instance.hooks?.['tbody.tr.td']
-        if (tdHook !== undefined) tdHookEntries.push([name, tdHook as TdHookFn])
+        if (tdHook !== undefined) tdHookEntries.push([name, tdHook])
     }
 
     // Hoisted out of the per-row loop so we don't allocate a fresh
@@ -510,15 +486,14 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         return rowsValue
     })
 
-    const derivePageRowsFns: DeriveRowsFn<Item>[] = Object.values(pluginInstances)
+    const derivePageRowsFns: DeriveRowsFn<Item>[] = pluginInstances
         .map((pluginInstance) => pluginInstance.derivePageRows)
         .filter(nonUndefined)
 
     // Must derive from `injectedRows` instead of `rows` to ensure that `_rows` is set.
     let pageRows = injectedRows
     derivePageRowsFns.forEach((fn) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        pageRows = fn(pageRows as any) as any
+        pageRows = fn(pageRows)
     })
 
     // Page rows are a subset of the same object references already processed

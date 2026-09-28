@@ -10,6 +10,10 @@ import {
 /** Union type representing either a Readable or Writable Svelte store. */
 export type ReadOrWritable<T> = Readable<T> | Writable<T>
 
+/** True for values that can carry properties (objects and functions), mirroring `value?.prop`. */
+const isObjectLike = (value: unknown): value is object =>
+    (typeof value === 'object' && value !== null) || typeof value === 'function'
+
 /**
  * Type guard that checks if a value is a Svelte Readable store.
  *
@@ -23,9 +27,8 @@ export type ReadOrWritable<T> = Readable<T> | Writable<T>
  * }
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isReadable = <T>(value: any): value is Readable<T> => {
-    return value?.subscribe instanceof Function
+export const isReadable = <T>(value: unknown): value is Readable<T> => {
+    return isObjectLike(value) && 'subscribe' in value && value.subscribe instanceof Function
 }
 
 /**
@@ -41,9 +44,14 @@ export const isReadable = <T>(value: any): value is Readable<T> => {
  * }
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isWritable = <T>(store: any): store is Writable<T> => {
-    return store?.update instanceof Function && store.set instanceof Function
+export const isWritable = <T>(store: unknown): store is Writable<T> => {
+    return (
+        isObjectLike(store) &&
+        'update' in store &&
+        store.update instanceof Function &&
+        'set' in store &&
+        store.set instanceof Function
+    )
 }
 
 /**
@@ -95,12 +103,12 @@ export type DerivedKeys<S extends ReadOrWritableKeys<unknown>> =
  */
 export const derivedKeys = <S extends ReadOrWritableKeys<unknown>>(storeMap: S): DerivedKeys<S> => {
     // Freeze the order of entries.
-    const entries = Object.entries(storeMap) as [string, Readable<unknown>][]
+    const entries: [string, Readable<unknown>][] = Object.entries(storeMap)
     const keys = entries.map(([key]) => key)
     return derived(
         entries.map(([, store]) => store),
         ($stores) => {
-            return Object.fromEntries($stores.map((store, idx) => [keys[idx], store]))
+            return Object.fromEntries(keys.map((key, idx) => [key, $stores[idx]]))
         }
     ) as DerivedKeys<S>
 }
@@ -253,13 +261,29 @@ export interface RecordSetStore<T extends string | number> extends Writable<Reco
  * expandedIds.toggle('row1') // Removes 'row1'
  * ```
  */
+/**
+ * Returns a copy of `record` without `key`. The input is not mutated.
+ */
+export const withoutKey = <T>(record: Record<string, T>, key: string): Record<string, T> => {
+    const { [key]: _removed, ...rest } = record
+    return rest
+}
+
+/**
+ * Returns a copy of `record` without any of `keys`. The input is not mutated.
+ */
+export const withoutKeys = <T>(record: Record<string, T>, keys: string[]): Record<string, T> => {
+    const removed = new Set(keys)
+    return Object.fromEntries(Object.entries(record).filter(([key]) => !removed.has(key)))
+}
+
 export const recordSetStore = <T extends string | number>(
     initial: Record<T, boolean> = {} as Record<T, boolean>
 ): RecordSetStore<T> => {
     const withFalseRemoved = (record: Record<T, boolean>): Record<T, true> => {
         return Object.fromEntries(Object.entries(record).filter(([, v]) => v)) as Record<T, true>
     }
-    const { subscribe, update, set } = writable(withFalseRemoved(initial))
+    const { subscribe, update, set } = writable<Record<T, boolean>>(withFalseRemoved(initial))
     const updateAndRemoveFalse = (fn: Updater<Record<T, boolean>>) => {
         update(($recordSet) => {
             const newRecordSet = fn($recordSet)
@@ -269,8 +293,7 @@ export const recordSetStore = <T extends string | number>(
     const toggle = (item: T) => {
         update(($recordSet) => {
             if ($recordSet[item] === true) {
-                delete $recordSet[item]
-                return $recordSet
+                return withoutKey($recordSet, String(item)) as Record<T, boolean>
             }
             return {
                 ...$recordSet,
@@ -291,21 +314,13 @@ export const recordSetStore = <T extends string | number>(
         }))
     }
     const remove = (item: T) => {
-        update(($recordSet) => {
-            delete $recordSet[item]
-            return $recordSet
-        })
+        update(($recordSet) => withoutKey($recordSet, String(item)) as Record<T, boolean>)
     }
     const removeAll = (items: T[]) => {
-        update(($recordSet) => {
-            for (const item of items) {
-                delete $recordSet[item]
-            }
-            return $recordSet
-        })
+        update(($recordSet) => withoutKeys($recordSet, items.map(String)) as Record<T, boolean>)
     }
     const clear = () => {
-        set({} as Record<T, true>)
+        set({} as Record<T, boolean>)
     }
     return {
         subscribe,

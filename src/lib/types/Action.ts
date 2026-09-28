@@ -4,7 +4,7 @@
  *
  * @template Props - The type of props passed to the action.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// trunk-ignore(eslint/@typescript-eslint/no-explicit-any): default accepts actions with any props type
 export type ActionReturnType<Props = any> = {
     /** Called when props change. */
     update?: (_newProps: Props) => void
@@ -18,4 +18,5 @@ export type ActionReturnType<Props = any> = {
  *
  * @template Props - The type of props passed to the action.
  */
+// trunk-ignore(eslint/@typescript-eslint/no-invalid-void-type): mirrors svelte/action, actions may return nothing
 export type Action<Props> = (_node: Element, _props?: Props) => ActionReturnType<Props> | void

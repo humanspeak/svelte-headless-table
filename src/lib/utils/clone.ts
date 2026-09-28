@@ -34,7 +34,8 @@ export const isClonable = <T>(obj: unknown): obj is Clonable<T> => {
  * @returns A new instance object with all properties shallow copied.
  */
 export const unsafeClone = <T extends object>(source: T, props?: Partial<T>): T => {
-    const clone = Object.assign(Object.create(Object.getPrototypeOf(source)), source)
+    const prototype = Object.getPrototypeOf(source) as object | null
+    const clone = Object.assign(Object.create(prototype) as T, source)
     if (props !== undefined) {
         Object.assign(clone, props)
     }

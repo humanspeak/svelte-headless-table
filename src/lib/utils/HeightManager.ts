@@ -72,7 +72,7 @@ export class HeightManager {
      *
      * @param estimatedRowHeight - Initial estimated height for unmeasured rows.
      */
-    constructor(estimatedRowHeight: number = 40) {
+    constructor(estimatedRowHeight = 40) {
         this.estimatedRowHeight = estimatedRowHeight
     }
 
@@ -166,8 +166,12 @@ export class HeightManager {
         const avgHeight = this.getAverageHeight()
         let offset = 0
 
-        for (let i = 0; i < index && i < rowIds.length; i++) {
-            offset += this.heightCache.get(rowIds[i]) ?? avgHeight
+        // Index loop on purpose: this runs on every scroll frame, so it must
+        // not copy the (possibly 100k-entry) id list.
+        for (let i = 0; i < index; i++) {
+            const rowId = rowIds.at(i)
+            if (rowId === undefined) break
+            offset += this.heightCache.get(rowId) ?? avgHeight
         }
 
         return offset

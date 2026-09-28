@@ -18,9 +18,7 @@ import { getNullMatrix, getTransposed } from '$lib/utils/matrix.js'
  * @template Item - The type of data items in the table.
  * @template Plugins - The plugins used by the table.
  */
-/* trunk-ignore(eslint/@typescript-eslint/no-unused-vars) */
-/* trunk-ignore(eslint/no-unused-vars) */
-export type HeaderRowAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = {
+export type HeaderRowAttributes<_Item, _Plugins extends AnyPlugins = AnyPlugins> = {
     role: 'row'
 }
 
@@ -66,7 +64,7 @@ export class HeaderRow<Item, Plugins extends AnyPlugins = AnyPlugins> extends Ta
      * @param attrs - The merged plugin attributes.
      * @returns The attributes with `role` set.
      */
-    protected decorateAttrs(attrs: Record<string, unknown>) {
+    protected override decorateAttrs(attrs: Record<string, unknown>) {
         return {
             ...attrs,
             role: 'row' as const
@@ -105,8 +103,7 @@ export const getHeaderRows = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     // to reduce the number of expensive transpose operations required.
     let columnMatrix = getTransposed(rowMatrix)
     columnMatrix = getOrderedColumnMatrix(columnMatrix, flatColumnIds)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    populateGroupHeaderCellIds(columnMatrix as any)
+    populateGroupHeaderCellIds(columnMatrix)
     return headerRowsForRowMatrix(getTransposed(columnMatrix))
 }
 
@@ -132,16 +129,30 @@ export const getHeaderRowMatrix = <Item, Plugins extends AnyPlugins = AnyPlugins
         loadHeaderRowMatrix(rowMatrix, c, heightOffset, cellOffset)
         cellOffset += c.isGroup() ? c.ids.length : 1
     })
+    const lastRow = rowMatrix.at(maxHeight - 1)
     // Replace null cells with blank display cells.
     return rowMatrix.map((cells, rowIdx) =>
         cells.map((cell, columnIdx) => {
             if (cell !== null) return cell
             if (rowIdx === maxHeight - 1)
                 return new FlatDisplayHeaderCell({ id: columnIdx.toString(), colstart: columnIdx })
-            const flatId = rowMatrix[maxHeight - 1][columnIdx]?.id ?? columnIdx.toString()
+            const flatId = lastRow?.[columnIdx]?.id ?? columnIdx.toString()
             return new GroupDisplayHeaderCell({ ids: [], allIds: [flatId], colstart: columnIdx })
         })
     )
+}
+
+/**
+ * Returns a matrix row, or throws when the matrix is shorter than expected.
+ *
+ * @throws RangeError if the row does not exist.
+ */
+const matrixRow = <T>(matrix: Matrix<T>, rowIdx: number): T[] => {
+    const row = matrix.at(rowIdx)
+    if (row === undefined) {
+        throw new RangeError(`Header row ${rowIdx} is out of bounds`)
+    }
+    return row
 }
 
 const loadHeaderRowMatrix = <Item, Plugins extends AnyPlugins = AnyPlugins>(
@@ -152,31 +163,29 @@ const loadHeaderRowMatrix = <Item, Plugins extends AnyPlugins = AnyPlugins>(
 ) => {
     if (column.isData()) {
         // `DataHeaderCell` should always be in the last row.
-        rowMatrix[rowMatrix.length - 1][cellOffset] = new DataHeaderCell({
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            label: column.header as any,
+        matrixRow(rowMatrix, -1)[cellOffset] = new DataHeaderCell<Item, Plugins>({
+            label: column.header,
             accessorFn: column.accessorFn,
-            accessorKey: column.accessorKey as keyof Item,
+            accessorKey: column.accessorKey,
             id: column.id,
             colstart: cellOffset
         })
         return
     }
     if (column.isDisplay()) {
-        rowMatrix[rowMatrix.length - 1][cellOffset] = new FlatDisplayHeaderCell({
+        matrixRow(rowMatrix, -1)[cellOffset] = new FlatDisplayHeaderCell<Item, Plugins>({
             id: column.id,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            label: column.header as any,
+            label: column.header,
             colstart: cellOffset
         })
         return
     }
     if (column.isGroup()) {
         // Fill multi-colspan cells.
+        const groupRow = matrixRow(rowMatrix, rowOffset)
         for (let i = 0; i < column.ids.length; i++) {
-            rowMatrix[rowOffset][cellOffset + i] = new GroupHeaderCell({
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                label: column.header as any,
+            groupRow[cellOffset + i] = new GroupHeaderCell<Item, Plugins>({
+                label: column.header,
                 colspan: 1,
                 allIds: column.ids,
                 ids: [],
@@ -213,8 +222,8 @@ export const getOrderedColumnMatrix = <Item, Plugins extends AnyPlugins = AnyPlu
     // The `FlatHeaderCell` should be the last cell of each column.
     flatColumnIds.forEach((key, columnIdx) => {
         const nextColumn = columnMatrix.find((columnCells) => {
-            const flatCell = columnCells[columnCells.length - 1]
-            if (!flatCell.isFlat()) {
+            const flatCell = columnCells.at(-1)
+            if (!flatCell?.isFlat()) {
                 throw new Error('The last element of each column must be a `FlatHeaderCell`')
             }
             return flatCell.id === key
@@ -232,10 +241,12 @@ export const getOrderedColumnMatrix = <Item, Plugins extends AnyPlugins = AnyPlu
     return orderedColumnMatrix
 }
 
-const populateGroupHeaderCellIds = <Item>(columnMatrix: Matrix<HeaderCell<Item>>) => {
+const populateGroupHeaderCellIds = <Item, Plugins extends AnyPlugins>(
+    columnMatrix: Matrix<HeaderCell<Item, Plugins>>
+) => {
     columnMatrix.forEach((columnCells) => {
-        const lastCell = columnCells[columnCells.length - 1]
-        if (!lastCell.isFlat()) {
+        const lastCell = columnCells.at(-1)
+        if (!lastCell?.isFlat()) {
             throw new Error('The last element of each column must be a `FlatHeaderCell`')
         }
         columnCells.forEach((c) => {
@@ -279,34 +290,19 @@ export const getMergedRow = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         return cells
     }
     const mergedCells: HeaderCell<Item, Plugins>[] = []
-    let startIdx = 0
-    // endIdx is initialized inside the merge branch (line ~293) before
-    // it's read; declared here only so the inner-while loop can see it.
-    let endIdx: number
-    while (startIdx < cells.length) {
-        const cell = cells[startIdx].clone()
-        if (!cell.isGroup()) {
-            mergedCells.push(cell)
-            startIdx++
+    for (const cell of cells) {
+        // Adjacent cells of the same group fold into the last pushed cell.
+        const last = mergedCells.at(-1)
+        if (last?.isGroup() && cell.isGroup() && cell.allId === last.allId) {
+            last.setIds([...last.ids, ...cell.ids])
+            last.colspan += 1
             continue
         }
-        endIdx = startIdx + 1
-        const ids: string[] = [...cell.ids]
-        while (endIdx < cells.length) {
-            const nextCell = cells[endIdx]
-            if (!nextCell.isGroup()) {
-                break
-            }
-            if (cell.allId !== nextCell.allId) {
-                break
-            }
-            ids.push(...nextCell.ids)
-            endIdx++
+        const clonedCell = cell.clone()
+        if (clonedCell.isGroup()) {
+            clonedCell.colspan = 1
         }
-        cell.setIds(ids)
-        cell.colspan = endIdx - startIdx
-        mergedCells.push(cell)
-        startIdx = endIdx
+        mergedCells.push(clonedCell)
     }
     return mergedCells
 }

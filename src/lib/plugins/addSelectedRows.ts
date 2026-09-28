@@ -11,7 +11,6 @@ import { DEFAULT_ROW_STATE_CACHE_CONFIG } from './cacheConfig.js'
  *
  * @template _Item - The type of data items (unused but required for type inference).
  */
-/* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
 export interface SelectedRowsConfig<_Item> {
     /** Initial selection state keyed by data ID. */
     initialSelectedDataIds?: Record<string, boolean>
@@ -160,7 +159,7 @@ const getRowIsSelectedStore = <Item>(
             const oldValue = isAllSubRowsSelectedForRow(row, $selectedDataIds, linkDataSubRows)
             const $updatedSelectedDataIds = { ...$selectedDataIds }
             writeSelectedDataIds(row, fn(oldValue), $updatedSelectedDataIds, linkDataSubRows)
-            if (row.parentRow !== undefined && row.parentRow.isData()) {
+            if (row.parentRow?.isData()) {
                 $updatedSelectedDataIds[row.parentRow.dataId] = isAllSubRowsSelectedForRow(
                     row.parentRow,
                     $updatedSelectedDataIds,

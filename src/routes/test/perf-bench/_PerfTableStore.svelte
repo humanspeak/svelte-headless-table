@@ -14,9 +14,8 @@
      */
     import { Render, Subscribe } from '$lib/index.js'
     import type { TableViewModel } from '$lib/createViewModel.svelte.js'
-    import type { AnyPlugins } from '$lib/types/TablePlugin.js'
 
-    type AnyVm = TableViewModel<unknown, AnyPlugins>
+    type AnyVm = TableViewModel<unknown>
     // The parent fixture keys this component on `vm` so a scenario change
     // forces a clean remount; within a single instance `vm` never changes.
     // The store references destructured below stay live for the component's

@@ -36,9 +36,12 @@ export const compare = <T extends string | number>(a: T | T[], b: T | T[]): numb
  * ```
  */
 export const compareArray = <T extends string | number>(a: T[], b: T[]): number => {
-    const minLength = Math.min(a.length, b.length)
-    for (let i = 0; i < minLength; i++) {
-        const order = compare(a[i], b[i])
+    const length = Math.min(a.length, b.length)
+    for (let i = 0; i < length; i++) {
+        const aValue = a[i]
+        const bValue = b[i]
+        if (aValue === undefined || bValue === undefined) break
+        const order = compare(aValue, bValue)
         if (order !== 0) return order
     }
     return 0

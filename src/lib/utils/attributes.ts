@@ -42,7 +42,6 @@ export const mergeAttributes = <
  * Converts an attributes object's style property from an object to a CSS string.
  * This prepares attributes for use in DOM elements.
  *
- * @template T - The type of the attributes object.
  * @param attrs - The attributes object with a potential style object.
  * @returns A new attributes object with the style converted to a string.
  * @example
@@ -51,9 +50,7 @@ export const mergeAttributes = <
  * // Returns { class: 'foo', style: 'color:red' }
  * ```
  */
-export const finalizeAttributes = <T extends Record<string, unknown>>(
-    attrs: T
-): Record<string, unknown> => {
+export const finalizeAttributes = (attrs: Record<string, unknown>): Record<string, unknown> => {
     if (attrs.style === undefined || typeof attrs.style !== 'object') {
         return attrs
     }

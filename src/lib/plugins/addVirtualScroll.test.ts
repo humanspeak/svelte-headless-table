@@ -35,7 +35,6 @@ class FakeScrollElement extends EventTarget {
 }
 
 beforeAll(() => {
-    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
     ;(globalThis as any).ResizeObserver = class {
         observe() {}
         unobserve() {}
@@ -48,7 +47,6 @@ function attachScrollAction(
     state: { virtualScroll: (_node: HTMLElement) => unknown },
     node: FakeScrollElement
 ) {
-    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
     const ret = state.virtualScroll(node as any) as { destroy?: () => void } | undefined
     return { node, destroy: () => ret?.destroy?.() }
 }
@@ -903,7 +901,6 @@ describe('addVirtualScroll sparse mode', () => {
         })
         const { state, unsubscribe } = createSparseTable({ onRangeChange })
         const node = new FakeScrollElement(10 * ROW_HEIGHT)
-        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
         const action = state.virtualScroll(node as any)
 
         node.scroll(70_000 * ROW_HEIGHT)
@@ -1366,7 +1363,6 @@ describe('addVirtualScroll with content above the rows', () => {
         const unsubscribe = vm.pageRows.subscribe(() => {})
         const state = vm.pluginStates.virtualScroll
         const node = new OffsetScrollElement()
-        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
         state.virtualScroll(node as any)
         return { vm, state, node, unsubscribe }
     }
@@ -1377,7 +1373,7 @@ describe('addVirtualScroll with content above the rows', () => {
         state: ReturnType<typeof build>['state'],
         node: OffsetScrollElement
     ) => {
-        const first = get(vm.pageRows)[0]
+        const first = get(vm.pageRows).at(0)
         if (first !== undefined) {
             state.measureRowAction(rowNode(node, get(state.topSpacerHeight)), first.id)
         }
@@ -1428,7 +1424,6 @@ describe('addVirtualScroll with content above the rows', () => {
         const unsubscribe = vm.pageRows.subscribe(() => {})
         const state = vm.pluginStates.virtualScroll
         const node = new OffsetScrollElement()
-        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
         state.virtualScroll(node as any)
 
         node.scroll(400)
@@ -1511,7 +1506,6 @@ describe('addVirtualScroll with a sticky header', () => {
         const unsubscribe = vm.pageRows.subscribe(() => {})
         const state = vm.pluginStates.virtualScroll
         const node = new StickyContainer()
-        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
         state.virtualScroll(node as any)
         return { vm, state, node, unsubscribe }
     }
@@ -1523,7 +1517,7 @@ describe('addVirtualScroll with a sticky header', () => {
         top: number
     ) => {
         node.scroll(top)
-        const first = get(vm.pageRows)[0]
+        const first = get(vm.pageRows).at(0)
         if (first !== undefined) {
             state.measureRowAction(rowNode(node, get(state.topSpacerHeight)), first.id)
         }
@@ -1569,7 +1563,6 @@ describe('addVirtualScroll with a sticky header', () => {
         const unsubscribe = vm.pageRows.subscribe(() => {})
         const state = vm.pluginStates.virtualScroll
         const node = new StickyContainer()
-        // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
         state.virtualScroll(node as any)
         state.measureHeaderAction(stickyHeaderNode())
 

@@ -197,7 +197,7 @@ describe('Table.column method', () => {
 
         it('handles accessor returning undefined', () => {
             interface PartialUser {
-                name?: string
+                name?: string | undefined
             }
             const partialData = writable<PartialUser[]>([{ name: undefined }])
             const partialTable = createTable(partialData)

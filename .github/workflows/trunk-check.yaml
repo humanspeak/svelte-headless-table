@@ -20,5 +20,18 @@ jobs:
               with:
                   persist-credentials: false
 
+            - uses: pnpm/action-setup@v6 # zizmor: ignore[unpinned-uses]
+
+            - name: Use Node.js - 24
+              uses: actions/setup-node@v7 # zizmor: ignore[unpinned-uses]
+              with:
+                  node-version: 24
+
+            # The type-aware ESLint rules need the generated `.svelte-kit/tsconfig.json`
+            # (our tsconfig extends it for the `$lib` path alias). `prepare` runs
+            # `svelte-kit sync`, so a plain install produces it.
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile --config.engine-strict=false
+
             - name: Trunk Code Quality
               uses: trunk-io/trunk-action@v1 # zizmor: ignore[unpinned-uses]

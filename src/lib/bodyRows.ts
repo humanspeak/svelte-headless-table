@@ -1,5 +1,5 @@
-import { BodyCell, DataBodyCell, DisplayBodyCell } from '$lib/bodyCells.js'
-import type { DataColumn, DisplayColumn, FlatColumn } from '$lib/columns.js'
+import { type BodyCell, DataBodyCell, DisplayBodyCell } from '$lib/bodyCells.js'
+import type { FlatColumn } from '$lib/columns.js'
 import { TableComponent } from '$lib/tableComponent.svelte.js'
 import type { AnyPlugins } from '$lib/types/TablePlugin.js'
 import { nonUndefined } from '$lib/utils/filter.js'
@@ -15,7 +15,7 @@ export type BodyRowInit<Item, Plugins extends AnyPlugins = AnyPlugins> = {
     cells: BodyCell<Item, Plugins>[]
     cellForId: Record<string, BodyCell<Item, Plugins>>
     depth?: number
-    parentRow?: BodyRow<Item, Plugins>
+    parentRow?: BodyRow<Item, Plugins> | undefined
 }
 
 /**
@@ -24,8 +24,7 @@ export type BodyRowInit<Item, Plugins extends AnyPlugins = AnyPlugins> = {
  * @template Item - The type of data items in the table.
  * @template Plugins - The plugins used by the table.
  */
-/* trunk-ignore(eslint/no-unused-vars,eslint/@typescript-eslint/no-unused-vars) */
-export type BodyRowAttributes<Item, Plugins extends AnyPlugins = AnyPlugins> = {
+export type BodyRowAttributes<_Item, _Plugins extends AnyPlugins = AnyPlugins> = {
     role: 'row'
 }
 
@@ -49,8 +48,8 @@ export abstract class BodyRow<Item, Plugins extends AnyPlugins = AnyPlugins> ext
      */
     cellForId: Record<string, BodyCell<Item, Plugins>>
     depth: number
-    parentRow?: BodyRow<Item, Plugins>
-    subRows?: BodyRow<Item, Plugins>[]
+    parentRow?: BodyRow<Item, Plugins> | undefined
+    subRows?: BodyRow<Item, Plugins>[] | undefined
     constructor({ id, cells, cellForId, depth = 0, parentRow }: BodyRowInit<Item, Plugins>) {
         super({ id })
         this.cells = cells
@@ -65,15 +64,14 @@ export abstract class BodyRow<Item, Plugins extends AnyPlugins = AnyPlugins> ext
      * @param attrs - The merged plugin attributes.
      * @returns The attributes with `role` set.
      */
-    protected decorateAttrs(attrs: Record<string, unknown>) {
+    protected override decorateAttrs(attrs: Record<string, unknown>) {
         return {
             ...attrs,
             role: 'row' as const
         }
     }
 
-    /* trunk-ignore(eslint/no-unused-vars) */
-    abstract clone(props?: BodyRowCloneProps): BodyRow<Item, Plugins>
+    abstract override clone(props?: BodyRowCloneProps): BodyRow<Item, Plugins>
 
     /**
      * Type guard to check if this row is a data row.
@@ -104,6 +102,23 @@ type BodyRowCloneProps = {
     includeCells?: boolean
     /** Whether to recursively clone sub-rows. */
     includeSubRows?: boolean
+}
+
+/**
+ * Replaces a freshly cloned row's cells (including hidden ones in `cellForId`)
+ * with clones that point back at the cloned row.
+ *
+ * @param clonedRow - The cloned row whose cells should be cloned.
+ */
+const cloneCellsInto = <Item, Plugins extends AnyPlugins>(clonedRow: BodyRow<Item, Plugins>) => {
+    const clonedCellsForId: Record<string, BodyCell<Item, Plugins>> = {}
+    for (const [id, cell] of Object.entries(clonedRow.cellForId)) {
+        const clonedCell = cell.clone()
+        clonedCell.row = clonedRow
+        clonedCellsForId[id] = clonedCell
+    }
+    clonedRow.cells = clonedRow.cells.map(({ id }) => clonedCellsForId[id]).filter(nonUndefined)
+    clonedRow.cellForId = clonedCellsForId
 }
 
 /**
@@ -179,16 +194,7 @@ export class DataBodyRow<Item, Plugins extends AnyPlugins = AnyPlugins> extends 
             depth: this.depth
         })
         if (includeCells) {
-            const clonedCellsForId = Object.fromEntries(
-                Object.entries(clonedRow.cellForId).map(([id, cell]) => {
-                    const clonedCell = cell.clone()
-                    clonedCell.row = clonedRow
-                    return [id, clonedCell]
-                })
-            )
-            const clonedCells = clonedRow.cells.map(({ id }) => clonedCellsForId[id])
-            clonedRow.cellForId = clonedCellsForId
-            clonedRow.cells = clonedCells
+            cloneCellsInto(clonedRow)
         }
         if (includeSubRows) {
             const clonedSubRows = this.subRows?.map((row) =>
@@ -254,16 +260,7 @@ export class DisplayBodyRow<Item, Plugins extends AnyPlugins = AnyPlugins> exten
         })
         clonedRow.subRows = this.subRows
         if (includeCells) {
-            const clonedCellsForId = Object.fromEntries(
-                Object.entries(clonedRow.cellForId).map(([id, cell]) => {
-                    const clonedCell = cell.clone()
-                    clonedCell.row = clonedRow
-                    return [id, clonedCell]
-                })
-            )
-            const clonedCells = clonedRow.cells.map(({ id }) => clonedCellsForId[id])
-            clonedRow.cellForId = clonedCellsForId
-            clonedRow.cells = clonedCells
+            cloneCellsInto(clonedRow)
         }
         if (includeSubRows) {
             const clonedSubRows = this.subRows?.map((row) =>
@@ -284,8 +281,35 @@ export class DisplayBodyRow<Item, Plugins extends AnyPlugins = AnyPlugins> exten
  */
 export interface BodyRowsOptions<Item> {
     /** Optional function to generate a unique ID for each data item. */
-    /* trunk-ignore(eslint/no-unused-vars) */
-    rowDataId?: (item: Item, index: number) => string
+    rowDataId?: ((item: Item, index: number) => string) | undefined
+}
+
+/**
+ * Creates the body cell for one column of a data row.
+ *
+ * @param row - The row the cell belongs to.
+ * @param column - The column the cell belongs to.
+ * @param item - The row's data item.
+ * @returns A data cell for data columns, or a display cell for display columns.
+ * @throws Error if the column is neither a data nor a display column.
+ */
+const createBodyCell = <Item, Plugins extends AnyPlugins>(
+    row: BodyRow<Item, Plugins>,
+    column: FlatColumn<Item, Plugins>,
+    item: Item
+): BodyCell<Item, Plugins> => {
+    if (column.isData()) {
+        return new DataBodyCell<Item, Plugins>({
+            row,
+            column,
+            label: column.cell,
+            value: column.getValue(item)
+        })
+    }
+    if (column.isDisplay()) {
+        return new DisplayBodyCell<Item, Plugins>({ row, column, label: column.cell })
+    }
+    throw new Error('Unrecognized `FlatColumn` implementation')
 }
 
 /**
@@ -312,33 +336,14 @@ export const getBodyRows = <Item, Plugins extends AnyPlugins = AnyPlugins>(
             cellForId: {}
         })
     })
-    data.forEach((item, rowIdx) => {
-        const cells = flatColumns.map((col) => {
-            if (col.isData()) {
-                const dataCol = col as DataColumn<Item, Plugins>
-                const value = dataCol.getValue(item)
-                return new DataBodyCell<Item, Plugins>({
-                    row: rows[rowIdx],
-                    column: dataCol,
-                    label: col.cell,
-                    value
-                })
-            }
-            if (col.isDisplay()) {
-                const displayCol = col as DisplayColumn<Item, Plugins>
-                return new DisplayBodyCell<Item, Plugins>({
-                    row: rows[rowIdx],
-                    column: displayCol,
-                    label: col.cell
-                })
-            }
-            throw new Error('Unrecognized `FlatColumn` implementation')
+    for (const row of rows) {
+        const item = row.original
+        row.cells = flatColumns.map((col) => {
+            const cell = createBodyCell(row, col, item)
+            row.cellForId[col.id] = cell
+            return cell
         })
-        rows[rowIdx].cells = cells
-        flatColumns.forEach((c, colIdx) => {
-            rows[rowIdx].cellForId[c.id] = cells[colIdx]
-        })
-    })
+    }
     return rows
 }
 
@@ -356,14 +361,9 @@ export const getColumnedBodyRows = <Item, Plugins extends AnyPlugins = AnyPlugin
     rows: DataBodyRow<Item, Plugins>[],
     columnIdOrder: string[]
 ): DataBodyRow<Item, Plugins>[] => {
-    const columnedRows: DataBodyRow<Item, Plugins>[] = rows.map((row) => {
-        const clonedRow = row.clone()
-        clonedRow.cells = []
-        clonedRow.cellForId = {}
-        return clonedRow
-    })
     if (rows.length === 0 || columnIdOrder.length === 0) return rows
-    rows.forEach((row, rowIdx) => {
+    return rows.map((row) => {
+        const columnedRow = row.clone()
         // Build `cellForId` directly during the clone pass so we don't
         // pay for an intermediate Map + Object.fromEntries detour
         // (which is what the previous shape did — see plan-1A in
@@ -373,16 +373,16 @@ export const getColumnedBodyRows = <Item, Plugins extends AnyPlugins = AnyPlugin
         const cellForId: Record<string, BodyCell<Item, Plugins>> = {}
         row.cells.forEach((cell) => {
             const clonedCell = cell.clone()
-            clonedCell.row = columnedRows[rowIdx]
+            clonedCell.row = columnedRow
             cellForId[clonedCell.id] = clonedCell
         })
         const visibleCells = columnIdOrder.map((cid) => cellForId[cid]).filter(nonUndefined)
-        columnedRows[rowIdx].cells = visibleCells
+        columnedRow.cells = visibleCells
         // `cellForId` includes hidden cells so row transformations can
         // still reach them.
-        columnedRows[rowIdx].cellForId = cellForId
+        columnedRow.cellForId = cellForId
+        return columnedRow
     })
-    return columnedRows
 }
 
 /**
@@ -408,39 +408,16 @@ export const getSubRows = <Item, Plugins extends AnyPlugins = AnyPlugins>(
             parentRow
         })
     })
-    subItems.forEach((item, rowIdx) => {
+    for (const subRow of subRows) {
+        const item = subRow.original
         // parentRow.cells only include visible cells.
         // We have to derive all cells from parentRow.cellForId
-        const cellForId = Object.fromEntries(
-            Object.values(parentRow.cellForId).map((cell) => {
-                const { column } = cell
-                if (column.isData()) {
-                    const dataCol = column as DataColumn<Item, Plugins>
-                    const value = dataCol.getValue(item)
-                    return [
-                        column.id,
-                        new DataBodyCell({
-                            row: subRows[rowIdx],
-                            column,
-                            label: column.cell,
-                            value
-                        })
-                    ]
-                }
-                if (column.isDisplay()) {
-                    return [
-                        column.id,
-                        new DisplayBodyCell({ row: subRows[rowIdx], column, label: column.cell })
-                    ]
-                }
-                throw new Error('Unrecognized `FlatColumn` implementation')
-            })
-        )
-        subRows[rowIdx].cellForId = cellForId
-        const cells = parentRow.cells.map((cell) => {
-            return cellForId[cell.id]
-        })
-        subRows[rowIdx].cells = cells
-    })
+        const cellForId: Record<string, BodyCell<Item, Plugins>> = {}
+        for (const { column } of Object.values(parentRow.cellForId)) {
+            cellForId[column.id] = createBodyCell(subRow, column, item)
+        }
+        subRow.cellForId = cellForId
+        subRow.cells = parentRow.cells.map((cell) => cellForId[cell.id]).filter(nonUndefined)
+    }
     return subRows
 }

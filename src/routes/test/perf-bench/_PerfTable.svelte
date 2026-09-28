@@ -12,9 +12,8 @@
      */
     import { Render } from '$lib/index.js'
     import type { TableViewModel } from '$lib/createViewModel.svelte.js'
-    import type { AnyPlugins } from '$lib/types/TablePlugin.js'
 
-    type AnyVm = TableViewModel<unknown, AnyPlugins>
+    type AnyVm = TableViewModel<unknown>
     // Keyed on `vm` by the parent, so `vm` never changes within an instance.
     const { vm }: { vm: AnyVm } = $props()
 </script>

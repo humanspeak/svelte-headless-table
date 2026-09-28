@@ -4,7 +4,9 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
     plugins: [sveltekit(), svelteTesting()],
-    resolve: process.env.VITEST ? { conditions: ['browser'] } : undefined,
+    // Spread rather than `resolve: undefined` so the key is absent outside
+    // Vitest (required by `exactOptionalPropertyTypes`).
+    ...(process.env.VITEST ? { resolve: { conditions: ['browser'] } } : {}),
     build: {
         sourcemap: false
     },

@@ -240,10 +240,10 @@
                     {/if}
 
                     {#each $pageRows as row (row.id)}
-                        <Subscribe attrs={row.attrs()} props={row.props()} let:attrs let:props>
+                        <Subscribe attrs={row.attrs()} let:attrs>
                             <tr
                                 {...attrs}
-                                data-virtual-index={props.virtualScroll.virtualIndex}
+                                data-virtual-index={row.current.props.virtualScroll.virtualIndex}
                                 use:measureRowAction={row.id}
                             >
                                 {#each row.cells as cell (cell.id)}
