@@ -13,7 +13,23 @@
 > `addPagination.svelte.ts`, `addTableFilter.svelte.ts` as landed by plan 002
 > — they are the exemplars for the patterns named below.
 >
-> **Drift check (run first)**: `git diff --stat 61c36ee..HEAD -- src/lib/plugins/_parked/ src/lib/utils/HeightManager.ts src/lib/utils/scrollAlign.ts`
+> Revision 2026-09-28 (guard, after plan 002 PASS at `bde2ca6`): what shipped —
+> exemplars are `src/lib/plugins/addSortBy.svelte.ts` (`SortKeys` class +
+> `createSortKeys`), `addPagination.svelte.ts` (`createPageState`) and
+> `addTableFilter.svelte.ts`; `box` / `RecordSet` / `ArraySet` in
+> `src/lib/reactivity.svelte.ts` use `$state.raw`, so values change by
+> assignment (never mutate `.current` in place); `createViewModel` applies
+> hooks once per row object (a `WeakSet`), so hook `props` / `attrs`
+> getters must read live state on every call; the vitest helper is
+> `src/lib/test/effectRoot.test.svelte.ts`; `PARKED.md` lists every config
+> entry to remove — `tsconfig.json`, `tsconfig.lib.json`, `vite.config.ts`
+> (test exclude + coverage exclude), `eslint.config.mjs` ignore for
+> `_parked/**`, and the `scrollAlign.ts` / `scrollAlign.test.ts` excludes
+> (restore them in Step 6). `@humanspeak/memory-cache` and
+> `plugins/cacheConfig.ts` are still present. `Planned at` re-stamped to
+> `bde2ca6`; the parked files are byte-identical to `61c36ee`.
+>
+> **Drift check (run first)**: `git diff --stat 61c36ee..HEAD -- src/lib/plugins/_parked/ src/lib/utils/HeightManager.ts src/lib/utils/scrollAlign.ts` (expect only the rename lines)
 > Plan 002 only _moved_ the parked files. If their content differs from the
 > excerpts below, treat it as a STOP condition.
 
@@ -24,7 +40,7 @@
 - **Risk**: HIGH (virtual scroll is the most stateful code in the library)
 - **Depends on**: 002-runes-core-and-contract.md
 - **Category**: migration (major, v7)
-- **Planned at**: commit `61c36ee`, 2026-09-28
+- **Planned at**: commit `bde2ca6`, 2026-09-28
 
 ## Why this matters
 
@@ -203,7 +219,7 @@ on PATH before committing (see plan 001).
   `addResizedColumns.svelte.ts`, `addVirtualScroll.svelte.ts`,
   `addVirtualScroll.types.ts`, their `*.test.ts`, `interactions.test.ts`
 - `src/lib/plugins/index.ts` (restore the four exports)
-- `tsconfig.lib.json`, `vite.config.ts` (remove the `_parked` excludes), `.agents/.plans/v7-runes-core/PARKED.md` (update)
+- `tsconfig.json`, `tsconfig.lib.json`, `vite.config.ts`, `eslint.config.mjs` (remove the `_parked` and `scrollAlign` entries listed in `PARKED.md`; leave the `src/routes/**` entries for plan 004), `.agents/.plans/v7-runes-core/PARKED.md` (update)
 - `src/lib/plugins/cacheConfig.ts` (delete if no longer imported)
 - `src/lib/utils/HeightManager.ts` only if a signature must change (unlikely)
 
@@ -321,7 +337,7 @@ reactive substrate only:
 - Tests: port `addVirtualScroll.test.ts`. Its `beforeEach` mocks
   `ResizeObserver` and `getBoundingClientRect`; keep them. Reactivity
   assertions that subscribed to stores use `withEffectRoot` from
-  `src/lib/test/effectRoot.svelte.ts` (plan 002) or read boxes directly.
+  `src/lib/test/effectRoot.test.svelte.ts` (plan 002) or read boxes directly.
   The `onRangeChange` tests must mount the `virtualScroll` action on a node
   (they do today) because the notifier now lives there.
 
@@ -330,7 +346,7 @@ reactive substrate only:
 ### Step 6: Un-park the rest and run the full gate
 
 - Move `interactions.test.ts` back; remove the `_parked` excludes from
-  `tsconfig.lib.json` and `vite.config.ts`; `rmdir src/lib/plugins/_parked`;
+  `tsconfig.json`, `tsconfig.lib.json`, `vite.config.ts` and `eslint.config.mjs` (and the `scrollAlign` excludes); `rmdir src/lib/plugins/_parked`;
   update `PARKED.md` (only the routes remain parked).
 - Delete `src/lib/plugins/cacheConfig.ts` and `@humanspeak/memory-cache`
   usages if nothing imports them any more (`grep -rn "memory-cache\|MemoryCache" src/lib`); if the dependency is
