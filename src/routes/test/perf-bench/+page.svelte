@@ -24,9 +24,9 @@
      * `_debug.derivationCalls` surface created in createViewModel.ts and
      * are the most stable signal — they don't move with hardware noise.
      */
-    import { writable, type Writable } from 'svelte/store'
+    import { get, writable, type Writable } from 'svelte/store'
     import { onMount, tick } from 'svelte'
-    import { createTable } from '$lib/index.js'
+    import { createTable as createLibTable } from '$lib/index.js'
     import {
         addColumnFilters,
         addColumnOrder,
@@ -44,11 +44,26 @@
     import type { TableViewModel } from '$lib/createViewModel.svelte.js'
     import PerfTable from './_PerfTable.svelte'
     import PerfTableStore from './_PerfTableStore.svelte'
+    import PerfTableSpike from './_PerfTableSpike.svelte'
     import { page } from '$app/state'
 
     // `?renderer=store` swaps in the `<Subscribe>`-based store control
     // renderer. Read once at init; the `current.*` renderer is the default.
     const useStoreRenderer = page.url.searchParams.get('renderer') === 'store'
+
+    // `?renderer=spike` renders through the v7 design spike (plan 001,
+    // throwaway). The spike models sort, pagination and a pass-through table
+    // filter, so presets with other plugins fall back to the default renderer.
+    // `createTable` is wrapped to hand the spike each scenario's raw data.
+    const useSpikeRenderer = page.url.searchParams.get('renderer') === 'spike'
+    const SPIKE_PLUGINS = new Set(['sort', 'filter', 'page'])
+    const spikeSupports = (vm: { pluginStates: object }) =>
+        Object.keys(vm.pluginStates).every((name) => SPIKE_PLUGINS.has(name))
+    let spikeData = $state.raw<Record<string, unknown>[]>([])
+    const createTable: typeof createLibTable = (data, plugins) => {
+        if (useSpikeRenderer) spikeData = get(data) as Record<string, unknown>[]
+        return createLibTable(data, plugins)
+    }
 
     const ROLLING_WINDOW_MS = 10_000
     const LONG_TASK_THRESHOLD_MS = 50
@@ -1383,6 +1398,8 @@
             {#key currentVm}
                 {#if useStoreRenderer}
                     <PerfTableStore vm={currentVm} />
+                {:else if useSpikeRenderer && spikeSupports(currentVm)}
+                    <PerfTableSpike vm={currentVm} data={spikeData} />
                 {:else}
                     <PerfTable vm={currentVm} />
                 {/if}
