@@ -2,8 +2,7 @@ import * as lib from './index.js'
 import * as plugins from './plugins/index.js'
 
 // The public surface is the contract consumers pin to. Any addition or
-// removal must be a deliberate change to these snapshots. (v7 plan 002: the
-// four DOM-driven plugins are parked until plan 003 restores their exports.)
+// removal must be a deliberate change to these snapshots.
 it('exports the expected root API', () => {
     expect(Object.keys(lib).sort()).toMatchInlineSnapshot(`
       [
@@ -56,14 +55,19 @@ it('exports the expected plugin API', () => {
         "addExpandedRows",
         "addFlatten",
         "addGridLayout",
+        "addGroupBy",
         "addHiddenColumns",
         "addPagination",
+        "addResizedColumns",
+        "addSelectedRows",
         "addSortBy",
         "addSubRows",
         "addTableFilter",
+        "addVirtualScroll",
         "createPageState",
         "createSortKeys",
         "getFlattenedRows",
+        "getGroupedRows",
         "matchFilter",
         "numberRangeFilter",
         "rowMatchesFilter",
