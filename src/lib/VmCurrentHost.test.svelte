@@ -1,25 +1,56 @@
 <script lang="ts">
-    import { readable } from 'svelte/store'
+    import type { BodyRow } from '$lib/bodyRows.js'
     import { createTable } from '$lib/createTable.js'
-    import { addPagination } from '$lib/plugins/addPagination.js'
-    import { addSelectedRows } from '$lib/plugins/addSelectedRows.js'
-    import { addSortBy } from '$lib/plugins/addSortBy.js'
+    import { addPagination } from '$lib/plugins/addPagination.svelte.js'
+    import { addSortBy } from '$lib/plugins/addSortBy.svelte.js'
+    import { RecordSet } from '$lib/reactivity.svelte.js'
     import { Render } from '$lib/render/index.js'
+    import type { NewTablePropSet, TablePlugin } from '$lib/types/TablePlugin.js'
+
+    interface Item {
+        name: string
+        age: number
+    }
+
+    // A minimal v7 row-selection plugin (a `tbody.tr` props hook over a
+    // RecordSet). It stands in for addSelectedRows, parked until plan 003.
+    const addTestSelect =
+        (): TablePlugin<
+            Item,
+            { selectedDataIds: RecordSet },
+            Record<string, never>,
+            NewTablePropSet<{ 'tbody.tr': { selected: boolean } }>
+        > =>
+        () => {
+            const selectedDataIds = new RecordSet()
+            return {
+                pluginState: { selectedDataIds },
+                hooks: {
+                    'tbody.tr': (row: BodyRow<Item>) => ({
+                        props: () => ({
+                            selected: row.isData() && selectedDataIds.has(row.dataId)
+                        })
+                    })
+                }
+            }
+        }
 
     // A whole table rendered with zero store syntax: table-level values come
     // from `vm.current`, row and cell values from `row.current` / `cell.current`.
-    const data = readable([
-        { name: 'Ada', age: 36 },
-        { name: 'Bea', age: 41 },
-        { name: 'Cy', age: 29 },
-        { name: 'Di', age: 52 },
-        { name: 'Ed', age: 23 }
-    ])
-    const table = createTable(data, {
-        sort: addSortBy(),
-        page: addPagination({ initialPageSize: 2 }),
-        select: addSelectedRows()
-    })
+    const table = createTable(
+        [
+            { name: 'Ada', age: 36 },
+            { name: 'Bea', age: 41 },
+            { name: 'Cy', age: 29 },
+            { name: 'Di', age: 52 },
+            { name: 'Ed', age: 23 }
+        ],
+        {
+            sort: addSortBy<Item>(),
+            page: addPagination<Item>({ initialPageSize: 2 }),
+            select: addTestSelect()
+        }
+    )
     const columns = table.createColumns([
         table.column({ header: 'Name', accessor: 'name' }),
         table.column({ header: 'Age', accessor: 'age' })

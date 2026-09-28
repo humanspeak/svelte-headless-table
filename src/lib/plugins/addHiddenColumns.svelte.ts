@@ -1,4 +1,4 @@
-import { derived, writable, type Writable } from 'svelte/store'
+import { box, type Box } from '../reactivity.svelte.js'
 import type { DeriveFlatColumnsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 
 /**
@@ -6,15 +6,15 @@ import type { DeriveFlatColumnsFn, NewTablePropSet, TablePlugin } from '../types
  */
 export interface HiddenColumnsConfig {
     /** Initial list of column IDs to hide. */
-    initialHiddenColumnIds?: string[]
+    initialHiddenColumnIds?: string[] | undefined
 }
 
 /**
  * State exposed by the addHiddenColumns plugin.
  */
 export interface HiddenColumnsState {
-    /** Writable store containing the list of hidden column IDs. */
-    hiddenColumnIds: Writable<string[]>
+    /** The IDs of the hidden columns. Assign a new array to change them. */
+    hiddenColumnIds: Box<string[]>
 }
 
 /**
@@ -25,15 +25,15 @@ export interface HiddenColumnsState {
  * @returns A TablePlugin that provides column visibility control.
  * @example
  * ```typescript
- * const table = createTable(data, {
+ * const table = createTable(() => data, {
  *   hide: addHiddenColumns({
  *     initialHiddenColumnIds: ['internalId', 'createdAt']
  *   })
  * })
  *
  * // Hide/show columns dynamically
- * const { hiddenColumnIds } = table.pluginStates.hide
- * hiddenColumnIds.update(ids => [...ids, 'newColumn'])
+ * const { hiddenColumnIds } = viewModel.pluginStates.hide
+ * hiddenColumnIds.current = [...hiddenColumnIds.current, 'newColumn']
  * ```
  */
 export const addHiddenColumns =
@@ -44,17 +44,20 @@ export const addHiddenColumns =
         NewTablePropSet<never>
     > =>
     () => {
-        const hiddenColumnIds = writable<string[]>(initialHiddenColumnIds)
+        const hiddenColumnIds = box<string[]>(initialHiddenColumnIds)
 
         const pluginState: HiddenColumnsState = { hiddenColumnIds }
 
         const deriveFlatColumns: DeriveFlatColumnsFn<Item> = (flatColumns) => {
-            return derived([flatColumns, hiddenColumnIds], ([$flatColumns, $hiddenColumnIds]) => {
-                if ($hiddenColumnIds.length === 0) {
-                    return $flatColumns
+            const visible = $derived.by(() => {
+                const columns = flatColumns()
+                const hiddenIds = hiddenColumnIds.current
+                if (hiddenIds.length === 0) {
+                    return columns
                 }
-                return $flatColumns.filter((c) => !$hiddenColumnIds.includes(c.id))
+                return columns.filter((c) => !hiddenIds.includes(c.id))
             })
+            return () => visible
         }
 
         return {

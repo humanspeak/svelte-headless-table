@@ -1,13 +1,14 @@
 import type { Component, ComponentProps, Snippet } from 'svelte'
-import type { Readable } from 'svelte/store'
+import type { Getter } from '../reactivity.svelte.js'
 
 /**
  * Configuration type for rendering Svelte components or primitive values.
  *
  * A `RenderConfig` is either a {@link ComponentRenderConfig} (created with
  * {@link createRender}), a {@link SnippetRenderConfig} (created with
- * {@link createSnippetRender}), a plain string or number, or a `Readable`
- * store of a string or number.
+ * {@link createSnippetRender}), a plain string or number, or a getter
+ * returning a string or number (read inside `<Render>`, so rune state it reads
+ * is tracked).
  *
  * @template TComponent - The Svelte component type.
  */
@@ -21,7 +22,7 @@ export type RenderConfig<TComponent extends Component = AnyComponent> =
     | SnippetRenderConfig<any>
     | string
     | number
-    | Readable<string | number>
+    | Getter<string | number>
 
 /**
  * Configuration class for rendering Svelte components with props and slots.
@@ -35,52 +36,24 @@ export class ComponentRenderConfig<TComponent extends Component = AnyComponent> 
     component: TComponent
 
     /**
-     * Optional props to pass to the component.
+     * Optional props to pass to the component: a plain object, or a getter
+     * returning one (read inside `<Render>`, so rune state it reads is
+     * tracked). Pass event handlers as ordinary `on<event>` props.
      */
-    props?: Record<string, unknown> | undefined
+    props?: Record<string, unknown> | Getter<Record<string, unknown>> | undefined
 
     /**
      * Creates a new component render configuration.
      *
      * @param component - The Svelte component to render.
-     * @param props - Optional props to pass to the component.
+     * @param props - Optional props, static or a getter.
      */
-    constructor(component: TComponent, props?: Record<string, unknown>) {
+    constructor(
+        component: TComponent,
+        props?: Record<string, unknown> | Getter<Record<string, unknown>>
+    ) {
         this.component = component
         this.props = props
-    }
-
-    /**
-     * @deprecated This method will be removed in the next major release. Please use svelte-5 event syntax instead.
-     * List of event handlers to attach to the component.
-     */
-    // Deprecated API; handlers of any event type are stored together
-    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-    eventHandlers: [string, (ev: any) => void][] = []
-
-    /**
-     * @deprecated This method will be removed in the next major release. Please use svelte-5 event syntax instead.
-     *
-     * Attaches an event handler to the component by setting the
-     * `on<type>` prop.
-     *
-     * @param type - The event type to listen for.
-     * @param handler - The event handler function.
-     * @returns this - For method chaining.
-     */
-    // Type parameters kept so callers passing explicit type arguments to this
-    // deprecated method still compile; `any` is the untyped-handler default.
-    // trunk-ignore(eslint/@typescript-eslint/no-unnecessary-type-parameters,eslint/@typescript-eslint/no-explicit-any)
-    on<TEventType extends string, TEvent = any>(
-        type: TEventType,
-        handler: (ev: TEvent) => void
-    ): this {
-        // The deprecated method maintains its own deprecated field
-        // trunk-ignore(eslint/@typescript-eslint/no-deprecated)
-        this.eventHandlers.push([type, handler])
-        this.props ??= {}
-        this.props[`on${type}`] = handler
-        return this
     }
 
     /**
@@ -107,21 +80,25 @@ export class ComponentRenderConfig<TComponent extends Component = AnyComponent> 
  *
  * @template TComponent - The Svelte component type.
  * @param component - The component to render.
- * @param props - Optional props to pass to the component, either static or a `Readable` store.
+ * @param props - Optional props to pass to the component, either a plain
+ * object or a getter returning one (reactive when it reads rune state).
  * @returns A new {@link ComponentRenderConfig} instance.
  *
  * @example
  * ```ts
  * const config = createRender(MyComponent)
  * const withProps = createRender(MyComponent, { name: 'World' })
- * const reactive = createRender(MyComponent, derived(store, ($s) => ({ name: $s })))
+ * const reactive = createRender(MyComponent, () => ({ name: user.current }))
  * ```
  */
 export function createRender<TComponent extends AnyComponent>(
     component: TComponent,
-    props?: Partial<ComponentProps<TComponent>> | Readable<ComponentProps<TComponent>>
+    props?: Partial<ComponentProps<TComponent>> | Getter<Partial<ComponentProps<TComponent>>>
 ): ComponentRenderConfig<TComponent> {
-    return new ComponentRenderConfig(component, props as Record<string, unknown> | undefined)
+    return new ComponentRenderConfig(
+        component,
+        props as Record<string, unknown> | Getter<Record<string, unknown>> | undefined
+    )
 }
 
 /**
@@ -134,8 +111,13 @@ export class SnippetRenderConfig<Args = void> {
     constructor(
         /** The snippet to render. */
         public snippet: Snippet<[Args]>,
-        /** The single argument passed to the snippet, static or reactive. */
-        public args: Args | Readable<Args>
+        /**
+         * The single argument passed to the snippet: the value itself, or a
+         * getter returning it (reactive when it reads rune state). A function
+         * value is always treated as a getter, so to pass a function as the
+         * argument wrap it: `() => fn`.
+         */
+        public args: Args | Getter<Args>
     ) {}
 }
 
@@ -146,8 +128,9 @@ export class SnippetRenderConfig<Args = void> {
  *
  * @template Args - The type of the single argument passed to the snippet.
  * @param snippet - The snippet to render.
- * @param args - The single argument passed to the snippet, either static or a
- * `Readable` store. Omit for snippets that take no argument.
+ * @param args - The single argument passed to the snippet, either the value or
+ * a getter returning it. A function is always called as a getter; wrap a
+ * function argument as `() => fn`. Omit for snippets that take no argument.
  * @returns A new {@link SnippetRenderConfig} instance.
  *
  * @example
@@ -163,7 +146,7 @@ export class SnippetRenderConfig<Args = void> {
  */
 export function createSnippetRender<Args = void>(
     snippet: Snippet<[Args]>,
-    args?: Args | Readable<Args>
+    args?: Args | Getter<Args>
 ): SnippetRenderConfig<Args> {
-    return new SnippetRenderConfig(snippet, args as Args)
+    return new SnippetRenderConfig(snippet, args as Args | Getter<Args>)
 }

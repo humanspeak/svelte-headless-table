@@ -1,16 +1,23 @@
-import { derived, writable, type Readable, type Writable } from 'svelte/store'
+import { untrack } from 'svelte'
 import type { BodyRow } from '../bodyRows.js'
 import type { PluginInitTableState } from '../createViewModel.svelte.js'
+import {
+    box,
+    derivedBox,
+    keyedBox,
+    type Box,
+    type Getter,
+    type ReadonlyBox
+} from '../reactivity.svelte.js'
 import type { RenderConfig } from '../render/createRender.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
-import { keyedProp } from '../utils/store.js'
 
 /**
  * Configuration options for the addColumnFilters plugin.
  */
 export interface ColumnFiltersConfig {
     /** If true, filtering is handled server-side and all rows are returned. */
-    serverSide?: boolean
+    serverSide?: boolean | undefined
     /**
      * How rows with sub-rows are matched.
      *
@@ -20,7 +27,7 @@ export interface ColumnFiltersConfig {
      * - `'self'`: every kept row must match on its own values; a parent that
      *   does not match is removed together with its subtree.
      */
-    matchMode?: ColumnFiltersMatchMode
+    matchMode?: ColumnFiltersMatchMode | undefined
 }
 
 /** Sub-row matching strategy for {@link addColumnFilters}. */
@@ -32,10 +39,13 @@ export type ColumnFiltersMatchMode = 'self-or-descendants' | 'self'
  * @template Item - The type of data items in the table.
  */
 export interface ColumnFiltersState<Item> {
-    /** Writable store containing filter values keyed by column ID. */
-    filterValues: Writable<Record<string, unknown>>
-    /** Readable store containing rows before filtering was applied. */
-    preFilteredRows: Readable<BodyRow<Item>[]>
+    /**
+     * Filter values keyed by column ID. Assign a new record to change them; a
+     * column without a value (or with `undefined`) is not filtered.
+     */
+    filterValues: Box<Record<string, unknown>>
+    /** The rows before filtering was applied. */
+    preFilteredRows: ReadonlyBox<BodyRow<Item>[]>
 }
 
 /**
@@ -50,9 +60,13 @@ export interface ColumnFiltersState<Item> {
 export interface ColumnFiltersColumnOptions<Item, FilterValue = any> {
     /** The filter function to use for this column. */
     fn: ColumnFilterFn<FilterValue>
-    /** Initial filter value for this column. */
+    /** Initial filter value for this column, applied when the view model is created. */
     initialFilterValue?: FilterValue
-    /** Optional render function for custom filter UI. */
+    /**
+     * Optional render function for custom filter UI. Called once per header
+     * cell (untracked); read the boxes it receives inside the returned
+     * component or snippet to stay reactive.
+     */
     render?: (props: ColumnRenderConfigPropArgs<Item, FilterValue>) => RenderConfig
 }
 
@@ -73,14 +87,14 @@ interface ColumnRenderConfigPropArgs<
 > extends PluginInitTableState<Item> {
     /** The column ID. */
     id: string
-    /** Writable store for the filter value. */
-    filterValue: Writable<FilterValue>
-    /** Readable store of all current column values (after filtering). */
-    values: Readable<Value[]>
-    /** Readable store of rows before filtering. */
-    preFilteredRows: Readable<BodyRow<Item>[]>
-    /** Readable store of all column values before filtering. */
-    preFilteredValues: Readable<Value[]>
+    /** The column's filter value; writing `undefined` clears it. */
+    filterValue: Box<FilterValue>
+    /** All current column values (after filtering). */
+    values: ReadonlyBox<Value[]>
+    /** The rows before filtering. */
+    preFilteredRows: ReadonlyBox<BodyRow<Item>[]>
+    /** All column values before filtering. */
+    preFilteredValues: ReadonlyBox<Value[]>
 }
 
 /**
@@ -131,7 +145,7 @@ const getFilteredRows = <Item, Row extends BodyRow<Item>>(
     columnOptions: Record<string, ColumnFiltersColumnOptions<Item>>,
     matchMode: ColumnFiltersMatchMode = 'self-or-descendants'
 ): Row[] => {
-    const $filteredRows = rows
+    const filteredRows = rows
         // Filter `subRows`
         .map((row) => {
             const { subRows } = row
@@ -164,7 +178,7 @@ const getFilteredRows = <Item, Row extends BodyRow<Item>>(
             }
             return true
         })
-    return $filteredRows
+    return filteredRows
 }
 
 /**
@@ -175,7 +189,7 @@ const getFilteredRows = <Item, Row extends BodyRow<Item>>(
  * @returns A TablePlugin that provides column filtering functionality.
  * @example
  * ```typescript
- * const table = createTable(data, {
+ * const table = createTable(() => data, {
  *   colFilter: addColumnFilters()
  * })
  *
@@ -203,28 +217,62 @@ export const addColumnFilters =
         ColumnFiltersPropSet
     > =>
     ({ columnOptions, tableState }) => {
-        const filterValues = writable<Record<string, unknown>>({})
-        const preFilteredRows = writable<BodyRow<Item>[]>([])
-        const filteredRows = writable<BodyRow<Item>[]>([])
+        // Initial filter values are applied here, when the view model creates
+        // the plugin: hooks run while the view model derives, where writing
+        // state is not allowed.
+        const initialFilterValues: Record<string, unknown> = {}
+        for (const [columnId, option] of Object.entries(columnOptions)) {
+            if (option.initialFilterValue !== undefined) {
+                initialFilterValues[columnId] = option.initialFilterValue
+            }
+        }
+        const filterValues = box<Record<string, unknown>>(initialFilterValues)
+
+        // Read through getters captured when the view model calls
+        // `deriveRows`; nothing is written while deriving.
+        let upstreamRows: Getter<BodyRow<Item>[]> = () => []
+        let filteredRows: Getter<BodyRow<Item>[]> = () => []
+        const preFilteredRows: ReadonlyBox<BodyRow<Item>[]> = {
+            get current() {
+                return upstreamRows()
+            }
+        }
 
         const pluginState: ColumnFiltersState<Item> = { filterValues, preFilteredRows }
 
         const deriveRows: DeriveRowsFn<Item> = (rows) => {
-            return derived([rows, filterValues], ([$rows, $filterValues]) => {
-                preFilteredRows.set($rows)
+            upstreamRows = rows
+            const filtered = $derived.by(() => {
+                const rowsValue = rows()
                 if (serverSide) {
-                    filteredRows.set($rows)
-                    return $rows
+                    return rowsValue
                 }
-                const _filteredRows = getFilteredRows(
-                    $rows,
-                    $filterValues,
-                    columnOptions,
-                    matchMode
-                )
-                filteredRows.set(_filteredRows)
-                return _filteredRows
+                return getFilteredRows(rowsValue, filterValues.current, columnOptions, matchMode)
             })
+            filteredRows = () => filtered
+            return () => filtered
+        }
+
+        // Per-column value lists, created with the plugin (not inside a hook,
+        // which runs during a derivation that may be owned by a short-lived
+        // effect). Display columns have no values.
+        const columnValues = (rows: BodyRow<Item>[], columnId: string): unknown[] =>
+            rows.map((row) => {
+                const cell = row.cellForId[columnId]
+                return cell?.isData() ? cell.value : undefined
+            })
+        const valueBoxes: Record<
+            string,
+            { values: ReadonlyBox<unknown[]>; preFilteredValues: ReadonlyBox<unknown[]> }
+        > = {}
+        for (const columnId of Object.keys(columnOptions)) {
+            const isData = tableState.flatColumns.some((c) => c.id === columnId && c.isData())
+            valueBoxes[columnId] = {
+                values: derivedBox(() => (isData ? columnValues(filteredRows(), columnId) : [])),
+                preFilteredValues: derivedBox(() =>
+                    isData ? columnValues(upstreamRows(), columnId) : []
+                )
+            }
         }
 
         return {
@@ -232,42 +280,25 @@ export const addColumnFilters =
             deriveRows,
             hooks: {
                 'thead.tr.th': (headerCell) => {
-                    const filterValue = keyedProp(filterValues, headerCell.id)
-                    const props = derived([], () => {
-                        const columnOption = columnOptions[headerCell.id]
-                        if (columnOption === undefined) {
-                            return undefined
-                        }
-                        filterValue.set(columnOption.initialFilterValue)
-                        const preFilteredValues = derived(preFilteredRows, ($rows) => {
-                            if (headerCell.isData()) {
-                                return $rows.map((row) => {
-                                    const cell = row.cellForId[headerCell.id]
-                                    return cell?.isData() ? cell.value : undefined
-                                })
-                            }
-                            return []
-                        })
-                        const values = derived(filteredRows, ($rows) => {
-                            if (headerCell.isData()) {
-                                return $rows.map((row) => {
-                                    const cell = row.cellForId[headerCell.id]
-                                    return cell?.isData() ? cell.value : undefined
-                                })
-                            }
-                            return []
-                        })
-                        const render = columnOption.render?.({
+                    const columnOption = columnOptions[headerCell.id]
+                    const boxes = valueBoxes[headerCell.id]
+                    if (columnOption === undefined || boxes === undefined) {
+                        return { props: () => undefined }
+                    }
+                    // Called once per header cell. Untracked, so reads inside a
+                    // user `render` do not become dependencies of the header rows.
+                    const render = untrack(() =>
+                        columnOption.render?.({
                             id: headerCell.id,
-                            filterValue,
+                            filterValue: keyedBox(filterValues, headerCell.id),
                             ...tableState,
-                            values,
+                            values: boxes.values,
                             preFilteredRows,
-                            preFilteredValues
+                            preFilteredValues: boxes.preFilteredValues
                         })
-                        return { render }
-                    })
-                    return { props }
+                    )
+                    const props = { render }
+                    return { props: () => props }
                 }
             }
         }

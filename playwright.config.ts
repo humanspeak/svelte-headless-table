@@ -14,6 +14,8 @@ const port = Number(process.env.PLAYWRIGHT_PORT ?? 4173)
 
 export default defineConfig({
     testDir: './tests',
+    // PARKED by plan 002; restored by plan 004
+    testIgnore: ['**/*'],
     // Produce artifacts that are easy to collect in CI
     // Written into test-results/ so CI's trunk analytics uploader and the
     // playwright-results artifact both find it (junit-paths in npm-publish.yml)

@@ -1,21 +1,20 @@
-import { derived, writable, type Readable, type Writable } from 'svelte/store'
 import type { BodyRow } from '../bodyRows.js'
+import { box, type Box, type Getter, type ReadonlyBox } from '../reactivity.svelte.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
-import { recordSetStore } from '../utils/store.js'
-import { textPrefixFilter } from './addColumnFilters.js'
+import { textPrefixFilter } from './addColumnFilters.svelte.js'
 
 /**
  * Configuration options for the addTableFilter plugin.
  */
 export interface TableFilterConfig {
     /** Custom filter function. Defaults to textPrefixFilter. */
-    fn?: TableFilterFn
+    fn?: TableFilterFn | undefined
     /** Initial filter value. Defaults to empty string. */
-    initialFilterValue?: string
+    initialFilterValue?: string | undefined
     /** Whether to include hidden columns in the filter. Defaults to false. */
-    includeHiddenColumns?: boolean
+    includeHiddenColumns?: boolean | undefined
     /** If true, filtering is handled server-side and all rows are returned. Defaults to false. */
-    serverSide?: boolean
+    serverSide?: boolean | undefined
 }
 
 /**
@@ -24,10 +23,10 @@ export interface TableFilterConfig {
  * @template Item - The type of data items in the table.
  */
 export interface TableFilterState<Item> {
-    /** Writable store containing the current filter value. */
-    filterValue: Writable<string>
-    /** Readable store containing the rows before filtering was applied. */
-    preFilteredRows: Readable<BodyRow<Item>[]>
+    /** The current filter value. */
+    filterValue: Box<string>
+    /** The rows before filtering was applied. */
+    preFilteredRows: ReadonlyBox<BodyRow<Item>[]>
 }
 
 /**
@@ -114,6 +113,8 @@ export const rowMatchesFilter = <Item>(
 
     // Pre-compute visible cell IDs once per row - O(m)
     // This is the optimization: uses Set.has() which is O(1) instead of .find() which is O(m)
+    // A lookup table local to this call, not state.
+    // trunk-ignore(eslint/svelte/prefer-svelte-reactivity)
     const visibleCellIds = new Set(row.cells.map((c) => c.id))
 
     const rowCellMatches = Object.values(row.cellForId).map((cell) => {
@@ -178,7 +179,7 @@ const getFilteredRows = <Item, Row extends BodyRow<Item>>(
     options: GetFilteredRowsOptions<Item>
 ): Row[] => {
     const { columnOptions, tableCellMatches, fn, includeHiddenColumns } = options
-    const $filteredRows = rows
+    const filteredRows = rows
         // Filter `subRows`
         .map((row) => {
             const { subRows } = row
@@ -199,7 +200,7 @@ const getFilteredRows = <Item, Row extends BodyRow<Item>>(
                 tableCellMatches
             })
         )
-    return $filteredRows
+    return filteredRows
 }
 
 /**
@@ -210,7 +211,7 @@ const getFilteredRows = <Item, Row extends BodyRow<Item>>(
  * @returns A TablePlugin that provides filtering functionality.
  * @example
  * ```typescript
- * const table = createTable(data, {
+ * const table = createTable(() => data, {
  *   filter: addTableFilter({
  *     fn: ({ filterValue, value }) => value.toLowerCase().includes(filterValue.toLowerCase()),
  *     initialFilterValue: '',
@@ -219,8 +220,8 @@ const getFilteredRows = <Item, Row extends BodyRow<Item>>(
  * })
  *
  * // Access the filter state
- * const { filterValue } = table.pluginStates.filter
- * filterValue.set('search term')
+ * const { filterValue } = viewModel.pluginStates.filter
+ * filterValue.current = 'search term'
  * ```
  */
 export const addTableFilter =
@@ -236,50 +237,53 @@ export const addTableFilter =
         TableFilterPropSet
     > =>
     ({ columnOptions }) => {
-        const filterValue = writable(initialFilterValue)
-        const preFilteredRows = writable<BodyRow<Item>[]>([])
-        const tableCellMatches = recordSetStore()
+        const filterValue = box(initialFilterValue)
+
+        // Both read through getters captured when the view model calls
+        // `deriveRows`; nothing is written while deriving.
+        let upstreamRows: Getter<BodyRow<Item>[]> = () => []
+        let tableCellMatches: Getter<Record<string, boolean>> = () => ({})
+        const preFilteredRows: ReadonlyBox<BodyRow<Item>[]> = {
+            get current() {
+                return upstreamRows()
+            }
+        }
 
         const pluginState: TableFilterState<Item> = { filterValue, preFilteredRows }
 
         const deriveRows: DeriveRowsFn<Item> = (rows) => {
-            return derived([rows, filterValue], ([$rows, $filterValue]) => {
-                preFilteredRows.set($rows)
-                tableCellMatches.clear()
-                const $tableCellMatches: Record<string, boolean> = {}
-                const $filteredRows = getFilteredRows($rows, $filterValue, {
+            upstreamRows = rows
+            // One pass computes the filtered rows and the matching cells.
+            const filtered = $derived.by(() => {
+                const rowsValue = rows()
+                const matches: Record<string, boolean> = {}
+                const filteredRows = getFilteredRows(rowsValue, filterValue.current, {
                     columnOptions,
-                    tableCellMatches: $tableCellMatches,
+                    tableCellMatches: matches,
                     fn,
                     includeHiddenColumns
                 })
-                tableCellMatches.set($tableCellMatches)
-                if (serverSide) {
-                    return $rows
-                }
-                return $filteredRows
+                return { rows: serverSide ? rowsValue : filteredRows, matches }
             })
+            tableCellMatches = () => filtered.matches
+            return () => filtered.rows
         }
 
         return {
             pluginState,
             deriveRows,
             hooks: {
-                'tbody.tr.td': (cell) => {
-                    const props = derived(
-                        [filterValue, tableCellMatches],
-                        ([$filterValue, $tableCellMatches]) => {
-                            const dataRowColId = cell.dataRowColId()
-                            return {
-                                matches:
-                                    $filterValue !== '' &&
-                                    dataRowColId !== undefined &&
-                                    ($tableCellMatches[dataRowColId] ?? false)
-                            }
+                'tbody.tr.td': (cell) => ({
+                    props: () => {
+                        const dataRowColId = cell.dataRowColId()
+                        return {
+                            matches:
+                                filterValue.current !== '' &&
+                                dataRowColId !== undefined &&
+                                (tableCellMatches()[dataRowColId] ?? false)
                         }
-                    )
-                    return { props }
-                }
+                    }
+                })
             }
         }
     }

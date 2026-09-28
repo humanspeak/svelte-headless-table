@@ -1,8 +1,7 @@
 // components
 export * from '$lib/render/index.js'
-export { default as Subscribe } from '$lib/subscribe/Subscribe.svelte'
 // table core
-export { createTable } from '$lib/createTable.js'
+export { createTable, type TableData } from '$lib/createTable.js'
 // models
 export * from '$lib/bodyCells.js'
 export * from '$lib/bodyRows.js'
@@ -19,3 +18,16 @@ export {
 } from '$lib/headerCells.js'
 export { HeaderRow } from '$lib/headerRows.js'
 export type * from '$lib/types/Label.js'
+// reactive primitives (plugin state)
+export {
+    ArraySet,
+    RecordSet,
+    box,
+    derivedBox,
+    keyedBox,
+    type ArraySetOptions,
+    type Box,
+    type Getter,
+    type ReadonlyBox,
+    type ToggleOptions
+} from '$lib/reactivity.svelte.js'

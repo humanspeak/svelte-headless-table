@@ -1,19 +1,22 @@
-import { get, readable } from 'svelte/store'
 import type { Sample } from '../../routes/_createSamples.js'
 import { DataBodyCell } from '../bodyCells.js'
 import { DataBodyRow } from '../bodyRows.js'
 import type { DataColumn } from '../columns.js'
 import { createTable } from '../createTable.js'
-import { textPrefixFilter } from './addColumnFilters.js'
-import { addHiddenColumns } from './addHiddenColumns.js'
-import { addSubRows } from './addSubRows.js'
-import { addTableFilter, rowMatchesFilter, type RowMatchesFilterOptions } from './addTableFilter.js'
+import { textPrefixFilter } from './addColumnFilters.svelte.js'
+import { addHiddenColumns } from './addHiddenColumns.svelte.js'
+import { addSubRows } from './addSubRows.svelte.js'
+import {
+    addTableFilter,
+    rowMatchesFilter,
+    type RowMatchesFilterOptions
+} from './addTableFilter.svelte.js'
 
 // ============================================================================
 // Test Data
 // ============================================================================
 
-const sampleData = readable<Sample[]>([
+const sampleData: Sample[] = [
     { firstName: 'Alice', lastName: 'Smith', age: 30, progress: 50, status: 'active', visits: 5 },
     { firstName: 'Bob', lastName: 'Jones', age: 25, progress: 75, status: 'inactive', visits: 3 },
     {
@@ -25,9 +28,9 @@ const sampleData = readable<Sample[]>([
         visits: 10
     },
     { firstName: 'Diana', lastName: 'Prince', age: 28, progress: 60, status: 'pending', visits: 7 }
-])
+]
 
-const nestedData = readable<Sample[]>([
+const nestedData: Sample[] = [
     {
         firstName: 'Parent1',
         lastName: 'Family',
@@ -62,7 +65,7 @@ const nestedData = readable<Sample[]>([
         status: 'active',
         visits: 15
     }
-])
+]
 
 // ============================================================================
 // Basic Filtering Tests
@@ -77,7 +80,7 @@ test('filters rows by text prefix match (default)', () => {
         table.column({ accessor: 'lastName', header: 'Last Name' })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     expect(rows).toHaveLength(1)
     expect(rows[0].isData() && rows[0].original.firstName).toBe('Alice')
@@ -92,7 +95,7 @@ test('returns all rows when filterValue is empty', () => {
         table.column({ accessor: 'lastName', header: 'Last Name' })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     expect(rows).toHaveLength(4)
 })
@@ -106,7 +109,7 @@ test('case-insensitive matching', () => {
         table.column({ accessor: 'lastName', header: 'Last Name' })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     expect(rows).toHaveLength(1)
     expect(rows[0].isData() && rows[0].original.firstName).toBe('Bob')
@@ -121,7 +124,7 @@ test('filters across multiple columns', () => {
         table.column({ accessor: 'lastName', header: 'Last Name' })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     // Should match "Brown" in lastName
     expect(rows).toHaveLength(1)
@@ -139,14 +142,14 @@ test('updates filtered rows when filterValue changes', () => {
     const vm = table.createViewModel(columns)
 
     // Initially all rows
-    expect(get(vm.rows)).toHaveLength(4)
+    expect(vm.current.rows).toHaveLength(4)
 
     // Update filter
     const { filterValue } = vm.pluginStates.filter
-    filterValue.set('Char')
+    filterValue.current = 'Char'
 
     // Now only Charlie
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
     expect(rows).toHaveLength(1)
     expect(rows[0].isData() && rows[0].original.firstName).toBe('Charlie')
 })
@@ -165,7 +168,7 @@ test('excludes hidden columns from filtering by default', () => {
         table.column({ accessor: 'lastName', header: 'Last Name' })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     // lastName is hidden, so "Smith" should not match
     expect(rows).toHaveLength(0)
@@ -181,7 +184,7 @@ test('includes hidden columns when includeHiddenColumns=true', () => {
         table.column({ accessor: 'lastName', header: 'Last Name' })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     // lastName is hidden but includeHiddenColumns=true, so "Smith" should match
     expect(rows).toHaveLength(1)
@@ -198,7 +201,7 @@ test('correctly identifies visible vs hidden cells', () => {
         table.column({ accessor: 'lastName', header: 'Last Name' })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     // firstName is visible and matches "Alice"
     expect(rows).toHaveLength(1)
@@ -361,18 +364,18 @@ test('respects exclude: true column option', () => {
         })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     // status column is excluded, so "active" should not match
     expect(rows).toHaveLength(0)
 })
 
 test('applies getFilterValue transformer before matching', () => {
-    const data = readable([
+    const data = [
         { id: 1, name: 'Alice', email: 'alice@test.com' },
         { id: 2, name: 'Bob', email: 'bob@example.org' },
         { id: 3, name: 'Charlie', email: 'charlie@test.com' }
-    ])
+    ]
 
     const table = createTable(data, {
         filter: addTableFilter({ initialFilterValue: 'test' })
@@ -391,7 +394,7 @@ test('applies getFilterValue transformer before matching', () => {
         })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     // Should match rows where email domain starts with "test"
     expect(rows).toHaveLength(2)
@@ -414,7 +417,7 @@ test('includes parent row when child matches filter', () => {
         table.column({ accessor: 'lastName', header: 'Last Name' })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     // Parent1 should be included because it has children that match
     expect(rows.length).toBeGreaterThanOrEqual(1)
@@ -431,7 +434,7 @@ test('filters nested subRows recursively', () => {
         table.column({ accessor: 'firstName', header: 'First Name' })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     // Find the parent row
     const parentRow = rows.find((r) => r.isData() && r.original.firstName === 'Parent1')
@@ -444,7 +447,7 @@ test('filters nested subRows recursively', () => {
 })
 
 test('empty subRows array handled correctly', () => {
-    const dataWithEmptyChildren = readable<Sample[]>([
+    const dataWithEmptyChildren: Sample[] = [
         {
             firstName: 'Parent',
             lastName: 'Test',
@@ -454,7 +457,7 @@ test('empty subRows array handled correctly', () => {
             visits: 10,
             children: []
         }
-    ])
+    ]
 
     const table = createTable(dataWithEmptyChildren, {
         sub: addSubRows({ children: 'children' }),
@@ -464,7 +467,7 @@ test('empty subRows array handled correctly', () => {
         table.column({ accessor: 'firstName', header: 'First Name' })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     expect(rows).toHaveLength(1)
     expect(rows[0].isData() && rows[0].original.firstName).toBe('Parent')
@@ -475,11 +478,11 @@ test('empty subRows array handled correctly', () => {
 // ============================================================================
 
 test('handles null/undefined cell values', () => {
-    const dataWithNulls = readable([
+    const dataWithNulls = [
         { id: 1, name: 'Alice', nickname: null },
         { id: 2, name: 'Bob', nickname: undefined },
         { id: 3, name: 'Charlie', nickname: 'Chuck' }
-    ])
+    ]
 
     const table = createTable(dataWithNulls, {
         filter: addTableFilter({ initialFilterValue: 'null' })
@@ -489,7 +492,7 @@ test('handles null/undefined cell values', () => {
         table.column({ accessor: 'nickname', header: 'Nickname' })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     // Should match "null" string representation
     expect(rows).toHaveLength(1)
@@ -497,7 +500,7 @@ test('handles null/undefined cell values', () => {
 })
 
 test('handles empty rows array', () => {
-    const emptyData = readable<Sample[]>([])
+    const emptyData: Sample[] = []
 
     const table = createTable(emptyData, {
         filter: addTableFilter({ initialFilterValue: 'test' })
@@ -506,7 +509,7 @@ test('handles empty rows array', () => {
         table.column({ accessor: 'firstName', header: 'First Name' })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     expect(rows).toHaveLength(0)
 })
@@ -520,7 +523,7 @@ test('tracks matching cells in tableCellMatches', () => {
         table.column({ accessor: 'lastName', header: 'Last Name' })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     // Get the first row and check that the matching cell has matches=true
     expect(rows).toHaveLength(1)
@@ -528,12 +531,12 @@ test('tracks matching cells in tableCellMatches', () => {
     const firstNameCell = row.cellForId.firstName
 
     // Access the cell props through the hook
-    const cellProps = get(firstNameCell.props())
+    const cellProps = firstNameCell.current.props
     expect(cellProps.filter.matches).toBe(true)
 
     // lastName should not have matches=true
     const lastNameCell = row.cellForId.lastName
-    const lastNameProps = get(lastNameCell.props())
+    const lastNameProps = lastNameCell.current.props
     expect(lastNameProps.filter.matches).toBe(false)
 })
 
@@ -547,12 +550,12 @@ test('preFilteredRows contains all rows before filtering', () => {
     const vm = table.createViewModel(columns)
 
     // Need to access rows first to trigger the derived store computation
-    const filteredRows = get(vm.rows)
+    const filteredRows = vm.current.rows
 
     const { preFilteredRows } = vm.pluginStates.filter
-    const $preFilteredRows = get(preFilteredRows)
+    const preFilteredRowsValue = preFilteredRows.current
 
-    expect($preFilteredRows).toHaveLength(4) // All original rows
+    expect(preFilteredRowsValue).toHaveLength(4) // All original rows
     expect(filteredRows).toHaveLength(1) // Only Alice
 })
 
@@ -569,7 +572,7 @@ test('serverSide=true returns all rows unchanged', () => {
         table.column({ accessor: 'lastName', header: 'Last Name' })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     // With serverSide=true, all rows should be returned regardless of filter
     expect(rows).toHaveLength(4)
@@ -585,10 +588,10 @@ test('serverSide mode still tracks filterValue', () => {
     const vm = table.createViewModel(columns)
 
     const { filterValue } = vm.pluginStates.filter
-    expect(get(filterValue)).toBe('test')
+    expect(filterValue.current).toBe('test')
 
-    filterValue.set('newValue')
-    expect(get(filterValue)).toBe('newValue')
+    filterValue.current = 'newValue'
+    expect(filterValue.current).toBe('newValue')
 })
 
 // ============================================================================
@@ -609,15 +612,15 @@ test('uses custom filter function when provided', () => {
         table.column({ accessor: 'firstName', header: 'First Name' })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     expect(rows).toHaveLength(1)
     expect(rows[0].isData() && rows[0].original.firstName).toBe('Alice')
 
     // Partial match should NOT work with exact match filter
     const { filterValue } = vm.pluginStates.filter
-    filterValue.set('Ali')
-    expect(get(vm.rows)).toHaveLength(0)
+    filterValue.current = 'Ali'
+    expect(vm.current.rows).toHaveLength(0)
 })
 
 // ============================================================================

@@ -4,8 +4,8 @@ import { tick } from 'svelte'
 import { vi } from 'vitest'
 import VmCurrentHost from './VmCurrentHost.test.svelte'
 
-// `vm.current.*` is the runes-native view of the view model's stores. The
-// host renders the whole table through it with no `$store` reads.
+// `vm.current.*` is the view model's reactive surface. The host renders the
+// whole table through it.
 const rowNames = () => screen.getAllByTestId('row').map((r) => r.firstElementChild?.textContent)
 
 it('renders the first page through vm.current.pageRows', () => {
@@ -16,7 +16,7 @@ it('renders the first page through vm.current.pageRows', () => {
 
 it('updates vm.current.pageRows when the page index changes outside the template', async () => {
     const { component } = render(VmCurrentHost)
-    component.pluginStates.page.pageIndex.set(1)
+    component.pluginStates.page.pageIndex.current = 1
     await tick()
     expect(rowNames()).toEqual(['Cy', 'Di'])
 })
@@ -46,7 +46,7 @@ it('keeps row.current.props live after a sort (select after sort)', async () => 
         const { component } = render(VmCurrentHost)
         await fireEvent.click(screen.getByTestId('th-name'))
         await tick()
-        component.pluginStates.select.selectedDataIds.set({ '0': true })
+        component.pluginStates.select.selectedDataIds.current = { '0': true }
         await tick()
 
         const selected = screen.getAllByTestId('row').map((r) => r.getAttribute('data-selected'))

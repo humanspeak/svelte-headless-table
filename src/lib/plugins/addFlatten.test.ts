@@ -1,10 +1,9 @@
-import { get, readable } from 'svelte/store'
 import type { Sample } from '../../routes/_createSamples.js'
 import { createTable } from '../createTable.js'
-import { addFlatten } from './addFlatten.js'
-import { addSubRows } from './addSubRows.js'
+import { addFlatten } from './addFlatten.svelte.js'
+import { addSubRows } from './addSubRows.svelte.js'
 
-const data = readable<Sample[]>([
+const data: Sample[] = [
     {
         firstName: 'Adam',
         lastName: 'Lee',
@@ -95,7 +94,7 @@ const data = readable<Sample[]>([
     },
     { firstName: 'Danny', lastName: 'Lee', age: 40, progress: 40, status: 'single', visits: 5 },
     { firstName: 'Elliot', lastName: 'Page', age: 40, progress: 40, status: 'single', visits: 5 }
-])
+]
 
 test('basic row flattening', () => {
     const table = createTable(data, {
@@ -113,7 +112,7 @@ test('basic row flattening', () => {
         })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
     expect(rows).toHaveLength(6)
     const row0 = rows[0].isData() ? rows[0] : undefined
     expect(row0).not.toBeUndefined()
@@ -122,7 +121,7 @@ test('basic row flattening', () => {
 })
 
 test('empty data: no rows returned', () => {
-    const emptyData = readable<Sample[]>([])
+    const emptyData: Sample[] = []
     const table = createTable(emptyData, {
         sub: addSubRows({ children: 'children' }),
         flatten: addFlatten({ initialDepth: 1 })
@@ -131,15 +130,15 @@ test('empty data: no rows returned', () => {
         table.column({ accessor: 'firstName', header: 'First Name' })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
     expect(rows).toHaveLength(0)
 })
 
 test('rows without children: depth=0 returns all root rows', () => {
-    const flatData = readable<Sample[]>([
+    const flatData: Sample[] = [
         { firstName: 'Adam', lastName: 'Lee', age: 30, progress: 30, status: 'single', visits: 5 },
         { firstName: 'Bryan', lastName: 'Lee', age: 30, progress: 30, status: 'single', visits: 5 }
-    ])
+    ]
     const table = createTable(flatData, {
         sub: addSubRows({ children: 'children' }),
         flatten: addFlatten({ initialDepth: 0 })
@@ -148,7 +147,7 @@ test('rows without children: depth=0 returns all root rows', () => {
         table.column({ accessor: 'firstName', header: 'First Name' })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
     expect(rows).toHaveLength(2)
     expect(rows[0].isData() && rows[0].original.firstName).toBe('Adam')
     expect(rows[1].isData() && rows[1].original.firstName).toBe('Bryan')
@@ -170,7 +169,7 @@ test('multi-level row flattening', () => {
         })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
     expect(rows).toHaveLength(1)
     const row0 = rows[0].isData() ? rows[0] : undefined
     expect(row0).not.toBeUndefined()

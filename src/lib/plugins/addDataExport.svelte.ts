@@ -1,7 +1,7 @@
-import { derived, get, type Readable } from 'svelte/store'
+import type { BodyCell } from '../bodyCells.js'
 import type { BodyRow } from '../bodyRows.js'
+import { derivedBox, type ReadonlyBox } from '../reactivity.svelte.js'
 import type { NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
-import { isReadable } from '../utils/store.js'
 
 /**
  * Supported export formats for the data export plugin.
@@ -32,9 +32,9 @@ export type DataExport<F extends DataExportFormat> = ExportForFormat[F]
  */
 export interface DataExportConfig<F extends DataExportFormat> {
     /** Key used for nested children in hierarchical exports. Defaults to 'children'. */
-    childrenKey?: string
+    childrenKey?: string | undefined
     /** Export format: 'object', 'json', or 'csv'. Defaults to 'object'. */
-    format?: F
+    format?: F | undefined
 }
 
 /**
@@ -43,8 +43,8 @@ export interface DataExportConfig<F extends DataExportFormat> {
  * @template F - The export format type.
  */
 export interface DataExportState<F extends DataExportFormat> {
-    /** Readable store containing the exported data in the specified format. */
-    exportedData: Readable<DataExport<F>>
+    /** The exported data in the specified format, recomputed when rows or columns change. */
+    exportedData: ReadonlyBox<DataExport<F>>
 }
 
 /**
@@ -52,11 +52,31 @@ export interface DataExportState<F extends DataExportFormat> {
  */
 export interface DataExportColumnOptions {
     /** If true, this column is excluded from exports. */
-    exclude?: boolean
+    exclude?: boolean | undefined
 }
 
 /** addDataExport adds no per-component props; the key exists so `current.props` stays precisely typed. */
 export type DataExportPropSet = NewTablePropSet<never>
+
+/**
+ * Resolves a cell's exported value: data cells export their value, display
+ * cells the result of their column's `data` callback (a getter result is
+ * called), anything else `null`.
+ * @internal
+ */
+const getExportValue = <Item>(cell: BodyCell<Item> | undefined, row: BodyRow<Item>): unknown => {
+    if (cell === undefined) {
+        return null
+    }
+    if (cell.isData()) {
+        return cell.value
+    }
+    if (cell.isDisplay() && cell.column.data !== undefined) {
+        const data = cell.column.data(cell, row.state)
+        return typeof data === 'function' ? (data as () => unknown)() : data
+    }
+    return null
+}
 
 /**
  * Converts rows to an array of plain objects.
@@ -69,23 +89,7 @@ const getObjectsFromRows = <Item>(
 ): Record<string, unknown>[] => {
     return rows.map((row) => {
         const dataObject = Object.fromEntries(
-            ids.map((id) => {
-                const cell = row.cellForId[id]
-                if (cell === undefined) {
-                    return [id, null]
-                }
-                if (cell.isData()) {
-                    return [id, cell.value]
-                }
-                if (cell.isDisplay() && cell.column.data !== undefined) {
-                    let data = cell.column.data(cell, row.state)
-                    if (isReadable(data)) {
-                        data = get(data)
-                    }
-                    return [id, data]
-                }
-                return [id, null]
-            })
+            ids.map((id) => [id, getExportValue(row.cellForId[id], row)])
         )
         if (row.subRows !== undefined) {
             dataObject[childrenKey] = getObjectsFromRows(row.subRows, ids, childrenKey)
@@ -100,23 +104,7 @@ const getObjectsFromRows = <Item>(
  */
 const getCsvFromRows = <Item>(rows: BodyRow<Item>[], ids: string[]): string => {
     const dataLines = rows.map((row) => {
-        const line = ids.map((id) => {
-            const cell = row.cellForId[id]
-            if (cell === undefined) {
-                return null
-            }
-            if (cell.isData()) {
-                return cell.value
-            }
-            if (cell.isDisplay() && cell.column.data !== undefined) {
-                let data = cell.column.data(cell, row.state)
-                if (isReadable(data)) {
-                    data = get(data)
-                }
-                return data
-            }
-            return null
-        })
+        const line = ids.map((id) => getExportValue(row.cellForId[id], row))
         return line.join(',')
     })
     const headerLine = ids.join(',')
@@ -133,7 +121,7 @@ const getCsvFromRows = <Item>(rows: BodyRow<Item>[], ids: string[]): string => {
  * @returns A TablePlugin that provides data export functionality.
  * @example
  * ```typescript
- * const table = createTable(data, {
+ * const table = createTable(() => data, {
  *   export: addDataExport({
  *     format: 'csv',
  *     childrenKey: 'subItems'
@@ -141,8 +129,8 @@ const getCsvFromRows = <Item>(rows: BodyRow<Item>[], ids: string[]): string => {
  * })
  *
  * // Access exported data
- * const { exportedData } = table.pluginStates.export
- * $: csvData = $exportedData
+ * const { exportedData } = viewModel.pluginStates.export
+ * const csvData = $derived(exportedData.current)
  * ```
  */
 export const addDataExport =
@@ -160,23 +148,22 @@ export const addDataExport =
             .filter(([, option]) => option.exclude === true)
             .map(([columnId]) => columnId)
 
-        const { visibleColumns, rows } = tableState
-
-        const exportedIds = derived(visibleColumns, ($visibleColumns) =>
-            $visibleColumns.map((c) => c.id).filter((id) => !excludedIds.includes(id))
-        )
-
-        const exportedData = derived([rows, exportedIds], ([$rows, $exportedIds]) => {
+        const exportedData = derivedBox((): DataExport<F> => {
+            const rows = tableState.rows()
+            const exportedIds = tableState
+                .visibleColumns()
+                .map((c) => c.id)
+                .filter((id) => !excludedIds.includes(id))
             switch (format) {
                 case 'json':
                     return JSON.stringify(
-                        getObjectsFromRows($rows, $exportedIds, childrenKey)
+                        getObjectsFromRows(rows, exportedIds, childrenKey)
                     ) as DataExport<F>
                 case 'csv':
-                    return getCsvFromRows($rows, $exportedIds) as DataExport<F>
+                    return getCsvFromRows(rows, exportedIds) as DataExport<F>
                 case 'object':
                 default:
-                    return getObjectsFromRows($rows, $exportedIds, childrenKey) as DataExport<F>
+                    return getObjectsFromRows(rows, exportedIds, childrenKey) as DataExport<F>
             }
         })
 

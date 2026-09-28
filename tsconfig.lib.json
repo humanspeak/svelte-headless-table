@@ -2,7 +2,13 @@
     "compilerOptions": {
         "noUncheckedIndexedAccess": true
     },
-    "exclude": ["src/lib/**/*.test.ts", "src/lib/**/*.test.svelte", "src/lib/**/*.d.ts"],
+    "exclude": [
+        "src/lib/**/*.test.ts",
+        "src/lib/**/*.test.svelte",
+        "src/lib/**/*.d.ts",
+        "src/lib/plugins/_parked/**",
+        "src/lib/utils/scrollAlign.ts"
+    ],
     "extends": "./tsconfig.json",
     "include": ["src/lib/**/*.ts", "src/lib/**/*.svelte"]
 }

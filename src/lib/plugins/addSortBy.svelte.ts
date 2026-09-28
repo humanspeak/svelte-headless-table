@@ -1,7 +1,6 @@
-import { MemoryCache } from '@humanspeak/memory-cache'
-import { derived, writable, type Readable, type Writable } from 'svelte/store'
 import type { DataBodyCell } from '../bodyCells.js'
 import type { BodyRow } from '../bodyRows.js'
+import type { Box, Getter, ReadonlyBox } from '../reactivity.svelte.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { compare } from '../utils/compare.js'
 import { isShiftClick } from '../utils/event.js'
@@ -11,15 +10,15 @@ import { isShiftClick } from '../utils/event.js'
  */
 export interface SortByConfig {
     /** Initial sort keys to apply on mount. */
-    initialSortKeys?: SortKey[]
+    initialSortKeys?: SortKey[] | undefined
     /** If true, prevents sorting by multiple columns. Defaults to false. */
-    disableMultiSort?: boolean
+    disableMultiSort?: boolean | undefined
     /** Function to detect multi-sort events (e.g., shift+click). Defaults to isShiftClick. */
-    isMultiSortEvent?: (_event: Event) => boolean
+    isMultiSortEvent?: ((_event: Event) => boolean) | undefined
     /** Custom toggle order cycle. Defaults to ['asc', 'desc', undefined]. */
-    toggleOrder?: ('asc' | 'desc' | undefined)[]
+    toggleOrder?: ('asc' | 'desc' | undefined)[] | undefined
     /** If true, sorting is handled server-side and rows are returned as-is. */
-    serverSide?: boolean
+    serverSide?: boolean | undefined
 }
 
 const DEFAULT_TOGGLE_ORDER: ('asc' | 'desc' | undefined)[] = ['asc', 'desc', undefined]
@@ -30,10 +29,10 @@ const DEFAULT_TOGGLE_ORDER: ('asc' | 'desc' | undefined)[] = ['asc', 'desc', und
  * @template Item - The type of data items in the table.
  */
 export interface SortByState<Item> {
-    /** Writable store containing the current sort keys. */
-    sortKeys: WritableSortKeys
-    /** Readable store containing the rows before sorting was applied. */
-    preSortedRows: Readable<BodyRow<Item>[]>
+    /** The current sort keys, with `toggleId` / `clearId` helpers. */
+    sortKeys: SortKeys
+    /** The rows before sorting was applied. */
+    preSortedRows: ReadonlyBox<BodyRow<Item>[]>
 }
 
 /**
@@ -85,85 +84,96 @@ export interface SortKey {
 }
 
 /**
- * Creates a writable store for managing sort keys with toggle and clear methods.
- *
- * @param initKeys - Initial sort keys.
- * @returns A WritableSortKeys store with toggle and clear functionality.
- * @example
- * ```typescript
- * const sortKeys = createSortKeysStore([{ id: 'name', order: 'asc' }])
- * sortKeys.toggleId('age') // Adds ascending sort by age
- * sortKeys.clearId('name') // Removes sort by name
- * ```
+ * Options for {@link SortKeys.toggleId}.
  */
-export const createSortKeysStore = (initKeys: SortKey[]): WritableSortKeys => {
-    const { subscribe, update, set } = writable(initKeys)
-    const toggleId = (
-        id: string,
-        { multiSort = true, toggleOrder = DEFAULT_TOGGLE_ORDER }: ToggleOptions = {}
-    ) => {
-        update(($sortKeys) => {
-            const keyIdx = $sortKeys.findIndex((key) => key.id === id)
-            const order = keyIdx === -1 ? undefined : $sortKeys[keyIdx]?.order
-            const orderIdx = toggleOrder.findIndex((o) => o === order)
-            const nextOrderIdx = (orderIdx + 1) % toggleOrder.length
-            const nextOrder = toggleOrder[nextOrderIdx]
-            if (!multiSort) {
-                if (nextOrder === undefined) {
-                    return []
-                }
-                return [{ id, order: nextOrder }]
-            }
-            if (keyIdx === -1 && nextOrder !== undefined) {
-                return [...$sortKeys, { id, order: nextOrder }]
-            }
-            if (nextOrder === undefined) {
-                return [...$sortKeys.slice(0, keyIdx), ...$sortKeys.slice(keyIdx + 1)]
-            }
-            return [
-                ...$sortKeys.slice(0, keyIdx),
-                { id, order: nextOrder },
-                ...$sortKeys.slice(keyIdx + 1)
-            ]
-        })
-    }
-    const clearId = (id: string) => {
-        update(($sortKeys) => {
-            const keyIdx = $sortKeys.findIndex((key) => key.id === id)
-            if (keyIdx === -1) {
-                return $sortKeys
-            }
-            return [...$sortKeys.slice(0, keyIdx), ...$sortKeys.slice(keyIdx + 1)]
-        })
-    }
-    return {
-        subscribe,
-        update,
-        set,
-        toggleId,
-        clearId
-    }
-}
-
-/**
- * Options for the toggleId method.
- */
-interface ToggleOptions {
-    /** Whether to allow multiple sort keys. */
+export interface SortToggleOptions {
+    /** Whether to allow multiple sort keys. Defaults to true. */
     multiSort?: boolean | undefined
     /** Custom toggle order cycle. Undefined uses the default order. */
     toggleOrder?: ('asc' | 'desc' | undefined)[] | undefined
 }
 
 /**
- * A writable store for sort keys with additional toggle and clear methods.
+ * The sort keys of a table: a {@link Box} of {@link SortKey}s with helpers to
+ * toggle and clear a column. Every write assigns a new array.
  */
-export type WritableSortKeys = Writable<SortKey[]> & {
-    /** Toggles the sort state for a column ID. */
-    toggleId: (_id: string, _options: ToggleOptions) => void
-    /** Clears the sort state for a column ID. */
-    clearId: (_id: string) => void
+export class SortKeys implements Box<SortKey[]> {
+    #keys = $state.raw<SortKey[]>([])
+
+    /**
+     * @param initialKeys - The initial sort keys.
+     */
+    constructor(initialKeys: SortKey[] = []) {
+        this.#keys = initialKeys
+    }
+
+    /** The current sort keys, in priority order. */
+    get current(): SortKey[] {
+        return this.#keys
+    }
+
+    set current(next: SortKey[]) {
+        this.#keys = next
+    }
+
+    /**
+     * Advances the sort order of a column through the toggle cycle.
+     *
+     * @param id - The column ID.
+     * @param options - Multi-sort and toggle-order options.
+     */
+    toggleId(
+        id: string,
+        { multiSort = true, toggleOrder = DEFAULT_TOGGLE_ORDER }: SortToggleOptions = {}
+    ): void {
+        const keys = this.#keys
+        const keyIdx = keys.findIndex((key) => key.id === id)
+        const order = keyIdx === -1 ? undefined : keys[keyIdx]?.order
+        const orderIdx = toggleOrder.findIndex((o) => o === order)
+        const nextOrderIdx = (orderIdx + 1) % toggleOrder.length
+        const nextOrder = toggleOrder[nextOrderIdx]
+        if (!multiSort) {
+            this.#keys = nextOrder === undefined ? [] : [{ id, order: nextOrder }]
+            return
+        }
+        if (keyIdx === -1 && nextOrder !== undefined) {
+            this.#keys = [...keys, { id, order: nextOrder }]
+            return
+        }
+        if (nextOrder === undefined) {
+            this.#keys = [...keys.slice(0, keyIdx), ...keys.slice(keyIdx + 1)]
+            return
+        }
+        this.#keys = [...keys.slice(0, keyIdx), { id, order: nextOrder }, ...keys.slice(keyIdx + 1)]
+    }
+
+    /**
+     * Removes the sort key of a column, if any.
+     *
+     * @param id - The column ID.
+     */
+    clearId(id: string): void {
+        const keyIdx = this.#keys.findIndex((key) => key.id === id)
+        if (keyIdx === -1) {
+            return
+        }
+        this.#keys = [...this.#keys.slice(0, keyIdx), ...this.#keys.slice(keyIdx + 1)]
+    }
 }
+
+/**
+ * Creates the sort keys state used by {@link addSortBy}.
+ *
+ * @param initialKeys - Initial sort keys.
+ * @returns A {@link SortKeys} instance.
+ * @example
+ * ```typescript
+ * const sortKeys = createSortKeys([{ id: 'name', order: 'asc' }])
+ * sortKeys.toggleId('age') // Adds ascending sort by age
+ * sortKeys.clearId('name') // Removes sort by name
+ * ```
+ */
+export const createSortKeys = (initialKeys: SortKey[] = []): SortKeys => new SortKeys(initialKeys)
 
 /**
  * Sorts rows based on the provided sort keys and column options.
@@ -196,8 +206,8 @@ const getSortedRows = <Item, Row extends BodyRow<Item>>(
     })
 
     // Shallow clone to prevent sort affecting `preSortedRows`.
-    const $sortedRows = [...rows] as typeof rows
-    $sortedRows.sort((a, b) => {
+    const sortedRows = [...rows] as typeof rows
+    sortedRows.sort((a, b) => {
         for (const config of sortConfig) {
             // TODO check why cellForId returns `undefined`.
             const cellA = a.cellForId[config.id]
@@ -230,7 +240,7 @@ const getSortedRows = <Item, Row extends BodyRow<Item>>(
         }
         return 0
     })
-    for (const [i, row] of $sortedRows.entries()) {
+    for (const [i, row] of sortedRows.entries()) {
         const { subRows } = row
         if (subRows === undefined) {
             continue
@@ -238,9 +248,9 @@ const getSortedRows = <Item, Row extends BodyRow<Item>>(
         const sortedSubRows = getSortedRows<Item, Row>(subRows as Row[], sortKeys, columnOptions)
         const clonedRow = row.clone() as Row
         clonedRow.subRows = sortedSubRows
-        $sortedRows[i] = clonedRow
+        sortedRows[i] = clonedRow
     }
-    return $sortedRows
+    return sortedRows
 }
 
 /**
@@ -252,7 +262,7 @@ const getSortedRows = <Item, Row extends BodyRow<Item>>(
  * @returns A TablePlugin that provides sorting functionality.
  * @example
  * ```typescript
- * const table = createTable(data, {
+ * const table = createTable(() => data, {
  *   sort: addSortBy({
  *     initialSortKeys: [{ id: 'name', order: 'asc' }],
  *     disableMultiSort: false
@@ -260,7 +270,8 @@ const getSortedRows = <Item, Row extends BodyRow<Item>>(
  * })
  *
  * // Access sort state in your component
- * const { sortKeys } = table.pluginStates.sort
+ * const { sortKeys } = viewModel.pluginStates.sort
+ * sortKeys.current // [{ id: 'name', order: 'asc' }]
  * ```
  */
 export const addSortBy =
@@ -281,32 +292,38 @@ export const addSortBy =
             .filter(([, option]) => option.disable === true)
             .map(([columnId]) => columnId)
 
-        const sortKeys = createSortKeysStore(initialSortKeys)
-        const preSortedRows = writable<BodyRow<Item>[]>([])
+        const sortKeys = createSortKeys(initialSortKeys)
+
+        // "Pre-sorted rows" read through the upstream getter captured when the
+        // view model calls `deriveRows`; nothing is written while deriving.
+        let upstreamRows: Getter<BodyRow<Item>[]> = () => []
+        const preSortedRows: ReadonlyBox<BodyRow<Item>[]> = {
+            get current() {
+                return upstreamRows()
+            }
+        }
 
         const deriveRows: DeriveRowsFn<Item> = (rows) => {
-            return derived([rows, sortKeys], ([$rows, $sortKeys]) => {
-                preSortedRows.set($rows)
+            upstreamRows = rows
+            const sorted = $derived.by(() => {
+                const rowsValue = rows()
+                const keys = sortKeys.current
                 // Early return if no sorting needed
-                if (serverSide || $sortKeys.length === 0) {
-                    return $rows
+                if (serverSide || keys.length === 0) {
+                    return rowsValue
                 }
-                return getSortedRows<Item, (typeof $rows)[number]>($rows, $sortKeys, columnOptions)
+                return getSortedRows<Item, (typeof rowsValue)[number]>(
+                    rowsValue,
+                    keys,
+                    columnOptions
+                )
             })
+            return () => sorted
         }
 
         const pluginState: SortByState<Item> = { sortKeys, preSortedRows }
 
-        // The `tbody.tr.td` hook output only depends on `cell.id` (the
-        // column ID — closed-over) and the reactive `sortKeys` store.
-        // Two body cells in the same column produce identical Readables,
-        // so we can share one Readable per column ID across every row.
-        // For rows-10k × 8 cols that collapses 80,000 Readable allocations
-        // per cold mount into 8. LRU eviction means we stay bounded even
-        // if column IDs churn over the view-model's lifetime.
-        const tdPropsCache = new MemoryCache<Readable<SortByPropSet['tbody.tr.td']>>({
-            maxSize: 256
-        })
+        const orderOf = (id: string) => sortKeys.current.find((k) => k.id === id)?.order
 
         return {
             pluginState,
@@ -314,43 +331,27 @@ export const addSortBy =
             hooks: {
                 'thead.tr.th': (cell) => {
                     const disabled = disabledSortIds.includes(cell.id)
-                    const props = derived(sortKeys, ($sortKeys) => {
-                        const key = $sortKeys.find((k) => k.id === cell.id)
-                        const toggle = (event: Event) => {
-                            if (!cell.isData()) return
-                            if (disabled) return
-                            sortKeys.toggleId(cell.id, {
-                                multiSort: disableMultiSort ? false : isMultiSortEvent(event),
-                                toggleOrder
-                            })
-                        }
-                        const clear = () => {
-                            if (!cell.isData()) return
-                            if (disabledSortIds.includes(cell.id)) return
-                            sortKeys.clearId(cell.id)
-                        }
-                        return {
-                            order: key?.order,
-                            toggle,
-                            clear,
-                            disabled
-                        }
-                    })
-                    return { props }
-                },
-                'tbody.tr.td': (cell) => {
-                    let props = tdPropsCache.get(cell.id)
-                    if (props === undefined) {
-                        props = derived(sortKeys, ($sortKeys) => {
-                            const key = $sortKeys.find((k) => k.id === cell.id)
-                            return {
-                                order: key?.order
-                            }
+                    // Handlers are allocated once per cell, not per read.
+                    const toggle = (event: Event) => {
+                        if (!cell.isData()) return
+                        if (disabled) return
+                        sortKeys.toggleId(cell.id, {
+                            multiSort: disableMultiSort ? false : isMultiSortEvent(event),
+                            toggleOrder
                         })
-                        tdPropsCache.set(cell.id, props)
                     }
-                    return { props }
-                }
+                    const clear = () => {
+                        if (!cell.isData()) return
+                        if (disabled) return
+                        sortKeys.clearId(cell.id)
+                    }
+                    return {
+                        props: () => ({ order: orderOf(cell.id), toggle, clear, disabled })
+                    }
+                },
+                'tbody.tr.td': (cell) => ({
+                    props: () => ({ order: orderOf(cell.id) })
+                })
             }
         }
     }

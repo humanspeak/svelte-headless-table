@@ -1,4 +1,3 @@
-import { derived } from 'svelte/store'
 import { type DataBodyRow, getSubRows } from '../bodyRows.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 
@@ -60,7 +59,7 @@ const withSubRows = <Item, Row extends DataBodyRow<Item>>(
  *   directReports?: Employee[]
  * }
  *
- * const table = createTable(data, {
+ * const table = createTable(() => data, {
  *   subRows: addSubRows({
  *     children: 'directReports' // or: (item) => item.directReports
  *   })
@@ -81,14 +80,17 @@ export const addSubRows =
             children instanceof Function ? children : (item) => item[children] as unknown as Item[]
 
         const deriveRows: DeriveRowsFn<Item> = (rows) => {
-            return derived(rows, ($rows) => {
-                return $rows.map((row) => {
+            // Attaches `subRows` to the upstream row objects (plain fields, not
+            // rune state).
+            const withChildren = $derived.by(() =>
+                rows().map((row) => {
                     if (row.isData()) {
                         return withSubRows(row, getChildren)
                     }
                     return row
                 })
-            })
+            )
+            return () => withChildren
         }
 
         return {

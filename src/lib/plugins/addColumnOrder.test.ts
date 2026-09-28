@@ -1,6 +1,5 @@
-import { get, readable } from 'svelte/store'
 import { createTable } from '../createTable.js'
-import { addColumnOrder } from './addColumnOrder.js'
+import { addColumnOrder } from './addColumnOrder.svelte.js'
 
 interface Item {
     firstName: string
@@ -8,10 +7,10 @@ interface Item {
     age: number
 }
 
-const data = readable<Item[]>([
+const data: Item[] = [
     { firstName: 'Adam', lastName: 'West', age: 50 },
     { firstName: 'Becky', lastName: 'White', age: 30 }
-])
+]
 
 test('basic reordering: columns appear in specified order', () => {
     const table = createTable(data, {
@@ -23,7 +22,7 @@ test('basic reordering: columns appear in specified order', () => {
         table.column({ accessor: 'age', header: 'Age' })
     ])
     const vm = table.createViewModel(columns)
-    const visibleColumns = get(vm.visibleColumns)
+    const visibleColumns = vm.current.visibleColumns
 
     expect(visibleColumns.map((c) => c.id)).toStrictEqual(['age', 'firstName', 'lastName'])
 })
@@ -38,7 +37,7 @@ test('partial order: unspecified columns appended at end', () => {
         table.column({ accessor: 'age', header: 'Age' })
     ])
     const vm = table.createViewModel(columns)
-    const visibleColumns = get(vm.visibleColumns)
+    const visibleColumns = vm.current.visibleColumns
 
     expect(visibleColumns.map((c) => c.id)).toStrictEqual(['age', 'lastName', 'firstName'])
 })
@@ -56,7 +55,7 @@ test('hideUnspecifiedColumns: unspecified columns hidden', () => {
         table.column({ accessor: 'age', header: 'Age' })
     ])
     const vm = table.createViewModel(columns)
-    const visibleColumns = get(vm.visibleColumns)
+    const visibleColumns = vm.current.visibleColumns
 
     expect(visibleColumns.map((c) => c.id)).toStrictEqual(['firstName', 'age'])
 })
@@ -71,7 +70,7 @@ test('empty columnIdOrder: all columns shown in original order', () => {
         table.column({ accessor: 'age', header: 'Age' })
     ])
     const vm = table.createViewModel(columns)
-    const visibleColumns = get(vm.visibleColumns)
+    const visibleColumns = vm.current.visibleColumns
 
     expect(visibleColumns.map((c) => c.id)).toStrictEqual(['firstName', 'lastName', 'age'])
 })
@@ -86,7 +85,7 @@ test('non-existent column ID in order: skips missing IDs gracefully', () => {
         table.column({ accessor: 'age', header: 'Age' })
     ])
     const vm = table.createViewModel(columns)
-    const visibleColumns = get(vm.visibleColumns)
+    const visibleColumns = vm.current.visibleColumns
 
     // Non-existent IDs are skipped; matched columns appear in order, then unspecified columns
     expect(visibleColumns.map((c) => c.id)).toStrictEqual(['age', 'firstName', 'lastName'])

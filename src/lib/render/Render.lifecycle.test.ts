@@ -1,53 +1,51 @@
 import '@testing-library/jest-dom/vitest'
 import { render } from '@testing-library/svelte'
-import type { Readable } from 'svelte/store'
-import SubscribeHost from '../subscribe/SubscribeHost.test.svelte'
+import { flushSync } from 'svelte'
+import { box } from '../reactivity.svelte.js'
 import Fixture from './Fixture.test.svelte'
 import { createRender, Render } from './index.js'
 
-/** A store that counts how many times it was subscribed to and torn down. */
-const countingStore = <T>(value: T) => {
-    let subscribed = 0
-    let unsubscribed = 0
-    const store: Readable<T> = {
-        subscribe(run) {
-            subscribed += 1
-            run(value)
-            return () => {
-                unsubscribed += 1
-            }
-        }
+/** A getter over rune state that counts how often it is called. */
+const countingGetter = <T>(initial: T) => {
+    const value = box(initial)
+    let calls = 0
+    const get = () => {
+        calls += 1
+        return value.current
     }
-    return { store, counts: () => ({ subscribed, unsubscribed }) }
+    return { value, get, calls: () => calls }
 }
 
-// Virtualised tables mount and unmount thousands of cells; every
-// subscription a cell opens must be closed when it goes away.
-it('Render unsubscribes from a readable value on unmount', () => {
-    const { store, counts } = countingStore('text')
-    const { unmount } = render(Render, { props: { of: store } })
-    expect(counts().subscribed).toBeGreaterThan(0)
+// Virtualised tables mount and unmount thousands of cells; a cell that went
+// away must stop tracking the state its getters read (v6 checked that every
+// store subscription was closed).
+it('Render stops tracking a getter config on unmount', () => {
+    const { value, get, calls } = countingGetter('text')
+    const { unmount } = render(Render, { props: { of: get } })
+    expect(calls()).toBeGreaterThan(0)
+    // While mounted, a change is re-read (so the check below is not vacuous).
+    const mounted = calls()
+    value.current = 'mounted-change'
+    flushSync()
+    expect(calls()).toBeGreaterThan(mounted)
     unmount()
-    expect(counts().unsubscribed).toBe(counts().subscribed)
+    const before = calls()
+    value.current = 'changed'
+    flushSync()
+    expect(calls()).toBe(before)
 })
 
-it('Render unsubscribes from readable component props on unmount', () => {
-    const { store, counts } = countingStore({ label: 'p', count: 1 })
-    const { unmount } = render(Render, { props: { of: createRender(Fixture, store) } })
-    expect(counts().subscribed).toBeGreaterThan(0)
+it('Render stops tracking getter component props on unmount', () => {
+    const { value, get, calls } = countingGetter({ label: 'p', count: 1 })
+    const { unmount } = render(Render, { props: { of: createRender(Fixture, get) } })
+    expect(calls()).toBeGreaterThan(0)
+    const mounted = calls()
+    value.current = { label: 'm', count: 5 }
+    flushSync()
+    expect(calls()).toBeGreaterThan(mounted)
     unmount()
-    expect(counts().unsubscribed).toBe(counts().subscribed)
-})
-
-it('Subscribe unsubscribes from every store prop on unmount', () => {
-    const attrs = countingStore<Record<string, unknown>>({ role: 'cell' })
-    const props = countingStore({ n: 1 })
-    const { unmount } = render(SubscribeHost, {
-        props: { attrs: attrs.store, props: props.store }
-    })
-    expect(attrs.counts().subscribed).toBeGreaterThan(0)
-    expect(props.counts().subscribed).toBeGreaterThan(0)
-    unmount()
-    expect(attrs.counts().unsubscribed).toBe(attrs.counts().subscribed)
-    expect(props.counts().unsubscribed).toBe(props.counts().subscribed)
+    const before = calls()
+    value.current = { label: 'q', count: 2 }
+    flushSync()
+    expect(calls()).toBe(before)
 })

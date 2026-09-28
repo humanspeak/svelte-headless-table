@@ -1,4 +1,3 @@
-import { writable } from 'svelte/store'
 import { createTable } from './createTable.js'
 import { DataHeaderCell, GroupDisplayHeaderCell, GroupHeaderCell } from './headerCells.js'
 import { getHeaderRows, HeaderRow } from './headerRows.js'
@@ -12,7 +11,7 @@ interface User {
     status: string
 }
 
-const data = writable<User[]>([])
+const data: User[] = []
 
 const table = createTable(data)
 

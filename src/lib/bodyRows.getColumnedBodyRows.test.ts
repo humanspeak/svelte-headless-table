@@ -1,4 +1,3 @@
-import { writable } from 'svelte/store'
 import { type BodyRow, getBodyRows, getColumnedBodyRows } from './bodyRows.js'
 import { createTable } from './createTable.js'
 
@@ -30,7 +29,7 @@ const data: User[] = [
     }
 ]
 
-const table = createTable(writable(data))
+const table = createTable(data)
 
 const columns = [
     table.column({

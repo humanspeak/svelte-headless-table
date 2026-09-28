@@ -3,7 +3,7 @@ import { render } from 'svelte/server'
 import VmCurrentHost from './VmCurrentHost.test.svelte'
 
 // `vm.current.*` must be populated on the server: rendering reads it outside
-// any effect, where fromStore falls back to `get(store)`.
+// any effect, where each `$derived` is computed on read.
 it('server-renders the table through vm.current', () => {
     const { body } = render(VmCurrentHost)
     expect(body).toContain('role="table"')

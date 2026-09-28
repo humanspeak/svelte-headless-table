@@ -17,5 +17,18 @@
         "noImplicitOverride": true,
         "exactOptionalPropertyTypes": true
     },
+    "exclude": [
+        "node_modules/**",
+        "src/service-worker.js",
+        "src/service-worker/**/*.js",
+        "src/service-worker.ts",
+        "src/service-worker/**/*.ts",
+        "src/service-worker.d.ts",
+        "src/service-worker/**/*.d.ts",
+        "src/routes/**",
+        "src/lib/plugins/_parked/**",
+        "src/lib/utils/scrollAlign.ts",
+        "src/lib/utils/scrollAlign.test.ts"
+    ],
     "extends": "./.svelte-kit/tsconfig.json"
 }

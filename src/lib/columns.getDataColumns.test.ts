@@ -1,4 +1,3 @@
-import { writable } from 'svelte/store'
 import { type DataColumn, getFlatColumns } from './columns.js'
 import { createTable } from './createTable.js'
 
@@ -11,7 +10,7 @@ interface User {
     status: string
 }
 
-const data = writable<User[]>([])
+const data: User[] = []
 
 const table = createTable(data)
 

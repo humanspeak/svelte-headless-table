@@ -1,5 +1,5 @@
-import { derived, writable, type Readable, type Writable } from 'svelte/store'
 import type { BodyRow } from '../bodyRows.js'
+import { box, type Box } from '../reactivity.svelte.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 
 /**
@@ -7,15 +7,15 @@ import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TableP
  */
 export interface FlattenConfig {
     /** Initial depth to flatten. 0 means no flattening. Defaults to 0. */
-    initialDepth?: number
+    initialDepth?: number | undefined
 }
 
 /**
  * State exposed by the addFlatten plugin.
  */
 export interface FlattenState {
-    /** Writable store for the current flatten depth. */
-    depth: Writable<number>
+    /** The current flatten depth. */
+    depth: Box<number>
 }
 
 /**
@@ -71,14 +71,14 @@ export const getFlattenedRows = <Item, Row extends BodyRow<Item>>(
  * @returns A TablePlugin that provides flattening functionality.
  * @example
  * ```typescript
- * const table = createTable(data, {
+ * const table = createTable(() => data, {
  *   flatten: addFlatten({
  *     initialDepth: 0 // Start with no flattening
  *   })
  * })
  *
  * // Flatten to show only first-level children
- * table.pluginStates.flatten.depth.set(1)
+ * viewModel.pluginStates.flatten.depth.current = 1
  * ```
  */
 export const addFlatten =
@@ -89,28 +89,33 @@ export const addFlatten =
         FlattenPropSet
     > =>
     () => {
-        const depth = writable(initialDepth)
+        const depth = box(initialDepth)
         const pluginState: FlattenState = { depth }
         const deriveRows: DeriveRowsFn<Item> = (rows) => {
-            return derived([rows, depth], ([$rows, $depth]) => {
-                return getFlattenedRows<Item, (typeof $rows)[number]>($rows, $depth)
+            const flattened = $derived.by(() => {
+                const rowsValue = rows()
+                return getFlattenedRows<Item, (typeof rowsValue)[number]>(rowsValue, depth.current)
             })
+            return () => flattened
         }
+
+        // The handlers do not depend on the cell, so one constant object is
+        // shared by every cell's props getter.
+        const cellProps: FlattenPropSet['tbody.tr.td'] = {
+            flatten: (nextDepth: number) => {
+                depth.current = nextDepth
+            },
+            unflatten: () => {
+                depth.current = 0
+            }
+        }
+        const getCellProps = () => cellProps
 
         return {
             pluginState,
             deriveRows,
             hooks: {
-                'tbody.tr.td': () => {
-                    const props: Readable<FlattenPropSet['tbody.tr.td']> = derived([], () => {
-                        const flatten = ($depth: number) => {
-                            depth.set($depth)
-                        }
-                        const unflatten = () => flatten(0)
-                        return { flatten, unflatten }
-                    })
-                    return { props }
-                }
+                'tbody.tr.td': () => ({ props: getCellProps })
             }
         }
     }

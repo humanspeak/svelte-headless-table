@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { render, screen } from '@testing-library/svelte'
-import { writable } from 'svelte/store'
+import { tick } from 'svelte'
+import { box } from '../reactivity.svelte.js'
 import Fixture from './Fixture.test.svelte'
 import { createRender, createSnippetRender, Render } from './index.js'
 import { textSnippet } from './SnippetHost.test.svelte'
@@ -15,16 +16,16 @@ it('switches between every RenderConfig variant on the same instance', async () 
     expect(container).toHaveTextContent('42')
     expect(container).not.toHaveTextContent('first')
 
-    const store = writable('from-store')
-    await rerender({ of: store })
-    expect(container).toHaveTextContent('from-store')
-    store.set('store-updated')
-    await Promise.resolve()
-    expect(container).toHaveTextContent('store-updated')
+    const value = box('from-getter')
+    await rerender({ of: () => value.current })
+    expect(container).toHaveTextContent('from-getter')
+    value.current = 'getter-updated'
+    await tick()
+    expect(container).toHaveTextContent('getter-updated')
 
     await rerender({ of: createRender(Fixture, { label: 'comp', count: 3 }) })
     expect(screen.getByTestId('fixture')).toHaveTextContent('comp:3')
-    expect(container).not.toHaveTextContent('store-updated')
+    expect(container).not.toHaveTextContent('getter-updated')
 
     await rerender({ of: createSnippetRender(textSnippet, 'snip') })
     expect(screen.getByTestId('text-snippet')).toHaveTextContent('snip')
@@ -35,16 +36,18 @@ it('switches between every RenderConfig variant on the same instance', async () 
     expect(screen.queryByTestId('text-snippet')).toBeNull()
 })
 
-it('swaps readable props for static props on the same component', async () => {
-    const props = writable({ label: 'a', count: 1 })
-    const { rerender } = render(Render, { props: { of: createRender(Fixture, props) } })
+it('swaps getter props for static props on the same component', async () => {
+    const props = box({ label: 'a', count: 1 })
+    const { rerender } = render(Render, {
+        props: { of: createRender(Fixture, () => props.current) }
+    })
     expect(screen.getByTestId('fixture')).toHaveTextContent('a:1')
 
     await rerender({ of: createRender(Fixture, { label: 'b', count: 2 }) })
     expect(screen.getByTestId('fixture')).toHaveTextContent('b:2')
 
-    // The old store must no longer drive the component.
-    props.set({ label: 'stale', count: 9 })
-    await Promise.resolve()
+    // The old getter must no longer drive the component.
+    props.current = { label: 'stale', count: 9 }
+    await tick()
     expect(screen.getByTestId('fixture')).toHaveTextContent('b:2')
 })

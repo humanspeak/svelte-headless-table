@@ -1,4 +1,4 @@
-import { derived, writable, type Writable } from 'svelte/store'
+import { box, type Box } from '../reactivity.svelte.js'
 import type { DeriveFlatColumnsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 
 /**
@@ -6,17 +6,17 @@ import type { DeriveFlatColumnsFn, NewTablePropSet, TablePlugin } from '../types
  */
 export interface ColumnOrderConfig {
     /** Initial order of column IDs. Columns are ordered in this sequence. */
-    initialColumnIdOrder?: string[]
+    initialColumnIdOrder?: string[] | undefined
     /** If true, columns not in the order list are hidden. Defaults to false. */
-    hideUnspecifiedColumns?: boolean
+    hideUnspecifiedColumns?: boolean | undefined
 }
 
 /**
  * State exposed by the addColumnOrder plugin.
  */
 export interface ColumnOrderState {
-    /** Writable store containing the ordered list of column IDs. */
-    columnIdOrder: Writable<string[]>
+    /** The ordered list of column IDs. Assign a new array to reorder. */
+    columnIdOrder: Box<string[]>
 }
 
 /**
@@ -28,7 +28,7 @@ export interface ColumnOrderState {
  * @returns A TablePlugin that provides column ordering functionality.
  * @example
  * ```typescript
- * const table = createTable(data, {
+ * const table = createTable(() => data, {
  *   order: addColumnOrder({
  *     initialColumnIdOrder: ['name', 'age', 'email'],
  *     hideUnspecifiedColumns: false
@@ -36,8 +36,8 @@ export interface ColumnOrderState {
  * })
  *
  * // Reorder columns dynamically
- * const { columnIdOrder } = table.pluginStates.order
- * columnIdOrder.set(['email', 'name', 'age'])
+ * const { columnIdOrder } = viewModel.pluginStates.order
+ * columnIdOrder.current = ['email', 'name', 'age']
  * ```
  */
 export const addColumnOrder =
@@ -51,15 +51,18 @@ export const addColumnOrder =
         NewTablePropSet<never>
     > =>
     () => {
-        const columnIdOrder = writable<string[]>(initialColumnIdOrder)
+        const columnIdOrder = box<string[]>(initialColumnIdOrder)
 
         const pluginState: ColumnOrderState = { columnIdOrder }
 
         const deriveFlatColumns: DeriveFlatColumnsFn<Item> = (flatColumns) => {
-            return derived([flatColumns, columnIdOrder], ([$flatColumns, $columnIdOrder]) => {
-                const colById = new Map($flatColumns.map((c) => [c.id, c]))
-                const orderedFlatColumns: typeof $flatColumns = []
-                $columnIdOrder.forEach((id) => {
+            const ordered = $derived.by(() => {
+                const columns = flatColumns()
+                // A lookup table local to this derivation, not state.
+                // trunk-ignore(eslint/svelte/prefer-svelte-reactivity)
+                const colById = new Map(columns.map((c) => [c.id, c]))
+                const orderedFlatColumns: typeof columns = []
+                columnIdOrder.current.forEach((id) => {
                     const col = colById.get(id)
                     if (col !== undefined) {
                         orderedFlatColumns.push(col)
@@ -67,13 +70,14 @@ export const addColumnOrder =
                     }
                 })
                 if (!hideUnspecifiedColumns) {
-                    // Remaining entries preserve original $flatColumns order.
+                    // Remaining entries preserve the original column order.
                     for (const col of colById.values()) {
                         orderedFlatColumns.push(col)
                     }
                 }
                 return orderedFlatColumns
             })
+            return () => ordered
         }
 
         return {

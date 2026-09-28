@@ -1,4 +1,3 @@
-import { get, readable } from 'svelte/store'
 import { TableComponent } from './tableComponent.svelte.js'
 import type { AnyPlugins } from './types/TablePlugin.js'
 
@@ -16,16 +15,16 @@ it('hooks plugin props', () => {
         a: 1,
         b: 2
     }
-    const props = readable($props)
+    const props = () => $props
     component.applyHook('test', { props })
 
-    const actual = component.props()
+    const actual = component.current.props
 
     const expected = {
         test: $props
     }
 
-    expect(get(actual)).toStrictEqual(expected)
+    expect(actual).toStrictEqual(expected)
 })
 
 it('hooks plugin attrs', () => {
@@ -34,14 +33,14 @@ it('hooks plugin attrs', () => {
         a: 1,
         b: 2
     }
-    const attrs = readable($attrs)
+    const attrs = () => $attrs
     component.applyHook('test', { attrs })
 
-    const actual = component.attrs()
+    const actual = component.current.attrs
 
     const expected = $attrs
 
-    expect(get(actual)).toStrictEqual(expected)
+    expect(actual).toStrictEqual(expected)
 })
 
 it('hooks and merges plugin attrs', () => {
@@ -50,16 +49,16 @@ it('hooks and merges plugin attrs', () => {
         a: 1,
         b: 2
     }
-    const attrs1 = readable($attrs1)
+    const attrs1 = () => $attrs1
     const $attrs2 = {
         c: 3,
         b: 4
     }
-    const attrs2 = readable($attrs2)
+    const attrs2 = () => $attrs2
     component.applyHook('firstPlugin', { attrs: attrs1 })
     component.applyHook('secondPlugin', { attrs: attrs2 })
 
-    const actual = component.attrs()
+    const actual = component.current.attrs
 
     const expected = {
         a: 1,
@@ -67,7 +66,7 @@ it('hooks and merges plugin attrs', () => {
         b: 4
     }
 
-    expect(get(actual)).toStrictEqual(expected)
+    expect(actual).toStrictEqual(expected)
 })
 
 it('hooks and merges plugin attrs styles', () => {
@@ -80,7 +79,7 @@ it('hooks and merges plugin attrs styles', () => {
             y: '2'
         }
     }
-    const attrs1 = readable($attrs1)
+    const attrs1 = () => $attrs1
     const $attrs2 = {
         c: 3,
         b: 4,
@@ -89,11 +88,11 @@ it('hooks and merges plugin attrs styles', () => {
             y: '4'
         }
     }
-    const attrs2 = readable($attrs2)
+    const attrs2 = () => $attrs2
     component.applyHook('firstPlugin', { attrs: attrs1 })
     component.applyHook('secondPlugin', { attrs: attrs2 })
 
-    const actual = component.attrs()
+    const actual = component.current.attrs
 
     const expected = {
         a: 1,
@@ -102,15 +101,24 @@ it('hooks and merges plugin attrs styles', () => {
         style: 'x:1;y:4;z:3'
     }
 
-    expect(get(actual)).toStrictEqual(expected)
+    expect(actual).toStrictEqual(expected)
 })
 
 it('re-applying a hook for the same plugin replaces its attrs', () => {
     const component = new TestComponent({ id: '0' })
-    component.applyHook('test', { attrs: readable({ a: 1 }) })
-    expect(get(component.attrs())).toStrictEqual({ a: 1 })
+    component.applyHook('test', { attrs: () => ({ a: 1 }) })
+    expect(component.current.attrs).toStrictEqual({ a: 1 })
 
-    component.applyHook('test', { attrs: readable({ a: 2, b: 3 }) })
+    component.applyHook('test', { attrs: () => ({ a: 2, b: 3 }) })
 
-    expect(get(component.attrs())).toStrictEqual({ a: 2, b: 3 })
+    expect(component.current.attrs).toStrictEqual({ a: 2, b: 3 })
+})
+
+it('re-reads the hook getters on every current read (memo-free)', () => {
+    const component = new TestComponent({ id: '0' })
+    let n = 0
+    component.applyHook('test', { props: () => ({ n: ++n }) })
+
+    expect(component.current.props).toStrictEqual({ test: { n: 1 } })
+    expect(component.current.props).toStrictEqual({ test: { n: 2 } })
 })

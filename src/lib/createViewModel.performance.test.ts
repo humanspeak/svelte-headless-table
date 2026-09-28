@@ -1,13 +1,14 @@
-import { get, writable } from 'svelte/store'
+import { flushSync } from 'svelte'
 import { createTable } from './createTable.js'
 import {
     addColumnFilters,
     addExpandedRows,
     addHiddenColumns,
     addPagination,
-    addSelectedRows,
     addSortBy
 } from './plugins/index.js'
+import { box } from './reactivity.svelte.js'
+import { withEffectRoot } from './test/effectRoot.svelte.js'
 
 interface TestItem {
     id: string
@@ -19,9 +20,9 @@ interface TestItem {
     progress: number
 }
 
-describe('Store derivation chain performance', () => {
+describe('View model derivation chain performance', () => {
     it('reports derivation cascade metrics', () => {
-        const data = writable<TestItem[]>([
+        const data = box<TestItem[]>([
             {
                 id: '1',
                 firstName: 'Alice',
@@ -42,12 +43,13 @@ describe('Store derivation chain performance', () => {
             }
         ])
 
-        const table = createTable(data, {
+        // addSelectedRows is parked until plan 003, so this stack has five
+        // plugins instead of v6's six.
+        const table = createTable(() => data.current, {
             sort: addSortBy(),
             filter: addColumnFilters(),
             hide: addHiddenColumns(),
             page: addPagination(),
-            select: addSelectedRows(),
             expand: addExpandedRows()
         })
 
@@ -59,21 +61,24 @@ describe('Store derivation chain performance', () => {
 
         const vm = table.createViewModel(columns)
 
-        // Log store chain depths
-        console.log('\n=== Derived Store Chain Depths ===')
+        // Log derivation chain depths
+        console.log('\n=== Derivation Chain Depths ===')
         console.log(`  Plugins: ${vm._debug.pluginCount} (${vm._debug.pluginNames.join(', ')})`)
-        console.log(`  tableAttrs chain: ${vm._debug.derivedStoreCount.tableAttrs}`)
-        console.log(`  rows chain: ${vm._debug.derivedStoreCount.rows}`)
-        console.log(`  pageRows chain: ${vm._debug.derivedStoreCount.pageRows}`)
+        console.log(`  tableAttrs chain: ${vm._debug.derivedCount.tableAttrs}`)
+        console.log(`  rows chain: ${vm._debug.derivedCount.rows}`)
+        console.log(`  pageRows chain: ${vm._debug.derivedCount.pageRows}`)
 
-        // Subscribe to trigger initial derivations
-        const unsub = vm.pageRows.subscribe(() => {})
+        // Observe page rows in an effect to trigger the initial derivations
+        let observedPageRows = 0
+        const unsub = withEffectRoot(() => {
+            observedPageRows = vm.current.pageRows.length
+        })
 
         // Reset counters after initial setup
         vm._debug.resetCounters()
 
         // Single data change - measure cascade
-        data.set([
+        data.current = [
             {
                 id: '1',
                 firstName: 'Charlie',
@@ -83,7 +88,10 @@ describe('Store derivation chain performance', () => {
                 visits: 15,
                 progress: 60
             }
-        ])
+        ]
+        flushSync()
+        // The observing effect re-ran with the new data.
+        expect(observedPageRows).toBe(1)
 
         // Report derivation calls
         console.log('\n=== Derivation Calls (1 data change) ===')
@@ -114,9 +122,9 @@ describe('Store derivation chain performance', () => {
             progress: i % 100
         }))
 
-        const data = writable(largeData)
+        const data = box(largeData)
 
-        const table = createTable(data, {
+        const table = createTable(() => data.current, {
             sort: addSortBy(),
             filter: addColumnFilters(),
             hide: addHiddenColumns(),
@@ -129,14 +137,19 @@ describe('Store derivation chain performance', () => {
         ])
 
         const vm = table.createViewModel(columns)
-        const unsub = vm.pageRows.subscribe(() => {})
+        let observedPageRows = 0
+        const unsub = withEffectRoot(() => {
+            observedPageRows = vm.current.pageRows.length
+        })
 
         vm._debug.resetCounters()
 
         const start = performance.now()
 
         // Simulate filter change
-        data.update((d) => d.filter((item) => item.age > 30))
+        data.current = data.current.filter((item) => item.age > 30)
+        flushSync()
+        expect(observedPageRows).toBe(50)
 
         const elapsed = performance.now() - start
 
@@ -153,8 +166,8 @@ describe('Store derivation chain performance', () => {
         expect(elapsed).toBeLessThan(100)
     })
 
-    it('pins derivationCalls for sort + pagination after one get(vm.pageRows)', () => {
-        const data = writable<TestItem[]>(
+    it('pins derivationCalls for sort + pagination after one read of vm.current.pageRows', () => {
+        const data = box<TestItem[]>(
             Array.from({ length: 5 }, (_, i) => ({
                 id: String(i),
                 firstName: `First${i}`,
@@ -165,7 +178,7 @@ describe('Store derivation chain performance', () => {
                 progress: i
             }))
         )
-        const table = createTable(data, {
+        const table = createTable(() => data.current, {
             sort: addSortBy(),
             page: addPagination({ initialPageSize: 2 })
         })
@@ -175,10 +188,10 @@ describe('Store derivation chain performance', () => {
         ])
         const vm = table.createViewModel(columns)
 
-        get(vm.pageRows)
+        expect(vm.current.pageRows).toBeDefined()
 
-        // Baseline pinned before createViewModel moved to .svelte.ts (plan 004).
-        // `vm.current` must not change these counts.
+        // Baseline pinned in v6 (one `get(vm.pageRows)`); the runes chain must
+        // not derive more on one read.
         expect({ ...vm._debug.derivationCalls }).toEqual({
             tableAttrs: 0,
             tableHeadAttrs: 0,

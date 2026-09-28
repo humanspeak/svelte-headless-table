@@ -17,9 +17,49 @@ import {
     type CreateViewModelOptions,
     type TableViewModel
 } from '$lib/createViewModel.svelte.js'
+import type { Getter } from '$lib/reactivity.svelte.js'
 import type { AnyPlugins } from '$lib/types/TablePlugin.js'
 import { arrayEquals, getDuplicates } from '$lib/utils/array.js'
-import type { ReadOrWritable } from '$lib/utils/store.js'
+
+/**
+ * The data a table is built from: a plain array (static data) or a getter that
+ * returns the current array. A getter is read inside the view model's
+ * derivations, so reading rune state in it makes the table reactive, e.g.
+ * `createTable(() => items, plugins)` with `let items = $state([...])`.
+ *
+ * @template Item - The type of data items in the table.
+ */
+export type TableData<Item> = Item[] | Getter<Item[]>
+
+const STORE_DATA_ERROR =
+    'createTable: pass an array or a getter, e.g. createTable(() => items); Svelte stores are not accepted in v7 — see the migration guide'
+
+/**
+ * Normalises table data to a getter, rejecting Svelte stores so a v6 caller
+ * gets a clear error instead of an empty table.
+ *
+ * @param data - The data passed to `createTable` / `new Table`.
+ * @returns A getter for the data array.
+ * @throws Error if `data` is a Svelte store (an object with a `subscribe` method).
+ */
+const toDataGetter = <Item>(data: TableData<Item>): Getter<Item[]> => {
+    const maybeStore: unknown = data
+    if (
+        ((typeof maybeStore === 'object' && maybeStore !== null) ||
+            typeof maybeStore === 'function') &&
+        'subscribe' in maybeStore &&
+        typeof maybeStore.subscribe === 'function'
+    ) {
+        throw new Error(STORE_DATA_ERROR)
+    }
+    if (typeof data === 'function') {
+        return data
+    }
+    if (!Array.isArray(data)) {
+        throw new Error(STORE_DATA_ERROR)
+    }
+    return () => data
+}
 
 /**
  * Core table class that provides methods for defining columns and creating view models.
@@ -29,7 +69,7 @@ import type { ReadOrWritable } from '$lib/utils/store.js'
  * @template Plugins - The plugins configuration type.
  * @example
  * ```typescript
- * const table = createTable(data, { sort: addSortBy(), filter: addTableFilter() })
+ * const table = createTable(() => data, { sort: addSortBy(), filter: addTableFilter() })
  * const columns = table.createColumns([
  *   table.column({ accessor: 'name', header: 'Name' }),
  *   table.column({ accessor: 'age', header: 'Age' })
@@ -38,8 +78,8 @@ import type { ReadOrWritable } from '$lib/utils/store.js'
  * ```
  */
 export class Table<Item, Plugins extends AnyPlugins = AnyPlugins> {
-    /** The data source, either a Readable or Writable Svelte store. */
-    data: ReadOrWritable<Item[]>
+    /** Returns the current data array; read inside the view model's derivations. */
+    data: Getter<Item[]>
     /** The plugins configuration object. */
     plugins: Plugins
 
@@ -58,11 +98,12 @@ export class Table<Item, Plugins extends AnyPlugins = AnyPlugins> {
     /**
      * Creates a new Table instance.
      *
-     * @param data - A Svelte store containing the table data.
+     * @param data - The data array, or a getter returning it.
      * @param plugins - The plugins to use with this table.
+     * @throws Error if `data` is a Svelte store.
      */
-    constructor(data: ReadOrWritable<Item[]>, plugins: Plugins) {
-        this.data = data
+    constructor(data: TableData<Item>, plugins: Plugins) {
+        this.data = toDataGetter(data)
         this.plugins = plugins
     }
 
@@ -158,9 +199,14 @@ export class Table<Item, Plugins extends AnyPlugins = AnyPlugins> {
      * The view model provides all the data needed to render the table.
      * Pass `options.reuseKey` to reuse the previous compatible view model.
      *
+     * Call it in a component `<script>`, at module level or in a load
+     * function — never inside a transient `$effect` / `$effect.root` that is
+     * destroyed before the view model is dropped: its derivations would stop
+     * updating (Svelte warns `derived_inert`).
+     *
      * @param columns - The column definitions.
      * @param options - Optional configuration for the view model.
-     * @returns A TableViewModel with reactive stores for rendering.
+     * @returns A TableViewModel whose `current` properties are reactive.
      */
     createViewModel(
         columns: Column<Item, Plugins>[],
@@ -198,23 +244,27 @@ export class Table<Item, Plugins extends AnyPlugins = AnyPlugins> {
  *
  * @template Item - The type of data items in the table.
  * @template Plugins - The plugins configuration type.
- * @param data - A Svelte store containing the table data.
+ * @param data - The data array, or a getter returning it (reactive when the
+ * getter reads rune state). Svelte stores are rejected.
  * @param plugins - Optional plugins configuration object.
  * @returns A new Table instance.
+ * @throws Error if `data` is a Svelte store.
  * @example
- * ```typescript
- * import { createTable } from 'svelte-headless-table'
- * import { addSortBy, addPagination } from 'svelte-headless-table/plugins'
+ * ```svelte
+ * <script lang="ts">
+ * import { createTable } from '@humanspeak/svelte-headless-table'
+ * import { addSortBy, addPagination } from '@humanspeak/svelte-headless-table/plugins'
  *
- * const data = writable([{ name: 'Alice', age: 30 }, { name: 'Bob', age: 25 }])
- * const table = createTable(data, {
+ * let data = $state([{ name: 'Alice', age: 30 }, { name: 'Bob', age: 25 }])
+ * const table = createTable(() => data, {
  *   sort: addSortBy(),
  *   page: addPagination({ initialPageSize: 10 })
  * })
+ * </script>
  * ```
  */
 export const createTable = <Item, Plugins extends AnyPlugins = AnyPlugins>(
-    data: ReadOrWritable<Item[]>,
+    data: TableData<Item>,
     plugins: Plugins = {} as Plugins
 ): Table<Item, Plugins> => {
     return new Table(data, plugins)
