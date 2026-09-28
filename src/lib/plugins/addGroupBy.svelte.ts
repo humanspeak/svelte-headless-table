@@ -1,31 +1,30 @@
-import { derived, type Readable, writable } from 'svelte/store'
 import { DataBodyCell } from '../bodyCells.js'
 import { type BodyRow, DisplayBodyRow } from '../bodyRows.js'
 import type { DataColumn } from '../columns.js'
+import { ArraySet, type Getter } from '../reactivity.svelte.js'
 import type { DataLabel } from '../types/Label.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { isShiftClick } from '../utils/event.js'
 import { nonUndefined } from '../utils/filter.js'
-import { arraySetStore, type ArraySetStore } from '../utils/store.js'
 
 /**
  * Configuration options for the addGroupBy plugin.
  */
 export interface GroupByConfig {
     /** Initial list of column IDs to group by. */
-    initialGroupByIds?: string[]
+    initialGroupByIds?: string[] | undefined
     /** If true, prevents grouping by multiple columns. Defaults to false. */
-    disableMultiGroup?: boolean
+    disableMultiGroup?: boolean | undefined
     /** Function to detect multi-group events (e.g., shift+click). Defaults to isShiftClick. */
-    isMultiGroupEvent?: (_event: Event) => boolean
+    isMultiGroupEvent?: ((_event: Event) => boolean) | undefined
 }
 
 /**
  * State exposed by the addGroupBy plugin.
  */
 export interface GroupByState {
-    /** Store containing the list of column IDs to group by. */
-    groupByIds: ArraySetStore<string>
+    /** The column IDs to group by, in grouping order. */
+    groupByIds: ArraySet<string>
 }
 
 /**
@@ -92,6 +91,22 @@ interface GetGroupedRowsProps {
 }
 
 /**
+ * The per-cell flags produced while grouping, keyed by `cell.rowColId()`.
+ * @internal
+ */
+interface GroupedCellFlags {
+    repeatCellIds: Record<string, boolean>
+    aggregateCellIds: Record<string, boolean>
+    groupCellIds: Record<string, boolean>
+}
+
+const EMPTY_CELL_FLAGS: GroupedCellFlags = {
+    repeatCellIds: {},
+    aggregateCellIds: {},
+    groupCellIds: {}
+}
+
+/**
  * Extracts the ID prefix from a row ID.
  * @internal
  */
@@ -139,6 +154,8 @@ export const getGroupedRows = <Item, Row extends BodyRow<Item>>(
     const idPrefix = getIdPrefix(firstInputRow.id)
 
     // Keys are whatever `getGroupOn` (or the raw cell value) yields; Map compares them by identity.
+    // A lookup table local to this call, not state.
+    // trunk-ignore(eslint/svelte/prefer-svelte-reactivity)
     const subRowsForGroupOnValue = new Map<unknown, Row[]>()
     for (const row of rows) {
         const cell = row.cellForId[groupById]
@@ -251,7 +268,7 @@ export const getGroupedRows = <Item, Row extends BodyRow<Item>>(
  * @returns A TablePlugin that provides grouping functionality.
  * @example
  * ```typescript
- * const table = createTable(data, {
+ * const table = createTable(() => data, {
  *   group: addGroupBy({
  *     initialGroupByIds: ['department']
  *   })
@@ -285,32 +302,34 @@ export const addGroupBy =
             .filter(([, option]) => option.disable === true)
             .map(([columnId]) => columnId)
 
-        const groupByIds = arraySetStore(initialGroupByIds)
-
-        const repeatCellIds = writable<Record<string, boolean>>({})
-        const aggregateCellIds = writable<Record<string, boolean>>({})
-        const groupCellIds = writable<Record<string, boolean>>({})
+        const groupByIds = new ArraySet(initialGroupByIds)
 
         const pluginState: GroupByState = {
             groupByIds
         }
 
+        // The cell flags are produced by the same pass that groups the rows and
+        // read through a getter captured when the view model calls
+        // `deriveRows`; nothing is written while deriving.
+        let cellFlags: Getter<GroupedCellFlags> = () => EMPTY_CELL_FLAGS
+
         const deriveRows: DeriveRowsFn<Item> = (rows) => {
-            return derived([rows, groupByIds], ([$rows, $groupByIds]) => {
-                const $repeatCellIds: Record<string, boolean> = {}
-                const $aggregateCellIds: Record<string, boolean> = {}
-                const $groupCellIds: Record<string, boolean> = {}
-                const $groupedRows = getGroupedRows($rows, $groupByIds, columnOptions, {
-                    repeatCellIds: $repeatCellIds,
-                    aggregateCellIds: $aggregateCellIds,
-                    groupCellIds: $groupCellIds,
-                    allGroupByIds: $groupByIds
+            const grouped = $derived.by(() => {
+                const rowsValue = rows()
+                const groupByIdsValue = groupByIds.current
+                const flags: GroupedCellFlags = {
+                    repeatCellIds: {},
+                    aggregateCellIds: {},
+                    groupCellIds: {}
+                }
+                const groupedRows = getGroupedRows(rowsValue, groupByIdsValue, columnOptions, {
+                    ...flags,
+                    allGroupByIds: groupByIdsValue
                 })
-                repeatCellIds.set($repeatCellIds)
-                aggregateCellIds.set($aggregateCellIds)
-                groupCellIds.set($groupCellIds)
-                return $groupedRows
+                return { rows: groupedRows, flags }
             })
+            cellFlags = () => grouped.flags
+            return () => grouped.rows
         }
 
         return {
@@ -319,40 +338,37 @@ export const addGroupBy =
             hooks: {
                 'thead.tr.th': (cell) => {
                     const disabled = disabledGroupIds.includes(cell.id) || !cell.isData()
-                    const props = derived(groupByIds, ($groupByIds) => {
-                        const grouped = $groupByIds.includes(cell.id)
-                        const toggle = (event: Event) => {
-                            if (!cell.isData()) return
-                            if (disabled) return
-                            groupByIds.toggle(cell.id, {
-                                clearOthers: disableMultiGroup || !isMultiGroupEvent(event)
-                            })
-                        }
-                        const clear = () => {
-                            groupByIds.remove(cell.id)
-                        }
-                        return {
-                            grouped,
+                    // Handlers are allocated once per cell, not per read.
+                    const toggle = (event: Event) => {
+                        if (!cell.isData()) return
+                        if (disabled) return
+                        groupByIds.toggle(cell.id, {
+                            clearOthers: disableMultiGroup || !isMultiGroupEvent(event)
+                        })
+                    }
+                    const clear = () => {
+                        groupByIds.remove(cell.id)
+                    }
+                    return {
+                        props: () => ({
+                            grouped: groupByIds.has(cell.id),
                             toggle,
                             clear,
                             disabled
-                        }
-                    })
-                    return { props }
+                        })
+                    }
                 },
-                'tbody.tr.td': (cell) => {
-                    const props: Readable<GroupByPropSet['tbody.tr.td']> = derived(
-                        [repeatCellIds, aggregateCellIds, groupCellIds],
-                        ([$repeatCellIds, $aggregateCellIds, $groupCellIds]) => {
-                            return {
-                                repeated: $repeatCellIds[cell.rowColId()] === true,
-                                aggregated: $aggregateCellIds[cell.rowColId()] === true,
-                                grouped: $groupCellIds[cell.rowColId()] === true
-                            }
+                'tbody.tr.td': (cell) => ({
+                    props: (): GroupByPropSet['tbody.tr.td'] => {
+                        const { repeatCellIds, aggregateCellIds, groupCellIds } = cellFlags()
+                        const rowColId = cell.rowColId()
+                        return {
+                            repeated: repeatCellIds[rowColId] === true,
+                            aggregated: aggregateCellIds[rowColId] === true,
+                            grouped: groupCellIds[rowColId] === true
                         }
-                    )
-                    return { props }
-                }
+                    }
+                })
             }
         }
     }

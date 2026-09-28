@@ -44,8 +44,7 @@ export default [
             'docs-old/**',
             'docs-new/**',
             'docs/**',
-            // PARKED by plan 002 (v7): excluded from the tsconfigs until plans 003/004 restore them
-            'src/lib/plugins/_parked/**',
+            // PARKED by plan 002 (v7): excluded from the tsconfigs until plan 004 restores them
             'src/routes/**'
         ]
     },

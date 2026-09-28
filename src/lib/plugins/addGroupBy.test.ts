@@ -1,11 +1,11 @@
-import { get, readable } from 'svelte/store'
 import type { Sample } from '../../routes/_createSamples.js'
 import { createTable } from '../createTable.js'
-import { addGroupBy } from './addGroupBy.js'
-import { addSubRows } from './addSubRows.js'
+import { addExpandedRows } from './addExpandedRows.svelte.js'
+import { addGroupBy } from './addGroupBy.svelte.js'
+import { addSubRows } from './addSubRows.svelte.js'
 
 test('basic row grouping', () => {
-    const data = readable<Sample[]>([
+    const data: Sample[] = [
         { firstName: 'Adam', lastName: 'Lee', age: 30, progress: 30, status: 'single', visits: 5 },
         { firstName: 'Bryan', lastName: 'Lee', age: 30, progress: 30, status: 'single', visits: 5 },
         {
@@ -25,7 +25,7 @@ test('basic row grouping', () => {
             status: 'single',
             visits: 5
         }
-    ])
+    ]
     const table = createTable(data, {
         group: addGroupBy()
     })
@@ -43,7 +43,7 @@ test('basic row grouping', () => {
 
     const { groupByIds } = vm.pluginStates.group
     groupByIds.toggle('lastName')
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     expect(rows).toHaveLength(3)
     expect(rows[0].subRows).toHaveLength(3)
@@ -64,7 +64,7 @@ test('basic row grouping', () => {
 })
 
 test('all rows same group: 1 group row with all subRows', () => {
-    const data = readable<Sample[]>([
+    const data: Sample[] = [
         { firstName: 'Adam', lastName: 'Lee', age: 30, progress: 30, status: 'single', visits: 5 },
         { firstName: 'Bryan', lastName: 'Lee', age: 30, progress: 30, status: 'single', visits: 5 },
         {
@@ -77,7 +77,7 @@ test('all rows same group: 1 group row with all subRows', () => {
         },
         { firstName: 'Danny', lastName: 'Lee', age: 40, progress: 40, status: 'single', visits: 5 },
         { firstName: 'Elliot', lastName: 'Lee', age: 40, progress: 40, status: 'single', visits: 5 }
-    ])
+    ]
     const table = createTable(data, {
         group: addGroupBy()
     })
@@ -89,14 +89,14 @@ test('all rows same group: 1 group row with all subRows', () => {
 
     const { groupByIds } = vm.pluginStates.group
     groupByIds.toggle('lastName')
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     expect(rows).toHaveLength(1)
     expect(rows[0].subRows).toHaveLength(5)
 })
 
 test('each row unique group: N group rows with 1 subRow each', () => {
-    const data = readable<Sample[]>([
+    const data: Sample[] = [
         { firstName: 'Adam', lastName: 'Lee', age: 30, progress: 30, status: 'single', visits: 5 },
         {
             firstName: 'Bryan',
@@ -114,7 +114,7 @@ test('each row unique group: N group rows with 1 subRow each', () => {
             status: 'single',
             visits: 5
         }
-    ])
+    ]
     const table = createTable(data, {
         group: addGroupBy()
     })
@@ -126,7 +126,7 @@ test('each row unique group: N group rows with 1 subRow each', () => {
 
     const { groupByIds } = vm.pluginStates.group
     groupByIds.toggle('lastName')
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     expect(rows).toHaveLength(3)
     rows.forEach((row) => {
@@ -135,7 +135,7 @@ test('each row unique group: N group rows with 1 subRow each', () => {
 })
 
 test('group order: groups appear in first-seen insertion order', () => {
-    const data = readable<Sample[]>([
+    const data: Sample[] = [
         { firstName: 'Adam', lastName: 'Puth', age: 30, progress: 30, status: 'single', visits: 5 },
         { firstName: 'Bryan', lastName: 'Lee', age: 30, progress: 30, status: 'single', visits: 5 },
         {
@@ -147,7 +147,7 @@ test('group order: groups appear in first-seen insertion order', () => {
             visits: 5
         },
         { firstName: 'Danny', lastName: 'Lee', age: 40, progress: 40, status: 'single', visits: 5 }
-    ])
+    ]
     const table = createTable(data, {
         group: addGroupBy()
     })
@@ -159,7 +159,7 @@ test('group order: groups appear in first-seen insertion order', () => {
 
     const { groupByIds } = vm.pluginStates.group
     groupByIds.toggle('lastName')
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     expect(rows).toHaveLength(3)
     // First-seen order: Puth, Lee, Page
@@ -177,7 +177,7 @@ test('group order: groups appear in first-seen insertion order', () => {
 })
 
 it('preserves subrows of a row after grouping', () => {
-    const data = readable<Sample[]>([
+    const data: Sample[] = [
         {
             firstName: 'Adam',
             lastName: 'Lee',
@@ -265,7 +265,7 @@ it('preserves subrows of a row after grouping', () => {
             status: 'single',
             visits: 5
         }
-    ])
+    ]
     const table = createTable(data, {
         sub: addSubRows({
             children: 'children'
@@ -286,8 +286,78 @@ it('preserves subrows of a row after grouping', () => {
 
     const { groupByIds } = vm.pluginStates.group
     groupByIds.toggle('lastName')
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     const subRow00 = rows[0].subRows?.[0]
     expect(subRow00?.subRows).toHaveLength(2)
+})
+
+test('group-by td props are false (not undefined) for unflagged cells', () => {
+    const data: Sample[] = [
+        { firstName: 'Adam', lastName: 'Lee', age: 30, progress: 30, status: 'single', visits: 5 },
+        { firstName: 'Bryan', lastName: 'Lee', age: 30, progress: 30, status: 'single', visits: 5 }
+    ]
+    const table = createTable(data, {
+        group: addGroupBy()
+    })
+    const columns = table.createColumns([
+        table.column({ accessor: 'firstName', header: 'First Name' }),
+        table.column({ accessor: 'lastName', header: 'Last Name' })
+    ])
+    const vm = table.createViewModel(columns)
+
+    const ungroupedCell = vm.current.rows[0].cells[0]
+    expect(ungroupedCell.current.props.group).toStrictEqual({
+        repeated: false,
+        aggregated: false,
+        grouped: false
+    })
+})
+
+test('group-by td props and th props follow groupByIds', () => {
+    const data: Sample[] = [
+        { firstName: 'Adam', lastName: 'Lee', age: 30, progress: 30, status: 'single', visits: 5 },
+        { firstName: 'Bryan', lastName: 'Lee', age: 30, progress: 30, status: 'single', visits: 5 }
+    ]
+    const table = createTable(data, {
+        group: addGroupBy(),
+        expand: addExpandedRows({ initialExpandedIds: { '0': true } })
+    })
+    const columns = table.createColumns([
+        table.column({ accessor: 'firstName', header: 'First Name' }),
+        table.column({ accessor: 'lastName', header: 'Last Name' })
+    ])
+    const vm = table.createViewModel(columns)
+
+    const lastNameHeader = vm.current.headerRows[0].cells[1]
+    const thProps = lastNameHeader.current.props.group
+    expect(thProps.grouped).toBe(false)
+    thProps.toggle(new MouseEvent('click'))
+    expect(vm.pluginStates.group.groupByIds.current).toStrictEqual(['lastName'])
+    expect(lastNameHeader.current.props.group.grouped).toBe(true)
+
+    const [groupRow] = vm.current.rows
+    const groupedCell = groupRow.cellForId.lastName
+    const aggregatedCell = groupRow.cellForId.firstName
+    expect(groupedCell.current.props.group).toStrictEqual({
+        repeated: false,
+        aggregated: false,
+        grouped: true
+    })
+    expect(aggregatedCell.current.props.group).toStrictEqual({
+        repeated: false,
+        aggregated: true,
+        grouped: false
+    })
+    // The expanded group row is followed by its sub-rows, whose grouped cells repeat.
+    const repeatedCell = vm.current.rows[1].cellForId.lastName
+    expect(repeatedCell.current.props.group).toStrictEqual({
+        repeated: true,
+        aggregated: false,
+        grouped: false
+    })
+
+    thProps.clear()
+    expect(vm.pluginStates.group.groupByIds.current).toStrictEqual([])
+    expect(vm.current.rows).toHaveLength(2)
 })

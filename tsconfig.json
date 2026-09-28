@@ -25,10 +25,7 @@
         "src/service-worker/**/*.ts",
         "src/service-worker.d.ts",
         "src/service-worker/**/*.d.ts",
-        "src/routes/**",
-        "src/lib/plugins/_parked/**",
-        "src/lib/utils/scrollAlign.ts",
-        "src/lib/utils/scrollAlign.test.ts"
+        "src/routes/**"
     ],
     "extends": "./.svelte-kit/tsconfig.json"
 }

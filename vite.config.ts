@@ -15,8 +15,6 @@ export default defineConfig({
     },
     test: {
         include: ['src/**/*.test.ts'],
-        // PARKED by plan 002; restored by plan 003 (PARKED.md).
-        exclude: ['**/node_modules/**', 'src/lib/plugins/_parked/**'],
         globals: true,
         environment: 'jsdom',
         setupFiles: ['vitest.setup.ts'],
@@ -41,9 +39,7 @@ export default defineConfig({
                 '.trunk/**',
                 '.svelte-kit/**',
                 'tests/**',
-                'src/routes/**',
-                // PARKED by plan 002; restored by plan 003 (PARKED.md).
-                'src/lib/plugins/_parked/**'
+                'src/routes/**'
             ]
         },
         reporters: ['verbose', ['junit', { outputFile: './junit-vitest.xml' }]]

@@ -7,10 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      '@humanspeak/memory-cache':
-        specifier: ^1.2.0
-        version: 1.2.0
     devDependencies:
       '@eslint/compat':
         specifier: ^2.1.1

@@ -1,11 +1,10 @@
-import { derived, get, readable } from 'svelte/store'
 import type { Sample } from '../../routes/_createSamples.js'
 import { createTable } from '../createTable.js'
-import { addPagination } from './addPagination.js'
-import { addSelectedRows } from './addSelectedRows.js'
-import { addSubRows } from './addSubRows.js'
+import { addPagination } from './addPagination.svelte.js'
+import { addSelectedRows } from './addSelectedRows.svelte.js'
+import { addSubRows } from './addSubRows.svelte.js'
 
-const data = readable<Sample[]>([
+const data: Sample[] = [
     {
         firstName: 'Adam',
         lastName: 'Lee',
@@ -96,7 +95,7 @@ const data = readable<Sample[]>([
     },
     { firstName: 'Danny', lastName: 'Lee', age: 40, progress: 40, status: 'single', visits: 5 },
     { firstName: 'Elliot', lastName: 'Page', age: 40, progress: 40, status: 'single', visits: 5 }
-])
+]
 
 test('basic row selection', () => {
     const table = createTable(data, {
@@ -110,19 +109,12 @@ test('basic row selection', () => {
             id: 'selected',
             header: (_, { pluginStates }) => {
                 const { allRowsSelected, someRowsSelected } = pluginStates.select
-                return derived([allRowsSelected, someRowsSelected], ([$all, $some]) => {
-                    return `all: ${$all}, some: ${$some}`
-                })
+                return `all: ${allRowsSelected.current}, some: ${someRowsSelected.current}`
             },
             cell: ({ row }, { pluginStates }) => {
                 const { isSelected, isSomeSubRowsSelected, isAllSubRowsSelected } =
                     pluginStates.select.getRowState(row)
-                return derived(
-                    [isSelected, isSomeSubRowsSelected, isAllSubRowsSelected],
-                    ([$selected, $someSubRowsSelected, $allSubRowsSelected]) => {
-                        return `selected: ${$selected}, some subrows: ${$someSubRowsSelected}, all subrows: ${$allSubRowsSelected}`
-                    }
-                )
+                return `selected: ${isSelected.current}, some subrows: ${isSomeSubRowsSelected.current}, all subrows: ${isAllSubRowsSelected.current}`
             }
         }),
         table.column({
@@ -131,17 +123,17 @@ test('basic row selection', () => {
         })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
     const row0 = rows[0].isData() ? rows[0] : undefined
     expect(row0).not.toBeUndefined()
 
-    let row0Props = get(row0!.props())
+    let row0Props = row0!.current.props
     expect(row0Props.select.selected).toBe(false)
 
     const { selectedDataIds } = vm.pluginStates.select
     selectedDataIds.add('0')
 
-    row0Props = get(row0!.props())
+    row0Props = row0!.current.props
     expect(row0Props.select.selected).toBe(true)
 })
 
@@ -159,19 +151,12 @@ test('linked data sub rows selection', () => {
             id: 'selected',
             header: (_, { pluginStates }) => {
                 const { allRowsSelected, someRowsSelected } = pluginStates.select
-                return derived([allRowsSelected, someRowsSelected], ([$all, $some]) => {
-                    return `all: ${$all}, some: ${$some}`
-                })
+                return `all: ${allRowsSelected.current}, some: ${someRowsSelected.current}`
             },
             cell: ({ row }, { pluginStates }) => {
                 const { isSelected, isSomeSubRowsSelected, isAllSubRowsSelected } =
                     pluginStates.select.getRowState(row)
-                return derived(
-                    [isSelected, isSomeSubRowsSelected, isAllSubRowsSelected],
-                    ([$selected, $someSubRowsSelected, $allSubRowsSelected]) => {
-                        return `selected: ${$selected}, some subrows: ${$someSubRowsSelected}, all subrows: ${$allSubRowsSelected}`
-                    }
-                )
+                return `selected: ${isSelected.current}, some subrows: ${isSomeSubRowsSelected.current}, all subrows: ${isAllSubRowsSelected.current}`
             }
         }),
         table.column({
@@ -180,11 +165,11 @@ test('linked data sub rows selection', () => {
         })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
     const row0 = rows[0].isData() ? rows[0] : undefined
     expect(row0).not.toBeUndefined()
 
-    let row0Props = get(row0!.props())
+    let row0Props = row0!.current.props
     expect(row0Props.select.selected).toBe(false)
     expect(row0Props.select.allSubRowsSelected).toBe(false)
     expect(row0Props.select.someSubRowsSelected).toBe(false)
@@ -192,30 +177,30 @@ test('linked data sub rows selection', () => {
     const { selectedDataIds } = vm.pluginStates.select
     selectedDataIds.add('0')
 
-    row0Props = get(row0!.props())
+    row0Props = row0!.current.props
     expect(row0Props.select.selected).toBe(true)
 
-    row0Props = get(row0!.props())
+    row0Props = row0!.current.props
     expect(row0Props.select.selected).toBe(true)
     expect(row0Props.select.allSubRowsSelected).toBe(false)
     expect(row0Props.select.someSubRowsSelected).toBe(false)
 
     selectedDataIds.add('0>0>0')
 
-    row0Props = get(row0!.props())
+    row0Props = row0!.current.props
     expect(row0Props.select.selected).toBe(true)
     expect(row0Props.select.allSubRowsSelected).toBe(false)
     expect(row0Props.select.someSubRowsSelected).toBe(true)
 
     selectedDataIds.add('0>1')
 
-    row0Props = get(row0!.props())
+    row0Props = row0!.current.props
     expect(row0Props.select.selected).toBe(true)
     expect(row0Props.select.allSubRowsSelected).toBe(true)
     expect(row0Props.select.someSubRowsSelected).toBe(true)
 })
 
-test('reading rows selected store', () => {
+test('reading rows selected state', () => {
     const table = createTable(data, {
         sub: addSubRows({
             children: 'children'
@@ -227,19 +212,12 @@ test('reading rows selected store', () => {
             id: 'selected',
             header: (_, { pluginStates }) => {
                 const { allRowsSelected, someRowsSelected } = pluginStates.select
-                return derived([allRowsSelected, someRowsSelected], ([$all, $some]) => {
-                    return `all: ${$all}, some: ${$some}`
-                })
+                return `all: ${allRowsSelected.current}, some: ${someRowsSelected.current}`
             },
             cell: ({ row }, { pluginStates }) => {
                 const { isSelected, isSomeSubRowsSelected, isAllSubRowsSelected } =
                     pluginStates.select.getRowState(row)
-                return derived(
-                    [isSelected, isSomeSubRowsSelected, isAllSubRowsSelected],
-                    ([$selected, $someSubRowsSelected, $allSubRowsSelected]) => {
-                        return `selected: ${$selected}, some subrows: ${$someSubRowsSelected}, all subrows: ${$allSubRowsSelected}`
-                    }
-                )
+                return `selected: ${isSelected.current}, some subrows: ${isSomeSubRowsSelected.current}, all subrows: ${isAllSubRowsSelected.current}`
             }
         }),
         table.column({
@@ -250,34 +228,28 @@ test('reading rows selected store', () => {
     const vm = table.createViewModel(columns)
     const { selectedDataIds, allRowsSelected, someRowsSelected } = vm.pluginStates.select
 
-    // Populate `tableState.rows` by subscribing to `vm.rows` and running all row
-    // derivation functions.
-    get(vm.rows)
     selectedDataIds.add('0')
 
-    expect(get(someRowsSelected)).toBe(true)
-    expect(get(allRowsSelected)).toBe(false)
+    expect(someRowsSelected.current).toBe(true)
+    expect(allRowsSelected.current).toBe(false)
 
-    get(vm.rows)
     selectedDataIds.addAll(['0>0', '0>0>0', '0>1', '1', '1>0', '1>1', '2', '2>0', '2>1', '3', '4'])
 
-    expect(get(someRowsSelected)).toBe(true)
-    expect(get(allRowsSelected)).toBe(true)
+    expect(someRowsSelected.current).toBe(true)
+    expect(allRowsSelected.current).toBe(true)
 
-    get(vm.rows)
     selectedDataIds.remove('0')
 
-    expect(get(someRowsSelected)).toBe(true)
-    expect(get(allRowsSelected)).toBe(false)
+    expect(someRowsSelected.current).toBe(true)
+    expect(allRowsSelected.current).toBe(false)
 
-    get(vm.rows)
     selectedDataIds.clear()
 
-    expect(get(someRowsSelected)).toBe(false)
-    expect(get(allRowsSelected)).toBe(false)
+    expect(someRowsSelected.current).toBe(false)
+    expect(allRowsSelected.current).toBe(false)
 })
 
-test('updating all rows selected store', () => {
+test('updating all rows selected state', () => {
     const table = createTable(data, {
         sub: addSubRows({
             children: 'children'
@@ -289,19 +261,12 @@ test('updating all rows selected store', () => {
             id: 'selected',
             header: (_, { pluginStates }) => {
                 const { allRowsSelected, someRowsSelected } = pluginStates.select
-                return derived([allRowsSelected, someRowsSelected], ([$all, $some]) => {
-                    return `all: ${$all}, some: ${$some}`
-                })
+                return `all: ${allRowsSelected.current}, some: ${someRowsSelected.current}`
             },
             cell: ({ row }, { pluginStates }) => {
                 const { isSelected, isSomeSubRowsSelected, isAllSubRowsSelected } =
                     pluginStates.select.getRowState(row)
-                return derived(
-                    [isSelected, isSomeSubRowsSelected, isAllSubRowsSelected],
-                    ([$selected, $someSubRowsSelected, $allSubRowsSelected]) => {
-                        return `selected: ${$selected}, some subrows: ${$someSubRowsSelected}, all subrows: ${$allSubRowsSelected}`
-                    }
-                )
+                return `selected: ${isSelected.current}, some subrows: ${isSomeSubRowsSelected.current}, all subrows: ${isAllSubRowsSelected.current}`
             }
         }),
         table.column({
@@ -312,10 +277,9 @@ test('updating all rows selected store', () => {
     const vm = table.createViewModel(columns)
     const { selectedDataIds, allRowsSelected } = vm.pluginStates.select
 
-    get(vm.rows)
-    allRowsSelected.set(true)
+    allRowsSelected.current = true
 
-    expect(get(selectedDataIds)).toEqual({
+    expect(selectedDataIds.current).toEqual({
         '0': true,
         '1': true,
         '2': true,
@@ -323,13 +287,12 @@ test('updating all rows selected store', () => {
         '4': true
     })
 
-    get(vm.rows)
-    allRowsSelected.set(false)
+    allRowsSelected.current = false
 
-    expect(get(selectedDataIds)).toEqual({})
+    expect(selectedDataIds.current).toEqual({})
 })
 
-test('reading page rows selected store', () => {
+test('reading page rows selected state', () => {
     const table = createTable(data, {
         page: addPagination({
             initialPageSize: 2
@@ -344,19 +307,12 @@ test('reading page rows selected store', () => {
             id: 'selected',
             header: (_, { pluginStates }) => {
                 const { allRowsSelected, someRowsSelected } = pluginStates.select
-                return derived([allRowsSelected, someRowsSelected], ([$all, $some]) => {
-                    return `all: ${$all}, some: ${$some}`
-                })
+                return `all: ${allRowsSelected.current}, some: ${someRowsSelected.current}`
             },
             cell: ({ row }, { pluginStates }) => {
                 const { isSelected, isSomeSubRowsSelected, isAllSubRowsSelected } =
                     pluginStates.select.getRowState(row)
-                return derived(
-                    [isSelected, isSomeSubRowsSelected, isAllSubRowsSelected],
-                    ([$selected, $someSubRowsSelected, $allSubRowsSelected]) => {
-                        return `selected: ${$selected}, some subrows: ${$someSubRowsSelected}, all subrows: ${$allSubRowsSelected}`
-                    }
-                )
+                return `selected: ${isSelected.current}, some subrows: ${isSomeSubRowsSelected.current}, all subrows: ${isAllSubRowsSelected.current}`
             }
         }),
         table.column({
@@ -367,42 +323,33 @@ test('reading page rows selected store', () => {
     const vm = table.createViewModel(columns)
     const { selectedDataIds, allPageRowsSelected, somePageRowsSelected } = vm.pluginStates.select
 
-    // Populate `tableState.pageRows` by subscribing to `vm.pageRows` and running
-    // all row derivation functions.
-    get(vm.pageRows)
     selectedDataIds.add('4')
 
-    console.log(get(vm.pageRows))
+    expect(somePageRowsSelected.current).toBe(false)
+    expect(allPageRowsSelected.current).toBe(false)
 
-    expect(get(somePageRowsSelected)).toBe(false)
-    expect(get(allPageRowsSelected)).toBe(false)
-
-    get(vm.pageRows)
     selectedDataIds.add('0')
 
-    expect(get(somePageRowsSelected)).toBe(true)
-    expect(get(allPageRowsSelected)).toBe(false)
+    expect(somePageRowsSelected.current).toBe(true)
+    expect(allPageRowsSelected.current).toBe(false)
 
-    get(vm.pageRows)
     selectedDataIds.addAll(['1'])
 
-    expect(get(somePageRowsSelected)).toBe(true)
-    expect(get(allPageRowsSelected)).toBe(true)
+    expect(somePageRowsSelected.current).toBe(true)
+    expect(allPageRowsSelected.current).toBe(true)
 
-    get(vm.pageRows)
     selectedDataIds.remove('0')
 
-    expect(get(somePageRowsSelected)).toBe(true)
-    expect(get(allPageRowsSelected)).toBe(false)
+    expect(somePageRowsSelected.current).toBe(true)
+    expect(allPageRowsSelected.current).toBe(false)
 
-    get(vm.pageRows)
     selectedDataIds.clear()
 
-    expect(get(somePageRowsSelected)).toBe(false)
-    expect(get(allPageRowsSelected)).toBe(false)
+    expect(somePageRowsSelected.current).toBe(false)
+    expect(allPageRowsSelected.current).toBe(false)
 })
 
-test('updating all page rows selected store', () => {
+test('updating all page rows selected state', () => {
     const table = createTable(data, {
         page: addPagination({
             initialPageSize: 2
@@ -417,19 +364,12 @@ test('updating all page rows selected store', () => {
             id: 'selected',
             header: (_, { pluginStates }) => {
                 const { allRowsSelected, someRowsSelected } = pluginStates.select
-                return derived([allRowsSelected, someRowsSelected], ([$all, $some]) => {
-                    return `all: ${$all}, some: ${$some}`
-                })
+                return `all: ${allRowsSelected.current}, some: ${someRowsSelected.current}`
             },
             cell: ({ row }, { pluginStates }) => {
                 const { isSelected, isSomeSubRowsSelected, isAllSubRowsSelected } =
                     pluginStates.select.getRowState(row)
-                return derived(
-                    [isSelected, isSomeSubRowsSelected, isAllSubRowsSelected],
-                    ([$selected, $someSubRowsSelected, $allSubRowsSelected]) => {
-                        return `selected: ${$selected}, some subrows: ${$someSubRowsSelected}, all subrows: ${$allSubRowsSelected}`
-                    }
-                )
+                return `selected: ${isSelected.current}, some subrows: ${isSomeSubRowsSelected.current}, all subrows: ${isAllSubRowsSelected.current}`
             }
         }),
         table.column({
@@ -440,28 +380,25 @@ test('updating all page rows selected store', () => {
     const vm = table.createViewModel(columns)
     const { selectedDataIds, allPageRowsSelected } = vm.pluginStates.select
 
-    get(vm.pageRows)
-    allPageRowsSelected.set(true)
+    allPageRowsSelected.current = true
 
-    expect(get(selectedDataIds)).toEqual({
+    expect(selectedDataIds.current).toEqual({
         '0': true,
         '1': true
     })
 
-    get(vm.pageRows)
-    allPageRowsSelected.set(false)
+    allPageRowsSelected.current = false
 
-    expect(get(selectedDataIds)).toEqual({})
+    expect(selectedDataIds.current).toEqual({})
 
     selectedDataIds.add('4')
 
-    get(vm.pageRows)
-    allPageRowsSelected.set(false)
+    allPageRowsSelected.current = false
 
-    expect(get(selectedDataIds)).toEqual({ 4: true })
+    expect(selectedDataIds.current).toEqual({ 4: true })
 })
 
-test('getRowState returns memoized store instances', () => {
+test('getRowState returns the same views for the same row', () => {
     const table = createTable(data, {
         sub: addSubRows({
             children: 'children'
@@ -475,7 +412,7 @@ test('getRowState returns memoized store instances', () => {
         })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
     const row0 = rows[0].isData() ? rows[0] : undefined
     expect(row0).not.toBeUndefined()
 
@@ -485,23 +422,23 @@ test('getRowState returns memoized store instances', () => {
     const state1 = getRowState(row0!)
     const state2 = getRowState(row0!)
 
-    // With memoization, these should be the exact same store instances
+    // The same row object returns the same views
     expect(state1.isSelected).toBe(state2.isSelected)
     expect(state1.isSomeSubRowsSelected).toBe(state2.isSomeSubRowsSelected)
     expect(state1.isAllSubRowsSelected).toBe(state2.isAllSubRowsSelected)
 
     // Values should be consistent
-    expect(get(state1.isSelected)).toBe(get(state2.isSelected))
-    expect(get(state1.isSomeSubRowsSelected)).toBe(get(state2.isSomeSubRowsSelected))
-    expect(get(state1.isAllSubRowsSelected)).toBe(get(state2.isAllSubRowsSelected))
+    expect(state1.isSelected.current).toBe(state2.isSelected.current)
+    expect(state1.isSomeSubRowsSelected.current).toBe(state2.isSomeSubRowsSelected.current)
+    expect(state1.isAllSubRowsSelected.current).toBe(state2.isAllSubRowsSelected.current)
 
     // Verify updates propagate correctly (same instance, so this is trivially true)
-    state1.isSelected.set(true)
-    expect(get(state1.isSelected)).toBe(true)
-    expect(get(state2.isSelected)).toBe(true)
+    state1.isSelected.current = true
+    expect(state1.isSelected.current).toBe(true)
+    expect(state2.isSelected.current).toBe(true)
 })
 
-test('getRowState returns distinct store instances for different rows', () => {
+test('getRowState returns distinct views for different rows', () => {
     const table = createTable(data, {
         sub: addSubRows({
             children: 'children'
@@ -515,7 +452,7 @@ test('getRowState returns distinct store instances for different rows', () => {
         })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     // Get two different data rows
     const rowA = rows[0] // Adam
@@ -527,7 +464,7 @@ test('getRowState returns distinct store instances for different rows', () => {
     const stateA = getRowState(rowA)
     const stateB = getRowState(rowB)
 
-    // Store instances should NOT be the same between different rows
+    // Views should NOT be shared between different rows
     expect(stateA.isSelected).not.toBe(stateB.isSelected)
     expect(stateA.isSomeSubRowsSelected).not.toBe(stateB.isSomeSubRowsSelected)
     expect(stateA.isAllSubRowsSelected).not.toBe(stateB.isAllSubRowsSelected)
@@ -547,7 +484,7 @@ test('getRowState state mutations are isolated between different rows', () => {
         })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     const rowA = rows[0] // Adam
     const rowB = rows[1] // Bryan
@@ -558,35 +495,35 @@ test('getRowState state mutations are isolated between different rows', () => {
     const stateB = getRowState(rowB)
 
     // Both rows should initially be unselected
-    expect(get(stateA.isSelected)).toBe(false)
-    expect(get(stateB.isSelected)).toBe(false)
+    expect(stateA.isSelected.current).toBe(false)
+    expect(stateB.isSelected.current).toBe(false)
 
     // Select only rowA
-    stateA.isSelected.set(true)
+    stateA.isSelected.current = true
 
     // rowA should be selected
-    expect(get(stateA.isSelected)).toBe(true)
+    expect(stateA.isSelected.current).toBe(true)
 
     // rowB should remain unselected (state is isolated)
-    expect(get(stateB.isSelected)).toBe(false)
+    expect(stateB.isSelected.current).toBe(false)
 
     // Select rowB as well
-    stateB.isSelected.set(true)
+    stateB.isSelected.current = true
 
     // Both should now be selected
-    expect(get(stateA.isSelected)).toBe(true)
-    expect(get(stateB.isSelected)).toBe(true)
+    expect(stateA.isSelected.current).toBe(true)
+    expect(stateB.isSelected.current).toBe(true)
 
     // Deselect rowA, rowB should remain selected
-    stateA.isSelected.set(false)
-    expect(get(stateA.isSelected)).toBe(false)
-    expect(get(stateB.isSelected)).toBe(true)
+    stateA.isSelected.current = false
+    expect(stateA.isSelected.current).toBe(false)
+    expect(stateB.isSelected.current).toBe(true)
 
     // Clean up
     selectedDataIds.clear()
 })
 
-test('getRowState cache isolation - repeated calls return same per-row instance but distinct across rows', () => {
+test('getRowState isolation - repeated calls return same per-row instance but distinct across rows', () => {
     const table = createTable(data, {
         sub: addSubRows({
             children: 'children'
@@ -600,7 +537,7 @@ test('getRowState cache isolation - repeated calls return same per-row instance 
         })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
 
     const rowA = rows[0]
     const rowB = rows[1]
@@ -629,14 +566,14 @@ test('getRowState cache isolation - repeated calls return same per-row instance 
     expect(stateA1.isSelected).not.toBe(stateC1.isSelected)
 
     // Verify values are independent
-    stateA1.isSelected.set(true)
-    expect(get(stateA1.isSelected)).toBe(true)
-    expect(get(stateA2.isSelected)).toBe(true) // Same instance
-    expect(get(stateB1.isSelected)).toBe(false) // Different row
-    expect(get(stateC1.isSelected)).toBe(false) // Different row
+    stateA1.isSelected.current = true
+    expect(stateA1.isSelected.current).toBe(true)
+    expect(stateA2.isSelected.current).toBe(true) // Same instance
+    expect(stateB1.isSelected.current).toBe(false) // Different row
+    expect(stateC1.isSelected.current).toBe(false) // Different row
 })
 
-test('getRowState cache is cleared when selectedDataIds is cleared', () => {
+test('getRowState views follow selectedDataIds after it is cleared', () => {
     const table = createTable(data, {
         sub: addSubRows({
             children: 'children'
@@ -650,29 +587,99 @@ test('getRowState cache is cleared when selectedDataIds is cleared', () => {
         })
     ])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
+    const rows = vm.current.rows
     const row0 = rows[0]
 
     const { getRowState, selectedDataIds } = vm.pluginStates.select
 
     // Get initial state
     const stateBefore = getRowState(row0)
-    stateBefore.isSelected.set(true)
-    expect(get(stateBefore.isSelected)).toBe(true)
+    stateBefore.isSelected.current = true
+    expect(stateBefore.isSelected.current).toBe(true)
 
-    // Clear selected IDs - this should clear the cache
+    // Clear selected IDs; the views read them live, so nothing goes stale
     selectedDataIds.clear()
 
     // After clearing, the row should be unselected
-    expect(get(stateBefore.isSelected)).toBe(false)
+    expect(stateBefore.isSelected.current).toBe(false)
 
-    // Get state again - should get a fresh instance due to cache clear
+    // Get state again
     const stateAfter = getRowState(row0)
 
     // The new state should also show unselected
-    expect(get(stateAfter.isSelected)).toBe(false)
+    expect(stateAfter.isSelected.current).toBe(false)
 
-    // Verify the state still works correctly after cache clear
-    stateAfter.isSelected.set(true)
-    expect(get(stateAfter.isSelected)).toBe(true)
+    // Verify the state still works correctly after the clear
+    stateAfter.isSelected.current = true
+    expect(stateAfter.isSelected.current).toBe(true)
+})
+
+test('isSelected setter links sub-rows and updates the parent', () => {
+    const table = createTable(data, {
+        sub: addSubRows({
+            children: 'children'
+        }),
+        select: addSelectedRows()
+    })
+    const columns = table.createColumns([
+        table.column({
+            header: 'First Name',
+            accessor: 'firstName'
+        })
+    ])
+    const vm = table.createViewModel(columns)
+    const row0 = vm.current.rows[0]!
+    const { getRowState, selectedDataIds } = vm.pluginStates.select
+
+    // Selecting a parent selects every descendant.
+    getRowState(row0).isSelected.current = true
+    expect(selectedDataIds.current).toEqual({
+        '0': true,
+        '0>0': true,
+        '0>0>0': true,
+        '0>1': true
+    })
+
+    // Deselecting a child deselects its parent; the other branch is kept.
+    const child01 = row0.subRows![1]!
+    expect(child01.parentRow).toBe(row0)
+    getRowState(child01).isSelected.current = false
+    expect(selectedDataIds.current).toEqual({ '0>0': true, '0>0>0': true })
+    expect(getRowState(row0).isSelected.current).toBe(false)
+    expect(getRowState(row0).isSomeSubRowsSelected.current).toBe(true)
+    expect(getRowState(row0).isAllSubRowsSelected.current).toBe(false)
+
+    // Reselecting the last child reselects the parent.
+    getRowState(child01).isSelected.current = true
+    expect(selectedDataIds.current).toEqual({
+        '0': true,
+        '0>0': true,
+        '0>0>0': true,
+        '0>1': true
+    })
+    expect(getRowState(row0).isAllSubRowsSelected.current).toBe(true)
+})
+
+test('allRowsSelected tracks row and selection changes without a subscription', () => {
+    const table = createTable(data, {
+        sub: addSubRows({
+            children: 'children'
+        }),
+        select: addSelectedRows()
+    })
+    const columns = table.createColumns([
+        table.column({
+            header: 'First Name',
+            accessor: 'firstName'
+        })
+    ])
+    const vm = table.createViewModel(columns)
+    const { allRowsSelected, someRowsSelected } = vm.pluginStates.select
+
+    expect(allRowsSelected.current).toBe(false)
+    allRowsSelected.current = true
+    expect(allRowsSelected.current).toBe(true)
+    expect(someRowsSelected.current).toBe(true)
+    allRowsSelected.current = false
+    expect(someRowsSelected.current).toBe(false)
 })
