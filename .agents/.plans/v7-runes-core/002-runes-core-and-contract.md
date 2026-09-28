@@ -28,6 +28,20 @@
 > (d) `Planned at` re-stamped to `6a992eb`; `src/lib/` is unchanged since
 > `61c36ee`.
 >
+> Revision 2026-09-28 (guard, at the plan 002 snapshot `ceb30df`): two done
+> criteria were literal false positives and are corrected here, not
+> weakened — (1) the dist rune grep now matches `$state(` or `$state.raw(`
+> (the executor used `$state.raw` throughout to keep v6 identity semantics;
+> every rune survives packaging); (2) the `svelte/store` grep and the old-name
+> grep exclude `src/lib/plugins/_parked/` (the plan itself forbids editing the
+> parked files). Two plan defects surfaced and are fixed by a guard-dispatched
+> follow-up: the ESLint config must ignore the parked paths and `src/routes/**`
+> while they are excluded from the tsconfigs (otherwise Trunk reports parse
+> errors), and the test helper must be named `src/lib/test/effectRoot.test.svelte.ts`
+> so `svelte-package`'s `!dist/**/*.test.*` filter keeps it out of the tarball.
+> `src/lib/utils/scrollAlign.ts` (type-imports the parked virtual-scroll
+> types) is parked in config too and is restored by plan 003.
+>
 > **Drift check (run first)**: `git diff --stat 6a992eb..HEAD -- src/lib/`
 > Files under `src/routes/test/v7-spike/` and `src/routes/test/perf-bench/`
 > are expected to have changed (plan 001). If anything else under `src/lib/`
@@ -532,8 +546,8 @@ Keep the assertions; do not delete tests to make the suite pass.
 trunk fmt && trunk check --no-progress
 npx -y pnpm@11.24.0 check
 npx -y pnpm@11.24.0 test
-npx -y pnpm@11.24.0 package && grep -l '\$state(' dist/*.svelte.js dist/plugins/*.svelte.js | head -3
-grep -rn "svelte/store" src/lib --include=*.ts --include=*.svelte
+npx -y pnpm@11.24.0 package && grep -lE '\$state(\.raw)?\(' dist/*.svelte.js dist/plugins/*.svelte.js | head -3
+grep -rn "svelte/store" src/lib --include=*.ts --include=*.svelte | grep -v _parked
 ```
 
 Expected: lint clean; 0 type errors; unit suite green with coverage
@@ -572,8 +586,8 @@ interaction paint is more than 1.10× the plan 001 "current" numbers
 - [ ] `trunk check --no-progress` → `✔ No issues`
 - [ ] `npx -y pnpm@11.24.0 test` exits 0 with coverage thresholds met
 - [ ] `npx -y pnpm@11.24.0 package` exits 0 and `dist/plugins/addSortBy.svelte.js` exists
-- [ ] `grep -rn "svelte/store" src/lib --include=*.ts --include=*.svelte` returns nothing
-- [ ] `grep -rn "Subscribe\|attrsForName\|derivedKeys\|keyedProp\|recordSetStore" src/lib` returns nothing outside `src/lib/plugins/_parked/`
+- [ ] `grep -rn "svelte/store" src/lib --include=*.ts --include=*.svelte | grep -v _parked` returns nothing
+- [ ] `grep -rn "Subscribe\|attrsForName\|derivedKeys\|keyedProp\|recordSetStore" src/lib | grep -v _parked` returns nothing
 - [ ] `src/lib/plugins/_parked/` contains exactly the four plugins, their types file, their tests and `interactions.test.ts`; `PARKED.md` lists them
 - [ ] `.agents/.plans/v7-runes-core/README.md` status row updated
 
@@ -589,7 +603,7 @@ Stop and report back (do not improvise) if:
 - `state_unsafe_mutation` or `effect_orphan` is thrown by any library code
   path under `vitest` after you have removed all `$state` writes from
   derivation (Step 5/10): the ownership rule from the report needs revisiting.
-- `svelte-package` strips or mangles `$state` in `dist/*.svelte.js` (the
+- `svelte-package` strips or mangles `$state` / `$state.raw` in `dist/*.svelte.js` (the
   grep in Step 11 is empty) — consumers would then receive uncompiled runes
   syntax with no compiler pass; the packaging strategy must change before
   continuing.
