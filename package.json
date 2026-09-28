@@ -89,7 +89,7 @@
         "@humanspeak/memory-cache": "^1.2.0"
     },
     "devDependencies": {
-        "@eslint/compat": "^2.1.0",
+        "@eslint/compat": "^2.1.1",
         "@eslint/js": "^10.0.1",
         "@faker-js/faker": "^10.6.0",
         "@playwright/test": "^1.62.1",

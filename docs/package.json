@@ -33,7 +33,7 @@
     },
     "devDependencies": {
         "@cloudflare/workers-types": "^5.20260821.1",
-        "@eslint/compat": "^2.1.0",
+        "@eslint/compat": "^2.1.1",
         "@eslint/js": "^10.0.1",
         "@faker-js/faker": "^10.6.0",
         "@internationalized/date": "^3.12.3",
