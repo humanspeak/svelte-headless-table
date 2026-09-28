@@ -299,7 +299,11 @@ export class DataColumn<
      * @param item - The data item to extract the value from.
      * @returns The extracted value, or undefined if no accessor is configured.
      */
-    getValue(item: Item): unknown {
+    // Stays `any` until the next major: consumers chain property access on
+    // the result (`column.getValue(item).toFixed(2)`), and `unknown` would
+    // break them in a minor release.
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+    getValue(item: Item): any {
         if (this.accessorFn !== undefined) {
             return this.accessorFn(item)
         }
