@@ -190,9 +190,10 @@ export const addVirtualScroll = <Item>({
     // trunk-ignore(eslint/svelte/prefer-svelte-reactivity)
     const attachedNodes = new Set<HTMLElement>()
 
-    // The rows the most recent view model hands to `derivePageRows`. A box, so
-    // the geometry below follows a rebuilt view model instead of the one that
-    // happened to be built first. Written only when a view model is built.
+    // The page rows the most recent view model feeds this plugin (its
+    // `upstream.pageRows`). A box, so the geometry below follows a rebuilt
+    // view model instead of the one that happened to be built first. Written
+    // only when a view model is built.
     const upstreamRows = box<Getter<BodyRow<Item>[]>>(() => [])
 
     // One pass builds the ID list, the ID->position index, and the changed
@@ -852,14 +853,6 @@ export const addVirtualScroll = <Item>({
      * Re-runs when rows, scroll position, or viewport height changes.
      */
     const derivePageRows: DeriveRowsFn<Item> = (rows) => {
-        // Point the shared geometry at this view model's rows. This runs while
-        // the view model is being built, not while anything derives; `untrack`
-        // keeps it legal even if a caller builds the view model inside a
-        // `$derived`.
-        untrack(() => {
-            upstreamRows.current = rows
-        })
-
         const sliced = $derived.by(() => {
             const rowsValue = rows()
             const { start, end } = renderRange()
@@ -930,8 +923,15 @@ export const addVirtualScroll = <Item>({
         hooks
     }
 
-    return ({ tableState }) => {
+    return ({ tableState, upstream }) => {
         warnIfShared(tableState.data)
+        // Point the shared geometry at this view model's rows. This runs while
+        // the view model is being built, not while anything derives; `untrack`
+        // keeps it legal even if a caller builds the view model inside a
+        // `$derived`.
+        untrack(() => {
+            upstreamRows.current = upstream.pageRows
+        })
         return instance
     }
 }

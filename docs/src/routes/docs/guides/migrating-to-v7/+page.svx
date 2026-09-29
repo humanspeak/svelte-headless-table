@@ -322,13 +322,7 @@ A complete plugin: it hides rows whose value in a chosen column is below a minim
 
 ```ts
 // addMinValue.svelte.ts
-import {
-    box,
-    type BodyRow,
-    type Box,
-    type Getter,
-    type ReadonlyBox
-} from '@humanspeak/svelte-headless-table'
+import { box, type BodyRow, type Box, type ReadonlyBox } from '@humanspeak/svelte-headless-table'
 import type {
     DeriveRowsFn,
     NewTablePropSet,
@@ -355,21 +349,19 @@ export const addMinValue =
         Record<string, never>,
         MinValuePropSet
     > =>
-    () => {
+    ({ upstream }) => {
         const columnId = box<string | undefined>(undefined)
         const min = box(initialMin)
 
-        // Expose the pre-transform rows by capturing the upstream getter,
-        // not by copying them into state.
-        let upstream: Getter<BodyRow<Item>[]> = () => []
+        // Expose the pre-transform rows by reading `upstream`, the rows the
+        // view model feeds this plugin, not by copying them into state.
         const preFilteredRows: ReadonlyBox<BodyRow<Item>[]> = {
             get current() {
-                return upstream()
+                return upstream.rows()
             }
         }
 
         const deriveRows: DeriveRowsFn<Item> = (rows) => {
-            upstream = rows
             // Read state while deriving; never write it here.
             const filtered = $derived.by(() => {
                 const id = columnId.current
@@ -406,7 +398,7 @@ Three rules keep a plugin correct:
 
 1. **No state writes during derivation.** A `deriveRows` getter, a `$derived` and a hook's `props` / `attrs` getter must only read. Writing a `$state` or a box there throws `state_unsafe_mutation`. Clamp on read instead of writing a corrected value back (this is what `addPagination`'s `pageIndex` does), and apply initial values when the plugin is created, not in a hook.
 2. **Allocate handlers once per cell.** Create callbacks in the hook factory (it runs once per component) and return the same function from the `props` getter, which runs on every read.
-3. **Expose pre-transform rows by capturing the upstream getter.** Keep the `rows` getter `deriveRows` received and read it from a `ReadonlyBox`, as `preFilteredRows` does above. Copying it into state would be a write during derivation.
+3. **Read pre-transform rows from `upstream`.** The init argument's `upstream.rows`, `upstream.pageRows` and `upstream.flatColumns` are the values entering your plugin's position in each chain. They are getters that work from the moment the plugin is created, so read them from a `ReadonlyBox`, as `preFilteredRows` does above. Copying them into state would be a write during derivation.
 
 ## Outside components
 

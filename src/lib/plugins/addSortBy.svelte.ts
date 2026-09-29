@@ -1,6 +1,6 @@
 import type { DataBodyCell } from '../bodyCells.js'
 import type { BodyRow } from '../bodyRows.js'
-import { readonlyBox, type Box, type Getter, type ReadonlyBox } from '../reactivity.svelte.js'
+import { readonlyBox, type Box, type ReadonlyBox } from '../reactivity.svelte.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { compare } from '../utils/compare.js'
 import { isShiftClick } from '../utils/event.js'
@@ -287,20 +287,17 @@ export const addSortBy =
         SortByColumnOptions,
         SortByPropSet
     > =>
-    ({ columnOptions }) => {
+    ({ columnOptions, upstream }) => {
         const disabledSortIds = Object.entries(columnOptions)
             .filter(([, option]) => option.disable === true)
             .map(([columnId]) => columnId)
 
         const sortKeys = createSortKeys(initialSortKeys)
 
-        // "Pre-sorted rows" read through the upstream getter captured when the
-        // view model calls `deriveRows`; nothing is written while deriving.
-        let upstreamRows: Getter<BodyRow<Item>[]> = () => []
-        const preSortedRows = readonlyBox(() => upstreamRows())
+        // "Pre-sorted rows" are the rows the view model feeds this plugin.
+        const preSortedRows = readonlyBox(upstream.rows)
 
         const deriveRows: DeriveRowsFn<Item> = (rows) => {
-            upstreamRows = rows
             const sorted = $derived.by(() => {
                 const rowsValue = rows()
                 const keys = sortKeys.current

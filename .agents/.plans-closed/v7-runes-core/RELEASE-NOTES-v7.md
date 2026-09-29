@@ -65,6 +65,6 @@ The derive functions take a getter for the upstream value and return a getter. H
 
 1. **No state writes during derivation.** A `deriveRows` getter, a `$derived` and a hook's `props` / `attrs` getter must only read. Writing a `$state` or a box there throws `state_unsafe_mutation`. Clamp on read instead, and apply initial values when the plugin is created.
 2. **Allocate handlers once per cell.** Create callbacks in the hook factory and return the same function from the `props` getter.
-3. **Expose pre-transform rows by capturing the upstream getter.** Keep the `rows` getter `deriveRows` received and read it from a `ReadonlyBox`, rather than copying it into state.
+3. **Read pre-transform rows from `upstream`.** The init argument's `upstream.rows`, `upstream.pageRows` and `upstream.flatColumns` are the values entering your plugin's position in each chain. Read them from a `ReadonlyBox` rather than copying them into state.
 
 Full contract and a worked plugin: <https://table.svelte.page/docs/plugins/overview>.

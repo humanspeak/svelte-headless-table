@@ -236,19 +236,19 @@ export const addTableFilter =
         TableFilterColumnOptions<Item>,
         TableFilterPropSet
     > =>
-    ({ columnOptions }) => {
+    ({ columnOptions, upstream }) => {
         const filterValue = box(initialFilterValue)
 
-        // Both read through getters captured when the view model calls
-        // `deriveRows`; nothing is written while deriving.
-        let upstreamRows: Getter<BodyRow<Item>[]> = () => []
+        // "Pre-filtered rows" are the rows the view model feeds this plugin.
+        // The cell matches are this plugin's own output, read through the
+        // getter assigned when the view model calls `deriveRows`; nothing is
+        // written while deriving.
         let tableCellMatches: Getter<Record<string, boolean>> = () => ({})
-        const preFilteredRows = readonlyBox(() => upstreamRows())
+        const preFilteredRows = readonlyBox(upstream.rows)
 
         const pluginState: TableFilterState<Item> = { filterValue, preFilteredRows }
 
         const deriveRows: DeriveRowsFn<Item> = (rows) => {
-            upstreamRows = rows
             // One pass computes the filtered rows and the matching cells.
             const filtered = $derived.by(() => {
                 const rowsValue = rows()

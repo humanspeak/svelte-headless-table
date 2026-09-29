@@ -93,11 +93,12 @@ Reads inside a template, `$derived` or `$effect` are tracked; writes update the 
 
 ## Defining plugins
 
-A plugin is a function that receives `{ pluginName, tableState, columnOptions }` and returns its `pluginState` plus any of these optional parts:
+A plugin is a function that receives `{ pluginName, tableState, columnOptions, upstream }` and returns its `pluginState` plus any of these optional parts:
 
 - **Derivations.** `deriveRows`, `derivePageRows`, `deriveFlatColumns`, `deriveTableAttrs`, `deriveTableHeadAttrs` and `deriveTableBodyAttrs` each take a getter for the upstream value and return a getter for the transformed value, usually backed by `$derived.by`. The view model chains them in plugin order.
 - **Hooks.** `hooks['thead.tr' | 'thead.tr.th' | 'tbody.tr' | 'tbody.tr.td']` run once per component and return `{ props?: () => Props, attrs?: () => Attrs }`. The getters are called on every read of `current.props` / `current.attrs`, so keep them cheap.
 - **`tableState`.** Its members (`data`, `rows`, `pageRows`, `visibleColumns`, ...) are getters that resolve lazily, so a plugin can read values the view model produces after the plugin was created. Call them inside a `$derived` or a hook getter.
+- **`upstream`.** `upstream.rows`, `upstream.pageRows` and `upstream.flatColumns` are getters for the values entering this plugin's position in each chain — what its own `deriveRows`, `derivePageRows` and `deriveFlatColumns` receive. They work from the moment the plugin is created, whether or not the plugin defines those derive functions.
 
 A minimal `deriveRows` looks like this (plugins that use runes live in `.svelte.ts` files):
 
@@ -108,6 +109,6 @@ const deriveRows: DeriveRowsFn<Item> = (rows) => {
 }
 ```
 
-Three rules keep a plugin correct: never write state while a getter or `$derived` evaluates; allocate event handlers once per component in the hook factory; and expose pre-transform rows by capturing the upstream getter instead of copying it into state.
+Three rules keep a plugin correct: never write state while a getter or `$derived` evaluates; allocate event handlers once per component in the hook factory; and read pre-transform rows from `upstream` instead of copying them into state.
 
 <Admonition type="tip">The <a href="/docs/guides/migrating-to-v7#writing-a-v7-plugin">migration guide</a> walks through a complete plugin with a <code>deriveRows</code> transformation, a header-cell hook and plugin state.</Admonition>

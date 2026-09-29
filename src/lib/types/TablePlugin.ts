@@ -48,6 +48,29 @@ export type TablePluginInit<Item, ColumnOptions> = {
     tableState: PluginInitTableState<Item>
     /** Column options keyed by column ID. */
     columnOptions: Record<string, ColumnOptions>
+    /**
+     * The values entering this plugin's position in each derivation chain:
+     * what its own `deriveRows` / `derivePageRows` / `deriveFlatColumns`
+     * receives, available from the moment the plugin is created. Read them
+     * inside a getter, a `$derived` or a hook so the read is tracked.
+     */
+    upstream: PluginUpstream<Item>
+}
+
+/**
+ * The inputs of one plugin's position in the view model's derivation chains.
+ * Every member is a getter the view model resolves lazily, so it is safe to
+ * keep from the moment the plugin is created.
+ *
+ * @template Item - The type of data items in the table.
+ */
+export interface PluginUpstream<Item> {
+    /** The rows before this plugin's `deriveRows`. */
+    rows: Getter<BodyRow<Item>[]>
+    /** The rows before this plugin's `derivePageRows`. */
+    pageRows: Getter<BodyRow<Item>[]>
+    /** The columns before this plugin's `deriveFlatColumns`. */
+    flatColumns: Getter<FlatColumn<Item>[]>
 }
 
 /**
@@ -61,8 +84,8 @@ export type TablePluginInit<Item, ColumnOptions> = {
  *
  * - Never write rune state (`$state`, a `Box`) while a getter or `$derived` is
  *   being evaluated; Svelte throws `state_unsafe_mutation`. Clamp on read
- *   instead of writing back, and expose "pre-transform" values by capturing
- *   the upstream getter rather than copying it into state.
+ *   instead of writing back, and expose "pre-transform" values by reading
+ *   the init argument's `upstream` getters rather than copying them into state.
  * - Allocate event handlers once per component in the hook factory and return
  *   them from the `props` getter; do not allocate them on every read.
  *

@@ -8,10 +8,9 @@ import type { Getter } from '$lib/reactivity.svelte.js'
 import { bindComponent, type ComponentBinding } from '$lib/tableComponent.svelte.js'
 import type {
     AnyPlugins,
-    DeriveFlatColumnsFn,
     DeriveFn,
-    DeriveRowsFn,
     PluginStates,
+    PluginUpstream,
     TablePluginInstance
 } from '$lib/types/TablePlugin.js'
 import { finalizeAttributes } from '$lib/utils/attributes.js'
@@ -355,6 +354,18 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         pageRows: () => injectedPageRows
     }
 
+    // Each plugin's input in the three chains, recorded by the folds below
+    // and handed to the plugin as `upstream`. Plain lookups filled once while
+    // the view model is built, never written while anything derives; the
+    // getters resolve them lazily, so a plugin may keep them from creation.
+    const emptyRows: Getter<DataBodyRow<Item, Plugins>[]> = () => []
+    // trunk-ignore(eslint/svelte/prefer-svelte-reactivity)
+    const upstreamRowsFor = new Map<string, Getter<DataBodyRow<Item, Plugins>[]>>()
+    // trunk-ignore(eslint/svelte/prefer-svelte-reactivity)
+    const upstreamPageRowsFor = new Map<string, Getter<DataBodyRow<Item, Plugins>[]>>()
+    // trunk-ignore(eslint/svelte/prefer-svelte-reactivity)
+    const upstreamFlatColumnsFor = new Map<string, Getter<FlatColumn<Item, Plugins>[]>>()
+
     const pluginEntries: [string, TablePluginInstance<Item, unknown, unknown>][] = Object.entries(
         plugins
     ).map(([pluginName, plugin]) => {
@@ -367,7 +378,15 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
                 })
                 .filter(nonUndefined)
         )
-        return [pluginName, plugin({ pluginName, tableState: pluginInitTableState, columnOptions })]
+        const upstream: PluginUpstream<Item> = {
+            rows: () => (upstreamRowsFor.get(pluginName) ?? emptyRows)(),
+            pageRows: () => (upstreamPageRowsFor.get(pluginName) ?? emptyRows)(),
+            flatColumns: () => (upstreamFlatColumnsFor.get(pluginName) ?? (() => flatColumns))()
+        }
+        return [
+            pluginName,
+            plugin({ pluginName, tableState: pluginInitTableState, columnOptions, upstream })
+        ]
     })
     const pluginInstances = pluginEntries.map(([, pluginInstance]) => pluginInstance)
 
@@ -422,11 +441,15 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
 
     // ---- Columns --------------------------------------------------------------
 
-    const deriveFlatColumnsFns: DeriveFlatColumnsFn<Item>[] = pluginInstances
-        .map((pluginInstance) => pluginInstance.deriveFlatColumns)
-        .filter(nonUndefined)
+    // Every fold records each plugin's input, whether or not the plugin
+    // defines the derive function, so `upstream` works for all of them.
     let derivedColumns: Getter<FlatColumn<Item, Plugins>[]> = () => flatColumns
-    for (const fn of deriveFlatColumnsFns) derivedColumns = fn(derivedColumns)
+    for (const [name, instance] of pluginEntries) {
+        upstreamFlatColumnsFor.set(name, derivedColumns)
+        if (instance.deriveFlatColumns !== undefined) {
+            derivedColumns = instance.deriveFlatColumns(derivedColumns)
+        }
+    }
     const derivedColumnsFn = derivedColumns
     const visibleColumns = $derived.by(() => measure('visibleColumns', derivedColumnsFn))
 
@@ -441,11 +464,11 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         )
     )
 
-    const deriveRowsFns: DeriveRowsFn<Item>[] = pluginInstances
-        .map((pluginInstance) => pluginInstance.deriveRows)
-        .filter(nonUndefined)
     let rows: Getter<DataBodyRow<Item, Plugins>[]> = () => columnedRows
-    for (const fn of deriveRowsFns) rows = fn(rows)
+    for (const [name, instance] of pluginEntries) {
+        upstreamRowsFor.set(name, rows)
+        if (instance.deriveRows !== undefined) rows = instance.deriveRows(rows)
+    }
     const rowsFn = rows
 
     // One binding per component kind, shared by every component of that
@@ -479,12 +502,12 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         })
     )
 
-    const derivePageRowsFns: DeriveRowsFn<Item>[] = pluginInstances
-        .map((pluginInstance) => pluginInstance.derivePageRows)
-        .filter(nonUndefined)
     // Derive from `injectedRows` so page rows carry state and hooks.
     let pageRows: Getter<DataBodyRow<Item, Plugins>[]> = () => injectedRows
-    for (const fn of derivePageRowsFns) pageRows = fn(pageRows)
+    for (const [name, instance] of pluginEntries) {
+        upstreamPageRowsFor.set(name, pageRows)
+        if (instance.derivePageRows !== undefined) pageRows = instance.derivePageRows(pageRows)
+    }
     const pageRowsFn = pageRows
 
     // Bound too, so a `derivePageRows` plugin that produces new row objects
@@ -510,6 +533,9 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
         })
     )
 
+    const countDefined = (key: 'deriveFlatColumns' | 'deriveRows' | 'derivePageRows') =>
+        pluginInstances.filter((pluginInstance) => pluginInstance[key] !== undefined).length
+
     const _debug: ViewModelDebug = {
         pluginCount: Object.keys(plugins).length,
         pluginNames: Object.keys(plugins),
@@ -517,9 +543,9 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
             tableAttrs: deriveTableAttrsFns.length + 1, // +1 for finalized
             tableHeadAttrs: deriveTableHeadAttrsFns.length + 1,
             tableBodyAttrs: deriveTableBodyAttrsFns.length + 1,
-            visibleColumns: deriveFlatColumnsFns.length + 1, // +1 for the view model's own
-            rows: deriveRowsFns.length + 2, // +2 for columned + injected
-            pageRows: derivePageRowsFns.length + 1 // +1 for injected
+            visibleColumns: countDefined('deriveFlatColumns') + 1, // +1 for the view model's own
+            rows: countDefined('deriveRows') + 2, // +2 for columned + injected
+            pageRows: countDefined('derivePageRows') + 1 // +1 for injected
         },
         derivationCalls,
         derivationTimings,

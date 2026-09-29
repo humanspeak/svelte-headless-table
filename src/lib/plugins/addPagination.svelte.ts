@@ -1,4 +1,3 @@
-import type { BodyRow } from '../bodyRows.js'
 import {
     box,
     derivedBox,
@@ -165,14 +164,11 @@ export const addPagination =
         Record<string, never>,
         NewTablePropSet<never>
     > =>
-    () => {
-        // The rows before pagination, read through the upstream getter the view
-        // model hands to `derivePageRows` (captured below, never copied into
-        // state). The view model calls `derivePageRows` before it exposes
-        // `pluginStates`, so `pageCount` always reads the captured getter.
-        let upstreamRows: Getter<BodyRow<Item>[]> = () => []
+    ({ upstream }) => {
+        // The rows before pagination are the page rows the view model feeds
+        // this plugin; they are read through the getter, never copied into state.
         const pluginState = createPageState({
-            items: () => upstreamRows(),
+            items: upstream.pageRows,
             initialPageIndex,
             initialPageSize,
             serverSide,
@@ -181,7 +177,6 @@ export const addPagination =
         const { pageSize, pageIndex } = pluginState
 
         const derivePageRows: DeriveRowsFn<Item> = (rows) => {
-            upstreamRows = rows
             const paginated = $derived.by(() => {
                 const rowsValue = rows()
                 if (serverSide) {

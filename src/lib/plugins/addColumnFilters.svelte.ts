@@ -216,7 +216,7 @@ export const addColumnFilters =
         ColumnFiltersColumnOptions<Item>,
         ColumnFiltersPropSet
     > =>
-    ({ columnOptions, tableState }) => {
+    ({ columnOptions, tableState, upstream }) => {
         // Initial filter values are applied here, when the view model creates
         // the plugin: hooks run while the view model derives, where writing
         // state is not allowed.
@@ -228,16 +228,16 @@ export const addColumnFilters =
         }
         const filterValues = box<Record<string, unknown>>(initialFilterValues)
 
-        // Read through getters captured when the view model calls
-        // `deriveRows`; nothing is written while deriving.
-        let upstreamRows: Getter<BodyRow<Item>[]> = () => []
+        // "Pre-filtered rows" are the rows the view model feeds this plugin.
+        // The filtered rows are this plugin's own output, read through the
+        // getter assigned when the view model calls `deriveRows`; nothing is
+        // written while deriving.
         let filteredRows: Getter<BodyRow<Item>[]> = () => []
-        const preFilteredRows = readonlyBox(() => upstreamRows())
+        const preFilteredRows = readonlyBox(upstream.rows)
 
         const pluginState: ColumnFiltersState<Item> = { filterValues, preFilteredRows }
 
         const deriveRows: DeriveRowsFn<Item> = (rows) => {
-            upstreamRows = rows
             const filtered = $derived.by(() => {
                 const rowsValue = rows()
                 if (serverSide) {
@@ -266,7 +266,7 @@ export const addColumnFilters =
             valueBoxes[columnId] = {
                 values: derivedBox(() => (isData ? columnValues(filteredRows(), columnId) : [])),
                 preFilteredValues: derivedBox(() =>
-                    isData ? columnValues(upstreamRows(), columnId) : []
+                    isData ? columnValues(upstream.rows(), columnId) : []
                 )
             }
         }
