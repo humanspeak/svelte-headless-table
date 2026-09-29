@@ -2,10 +2,10 @@
 
 ## Plans written so far
 
-| Plan | Title                                                                                                               | Priority | Effort | Depends on | Status                                      |
-| ---- | ------------------------------------------------------------------------------------------------------------------- | -------- | ------ | ---------- | ------------------------------------------- |
-| 001  | Components pull their hooks from a private binding; `applyHook`, `injectState` and `state` leave the public surface | P1       | M      | —          | IN PROGRESS (dispatched to opus 2026-09-29) |
-| 002  | The view model hands each plugin its upstream rows instead of plugins capturing them                                | P1       | M      | 001        | TODO                                        |
+| Plan | Title                                                                                                               | Priority | Effort | Depends on | Status                                            |
+| ---- | ------------------------------------------------------------------------------------------------------------------- | -------- | ------ | ---------- | ------------------------------------------------- |
+| 001  | Components pull their hooks from a private binding; `applyHook`, `injectState` and `state` leave the public surface | P1       | M      | —          | DONE (PASS 381848e; plan amended once at 4e9e248) |
+| 002  | The view model hands each plugin its upstream rows instead of plugins capturing them                                | P1       | M      | 001        | IN PROGRESS (dispatched to opus 2026-09-29)       |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale)
 

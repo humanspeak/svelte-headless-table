@@ -8,7 +8,19 @@
 > (`.agents/.plans/v7-followups/README.md`) — unless a reviewer dispatched
 > you and told you they maintain the index.
 >
-> **Drift check (run first)**: `git diff --stat 317a8c8..HEAD -- src/lib/types/TablePlugin.ts src/lib/createViewModel.svelte.ts src/lib/plugins/`
+> Revision 2026-09-29 (guard, after plan 001 PASS at `381848e`): plan 001
+> changed `src/lib/createViewModel.svelte.ts` (four bindings and a
+> `bindRows` helper replace the hook loops; the `hookedRows` WeakSet is
+> gone) and added internal `bindComponent` / `componentState` functions to
+> `src/lib/tableComponent.svelte.ts`. None of that overlaps this plan, but
+> line numbers moved: plugin instantiation is now around line 360, the
+> flat-columns fold at 425–429, the rows fold at 444–448 and the page-rows
+> fold at 482–487. Capture sites today: `addSortBy.svelte.ts` 299–303,
+> `addTableFilter.svelte.ts` 244–251, `addColumnFilters.svelte.ts` 233–240
+> and 269, `addPagination.svelte.ts` 173–184, `addVirtualScroll.svelte.ts`
+> 196 / 204 / 860. `Planned at` re-stamped to `381848e`.
+>
+> **Drift check (run first)**: `git diff --stat 381848e..HEAD -- src/lib/types/TablePlugin.ts src/lib/createViewModel.svelte.ts src/lib/plugins/`
 > Plan 001 of this batch changes `createViewModel.svelte.ts` (hook binding)
 > and `addDataExport.svelte.ts`; that is expected. For everything else,
 > compare the "Current state" excerpts against the live code before
@@ -21,7 +33,7 @@
 - **Risk**: LOW–MED (additive to the contract; six plugins change how they read their input)
 - **Depends on**: 001-components-pull-hooks-from-a-binding.md (same file; run after it)
 - **Category**: tech-debt (plugin contract)
-- **Planned at**: commit `317a8c8`, 2026-09-29
+- **Planned at**: commit `381848e`, 2026-09-29
 
 ## Why this matters
 
