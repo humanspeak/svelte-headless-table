@@ -1,5 +1,19 @@
 # Follow-ups from the v7 quality review
 
+## Plans written so far
+
+| Plan | Title                                                                                                               | Priority | Effort | Depends on | Status |
+| ---- | ------------------------------------------------------------------------------------------------------------------- | -------- | ------ | ---------- | ------ |
+| 001  | Components pull their hooks from a private binding; `applyHook`, `injectState` and `state` leave the public surface | P1       | M      | —          | TODO   |
+| 002  | The view model hands each plugin its upstream rows instead of plugins capturing them                                | P1       | M      | 001        | TODO   |
+
+Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale)
+
+Plans 001 and 002 cover items 1–3 in the first table below (item 1 and 2
+are one change). Both land on `feat/v7-runes-core` before 7.0 is published.
+
+## Findings backlog
+
 Recorded on 2026-09-29 from a four-angle quality review (reuse,
 simplification, efficiency, altitude) of `feat/v7-runes-core` against
 `main`. These are findings, not yet plans: each needs an improve-style plan
