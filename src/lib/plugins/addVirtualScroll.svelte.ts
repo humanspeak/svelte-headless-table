@@ -211,10 +211,6 @@ export const addVirtualScroll = <Item>({
     // trunk-ignore(eslint/svelte/prefer-svelte-reactivity)
     const attachedNodes = new Set<HTMLElement>()
 
-    // Cache for row lookup in `measureRow`. A plain variable assigned while
-    // `synced` derives: it is not reactive state.
-    let allRowsCache: BodyRow<Item>[] = []
-
     // The rows the most recent view model hands to `derivePageRows`. A box, so
     // the geometry below follows a rebuilt view model instead of the one that
     // happened to be built first. Written only when a view model is built.
@@ -241,7 +237,6 @@ export const addVirtualScroll = <Item>({
         if (changed) {
             previousIds = ids
         }
-        allRowsCache = rows
         return { rows, ids: previousIds, index }
     })
 
@@ -652,14 +647,11 @@ export const addVirtualScroll = <Item>({
                 }
 
                 // Nothing is mounted now. Let callers cancel work for a table
-                // that is going away, and drop the row cache — it is only read
-                // by `measureRow`, which cannot fire without a container, and
-                // `synced` rebuilds it on the way back in. Scroll position,
-                // viewport height and measured heights survive: they are what
-                // the next mount restores from.
+                // that is going away. Scroll position, viewport height and
+                // measured heights survive: they are what the next mount
+                // restores from.
                 rangeRequest?.abort()
                 rangeRequest = undefined
-                allRowsCache = []
             }
         }
     }
@@ -776,8 +768,11 @@ export const addVirtualScroll = <Item>({
     const measureRow = (rowId: string, height: number) => {
         // If getRowHeight is provided, prefer that
         if (getRowHeight) {
-            const rowIndex = rowIndexById().get(rowId)
-            const row = rowIndex === undefined ? undefined : allRowsCache[rowIndex]
+            // Resolve the row from the derivation that produced the index, so
+            // the two can never disagree.
+            const { index, rows } = synced
+            const rowIndex = index.get(rowId)
+            const row = rowIndex === undefined ? undefined : rows[rowIndex]
             if (row?.isData() && row.original) {
                 const specifiedHeight = getRowHeight(row.original)
                 if (specifiedHeight !== height) {

@@ -1114,6 +1114,24 @@ describe('addVirtualScroll survives a view model rebuild', () => {
         expect(state.scrollTop.current).toBe(4_000)
     })
 
+    test('getRowHeight still wins after the scroll container remounts', () => {
+        const data = box(createTestData(10))
+        const table = createTable(() => data.current, {
+            virtualScroll: addVirtualScroll({ estimatedRowHeight: 40, getRowHeight: () => 60 })
+        })
+        const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
+        const state = table.createViewModel(columns).pluginStates.virtualScroll
+
+        // Read once so the rows are synced, then mount, unmount and mount again.
+        expect(state.totalHeight.current).toBe(400)
+        const first = attach(state)
+        first.destroy()
+        attach(state)
+
+        state.measureRow('0', 100)
+        expect(state.totalHeight.current).toBe(600)
+    })
+
     test('one plugin result drives one table', () => {
         // The documented contract: geometry lives in the config closure, so two
         // tables built from the same `addVirtualScroll(...)` share scroll state.
