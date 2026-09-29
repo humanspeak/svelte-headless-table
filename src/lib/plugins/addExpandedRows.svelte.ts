@@ -34,7 +34,7 @@ export interface ExpandedRowsState<Item> {
 export interface ExpandedRowsRowState {
     /** Whether the row is expanded. Writing adds or removes the row's ID in `expandedIds`. */
     isExpanded: Box<boolean>
-    /** Whether the row can be expanded (it had sub-rows when the view was created). */
+    /** Whether the row can be expanded: `true` while it has sub-rows. Read on access. */
     canExpand: boolean
     /** Whether every expandable sub-row is expanded. */
     isAllSubRowsExpanded: ReadonlyBox<boolean>
@@ -87,11 +87,12 @@ export const addExpandedRows =
         Record<string, never>,
         NewTablePropSet<never>
     > =>
-    () => {
+    ({ tableState }) => {
         const expandedIds = new RecordSet(initialExpandedIds)
 
-        // Views read `expandedIds` on access and own no reactive state, so
-        // they cannot go stale. A WeakMap keeps one view per row object
+        // Every member of a view, including `canExpand`, is read on access
+        // (from `expandedIds` and the row), and views own no reactive state,
+        // so they cannot go stale. A WeakMap keeps one view per row object
         // without an eviction policy or an `invalidate()` call.
         const rowStates = new WeakMap<BodyRow<Item>, ExpandedRowsRowState>()
 
@@ -130,7 +131,12 @@ export const addExpandedRows =
             }
             const state: ExpandedRowsRowState = {
                 isExpanded,
-                canExpand: (row.subRows?.length ?? 0) > 0,
+                get canExpand() {
+                    // Tracks the rows derivation, so a template re-reads this when
+                    // sub-rows are attached by a re-derive.
+                    tableState.rows()
+                    return (row.subRows?.length ?? 0) > 0
+                },
                 isAllSubRowsExpanded
             }
             rowStates.set(row, state)

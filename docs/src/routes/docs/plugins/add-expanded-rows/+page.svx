@@ -88,7 +88,7 @@ The expanded row ids. Read `expandedIds.current` (a `Record<string, boolean>` ho
 Returns the expansion state of a `BodyRow`:
 
 - `isExpanded: Box<boolean>`: writing adds or removes the row's id in `expandedIds`
-- `canExpand: boolean`: whether the row had sub-rows when the view was created
+- `canExpand: boolean`: whether the row currently has sub-rows. Read it from the state object (`getRowState(row).canExpand`) when you render; a value you destructured earlier is a snapshot.
 - `isAllSubRowsExpanded: ReadonlyBox<boolean>`
 
 The state holds nothing of its own (it reads `expandedIds`), so it is safe to call anywhere, including in a template. The same row object always returns the same view.

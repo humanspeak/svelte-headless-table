@@ -1,7 +1,10 @@
+import { flushSync } from 'svelte'
 import type { Sample } from '../../routes/_createSamples.js'
 import { createTable } from '../createTable.js'
+import { withEffectRoot } from '../test/effectRoot.test.svelte.js'
 import { addExpandedRows } from './addExpandedRows.svelte.js'
 import { addSubRows } from './addSubRows.svelte.js'
+import { deepState } from './deepState.test.svelte.js'
 
 const data: Sample[] = [
     {
@@ -316,4 +319,65 @@ test('getRowState state is isolated between different rows', () => {
     state0.isExpanded.current = false
     expect(state0.isExpanded.current).toBeFalsy()
     expect(state1.isExpanded.current).toBe(true)
+})
+
+test('canExpand follows sub-rows that arrive after the view was created', () => {
+    interface Node {
+        name: string
+        children?: Node[]
+    }
+    // Deep state: children are attached in place, the array keeps its identity.
+    const items = deepState<Node[]>([{ name: 'parent' }, { name: 'other' }])
+    const table = createTable(() => items.current, {
+        sub: addSubRows({ children: 'children' }),
+        expand: addExpandedRows()
+    })
+    const columns = table.createColumns([table.column({ header: 'Name', accessor: 'name' })])
+    const vm = table.createViewModel(columns)
+    const { getRowState } = vm.pluginStates.expand
+
+    const before = vm.current.rows[0]
+    expect(getRowState(before).canExpand).toBe(false)
+
+    // Children arrive later, in place, as lazy loading does.
+    items.current[0].children = [{ name: 'child' }]
+
+    const after = vm.current.rows[0]
+    // The row keeps its identity, so the cached state is reused.
+    expect(after).toBe(before)
+    expect(after.subRows).toHaveLength(1)
+    expect(getRowState(after).canExpand).toBe(true)
+    // The state a caller is already holding must agree.
+    expect(getRowState(before).canExpand).toBe(getRowState(after).canExpand)
+})
+
+test('an effect reading canExpand re-runs when sub-rows arrive', () => {
+    interface Node {
+        name: string
+        children?: Node[]
+    }
+    const items = deepState<Node[]>([{ name: 'parent' }, { name: 'other' }])
+    const table = createTable(() => items.current, {
+        sub: addSubRows({ children: 'children' }),
+        expand: addExpandedRows()
+    })
+    const columns = table.createColumns([table.column({ header: 'Name', accessor: 'name' })])
+    const vm = table.createViewModel(columns)
+    const { getRowState } = vm.pluginStates.expand
+    // Hold the view the way a template does, then read it in an effect.
+    const row = vm.current.rows[0]
+    const state = getRowState(row)
+
+    const observed: boolean[] = []
+    const cleanup = withEffectRoot(() => {
+        observed.push(state.canExpand)
+    })
+    expect(observed).toEqual([false])
+
+    items.current[0].children = [{ name: 'child' }]
+    flushSync()
+
+    expect(vm.current.rows[0]).toBe(row)
+    expect(observed).toEqual([false, true])
+    cleanup()
 })
