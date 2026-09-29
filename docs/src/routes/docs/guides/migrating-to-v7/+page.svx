@@ -82,7 +82,7 @@ The rewrite is also faster. Median of three 30-iteration runs per version on the
 | Removed helpers | `createSortKeysStore`, `createPageStore`, `getRowState(row).invalidate()` | `createSortKeys`, `createPageState`; `invalidate()` is gone (nothing to invalidate) |
 | Component plumbing | `row.applyHook()`, `row.injectState()`, `row.state` (and the same on cells and header components) | removed; labels and display-column `data` functions receive the table state as their second argument |
 | Column filters | `initialFilterValue` applied lazily, when a header's props were first read | applied when the view model is built |
-| Plugin-author contract | `deriveRows: (rows: Readable<Row[]>) => Readable<Row[]>`, hooks return `{ props?: Readable, attrs?: Readable }` | `deriveRows: (rows: () => Row[]) => () => Row[]`, hooks return `{ props?: () => Props, attrs?: () => Attrs }`; `transformFlatColumnsFn` removed |
+| Plugin-author contract | `deriveRows: (rows: Readable<Row[]>) => Readable<Row[]>`, hooks return `{ props?: Readable, attrs?: Readable }` | `deriveRows: (rows: () => Row[]) => () => Row[]`, hooks return `{ props?: () => Props, attrs?: () => Attrs }`; the init argument gains `upstream` (the rows and columns entering your plugin's position); `transformFlatColumnsFn` removed |
 
 ## Step by step
 
