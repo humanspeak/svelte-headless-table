@@ -8,6 +8,16 @@
 > (`.agents/.plans/ssr-derivation-cost/README.md`) — unless a reviewer
 > dispatched you and told you they maintain the index.
 >
+> Revision 2026-09-29: the design no longer adds `esm-env`. The maintainer
+> asked for no hard dependency; an optional import cannot work (a static
+> import of a missing package fails at resolve time, and a dynamic import is
+> asynchronous while the choice must be made synchronously when the view
+> model is built). The plan detects the _behaviour_ instead: a module-level
+> probe reads a `$derived` twice and counts evaluations. Measured on Svelte
+> 5.57.1 with `compileModule`: client build → 1 evaluation for two reads
+> (3 reads → 1 compute); server build outside a render → 2 evaluations
+> (3 reads → 3 computes). The package keeps zero runtime dependencies.
+>
 > **Drift check (run first)**: `git diff --stat 411e6d4..HEAD -- src/lib/createViewModel.svelte.ts src/lib/reactivity.svelte.ts src/lib/plugins/ package.json`
 > This plan is scheduled for a release **after** 7.0, so these files will
 > have changed (at minimum the review fixes in
@@ -93,8 +103,7 @@ model anywhere") has a hidden price. Browsers are unaffected.
   ("Outside components": "works in a component `<script>`, at the top level
   of a `.svelte.ts` module, in a SvelteKit `load` function and in a test")
   and `docs/src/routes/docs/api/create-view-model/+page.svx`.
-- `package.json` has **no runtime dependencies**. `esm-env` (what Svelte
-  itself uses for `BROWSER` / `DEV`) is not installed at the top level.
+- `package.json` has **no runtime dependencies**, and must keep none.
 - Conventions: 4-space indent, no semicolons, single quotes;
   `// trunk-ignore(eslint/<rule>)`; runes only in `.svelte` / `.svelte.ts`;
   library files are checked with `tsconfig.lib.json`; never write `$state`
@@ -122,7 +131,6 @@ model anywhere") has a hidden price. Browsers are unaffected.
 - `src/lib/plugins/add*.svelte.ts` (only to route their deriveds through
   the primitive)
 - `src/lib/createViewModel.ssr-outside.test.ts` + a host `*.test.svelte` (create)
-- `package.json` / `pnpm-lock.yaml` only if `esm-env` is added (Step 2)
 - `docs/src/routes/docs/api/create-view-model/+page.svx` and the "Outside
   components" section of the migration guide (one paragraph each)
 
@@ -221,17 +229,27 @@ In `src/lib/reactivity.svelte.ts`:
     `createPageState` wherever they write outside those primitives.
     A counter write is not rune state and is safe anywhere.
 
-2. Add the primitive:
+2. Add the probe and the primitive:
 
     ```ts
+    // Svelte memoises a `$derived` everywhere except on the server outside a
+    // render, where it is a plain function. Detect that behaviour directly
+    // rather than the environment: read a derived twice and count.
+    let probeRuns = 0
+    const probe = $derived.by(() => ++probeRuns)
+    // trunk-ignore(eslint/@typescript-eslint/no-unused-expressions)
+    probe
+    // trunk-ignore(eslint/@typescript-eslint/no-unused-expressions)
+    probe
+    const DERIVED_IS_MEMOISED = probeRuns === 1
+
     /**
-     * A derivation that is a real `$derived` in the browser and, on the
-     * server, is cached until library state is written or `inputs()` returns
-     * a different identity. Svelte does not memoise a `$derived` created
-     * outside a server render; this does.
+     * A derivation that is a real `$derived` wherever Svelte memoises one
+     * and, where it does not (the server, outside a render), is cached until
+     * library state is written or `inputs()` returns a different identity.
      */
     export const memo = <T>(fn: Getter<T>, inputs?: Getter<unknown>): Getter<T> => {
-        if (BROWSER) {
+        if (DERIVED_IS_MEMOISED) {
             const value = $derived.by(fn)
             return () => value
         }
@@ -250,12 +268,12 @@ In `src/lib/reactivity.svelte.ts`:
     }
     ```
 
-    `BROWSER` comes from `esm-env`: add it to `dependencies`
-    (`npx -y pnpm@11.24.0 add esm-env`). It is the package Svelte itself uses
-    and resolves at build time through export conditions, so the server
-    branch is dead code in a client bundle. Do **not** use
-    `typeof window === 'undefined'`: jsdom tests and edge runtimes make it
-    unreliable.
+    No import is involved, so there is nothing to install and nothing that
+    can be missing. If a future Svelte memoises server deriveds created
+    outside a render, the probe reports `1` and the library uses plain
+    `$derived` everywhere with no code change. The cache branch ships to the
+    client as ~15 lines of dead-at-runtime code; that is the price of having
+    no environment import.
 
 3. `derivedBox(fn)` becomes `const get = memo(fn); return { get current() { return get() } }`.
 
@@ -342,7 +360,7 @@ PLAYWRIGHT_PORT=4180 npx playwright test --project=chromium --project=firefox --
 - [ ] `npx -y pnpm@11.24.0 check` exits 0; `npx -y pnpm@11.24.0 test` exits 0 with thresholds met
 - [ ] Client bench ratios within 0.95–1.05 on the three headline scenarios
 - [ ] Playwright Chromium + Firefox: same counts as `main`
-- [ ] `package.json` `dependencies` contains only `esm-env`
+- [ ] `package.json` has no `dependencies` entry (the package stays dependency-free)
 - [ ] `.agents/.plans/ssr-derivation-cost/README.md` status row updated
 
 ## STOP conditions
@@ -354,10 +372,12 @@ PLAYWRIGHT_PORT=4180 npx playwright test --project=chromium --project=firefox --
 - A plugin writes library state _during_ a derivation on the server (the
   epoch would then invalidate the cache it is filling and loop). Report the
   plugin and line.
-- The maintainer's zero-runtime-dependency stance rules out `esm-env`:
-  report, and propose the alternative of resolving `BROWSER` through
-  `package.json` `exports` conditions in a local `env.js` / `env.browser.js`
-  pair instead.
+- The probe reports `1` under the node-environment SSR test (the server
+  runtime already memoises): the Step 1 counters should then be 1 as well;
+  report both numbers.
+- The probe reports `2` in a browser or jsdom test (the client runtime
+  stopped memoising unowned deriveds): every client read would bypass
+  `$derived` and lose reactivity. Do not ship; report.
 
 ## Maintenance notes
 

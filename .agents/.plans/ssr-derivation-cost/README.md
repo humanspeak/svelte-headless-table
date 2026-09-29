@@ -18,7 +18,7 @@ Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJE
 - Written against the v7 branch before release; the plan's drift check
   tells the executor to re-locate every excerpt. Pre-flight it again at
   dispatch time.
-- Lands as a `minor`: no API change, one small runtime dependency (`esm-env`).
+- Lands as a `minor`: no API change, no new dependency.
 
 ## Findings considered and rejected
 
@@ -28,4 +28,8 @@ Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJE
 - **Wrap the whole view model in a per-request cache keyed by request**:
   rejected — the library has no notion of a request and must work outside SvelteKit.
 - **Detect the server with `typeof window`**: rejected — unreliable under
-  jsdom and edge runtimes; `esm-env` is what Svelte itself uses.
+  jsdom and edge runtimes.
+- **Depend on `esm-env`, or import it optionally**: rejected by the
+  maintainer (2026-09-29) — the package stays dependency-free, and an
+  optional import cannot be resolved synchronously. The plan probes the
+  behaviour instead (read a `$derived` twice, count evaluations).
