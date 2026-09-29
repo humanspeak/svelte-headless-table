@@ -34,7 +34,7 @@ This conversion is mechanical, which makes it a good job for a coding assistant.
 Convert this project's @humanspeak/svelte-headless-table templates from the
 store API to current.*, staying on version 6.
 
-1. Read https://table.svelte.page/docs/guides-moving-to-current.md in full
+1. Read https://table.svelte.page/docs/guides/moving-to-current.md in full
    before changing anything.
 2. Keep the package on 6.x: the installed version must satisfy ^6.4.0. Do not
    upgrade to 7 in this change.
@@ -51,7 +51,7 @@ store API to current.*, staying on version 6.
    report which files you changed.
 ```
 
-If your assistant cannot fetch URLs, paste the contents of <a href="https://table.svelte.page/docs/guides-moving-to-current.md">guides-moving-to-current.md</a> after the prompt. When this is done and shipped, <a href="/docs/guides/migrating-to-v7">Migrating to v7</a> has the prompt for the next step.
+If your assistant cannot fetch URLs, paste the contents of <a href="https://table.svelte.page/docs/guides/moving-to-current.md">moving-to-current.md</a> after the prompt. When this is done and shipped, <a href="/docs/guides/migrating-to-v7">Migrating to v7</a> has the prompt for the next step.
 
 ## What changes and what does not
 
