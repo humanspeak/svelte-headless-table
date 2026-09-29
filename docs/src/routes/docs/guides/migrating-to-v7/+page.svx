@@ -80,6 +80,7 @@ The rewrite is also faster. Median of three 30-iteration runs per version on the
 | Dynamic render values | `Readable` accepted as a `RenderConfig`, as `createRender` props and as snippet args | pass a getter (`() => value`) |
 | Label state | `header: (_, { rows }) => derived(rows, ...)` | `header: (_, { rows }) => () => ...rows()...` |
 | Removed helpers | `createSortKeysStore`, `createPageStore`, `getRowState(row).invalidate()` | `createSortKeys`, `createPageState`; `invalidate()` is gone (nothing to invalidate) |
+| Component plumbing | `row.applyHook()`, `row.injectState()`, `row.state` (and the same on cells and header components) | removed; labels and display-column `data` functions receive the table state as their second argument |
 | Column filters | `initialFilterValue` applied lazily, when a header's props were first read | applied when the view model is built |
 | Plugin-author contract | `deriveRows: (rows: Readable<Row[]>) => Readable<Row[]>`, hooks return `{ props?: Readable, attrs?: Readable }` | `deriveRows: (rows: () => Row[]) => () => Row[]`, hooks return `{ props?: () => Props, attrs?: () => Attrs }`; `transformFlatColumnsFn` removed |
 
@@ -289,6 +290,7 @@ header: (_, { rows }) => createRender(Italic, () => ({ text: `${rows().length}` 
 - `createSortKeysStore(keys)` → `createSortKeys(keys)`. The result is a `SortKeys` box with `toggleId(id, options)` and `clearId(id)`.
 - `createPageStore(config)` → `createPageState(config)`, where `config.items` is a getter.
 - `getRowState(row).invalidate()` on `addExpandedRows` and `addSelectedRows` → delete the call. Per-row views read the plugin's set directly, are cached per row object, and never go stale.
+- `applyHook()`, `injectState()` and `state` on rows, cells and header components → removed; they were view-model plumbing. Read the table state from the second argument of a label or a display column's `data` function instead of `row.state` / `cell.state`.
 
 ### Plugin-author contract
 

@@ -1,8 +1,11 @@
+import type { BodyCell } from '$lib/bodyCells.js'
 import { getBodyRows, getColumnedBodyRows, type BodyRow, type DataBodyRow } from '$lib/bodyRows.js'
 import { getFlatColumns, type Column, type FlatColumn } from '$lib/columns.js'
 import type { Table } from '$lib/createTable.js'
+import type { HeaderCell } from '$lib/headerCells.js'
 import { getHeaderRows, type HeaderRow } from '$lib/headerRows.js'
 import type { Getter } from '$lib/reactivity.svelte.js'
+import { bindComponent, type ComponentBinding } from '$lib/tableComponent.svelte.js'
 import type {
     AnyPlugins,
     DeriveFlatColumnsFn,
@@ -232,6 +235,26 @@ type DerivationName = keyof ViewModelDebug['derivationCalls']
 type PluginHooks<Item> = NonNullable<TablePluginInstance<Item, unknown, unknown>['hooks']>
 
 /**
+ * Binds every row in `rows` and every visible cell of those rows. Binding is
+ * two pointer writes per component and idempotent, so re-binding a row the
+ * view model has seen before costs nothing more.
+ */
+const bindRows = <
+    Item,
+    Plugins extends AnyPlugins,
+    Row extends BodyRow<Item, Plugins> | HeaderRow<Item, Plugins>
+>(
+    rows: readonly Row[],
+    rowBinding: ComponentBinding<Item, Plugins, Row>,
+    cellBinding: ComponentBinding<Item, Plugins, Row['cells'][number]>
+) => {
+    for (const row of rows) {
+        bindComponent(row, rowBinding)
+        for (const cell of row.cells) bindComponent(cell, cellBinding)
+    }
+}
+
+/**
  * The `[pluginName, hook]` pairs of the plugins that define a hook for `key`.
  * Plugin shape is static after `createTable`, so this is resolved once per
  * view model instead of per row.
@@ -425,40 +448,33 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     for (const fn of deriveRowsFns) rows = fn(rows)
     const rowsFn = rows
 
-    // Pre-filter to plugins that actually define each body hook. Plugin
-    // shape is static after createTable, so it's safe to resolve these once
-    // at view-model build time.
-    const trHookEntries = hookEntriesFor(pluginEntries, 'tbody.tr')
-    const tdHookEntries = hookEntriesFor(pluginEntries, 'tbody.tr.td')
-    const theadTrHookEntries = hookEntriesFor(pluginEntries, 'thead.tr')
-    const thHookEntries = hookEntriesFor(pluginEntries, 'thead.tr.th')
+    // One binding per component kind, shared by every component of that
+    // kind. Plugin shape is static after createTable, so the hook factories
+    // are resolved once here; each component calls them lazily, on its first
+    // `current` read.
+    const bodyRowBinding: ComponentBinding<Item, Plugins, BodyRow<Item, Plugins>> = {
+        state: tableState,
+        hooks: hookEntriesFor(pluginEntries, 'tbody.tr')
+    }
+    const bodyCellBinding: ComponentBinding<Item, Plugins, BodyCell<Item, Plugins>> = {
+        state: tableState,
+        hooks: hookEntriesFor(pluginEntries, 'tbody.tr.td')
+    }
+    const headerRowBinding: ComponentBinding<Item, Plugins, HeaderRow<Item, Plugins>> = {
+        state: tableState,
+        hooks: hookEntriesFor(pluginEntries, 'thead.tr')
+    }
+    const headerCellBinding: ComponentBinding<Item, Plugins, HeaderCell<Item, Plugins>> = {
+        state: tableState,
+        hooks: hookEntriesFor(pluginEntries, 'thead.tr.th')
+    }
 
-    // Hooks are getters over plugin state, so a row needs them applied only
-    // once per identity: when a plugin re-derives (a sort toggle reorders the
-    // same row objects) the existing getters already track the new state.
-    // A WeakSet, not rune state — it is written while deriving.
-    const hookedRows = new WeakSet<BodyRow<Item, Plugins>>()
-    // Mutating the row and cell objects this derivation produced (state
-    // injection, hooks) is allowed; assigning rune state here is not.
+    // Binding mutates the row and cell objects this derivation produced,
+    // which is allowed; assigning rune state here is not.
     const injectedRows = $derived.by(() =>
         measure('injectedRows', () => {
             const rowsValue = rowsFn()
-            for (const row of rowsValue) {
-                if (hookedRows.has(row)) continue
-                hookedRows.add(row)
-                row.injectState(tableState)
-                for (const cell of row.cells) cell.injectState(tableState)
-                for (const [pluginName, trHook] of trHookEntries) {
-                    row.applyHook(pluginName, trHook(row))
-                }
-                if (tdHookEntries.length > 0) {
-                    for (const cell of row.cells) {
-                        for (const [pluginName, tdHook] of tdHookEntries) {
-                            cell.applyHook(pluginName, tdHook(cell))
-                        }
-                    }
-                }
-            }
+            bindRows(rowsValue, bodyRowBinding, bodyCellBinding)
             return rowsValue
         })
     )
@@ -471,9 +487,15 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     for (const fn of derivePageRowsFns) pageRows = fn(pageRows)
     const pageRowsFn = pageRows
 
-    // Page rows are a subset of the same object references already processed
-    // by injectedRows — no need to re-inject state or re-apply hooks.
-    const injectedPageRows = $derived.by(() => measure('injectedPageRows', pageRowsFn))
+    // Bound too, so a `derivePageRows` plugin that produces new row objects
+    // still hands out rows with state and hooks.
+    const injectedPageRows = $derived.by(() =>
+        measure('injectedPageRows', () => {
+            const pageRowsValue = pageRowsFn()
+            bindRows(pageRowsValue, bodyRowBinding, bodyCellBinding)
+            return pageRowsValue
+        })
+    )
 
     // ---- Header rows ------------------------------------------------------------
 
@@ -483,16 +505,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
                 columns,
                 visibleColumns.map((c) => c.id)
             )
-            for (const row of headerRowsValue) {
-                row.injectState(tableState)
-                for (const cell of row.cells) cell.injectState(tableState)
-                for (const [pluginName, trHook] of theadTrHookEntries) {
-                    row.applyHook(pluginName, trHook(row))
-                }
-                for (const [pluginName, thHook] of thHookEntries) {
-                    for (const cell of row.cells) cell.applyHook(pluginName, thHook(cell))
-                }
-            }
+            bindRows(headerRowsValue, headerRowBinding, headerCellBinding)
             return headerRowsValue
         })
     )

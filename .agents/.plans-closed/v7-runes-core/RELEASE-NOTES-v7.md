@@ -48,6 +48,7 @@ The cold mount of `sort-cycle-1k` measured 1.10× v6 (41.15 ms vs 37.50 ms); its
 - `getRowState(row).invalidate()` on `addExpandedRows` and `addSelectedRows` (per-row views never go stale)
 - `createSortKeysStore` (use `createSortKeys`) and `createPageStore` (use `createPageState`)
 - `transformFlatColumnsFn` on the plugin contract (use `deriveFlatColumns`)
+- `applyHook()`, `injectState()` and `state` on rows, cells and header components (view-model plumbing; labels and display-column `data` functions receive the table state as their second argument)
 - `Readable` values as render configs, `createRender` props and snippet args (use getters)
 
 New root exports: `box`, `derivedBox`, `keyedBox`, `RecordSet`, `ArraySet`, and the `Box`, `ReadonlyBox`, `Getter` types.

@@ -1,6 +1,7 @@
 import type { BodyCell } from '../bodyCells.js'
 import type { BodyRow } from '../bodyRows.js'
 import { derivedBox, type ReadonlyBox } from '../reactivity.svelte.js'
+import { componentState } from '../tableComponent.svelte.js'
 import type { NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 
 /**
@@ -72,7 +73,7 @@ const getExportValue = <Item>(cell: BodyCell<Item> | undefined, row: BodyRow<Ite
         return cell.value
     }
     if (cell.isDisplay() && cell.column.data !== undefined) {
-        const data = cell.column.data(cell, row.state)
+        const data = cell.column.data(cell, componentState(row))
         return typeof data === 'function' ? (data as () => unknown)() : data
     }
     return null

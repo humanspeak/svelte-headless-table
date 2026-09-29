@@ -1,4 +1,3 @@
-import { untrack } from 'svelte'
 import type { BodyRow } from '../bodyRows.js'
 import type { PluginInitTableState } from '../createViewModel.svelte.js'
 import {
@@ -282,18 +281,14 @@ export const addColumnFilters =
                     if (columnOption === undefined || boxes === undefined) {
                         return { props: () => undefined }
                     }
-                    // Called once per header cell. Untracked, so reads inside a
-                    // user `render` do not become dependencies of the header rows.
-                    const render = untrack(() =>
-                        columnOption.render?.({
-                            id: headerCell.id,
-                            filterValue: keyedBox(filterValues, headerCell.id),
-                            ...tableState,
-                            values: boxes.values,
-                            preFilteredRows,
-                            preFilteredValues: boxes.preFilteredValues
-                        })
-                    )
+                    const render = columnOption.render?.({
+                        id: headerCell.id,
+                        filterValue: keyedBox(filterValues, headerCell.id),
+                        ...tableState,
+                        values: boxes.values,
+                        preFilteredRows,
+                        preFilteredValues: boxes.preFilteredValues
+                    })
                     const props = { render }
                     return { props: () => props }
                 }

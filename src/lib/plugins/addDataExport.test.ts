@@ -1,6 +1,7 @@
 import { createTable } from '../createTable.js'
 import { box } from '../reactivity.svelte.js'
 import { addDataExport } from './addDataExport.svelte.js'
+import { addSelectedRows } from './addSelectedRows.svelte.js'
 import { addSubRows } from './addSubRows.svelte.js'
 
 interface Item {
@@ -268,4 +269,25 @@ test('display column data returned as a getter is called', () => {
     const vm = table.createViewModel(columns)
     const exported = vm.pluginStates.export.exportedData.current as Record<string, unknown>[]
     expect(exported[0]?.greeting).toBe('Hey Alice')
+})
+
+test('display column data receives the table state with plugin states', () => {
+    const table = createTable(sampleData, {
+        select: addSelectedRows(),
+        export: addDataExport()
+    })
+    const columns = table.createColumns([
+        table.column({ accessor: 'name', header: 'Name' }),
+        table.display({
+            id: 'selected',
+            header: 'Selected',
+            cell: () => '',
+            data: ({ row }, state) =>
+                state?.pluginStates.select.getRowState(row).isSelected.current ?? 'no state'
+        })
+    ])
+    const vm = table.createViewModel(columns)
+    vm.pluginStates.select.selectedDataIds.current = { '1': true }
+    const exported = vm.pluginStates.export.exportedData.current as Record<string, unknown>[]
+    expect(exported.map((row) => row.selected)).toEqual([false, true, false])
 })

@@ -2,6 +2,7 @@ import { DataBodyCell } from './bodyCells.js'
 import { DataBodyRow } from './bodyRows.js'
 import { DataColumn } from './columns.js'
 import type { TableState } from './createViewModel.svelte.js'
+import { bindComponent } from './tableComponent.svelte.js'
 
 interface User {
     firstName: string
@@ -57,7 +58,7 @@ it('renders dynamic label with state', () => {
             `${String(value).toLowerCase()} with ${columns.length} columns`
     })
 
-    actual.injectState(state)
+    bindComponent(actual, { state, hooks: [] })
 
     expect(actual.render()).toBe('adam with 0 columns')
 })

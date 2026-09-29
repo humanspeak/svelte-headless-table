@@ -1,4 +1,5 @@
 import { expectTypeOf } from 'vitest'
+import type { DataBodyCell } from './bodyCells.js'
 import type { BodyRow, DataBodyRow } from './bodyRows.js'
 import { createTable } from './createTable.js'
 import { addPagination } from './plugins/addPagination.svelte.js'
@@ -73,4 +74,10 @@ it('accepts a hand-written plugin on the v7 contract', () => {
 
     expectTypeOf(row.current.props.custom).toEqualTypeOf<{ x: number }>()
     expect(row.current.props.custom.x).toBe(1)
+})
+
+it('keeps the view model plumbing off rows and cells', () => {
+    expectTypeOf<BodyRow<Item>>().not.toHaveProperty('applyHook')
+    expectTypeOf<BodyRow<Item>>().not.toHaveProperty('injectState')
+    expectTypeOf<DataBodyCell<Item>>().not.toHaveProperty('state')
 })
