@@ -61,41 +61,41 @@ const table = createTable(data, {
 <Admonition type="info">State provided by <code>addHiddenColumns</code>.</Admonition>
 
 ```ts {3}
-const vm = table.createViewModel(columns);
-const { pluginStates } = vm;
-const { hiddenColumnIds } = pluginStates.hide;
+const vm = table.createViewModel(columns)
+const { pluginStates } = vm
+const { hiddenColumnIds } = pluginStates.hide
 ```
 
-### `hiddenColumnIds: Writable<string[]>`
-Active hidden column ids. Update this store to show or hide columns dynamically — columns whose ids are in the array are removed from the view model.
+### `hiddenColumnIds: Box<string[]>`
+Active hidden column ids. Assign a new array to show or hide columns dynamically — columns whose ids are in the array are removed from the view model.
 
 ```ts
 // Hide a column.
-hiddenColumnIds.update((ids) => [...ids, 'createdAt']);
+hiddenColumnIds.current = [...hiddenColumnIds.current, 'createdAt']
 
 // Show a column.
-hiddenColumnIds.update((ids) => ids.filter((id) => id !== 'createdAt'));
+hiddenColumnIds.current = hiddenColumnIds.current.filter((id) => id !== 'createdAt')
 ```
 
 A common pattern drives visibility with a checkbox per column:
 
 ```svelte
 <script>
-    const { flatColumns, pluginStates } = table.createViewModel(columns);
-    const { hiddenColumnIds } = pluginStates.hide;
+    const { flatColumns, pluginStates } = table.createViewModel(columns)
+    const { hiddenColumnIds } = pluginStates.hide
 
     const toggle = (id, visible) => {
-        hiddenColumnIds.update((ids) =>
-            visible ? ids.filter((i) => i !== id) : [...ids, id]
-        );
-    };
+        hiddenColumnIds.current = visible
+            ? hiddenColumnIds.current.filter((i) => i !== id)
+            : [...hiddenColumnIds.current, id]
+    }
 </script>
 
 {#each flatColumns as col (col.id)}
     <label>
         <input
             type="checkbox"
-            checked={!$hiddenColumnIds.includes(col.id)}
+            checked={!hiddenColumnIds.current.includes(col.id)}
             onchange={(e) => toggle(col.id, e.currentTarget.checked)}
         />
         {col.header}

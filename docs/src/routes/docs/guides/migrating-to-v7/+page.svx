@@ -1,0 +1,440 @@
+---
+title: Migrating to v7
+description: Move a 6.x table to the runes-native v7 API
+sidebar_title: Migrating to v7
+---
+
+<script>
+  import Admonition from '$lib/components/Admonition.svelte'
+  import { getSeoContext } from '@humanspeak/docs-kit'
+  const seo = getSeoContext()
+  if (seo) {
+      seo.title = 'Migrating to v7 - Svelte Headless Table'
+      seo.description = 'Move a Svelte Headless Table 6.x table to the runes-native v7 API: plain arrays or getters for data, current.* for rendering, and Box-based plugin state instead of Svelte stores.'
+      seo.ogTitle = 'Migrating to v7'
+      seo.ogTagline = 'From Svelte stores to runes, step by step.'
+      seo.ogFeatures = ['No stores', 'current.* only', 'Getter-based plugins', 'Faster']
+      seo.ogSlug = 'guides-migrating-to-v7'
+  }
+</script>
+
+# Migrating to v7
+
+## Hand this to your AI assistant
+
+Every page of these docs is also published as plain Markdown, so a coding assistant can read the guide directly. Copy this prompt into it from your project's root:
+
+```text
+Upgrade this project from @humanspeak/svelte-headless-table 6.x to 7.
+
+1. Read https://table.svelte.page/docs/guides/migrating-to-v7.md in full before
+   changing anything. Every docs page is also available as Markdown: append
+   .md to its URL, for example
+   https://table.svelte.page/docs/plugins/add-pagination.md. The index of all
+   pages is https://table.svelte.page/llms.txt.
+2. If any template still uses <Subscribe>, $headerRows / $rows / $pageRows /
+   $tableAttrs, or cell.attrs() / cell.props(), convert it to current.* first,
+   following https://table.svelte.page/docs/guides/moving-to-current.md.
+3. Install @humanspeak/svelte-headless-table@^7 and apply every row of the
+   guide's "Breaking changes at a glance" table. Table data must be an array
+   or a getter, never a Svelte store. Plugin state is read and written through
+   .current. Files that create $state must be .svelte or .svelte.ts.
+4. Run every grep in the guide's "Checklist" section and fix each hit. Review
+   every initialFilterValue: it is now applied when the view model is built.
+5. Run the project's type check and tests. Report what you changed, and list
+   anything you could not convert with the file and line.
+```
+
+If your assistant cannot fetch URLs, paste the contents of <a href="https://table.svelte.page/docs/guides/migrating-to-v7.md">migrating-to-v7.md</a> after the prompt, or give it <a href="https://table.svelte.page/llms-full.txt">llms-full.txt</a>, which is the whole documentation in one file.
+
+## What v7 is
+
+v7 rebuilds the core on Svelte 5 runes: the view model is a chain of `$derived` values and the library imports nothing from `svelte/store`. `current.*` (`vm.current`, `row.current`, `cell.current`) is now the only way to read the table, and plugin state is plain reactive objects with a `current` property. Plugins are written against getters instead of stores.
+
+The rewrite is also faster. Median of three 30-iteration runs per version on the same machine (details in `scripts/perf-v6-vs-v7.md` in the repository):
+
+| Scenario | 6.5.4 | 7.0 | v7 / v6 |
+| --- | ---: | ---: | ---: |
+| 10,000 rows, first paint | 372.75 ms | 215.80 ms | 0.58× |
+| 1,000 rows, three sort changes | 123.50 ms | 86.85 ms | 0.70× |
+| 1,000 rows with seven plugins, first paint | 61.55 ms | 55.50 ms | 0.90× |
+
+## Before you start
+
+- **Be on 6.4 or later, with templates on `current.*`.** 6.4 added `current` next to the stores, so you can move templates first while everything still runs on 6.x. If your templates still use `<Subscribe>`, `$headerRows` or `cell.attrs()`, follow <a href="/docs/guides/moving-to-current">Moving to current.*</a> first: that part of the migration is the same on both versions.
+- **Svelte `^5.30`** is the minimum peer version.
+- Code that runs `createTable` or reads plugin state in `.ts` files needs rune support there: rename them to `.svelte.ts` if they create `$state`.
+
+## Breaking changes at a glance
+
+| Area | 6.x | 7.x |
+| --- | --- | --- |
+| Data input | `createTable(readable(items))`, `createTable(writable(items))` | `createTable(items)` or `createTable(() => items)`; a store throws |
+| View-model stores | `vm.rows`, `vm.pageRows`, `vm.headerRows`, `vm.tableAttrs`, ... (`Readable`) | removed; read `vm.current.rows`, `vm.current.pageRows`, ... |
+| `Subscribe` | `<Subscribe attrs={cell.attrs()} let:attrs>` | removed; read `cell.current.attrs` |
+| `attrs()` / `props()` | `row.attrs()`, `cell.props()` return stores | removed; `row.current.attrs`, `cell.current.props` |
+| Plugin state reads/writes | `$pageIndex`, `pageIndex.set(2)`, `pageIndex.update(...)` | `pageIndex.current`, `pageIndex.current = 2` |
+| Set-like plugin state | `selectedDataIds` / `expandedIds` / `groupByIds` stores with helper methods | `RecordSet` / `ArraySet`: `.current` plus `add`, `remove`, `toggle`, `clear`, ... |
+| Per-row state | `getRowState(row).isSelected` is a `Writable<boolean>` | a `Box<boolean>`; `canExpand` is a plain `boolean` |
+| `createRender` events | `createRender(C, props).on('click', fn)`, `eventHandlers` | removed; pass `onclick: fn` as a prop |
+| Dynamic render values | `Readable` accepted as a `RenderConfig`, as `createRender` props and as snippet args | pass a getter (`() => value`) |
+| Label state | `header: (_, { rows }) => derived(rows, ...)` | `header: (_, { rows }) => () => ...rows()...` |
+| Removed helpers | `createSortKeysStore`, `createPageStore`, `getRowState(row).invalidate()` | `createSortKeys`, `createPageState`; `invalidate()` is gone (nothing to invalidate) |
+| Component plumbing | `row.applyHook()`, `row.injectState()`, `row.state` (and the same on cells and header components) | removed; labels and display-column `data` functions receive the table state as their second argument |
+| Column filters | `initialFilterValue` applied lazily, when a header's props were first read | applied when the view model is built |
+| Plugin-author contract | `deriveRows: (rows: Readable<Row[]>) => Readable<Row[]>`, hooks return `{ props?: Readable, attrs?: Readable }` | `deriveRows: (rows: () => Row[]) => () => Row[]`, hooks return `{ props?: () => Props, attrs?: () => Attrs }`; the init argument gains `upstream` (the rows and columns entering your plugin's position); `transformFlatColumnsFn` removed |
+
+## Step by step
+
+### Data input
+
+A plain array for static data; a getter over rune state for data that changes.
+
+```ts
+// 6.x
+import { readable, writable } from 'svelte/store'
+const table = createTable(readable(people))
+
+const data = writable(people)
+const table = createTable(data)
+data.update((rows) => [...rows, newPerson])
+
+// 7.x
+const table = createTable(people)
+
+let data = $state.raw(people)
+const table = createTable(() => data)
+data = [...data, newPerson]
+```
+
+`$state.raw` is enough (and cheaper than `$state`) when you replace the array rather than mutating it. If the data comes from a store you do not control, convert it in your own code with Svelte's `fromStore`:
+
+```ts
+import { fromStore } from 'svelte/store'
+const rows = fromStore(externalStore)
+const table = createTable(() => rows.current)
+```
+
+<Admonition type="warning">Passing a store to <code>createTable</code> throws: <code>createTable: pass an array or a getter, e.g. createTable(() =&gt; items); Svelte stores are not accepted in v7</code>. The same applies to <code>addPagination</code>'s <code>serverItemCount</code> and <code>addVirtualScroll</code>'s <code>totalRows</code> / <code>dataOffset</code>.</Admonition>
+
+### View-model stores
+
+```svelte
+<!-- 6.x -->
+<script>
+    const { headerRows, pageRows, tableAttrs, tableBodyAttrs } = table.createViewModel(columns)
+</script>
+<table {...$tableAttrs}>
+    <tbody {...$tableBodyAttrs}>
+        {#each $pageRows as row (row.id)}
+
+<!-- 7.x -->
+<script>
+    const vm = table.createViewModel(columns)
+</script>
+<table {...vm.current.tableAttrs}>
+    <tbody {...vm.current.tableBodyAttrs}>
+        {#each vm.current.pageRows as row (row.id)}
+```
+
+`vm.flatColumns` and `vm.pluginStates` stay plain properties. `vm.current.visibleColumns` replaces `$visibleColumns`, and `vm.current.originalRows` replaces `$originalRows`.
+
+### `Subscribe`, `attrs()` and `props()`
+
+```svelte
+<!-- 6.x -->
+{#each headerRow.cells as cell (cell.id)}
+    <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
+        <th {...attrs} onclick={props.sort.toggle}>
+            <Render of={cell.render()} />
+        </th>
+    </Subscribe>
+{/each}
+
+<!-- 7.x -->
+{#each headerRow.cells as cell (cell.id)}
+    <th {...cell.current.attrs} onclick={cell.current.props.sort.toggle}>
+        <Render of={cell.render()} />
+    </th>
+{/each}
+```
+
+If you already moved to `current.*` on 6.4+, the only change is deleting the `Subscribe` import.
+
+### Plugin state
+
+Every plugin state value is a `Box` (`current` is readable and writable), a `ReadonlyBox` (`current` is readable) or a set class. Replace `$x` with `x.current` and `.set(v)` / `.update(fn)` with an assignment. This is the pagination demo from these docs:
+
+```svelte
+<!-- 6.x -->
+<script>
+    const { pageIndex, pageCount, pageSize, hasNextPage, hasPreviousPage } = vm.pluginStates.page
+</script>
+<button onclick={() => $pageIndex--} disabled={!$hasPreviousPage}>Previous page</button>
+{$pageIndex + 1} out of {$pageCount}
+<button onclick={() => $pageIndex++} disabled={!$hasNextPage}>Next page</button>
+<input type="number" min={1} bind:value={$pageSize} />
+
+<!-- 7.x -->
+<script>
+    const { pageIndex, pageCount, pageSize, hasNextPage, hasPreviousPage } = vm.pluginStates.page
+</script>
+<button onclick={() => (pageIndex.current -= 1)} disabled={!hasPreviousPage.current}>
+    Previous page
+</button>
+{pageIndex.current + 1} out of {pageCount.current}
+<button onclick={() => (pageIndex.current += 1)} disabled={!hasNextPage.current}>Next page</button>
+<input type="number" min={1} bind:value={pageSize.current} />
+```
+
+`bind:value` works directly on a box's `current`. A few boxes do extra work on read or write: `pageSize` clamps writes below 1, and `pageIndex` clamps reads to the last page (6.x wrote the clamped value back into the store).
+
+Values are replaced, never mutated in place. Assign a new array or object:
+
+```ts
+// 6.x
+hiddenColumnIds.update((ids) => [...ids, 'email'])
+filterValues.update((values) => ({ ...values, status: 'single' }))
+
+// 7.x
+hiddenColumnIds.current = [...hiddenColumnIds.current, 'email']
+filterValues.current = { ...filterValues.current, status: 'single' }
+```
+
+`Box`, `ReadonlyBox`, `RecordSet` and `ArraySet` are exported from the package root, together with the `box`, `derivedBox` and `keyedBox` helpers used to build them.
+
+### Set-like state (`RecordSet`, `ArraySet`)
+
+`addSelectedRows`' `selectedDataIds` and `addExpandedRows`' `expandedIds` are `RecordSet`s; `addGroupBy`'s `groupByIds` is an `ArraySet`. The helper methods keep their names; the value moves to `current`.
+
+```ts
+// 6.x
+$selectedDataIds // { '1': true }
+selectedDataIds.add('2')
+selectedDataIds.clear()
+
+// 7.x
+selectedDataIds.current // { '1': true }
+selectedDataIds.add('2')
+selectedDataIds.clear()
+selectedDataIds.has('2') // new: a membership check
+```
+
+### Per-row state and indicator components
+
+`getRowState(row)` returns boxes. Pass them as props to the indicator component, and read and write `current` there, with `checked` + `onchange` instead of `bind:checked={$isSelected}`:
+
+```svelte
+<!-- SelectIndicator.svelte, 6.x -->
+<script lang="ts">
+    import type { Readable, Writable } from 'svelte/store'
+    export let isSelected: Writable<boolean>
+    export let isSomeSubRowsSelected: Readable<boolean>
+</script>
+<input type="checkbox" bind:checked={$isSelected} indeterminate={$isSomeSubRowsSelected} />
+
+<!-- SelectIndicator.svelte, 7.x -->
+<script lang="ts">
+    import type { Box, ReadonlyBox } from '@humanspeak/svelte-headless-table'
+    const { isSelected, isSomeSubRowsSelected }: {
+        isSelected: Box<boolean>
+        isSomeSubRowsSelected: ReadonlyBox<boolean>
+    } = $props()
+</script>
+<input
+    type="checkbox"
+    checked={isSelected.current}
+    indeterminate={isSomeSubRowsSelected.current}
+    onchange={(e) => (isSelected.current = e.currentTarget.checked)}
+/>
+```
+
+The column definition does not change: `createRender(SelectIndicator, { isSelected, isSomeSubRowsSelected })`. For `addExpandedRows`, `isExpanded` is a `Box<boolean>`, `isAllSubRowsExpanded` a `ReadonlyBox<boolean>`, and `canExpand` is now a plain `boolean` (read it without `$`).
+
+Filter components rendered by `addColumnFilters` get the same treatment: `filterValue` is a `Box`, and `values`, `preFilteredValues` and `preFilteredRows` are `ReadonlyBox`es.
+
+### Column filter initial values
+
+<Admonition type="warning">6.x applied a column's <code>initialFilterValue</code> lazily, the first time that header's props were read. v7 applies it when the view model is built. An initial value on a column whose header props you never rendered used to have no effect; now it filters. In particular <code>initialFilterValue: ''</code> on a <code>matchFilter</code> column now filters every row out. Use <code>undefined</code> (or leave the option out) for "no filter".</Admonition>
+
+### `createRender` events and dynamic props
+
+```ts
+// 6.x
+const noticeProps = writable({ count: 0 })
+createRender(Notice, noticeProps).on('click', () => $noticeProps.count++)
+
+// 7.x
+let count = $state(0)
+createRender(Notice, () => ({ count, onclick: () => count++ }))
+```
+
+`createRender(Component, props)` takes a props object or a getter returning one. `.on()` and `eventHandlers` are gone: handlers are ordinary `on<event>` props. `createSnippetRender(snippet, args)` likewise takes a value or a getter (a function argument is always called as a getter; wrap a function value as `() => fn`).
+
+### Dynamic labels
+
+A label receives <a href="/docs/api/table-state">`TableState`</a>, whose members are getters in v7. Return a getter for dynamic text, or pass a props getter to `createRender`:
+
+```ts
+// 6.x
+header: (_, { rows }) => derived(rows, (r) => `Name (${r.length} users)`)
+header: (_, { rows }) => createRender(Italic, derived(rows, (r) => ({ text: `${r.length}` })))
+
+// 7.x
+header: (_, { rows }) => () => `Name (${rows().length} users)`
+header: (_, { rows }) => createRender(Italic, () => ({ text: `${rows().length}` }))
+```
+
+### Removed helpers
+
+- `createSortKeysStore(keys)` → `createSortKeys(keys)`. The result is a `SortKeys` box with `toggleId(id, options)` and `clearId(id)`.
+- `createPageStore(config)` → `createPageState(config)`, where `config.items` is a getter.
+- `getRowState(row).invalidate()` on `addExpandedRows` and `addSelectedRows` → delete the call. Per-row views read the plugin's set directly, are cached per row object, and never go stale.
+- `applyHook()`, `injectState()` and `state` on rows, cells and header components → removed; they were view-model plumbing. Read the table state from the second argument of a label or a display column's `data` function instead of `row.state` / `cell.state`.
+
+### Plugin-author contract
+
+The derive functions take a getter for the upstream value and return a getter; hooks return getters for `props` and `attrs`; `tableState` members are getters. `transformFlatColumnsFn` was removed: use `deriveFlatColumns`.
+
+```ts
+// 6.x
+const deriveRows: DeriveRowsFn<Item> = (rows) =>
+    derived([rows, sortKeys], ([$rows, $sortKeys]) => sort($rows, $sortKeys))
+
+hooks: {
+    'thead.tr.th': (cell) => ({ props: derived(sortKeys, ($keys) => ({ order: orderOf($keys, cell.id) })) })
+}
+
+// 7.x
+const deriveRows: DeriveRowsFn<Item> = (rows) => {
+    const sorted = $derived.by(() => sort(rows(), sortKeys.current))
+    return () => sorted
+}
+
+hooks: {
+    'thead.tr.th': (cell) => ({ props: () => ({ order: orderOf(sortKeys.current, cell.id) }) })
+}
+```
+
+## Writing a v7 plugin
+
+A complete plugin: it hides rows whose value in a chosen column is below a minimum, and gives each header cell an `active` flag and an `activate()` handler. Plugins that use runes live in `.svelte.ts` files.
+
+```ts
+// addMinValue.svelte.ts
+import { box, type BodyRow, type Box, type ReadonlyBox } from '@humanspeak/svelte-headless-table'
+import type {
+    DeriveRowsFn,
+    NewTablePropSet,
+    TablePlugin
+} from '@humanspeak/svelte-headless-table/plugins'
+
+export interface MinValueState<Item> {
+    /** The column being filtered, if any. */
+    columnId: Box<string | undefined>
+    /** Rows whose value in `columnId` is below `min` are hidden. */
+    min: Box<number>
+    /** The rows before this plugin filtered them. */
+    preFilteredRows: ReadonlyBox<BodyRow<Item>[]>
+}
+
+export type MinValuePropSet = NewTablePropSet<{
+    'thead.tr.th': { active: boolean; activate: () => void }
+}>
+
+export const addMinValue =
+    <Item>({ initialMin = 0 }: { initialMin?: number } = {}): TablePlugin<
+        Item,
+        MinValueState<Item>,
+        Record<string, never>,
+        MinValuePropSet
+    > =>
+    ({ upstream }) => {
+        const columnId = box<string | undefined>(undefined)
+        const min = box(initialMin)
+
+        // Expose the pre-transform rows by reading `upstream`, the rows the
+        // view model feeds this plugin, not by copying them into state.
+        const preFilteredRows: ReadonlyBox<BodyRow<Item>[]> = {
+            get current() {
+                return upstream.rows()
+            }
+        }
+
+        const deriveRows: DeriveRowsFn<Item> = (rows) => {
+            // Read state while deriving; never write it here.
+            const filtered = $derived.by(() => {
+                const id = columnId.current
+                if (id === undefined) return rows()
+                return rows().filter((row) => {
+                    const cell = row.cellForId[id]
+                    return !cell?.isData() || Number(cell.value) >= min.current
+                })
+            })
+            return () => filtered
+        }
+
+        return {
+            pluginState: { columnId, min, preFilteredRows },
+            deriveRows,
+            hooks: {
+                'thead.tr.th': (cell) => {
+                    // Allocate the handler once per cell, not on every read.
+                    const activate = () => {
+                        columnId.current = cell.id
+                    }
+                    return {
+                        props: () => ({ active: columnId.current === cell.id, activate })
+                    }
+                }
+            }
+        }
+    }
+```
+
+Use it like any other plugin: `createTable(() => items, { min: addMinValue({ initialMin: 18 }) })`, then `cell.current.props.min.active` in the header and `vm.pluginStates.min.min.current = 21` anywhere.
+
+Three rules keep a plugin correct:
+
+1. **No state writes during derivation.** A `deriveRows` getter, a `$derived` and a hook's `props` / `attrs` getter must only read. Writing a `$state` or a box there throws `state_unsafe_mutation`. Clamp on read instead of writing a corrected value back (this is what `addPagination`'s `pageIndex` does), and apply initial values when the plugin is created, not in a hook.
+2. **Allocate handlers once per cell.** Create callbacks in the hook factory (it runs once per component) and return the same function from the `props` getter, which runs on every read.
+3. **Read pre-transform rows from `upstream`.** The init argument's `upstream.rows`, `upstream.pageRows` and `upstream.flatColumns` are the values entering your plugin's position in each chain. They are getters that work from the moment the plugin is created, so read them from a `ReadonlyBox`, as `preFilteredRows` does above. Copying them into state would be a write during derivation.
+
+## Outside components
+
+`createViewModel` works in a component `<script>`, at the top level of a `.svelte.ts` module, in a SvelteKit `load` function and in a test. Plain reads of `vm.current.*` and of plugin state return the current value anywhere, including during server rendering:
+
+```ts
+const table = createTable(people, { sort: addSortBy() })
+const vm = table.createViewModel(columns)
+vm.pluginStates.sort.sortKeys.current = [{ id: 'age', order: 'desc' }]
+const oldest = vm.current.rows[0].original // a plain read, no subscription needed
+```
+
+To observe changes outside a component, read inside an `$effect` created under `$effect.root`, and call the returned cleanup when you are done:
+
+```ts
+const stop = $effect.root(() => {
+    $effect(() => {
+        console.log(vm.current.rows.length)
+    })
+})
+// ...
+stop()
+```
+
+Effects only run in a client environment (in Vitest: `environment: 'jsdom'` with Svelte's browser build); plain reads work in both.
+
+<Admonition type="warning">Do not create the view model inside an <code>$effect</code> or <code>$effect.root</code> that is torn down while you still use it: its derivations would stop updating (Svelte warns <code>derived_inert</code>).</Admonition>
+
+## Checklist
+
+Run these from your project root; each should print nothing when you are done.
+
+1. `grep -rn "svelte/store" src` — nothing left imports stores for the table. (A `fromStore` bridge you added on purpose is fine.)
+2. `grep -rn "<Subscribe" src` — every `Subscribe` is gone.
+3. `grep -rnE "\.(attrs|props)\(\)" src` — no `attrs()` / `props()` calls.
+4. `grep -rnE "\$(pluginStates|sortKeys|pageIndex|pageSize|filterValue|filterValues|selectedDataIds|isSelected|isExpanded|expandedIds|groupByIds|hiddenColumnIds|columnIdOrder|columnWidths)\b" src` — no `$`-prefixed plugin state.
+5. `grep -rnE "\$(rows|pageRows|headerRows|tableAttrs|tableBodyAttrs|visibleColumns)\b" src` — no view-model stores.
+6. `grep -rnE "createSortKeysStore|createPageStore|invalidate\(\)|\.on\('" src` — no removed helpers.
+7. `grep -rn "initialFilterValue: ''" src` — review each hit on a `matchFilter` column.

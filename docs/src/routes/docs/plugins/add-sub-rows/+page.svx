@@ -57,7 +57,7 @@ const columns = table.createColumns([
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components.</Admonition>
 
 ```svelte
 {#each vm.current.headerRows as headerRow (headerRow.id)}

@@ -61,7 +61,7 @@ _Defaults to `['asc', 'desc', undefined]`_.
 
 ### `serverSide?: boolean`
 
-If `true`, the sort plugin will have no effect on the rows of the table. Instead, you can control sorting by updating [`$data`](/docs/api/create-table#createtable-data-plugins-table). The plugin's state can be used as variables in your data-fetching query to get sorted data from the server directly.
+If `true`, the sort plugin will have no effect on the rows of the table. Instead, you can control sorting by updating the table's [data](/docs/api/create-table#createtable-data-plugins-table). The plugin's state can be used as variables in your data-fetching query to get sorted data from the server directly.
 
 _Defaults to `false`_.
 
@@ -81,9 +81,25 @@ const columns = table.createColumns([
 ]);
 ```
 
+### `disable?: boolean`
+
+Disables sorting on the column.
+
+### `getSortValue?: (value) => string | number | (string | number)[]`
+
+Returns the value to sort by, for cell values that are not directly comparable.
+
+### `compareFn?: (left, right) => number`
+
+A custom comparison for the column.
+
+### `invert?: boolean`
+
+Inverts the sort order of the column.
+
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
 
 <PluginProps set="SortByPropSet" pluginKey="sort" />
 
@@ -91,6 +107,34 @@ const columns = table.createColumns([
 
 - With `addSubRows`, sub-rows are sorted within their parent; parents are ordered among themselves and children among their siblings.
 - Sorting runs before `addPagination` and `addVirtualScroll`, so a sort always reorders the whole data set, not just the visible page.
+
+## Plugin State
+
+<Admonition type="info">State provided by <code>addSortBy</code>.</Admonition>
+
+```ts {3}
+const vm = table.createViewModel(columns)
+const { pluginStates } = vm
+const { sortKeys } = pluginStates.sort
+```
+
+### `sortKeys: SortKeys`
+
+The active sort keys, a `Box<SortKey[]>` with two helpers. Read or assign `sortKeys.current`; every write assigns a new array.
+
+```ts
+sortKeys.current // [{ id: 'age', order: 'desc' }]
+sortKeys.current = [{ id: 'name', order: 'asc' }]
+sortKeys.toggleId('age') // advance the column through the toggle order
+sortKeys.toggleId('age', { multiSort: false }) // replace the other keys
+sortKeys.clearId('name')
+```
+
+`createSortKeys(initialKeys)` builds a standalone `SortKeys` (it replaces the 6.x `createSortKeysStore`).
+
+### `preSortedRows: ReadonlyBox<BodyRow[]>`
+
+The rows before sorting was applied.
 
 ## Examples
 

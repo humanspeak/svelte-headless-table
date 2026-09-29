@@ -21,12 +21,20 @@
      *      runner to scrape.
      *
      * The non-wall-clock derivation counts come straight from the
-     * `_debug.derivationCalls` surface created in createViewModel.ts and
-     * are the most stable signal — they don't move with hardware noise.
+     * `vm._debug` surface created in createViewModel.svelte.ts and are the
+     * most stable signal — they don't move with hardware noise:
+     *   - `derivationCalls` / `derivationTimings`: per-derivation run count
+     *     and cumulative `performance.now()` wall-clock (ms);
+     *   - `getTotalCalls()` / `getTotalMs()`: their sums;
+     *   - `resetCounters()`: zeroes both before a measured window;
+     *   - `derivedCount`: the length of each derivation chain.
+     *
+     * Presets hand `createTable` a plain array (the data never changes
+     * within a run) and drive interactions through the v7 plugin state
+     * (`Box` / `RecordSet` `.current` writes).
      */
-    import { writable, type Writable } from 'svelte/store'
     import { onMount, tick } from 'svelte'
-    import { createTable } from '$lib/index.js'
+    import { createTable, type Box } from '$lib/index.js'
     import {
         addColumnFilters,
         addColumnOrder,
@@ -43,12 +51,6 @@
     } from '$lib/plugins/index.js'
     import type { TableViewModel } from '$lib/createViewModel.svelte.js'
     import PerfTable from './_PerfTable.svelte'
-    import PerfTableStore from './_PerfTableStore.svelte'
-    import { page } from '$app/state'
-
-    // `?renderer=store` swaps in the `<Subscribe>`-based store control
-    // renderer. Read once at init; the `current.*` renderer is the default.
-    const useStoreRenderer = page.url.searchParams.get('renderer') === 'store'
 
     const ROLLING_WINDOW_MS = 10_000
     const LONG_TASK_THRESHOLD_MS = 50
@@ -375,7 +377,7 @@
         resetStat()
         await preroll()
 
-        const data = writable(buildFlatRows(1000))
+        const data = buildFlatRows(1000)
 
         const tT0 = performance.now()
         const table = createTable(data, {
@@ -465,7 +467,7 @@
         resetStat()
         await preroll()
 
-        const data = writable(buildFlatRows(10_000))
+        const data = buildFlatRows(10_000)
 
         const tT0 = performance.now()
         const table = createTable(data, {
@@ -557,7 +559,7 @@
 
         const rows = 1000
         const cols = 50
-        const data = writable(buildWideRows(rows, cols))
+        const data = buildWideRows(rows, cols)
 
         const tT0 = performance.now()
         const table = createTable(data, {
@@ -648,7 +650,7 @@
 
         const rows = 1000
         const cols = 20
-        const data = writable(buildWideRows(rows, cols))
+        const data = buildWideRows(rows, cols)
 
         const tT0 = performance.now()
         const table = createTable(data, {
@@ -688,12 +690,12 @@
 
         // Interaction: reverse the column order, measure next paint.
         const columnIdOrder = (
-            vm.pluginStates as unknown as { order: { columnIdOrder: Writable<string[]> } }
+            vm.pluginStates as unknown as { order: { columnIdOrder: Box<string[]> } }
         ).order.columnIdOrder
         vm._debug.resetCounters()
         const iStart = performance.now()
         const iPaintPromise = waitForPaint()
-        columnIdOrder.set([...colIds].reverse())
+        columnIdOrder.current = [...colIds].reverse()
         const iPaintAt = await iPaintPromise
         const interactionPaintMs = iPaintAt - iStart
         await tick()
@@ -759,7 +761,7 @@
         await preroll()
 
         const rows = 1000
-        const data = writable(buildFlatRows(rows))
+        const data = buildFlatRows(rows)
 
         const tT0 = performance.now()
         const table = createTable(data, {
@@ -848,7 +850,7 @@
         await preroll()
 
         const rows = 1000
-        const data = writable(buildFlatRows(rows))
+        const data = buildFlatRows(rows)
 
         const tT0 = performance.now()
         const table = createTable(data, {
@@ -887,7 +889,7 @@
         // measured separately, then summed for `interactionMs`.
         const sortKeys = (
             vm.pluginStates as unknown as {
-                sort: { sortKeys: Writable<{ id: string; order: 'asc' | 'desc' }[]> }
+                sort: { sortKeys: Box<{ id: string; order: 'asc' | 'desc' }[]> }
             }
         ).sort.sortKeys
         const cycle: { id: string; order: 'asc' | 'desc' }[][] = [
@@ -901,7 +903,7 @@
         for (const keys of cycle) {
             const stepStart = performance.now()
             const stepPaint = waitForPaint()
-            sortKeys.set(keys)
+            sortKeys.current = keys
             const stepPaintAt = await stepPaint
             interactionPaintTotal += stepPaintAt - stepStart
             await tick()
@@ -965,7 +967,7 @@
 
         const parents = 100
         const kids = 10
-        const data = writable(buildTreeRows(parents, kids))
+        const data = buildTreeRows(parents, kids)
 
         const tT0 = performance.now()
         const table = createTable(data, {
@@ -1004,7 +1006,7 @@
         // derivation; flatten-tree work dominates injectedRows).
         const expandedIds = (
             vm.pluginStates as unknown as {
-                expand: { expandedIds: Writable<Record<string, boolean>> }
+                expand: { expandedIds: Box<Record<string, boolean>> }
             }
         ).expand.expandedIds
         vm._debug.resetCounters()
@@ -1015,7 +1017,7 @@
         // single derivation pass rather than 50 separate ones.
         const all: Record<string, boolean> = {}
         for (let p = 0; p < parents; p++) all[String(p)] = true
-        expandedIds.set(all)
+        expandedIds.current = all
         const iPaintAt = await iPaintPromise
         const interactionPaintMs = iPaintAt - iStart
         await tick()
@@ -1079,7 +1081,7 @@
         await preroll()
 
         const rows = 1000
-        const data = writable(buildFlatRows(rows))
+        const data = buildFlatRows(rows)
 
         const tT0 = performance.now()
         const table = createTable(data, {
@@ -1113,7 +1115,12 @@
             table.column({
                 header: 'Status',
                 accessor: 'status',
-                plugins: { filter: { fn: matchFilter, initialFilterValue: '' } }
+                // No initial value: `matchFilter` treats `undefined` as "no
+                // filter", while `''` would match no row. v7 seeds initial
+                // filter values when the view model is built (v6 only did so
+                // once a header's props were read, which this renderer never
+                // does), so `''` here would render an empty table.
+                plugins: { filter: { fn: matchFilter } }
             }),
             table.column({ header: 'Dept', accessor: 'department' }),
             table.column({ header: 'Progress', accessor: 'progress' }),
@@ -1381,11 +1388,7 @@
     >
         {#if currentVm}
             {#key currentVm}
-                {#if useStoreRenderer}
-                    <PerfTableStore vm={currentVm} />
-                {:else}
-                    <PerfTable vm={currentVm} />
-                {/if}
+                <PerfTable vm={currentVm} />
             {/key}
         {/if}
     </div>

@@ -1,19 +1,23 @@
 <script lang="ts">
-    import type { Writable, Readable } from 'svelte/store'
+    import type { Box, ReadonlyBox } from '@humanspeak/svelte-headless-table'
 
-    export let filterValue: Writable<string>
-    export let values: Readable<string[]>
-    export let preFilteredValues: Readable<string[]>
+    interface Props {
+        filterValue: Box<string>
+        values: ReadonlyBox<unknown[]>
+        preFilteredValues: ReadonlyBox<unknown[]>
+    }
+
+    const { filterValue, values, preFilteredValues }: Props = $props()
 </script>
 
 <label for="filter-input">
-    {$values.length} out of {$preFilteredValues.length}
+    {values.current.length} out of {preFilteredValues.current.length}
 </label>
 <input
     id="filter-input"
     class="demo"
     type="text"
-    bind:value={$filterValue}
+    bind:value={filterValue.current}
     placeholder="filter..."
 />
 

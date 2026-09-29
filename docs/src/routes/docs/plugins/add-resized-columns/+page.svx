@@ -33,6 +33,9 @@ const table = createTable(data, {
 });
 ```
 
+### `onResizeEnd?: (event: Event) => void`
+Called when a drag-resize ends.
+
 ## Column Options
 
 <Admonition type="info">Options passed into column definitions.</Admonition>
@@ -63,7 +66,7 @@ Disable resizing for the column. If all child columns of a group are disabled, t
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
 
 ### HeaderCell action
 Use `use:cell.current.props.resize` on the `<th>` to initialize the plugin.
@@ -76,3 +79,19 @@ Use `use:cell.current.props.resize` on the `<th>` to initialize the plugin.
 
 <PluginProps set="ResizedColumnsPropSet" pluginKey="resize" />
 
+## Plugin State
+
+<Admonition type="info">State provided by <code>addResizedColumns</code>.</Admonition>
+
+```ts {3}
+const vm = table.createViewModel(columns)
+const { pluginStates } = vm
+const { columnWidths } = pluginStates.resize
+```
+
+### `columnWidths: Box<Record<string, number>>`
+The current column widths in pixels, keyed by column id. Assign a new record to change them:
+
+```ts
+columnWidths.current = { ...columnWidths.current, name: 240 }
+```

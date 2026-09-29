@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { render, screen } from '@testing-library/svelte'
 import { tick, type Snippet } from 'svelte'
-import { writable } from 'svelte/store'
+import { box } from '../reactivity.svelte.js'
 import { Render, SnippetRenderConfig, createSnippetRender } from './index.js'
 import SnippetHost, { textSnippet } from './SnippetHost.test.svelte'
 
@@ -12,10 +12,10 @@ it('renders a script-referenced snippet in a cell', () => {
 })
 
 it('renders a snippet with reactive args and tracks updates', async () => {
-    const args = writable('a')
-    render(Render, { props: { of: createSnippetRender(textSnippet, args) } })
+    const args = box('a')
+    render(Render, { props: { of: createSnippetRender(textSnippet, () => args.current) } })
     expect(screen.getByTestId('text-snippet')).toHaveTextContent('a')
-    args.set('b')
+    args.current = 'b'
     await tick()
     expect(screen.getByTestId('text-snippet')).toHaveTextContent('b')
 })

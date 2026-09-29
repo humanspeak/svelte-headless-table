@@ -1,8 +1,8 @@
-import { get, readable, writable } from 'svelte/store'
 import { DataColumn, DisplayColumn, GroupColumn } from './columns.js'
 import { createTable, Table } from './createTable.js'
-import { addHiddenColumns } from './plugins/addHiddenColumns.js'
-import { addSortBy } from './plugins/addSortBy.js'
+import { addHiddenColumns } from './plugins/addHiddenColumns.svelte.js'
+import { addSortBy } from './plugins/addSortBy.svelte.js'
+import { box } from './reactivity.svelte.js'
 
 interface User {
     firstName: string
@@ -28,17 +28,16 @@ const sampleData: User[] = [
 
 describe('createTable factory function', () => {
     describe('positive cases', () => {
-        it('creates a Table instance with writable store', () => {
-            const data = writable<User[]>(sampleData)
-            const table = createTable(data)
+        it('creates a Table instance from a plain array', () => {
+            const table = createTable(sampleData)
 
             expect(table).toBeInstanceOf(Table)
-            expect(table.data).toBe(data)
+            expect(table.data()).toBe(sampleData)
             expect(table.plugins).toEqual({})
         })
 
-        it('creates a Table instance with readable store', () => {
-            const data = readable<User[]>(sampleData)
+        it('creates a Table instance from a getter', () => {
+            const data = () => sampleData
             const table = createTable(data)
 
             expect(table).toBeInstanceOf(Table)
@@ -46,12 +45,11 @@ describe('createTable factory function', () => {
         })
 
         it('creates a Table instance with plugins', () => {
-            const data = writable<User[]>(sampleData)
             const plugins = {
                 sort: addSortBy(),
                 hide: addHiddenColumns()
             }
-            const table = createTable(data, plugins)
+            const table = createTable(sampleData, plugins)
 
             expect(table.plugins).toBe(plugins)
             expect(table.plugins.sort).toBeDefined()
@@ -59,8 +57,7 @@ describe('createTable factory function', () => {
         })
 
         it('creates a Table instance with empty plugins object', () => {
-            const data = writable<User[]>(sampleData)
-            const table = createTable(data, {})
+            const table = createTable(sampleData, {})
 
             expect(table.plugins).toEqual({})
         })
@@ -68,26 +65,52 @@ describe('createTable factory function', () => {
 
     describe('edge cases', () => {
         it('handles empty data array', () => {
-            const data = writable<User[]>([])
-            const table = createTable(data)
+            const table = createTable<User>([])
 
             expect(table).toBeInstanceOf(Table)
-            expect(get(table.data)).toEqual([])
+            expect(table.data()).toEqual([])
         })
 
-        it('handles data store that updates', () => {
-            const data = writable<User[]>([])
-            const table = createTable(data)
+        it('reads the current data through a getter over rune state', () => {
+            const data = box<User[]>([])
+            const table = createTable(() => data.current)
 
-            data.set(sampleData)
-            expect(get(table.data)).toEqual(sampleData)
+            data.current = sampleData
+            expect(table.data()).toEqual(sampleData)
+        })
+    })
+
+    describe('negative cases', () => {
+        // A v6 caller passing a store gets a pointer to the migration guide,
+        // not an empty table.
+        it('throws for a Svelte store', () => {
+            const store = {
+                subscribe: (run: (value: User[]) => void) => {
+                    run(sampleData)
+                    return () => {}
+                }
+            }
+            expect(() => createTable(store as unknown as User[])).toThrow(
+                /createTable: pass an array or a getter.*Svelte stores are not accepted in v7/
+            )
+        })
+
+        it('throws for a store passed to the Table constructor', () => {
+            const store = { subscribe: () => () => {}, set: () => {} }
+            expect(() => new Table(store as unknown as User[], {})).toThrow(
+                /Svelte stores are not accepted in v7/
+            )
+        })
+
+        it('throws for a value that is neither an array nor a function', () => {
+            expect(() => createTable({} as unknown as User[])).toThrow(/pass an array or a getter/)
         })
     })
 })
 
 describe('Table.column method', () => {
-    const data = writable<User[]>(sampleData)
-    const table = createTable(data)
+    const data = box<User[]>(sampleData)
+    const table = createTable(() => data.current)
 
     describe('positive cases', () => {
         it('creates DataColumn with accessorKey only', () => {
@@ -147,7 +170,7 @@ describe('Table.column method', () => {
         })
 
         it('creates DataColumn with plugin config', () => {
-            const tableWithPlugins = createTable(data, {
+            const tableWithPlugins = createTable(() => data.current, {
                 sort: addSortBy()
             })
 
@@ -199,8 +222,8 @@ describe('Table.column method', () => {
             interface PartialUser {
                 name?: string | undefined
             }
-            const partialData = writable<PartialUser[]>([{ name: undefined }])
-            const partialTable = createTable(partialData)
+            const partialData = box<PartialUser[]>([{ name: undefined }])
+            const partialTable = createTable(() => partialData.current)
             const column = partialTable.column({
                 header: 'Name',
                 accessor: 'name'
@@ -213,8 +236,8 @@ describe('Table.column method', () => {
             interface NullableUser {
                 name: string | null
             }
-            const nullData = writable<NullableUser[]>([{ name: null }])
-            const nullTable = createTable(nullData)
+            const nullData = box<NullableUser[]>([{ name: null }])
+            const nullTable = createTable(() => nullData.current)
             const column = nullTable.column({
                 header: 'Name',
                 accessor: 'name'
@@ -226,8 +249,8 @@ describe('Table.column method', () => {
 })
 
 describe('Table.group method', () => {
-    const data = writable<User[]>(sampleData)
-    const table = createTable(data)
+    const data = box<User[]>(sampleData)
+    const table = createTable(() => data.current)
 
     describe('positive cases', () => {
         it('creates GroupColumn with nested columns', () => {
@@ -317,8 +340,8 @@ describe('Table.group method', () => {
 })
 
 describe('Table.display method', () => {
-    const data = writable<User[]>(sampleData)
-    const table = createTable(data)
+    const data = box<User[]>(sampleData)
+    const table = createTable(() => data.current)
 
     describe('positive cases', () => {
         it('creates DisplayColumn with cell renderer', () => {
@@ -388,8 +411,8 @@ describe('Table.display method', () => {
 })
 
 describe('Table.createColumns method', () => {
-    const data = writable<User[]>(sampleData)
-    const table = createTable(data)
+    const data = box<User[]>(sampleData)
+    const table = createTable(() => data.current)
 
     describe('positive cases', () => {
         it('returns the same columns array', () => {
@@ -471,8 +494,8 @@ describe('Table.createColumns method', () => {
 describe('Table.createViewModel method', () => {
     describe('positive cases', () => {
         it('creates a view model with all required properties', () => {
-            const data = writable<User[]>(sampleData)
-            const table = createTable(data)
+            const data = box<User[]>(sampleData)
+            const table = createTable(() => data.current)
             const columns = table.createColumns([
                 table.column({ header: 'First', accessor: 'firstName' }),
                 table.column({ header: 'Age', accessor: 'age' })
@@ -481,20 +504,24 @@ describe('Table.createViewModel method', () => {
             const vm = table.createViewModel(columns)
 
             expect(vm).toHaveProperty('flatColumns')
-            expect(vm).toHaveProperty('tableAttrs')
-            expect(vm).toHaveProperty('tableHeadAttrs')
-            expect(vm).toHaveProperty('tableBodyAttrs')
-            expect(vm).toHaveProperty('visibleColumns')
-            expect(vm).toHaveProperty('headerRows')
-            expect(vm).toHaveProperty('originalRows')
-            expect(vm).toHaveProperty('rows')
-            expect(vm).toHaveProperty('pageRows')
             expect(vm).toHaveProperty('pluginStates')
+            expect(vm).toHaveProperty('_debug')
+            expect(vm.current).toHaveProperty('tableAttrs')
+            expect(vm.current).toHaveProperty('tableHeadAttrs')
+            expect(vm.current).toHaveProperty('tableBodyAttrs')
+            expect(vm.current).toHaveProperty('visibleColumns')
+            expect(vm.current).toHaveProperty('headerRows')
+            expect(vm.current).toHaveProperty('originalRows')
+            expect(vm.current).toHaveProperty('rows')
+            expect(vm.current).toHaveProperty('pageRows')
+            // v7 has no store fields on the view model.
+            expect(vm).not.toHaveProperty('rows')
+            expect(vm).not.toHaveProperty('tableAttrs')
         })
 
         it('creates correct flat columns', () => {
-            const data = writable<User[]>(sampleData)
-            const table = createTable(data)
+            const data = box<User[]>(sampleData)
+            const table = createTable(() => data.current)
             const columns = table.createColumns([
                 table.column({ header: 'First', accessor: 'firstName' }),
                 table.group({
@@ -513,21 +540,21 @@ describe('Table.createViewModel method', () => {
         })
 
         it('creates rows from data', () => {
-            const data = writable<User[]>(sampleData)
-            const table = createTable(data)
+            const data = box<User[]>(sampleData)
+            const table = createTable(() => data.current)
             const columns = table.createColumns([
                 table.column({ header: 'First', accessor: 'firstName' })
             ])
 
             const vm = table.createViewModel(columns)
-            const rows = get(vm.rows)
+            const rows = vm.current.rows
 
             expect(rows).toHaveLength(3)
         })
 
         it('uses custom rowDataId function', () => {
-            const data = writable<User[]>(sampleData)
-            const table = createTable(data)
+            const data = box<User[]>(sampleData)
+            const table = createTable(() => data.current)
             const columns = table.createColumns([
                 table.column({ header: 'First', accessor: 'firstName' })
             ])
@@ -535,7 +562,7 @@ describe('Table.createViewModel method', () => {
             const vm = table.createViewModel(columns, {
                 rowDataId: (item) => item.firstName.toLowerCase()
             })
-            const rows = get(vm.rows)
+            const rows = vm.current.rows
 
             // rowDataId sets dataId, not id (id is sequential)
             expect(rows[0].dataId).toBe('alice')
@@ -544,8 +571,8 @@ describe('Table.createViewModel method', () => {
         })
 
         it('initializes plugin states', () => {
-            const data = writable<User[]>(sampleData)
-            const table = createTable(data, {
+            const data = box<User[]>(sampleData)
+            const table = createTable(() => data.current, {
                 sort: addSortBy()
             })
             const columns = table.createColumns([
@@ -559,15 +586,15 @@ describe('Table.createViewModel method', () => {
         })
 
         it('provides correct table attributes', () => {
-            const data = writable<User[]>(sampleData)
-            const table = createTable(data)
+            const data = box<User[]>(sampleData)
+            const table = createTable(() => data.current)
             const columns = table.createColumns([
                 table.column({ header: 'First', accessor: 'firstName' })
             ])
 
             const vm = table.createViewModel(columns)
-            const tableAttrs = get(vm.tableAttrs)
-            const tableBodyAttrs = get(vm.tableBodyAttrs)
+            const tableAttrs = vm.current.tableAttrs
+            const tableBodyAttrs = vm.current.tableBodyAttrs
 
             expect(tableAttrs.role).toBe('table')
             expect(tableBodyAttrs.role).toBe('rowgroup')
@@ -576,50 +603,50 @@ describe('Table.createViewModel method', () => {
 
     describe('edge cases', () => {
         it('handles empty columns', () => {
-            const data = writable<User[]>(sampleData)
-            const table = createTable(data)
+            const data = box<User[]>(sampleData)
+            const table = createTable(() => data.current)
             const columns = table.createColumns([])
 
             const vm = table.createViewModel(columns)
 
             expect(vm.flatColumns).toHaveLength(0)
-            expect(get(vm.headerRows)).toHaveLength(0)
+            expect(vm.current.headerRows).toHaveLength(0)
         })
 
         it('handles empty data', () => {
-            const data = writable<User[]>([])
-            const table = createTable(data)
+            const data = box<User[]>([])
+            const table = createTable(() => data.current)
             const columns = table.createColumns([
                 table.column({ header: 'First', accessor: 'firstName' })
             ])
 
             const vm = table.createViewModel(columns)
-            const rows = get(vm.rows)
+            const rows = vm.current.rows
 
             expect(rows).toHaveLength(0)
         })
 
         it('reacts to data changes', () => {
-            const data = writable<User[]>([])
-            const table = createTable(data)
+            const data = box<User[]>([])
+            const table = createTable(() => data.current)
             const columns = table.createColumns([
                 table.column({ header: 'First', accessor: 'firstName' })
             ])
 
             const vm = table.createViewModel(columns)
 
-            expect(get(vm.rows)).toHaveLength(0)
+            expect(vm.current.rows).toHaveLength(0)
 
-            data.set(sampleData)
-            expect(get(vm.rows)).toHaveLength(3)
+            data.current = sampleData
+            expect(vm.current.rows).toHaveLength(3)
 
-            data.set([sampleData[0]])
-            expect(get(vm.rows)).toHaveLength(1)
+            data.current = [sampleData[0]]
+            expect(vm.current.rows).toHaveLength(1)
         })
 
         it('handles rowDataId returning same dataId for different items', () => {
-            const data = writable<User[]>(sampleData)
-            const table = createTable(data)
+            const data = box<User[]>(sampleData)
+            const table = createTable(() => data.current)
             const columns = table.createColumns([
                 table.column({ header: 'First', accessor: 'firstName' })
             ])
@@ -628,7 +655,7 @@ describe('Table.createViewModel method', () => {
             const vm = table.createViewModel(columns, {
                 rowDataId: () => 'same-id'
             })
-            const rows = get(vm.rows)
+            const rows = vm.current.rows
 
             expect(rows).toHaveLength(3)
             // All rows have the same dataId (user responsibility to ensure uniqueness)
@@ -638,8 +665,8 @@ describe('Table.createViewModel method', () => {
 
     describe('reuseKey', () => {
         it('the same reuseKey returns the same view model object', () => {
-            const data = writable<User[]>(sampleData)
-            const table = createTable(data)
+            const data = box<User[]>(sampleData)
+            const table = createTable(() => data.current)
             const makeColumns = () =>
                 table.createColumns([table.column({ header: 'First', accessor: 'firstName' })])
 
@@ -650,8 +677,8 @@ describe('Table.createViewModel method', () => {
         })
 
         it('no reuseKey always builds a new view model', () => {
-            const data = writable<User[]>(sampleData)
-            const table = createTable(data)
+            const data = box<User[]>(sampleData)
+            const table = createTable(() => data.current)
             const makeColumns = () =>
                 table.createColumns([table.column({ header: 'First', accessor: 'firstName' })])
 
@@ -662,8 +689,8 @@ describe('Table.createViewModel method', () => {
         })
 
         it('a reuseKey with different column ids rebuilds and warns', () => {
-            const data = writable<User[]>(sampleData)
-            const table = createTable(data)
+            const data = box<User[]>(sampleData)
+            const table = createTable(() => data.current)
             const firstColumns = table.createColumns([
                 table.column({ header: 'First', accessor: 'firstName' })
             ])
@@ -682,8 +709,8 @@ describe('Table.createViewModel method', () => {
         })
 
         it('changing rowDataId with the same reuseKey rebuilds', () => {
-            const data = writable<User[]>(sampleData)
-            const table = createTable(data)
+            const data = box<User[]>(sampleData)
+            const table = createTable(() => data.current)
             const makeColumns = () =>
                 table.createColumns([table.column({ header: 'First', accessor: 'firstName' })])
 
@@ -702,8 +729,8 @@ describe('Table.createViewModel method', () => {
 })
 
 describe('Column type guards', () => {
-    const data = writable<User[]>(sampleData)
-    const table = createTable(data)
+    const data = box<User[]>(sampleData)
+    const table = createTable(() => data.current)
 
     it('isFlat returns true for DataColumn', () => {
         const column = table.column({ header: 'First', accessor: 'firstName' })

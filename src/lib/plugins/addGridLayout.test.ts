@@ -1,7 +1,6 @@
-import { get, readable } from 'svelte/store'
 import { createTable } from '../createTable.js'
-import { addGridLayout } from './addGridLayout.js'
-import { addHiddenColumns } from './addHiddenColumns.js'
+import { addGridLayout } from './addGridLayout.svelte.js'
+import { addHiddenColumns } from './addHiddenColumns.svelte.js'
 
 interface Item {
     a: string
@@ -9,10 +8,10 @@ interface Item {
     c: string
 }
 
-const data = readable<Item[]>([
+const data: Item[] = [
     { a: '1', b: '2', c: '3' },
     { a: '4', b: '5', c: '6' }
-])
+]
 
 test('deriveTableAttrs sets display:grid and grid-template-columns', () => {
     const table = createTable(data, {
@@ -25,8 +24,8 @@ test('deriveTableAttrs sets display:grid and grid-template-columns', () => {
     ])
     const vm = table.createViewModel(columns)
     // Trigger column derivation
-    get(vm.visibleColumns)
-    const attrs = get(vm.tableAttrs)
+    expect(vm.current.visibleColumns).toBeDefined()
+    const attrs = vm.current.tableAttrs
     expect((attrs as any).style).toContain('display:grid')
     expect((attrs as any).style).toContain('grid-template-columns:repeat(3, auto)')
 })
@@ -42,8 +41,8 @@ test('grid-template-columns updates when visible columns change', () => {
         table.column({ accessor: 'c', header: 'C' })
     ])
     const vm = table.createViewModel(columns)
-    get(vm.visibleColumns)
-    const attrs = get(vm.tableAttrs)
+    expect(vm.current.visibleColumns).toBeDefined()
+    const attrs = vm.current.tableAttrs
     expect((attrs as any).style).toContain('grid-template-columns:repeat(2, auto)')
 })
 
@@ -53,7 +52,7 @@ test('deriveTableHeadAttrs sets display:contents', () => {
     })
     const columns = table.createColumns([table.column({ accessor: 'a', header: 'A' })])
     const vm = table.createViewModel(columns)
-    const attrs = get(vm.tableHeadAttrs)
+    const attrs = vm.current.tableHeadAttrs
     expect((attrs as any).style).toContain('display:contents')
 })
 
@@ -63,7 +62,7 @@ test('deriveTableBodyAttrs sets display:contents', () => {
     })
     const columns = table.createColumns([table.column({ accessor: 'a', header: 'A' })])
     const vm = table.createViewModel(columns)
-    const attrs = get(vm.tableBodyAttrs)
+    const attrs = vm.current.tableBodyAttrs
     expect((attrs as any).style).toContain('display:contents')
 })
 
@@ -73,8 +72,8 @@ test('thead.tr hook sets display:contents', () => {
     })
     const columns = table.createColumns([table.column({ accessor: 'a', header: 'A' })])
     const vm = table.createViewModel(columns)
-    const headerRows = get(vm.headerRows)
-    const rowAttrs = get(headerRows[0].attrs())
+    const headerRows = vm.current.headerRows
+    const rowAttrs = headerRows[0].current.attrs
     expect((rowAttrs as any).style).toContain('display:contents')
 })
 
@@ -88,13 +87,13 @@ test('thead.tr.th hook sets grid-column based on colstart and colspan', () => {
         table.column({ accessor: 'c', header: 'C' })
     ])
     const vm = table.createViewModel(columns)
-    const headerRows = get(vm.headerRows)
+    const headerRows = vm.current.headerRows
     const cells = headerRows[0].cells
-    const attrs0 = get(cells[0].attrs())
+    const attrs0 = cells[0].current.attrs
     expect((attrs0 as any).style).toContain('grid-column:1 / span 1')
-    const attrs1 = get(cells[1].attrs())
+    const attrs1 = cells[1].current.attrs
     expect((attrs1 as any).style).toContain('grid-column:2 / span 1')
-    const attrs2 = get(cells[2].attrs())
+    const attrs2 = cells[2].current.attrs
     expect((attrs2 as any).style).toContain('grid-column:3 / span 1')
 })
 
@@ -104,7 +103,7 @@ test('tbody.tr hook sets display:contents', () => {
     })
     const columns = table.createColumns([table.column({ accessor: 'a', header: 'A' })])
     const vm = table.createViewModel(columns)
-    const rows = get(vm.rows)
-    const rowAttrs = get(rows[0].attrs())
+    const rows = vm.current.rows
+    const rowAttrs = rows[0].current.attrs
     expect((rowAttrs as any).style).toContain('display:contents')
 })

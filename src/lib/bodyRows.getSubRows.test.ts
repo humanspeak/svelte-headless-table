@@ -1,4 +1,3 @@
-import { writable } from 'svelte/store'
 import { DataBodyCell, DisplayBodyCell } from './bodyCells.js'
 import {
     type BodyRow,
@@ -46,7 +45,7 @@ const data: User[] = [
     }
 ]
 
-const table = createTable(writable(data))
+const table = createTable(data)
 
 const dataColumns = [
     table.column({

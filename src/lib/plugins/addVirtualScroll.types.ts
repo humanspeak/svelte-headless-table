@@ -1,5 +1,5 @@
 import type { Action } from 'svelte/action'
-import type { Readable, Writable } from 'svelte/store'
+import type { Box, Getter, ReadonlyBox } from '../reactivity.svelte.js'
 
 /**
  * Configuration options for the addVirtualScroll plugin.
@@ -20,9 +20,10 @@ export interface VirtualScrollConfig<Item> {
 
     /**
      * Whether there is more data available to load.
-     * Can be a boolean or a Writable store.
+     * Can be a boolean or a {@link Box}; a box is adopted, so writing
+     * `hasMore.current = false` stops further `onLoadMore` calls.
      */
-    hasMore?: Writable<boolean> | boolean | undefined
+    hasMore?: Box<boolean> | boolean | undefined
 
     /**
      * Number of pixels from the bottom to trigger onLoadMore.
@@ -56,7 +57,7 @@ export interface VirtualScrollConfig<Item> {
      *
      * Supplying this opts into **sparse mode**: the plugin sizes the scroll
      * container and computes visible ranges against the full dataset, while the
-     * table's `data` store holds only the resident window. Use it for
+     * table's `data` holds only the resident window. Use it for
      * server-paged datasets that are too large to materialize.
      *
      * In sparse mode all indices — `visibleRange`, `scrollToIndex`,
@@ -66,26 +67,30 @@ export interface VirtualScrollConfig<Item> {
      * measured rows), since rows outside the resident window cannot be
      * measured — per-row heights from `getRowHeight` feed that average but do
      * not position individual rows.
+     *
+     * A number, or a getter / {@link ReadonlyBox} to make it reactive. Svelte
+     * stores are not accepted; wrap one with `fromStore` and pass the result.
      */
-    totalRows?: Readable<number> | number | undefined
+    totalRows?: number | Getter<number> | ReadonlyBox<number> | undefined
 
     /**
-     * Absolute index of the first row held in the table's `data` store.
+     * Absolute index of the first row held in the table's `data`.
      *
      * Sparse mode only. Keep this in sync with `data` whenever the resident
      * window moves — the plugin uses it to map absolute indices onto the loaded
-     * rows.
+     * rows. A number, or a getter / {@link ReadonlyBox} to make it reactive.
      *
      * @default 0
      */
-    dataOffset?: Readable<number> | number | undefined
+    dataOffset?: number | Getter<number> | ReadonlyBox<number> | undefined
 
     /**
      * Fired whenever the visible range changes, so a caller can fetch the pages
      * intersecting it and evict the ones that have scrolled away.
      *
      * In sparse mode the range is in absolute dataset indices. Invoked on a
-     * microtask, so it is safe to update stores from within it.
+     * microtask, so it is safe to update state from within it. Reported while
+     * the {@link VirtualScrollState.virtualScroll} action is mounted.
      *
      * The range moves faster than a network round trip, so an async handler
      * must not assume it is still current when its fetch resolves — see
@@ -158,12 +163,12 @@ export interface VirtualScrollState<_Item> {
     /**
      * Current scroll position of the container.
      */
-    scrollTop: Readable<number>
+    scrollTop: ReadonlyBox<number>
 
     /**
      * Height of the scroll container viewport.
      */
-    viewportHeight: Readable<number>
+    viewportHeight: ReadonlyBox<number>
 
     /**
      * Range of currently visible row indices.
@@ -172,7 +177,7 @@ export interface VirtualScrollState<_Item> {
      * what the user sees. For a "rows N–M of T" readout use
      * {@link VirtualScrollState.viewportRange}.
      */
-    visibleRange: Readable<VisibleRange>
+    visibleRange: ReadonlyBox<VisibleRange>
 
     /**
      * Rows actually intersecting the viewport, with no render buffer.
@@ -200,36 +205,37 @@ export interface VirtualScrollState<_Item> {
      * `end` is exclusive, so a range of `{ start: 0, end: 10 }` means rows 1–10
      * of a 1-based readout.
      */
-    viewportRange: Readable<VisibleRange>
+    viewportRange: ReadonlyBox<VisibleRange>
 
     /**
      * Total height of all rows (for scroll container sizing).
      */
-    totalHeight: Readable<number>
+    totalHeight: ReadonlyBox<number>
 
     /**
      * Height of the top spacer element.
      */
-    topSpacerHeight: Readable<number>
+    topSpacerHeight: ReadonlyBox<number>
 
     /**
      * Height of the bottom spacer element.
      */
-    bottomSpacerHeight: Readable<number>
+    bottomSpacerHeight: ReadonlyBox<number>
 
     /**
      * Whether more data is currently being loaded.
      */
-    isLoading: Readable<boolean>
+    isLoading: ReadonlyBox<boolean>
 
     /**
      * Whether there is more data available to load.
      */
-    hasMore: Readable<boolean>
+    hasMore: ReadonlyBox<boolean>
 
     /**
      * Svelte action to attach to the scroll container.
-     * Handles scroll event listeners and viewport tracking.
+     * Handles scroll event listeners and viewport tracking, and reports range
+     * changes to `onRangeChange` while it is mounted.
      */
     virtualScroll: Action
 
@@ -274,18 +280,18 @@ export interface VirtualScrollState<_Item> {
      * In sparse mode this reflects the configured dataset total rather than the
      * number of rows currently loaded.
      */
-    totalRows: Readable<number>
+    totalRows: ReadonlyBox<number>
 
     /**
      * Number of rows currently rendered in the DOM.
      */
-    renderedRows: Readable<number>
+    renderedRows: ReadonlyBox<number>
 
     /**
-     * Absolute index of the first row held in the table's `data` store.
+     * Absolute index of the first row held in the table's `data`.
      * Always `0` outside sparse mode.
      */
-    dataOffset: Readable<number>
+    dataOffset: ReadonlyBox<number>
 }
 
 /**

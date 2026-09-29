@@ -5,11 +5,12 @@ sidebar_title: TableState
 ---
 
 <script>
+  import Admonition from '$lib/components/Admonition.svelte'
   import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
   if (seo) {
       seo.title = 'TableState API - Svelte Headless Table'
-      seo.description = 'Learn about the TableState API that extends TableViewModel with additional properties for accessing current plugin states and overall table configuration values'
+      seo.description = 'Learn about the TableState API: the getters and plugin states that labels and plugins receive to read the current table data, rows and columns'
       seo.ogTitle = 'TableState API'
       seo.ogTagline = 'Access current plugin states and table configuration.'
       seo.ogFeatures = ['Plugin State', 'Table Config', 'ViewModel', 'Reactive']
@@ -19,16 +20,59 @@ sidebar_title: TableState
 
 # TableState
 
-`TableState` is the <a href="/docs/api/table-view-model">`TableViewModel`</a> with two additional properties.
+`TableState` is what labels (`header`, `cell`, `footer`, a display column's `data`) receive as their second argument, and what plugins receive as `tableState`. Its reactive members are **getters**: call them inside the label's returned getter, a component, a `$derived` or a template so the read is tracked.
+
+```ts
+table.column({
+    accessor: 'name',
+    header: (_cell, state) => () => `Name (${state.pageRows().length} on page)`
+})
+```
+
+<Admonition type="info">In v6 these members were stores (<code>$pageRows</code>); in v7 they are functions. A label that returns a getter re-renders when what it reads changes, because <code>&lt;Render&gt;</code> calls the getter inside the template.</Admonition>
 
 ## Usage
 
-### `data: ReadOrWritable<Item[]>`
+### `data: () => Item[]`
 
-A reference to the original data source.
+Returns the table's data array: the array you passed to `createTable`, or the result of the getter you passed.
 
 ### `columns: Column[]`
 
-A reference to the columns of the table.
+The column definitions of the table.
 
+### `flatColumns: FlatColumn[]`
 
+Every flat column, before plugin transformations. A plain array.
+
+### `tableAttrs: () => TableAttributes`
+
+### `tableHeadAttrs: () => TableHeadAttributes`
+
+### `tableBodyAttrs: () => TableBodyAttributes`
+
+Return the finalized attributes for `<table>`, `<thead>` and `<tbody>`.
+
+### `visibleColumns: () => FlatColumn[]`
+
+Returns the columns left after plugin transformations.
+
+### `headerRows: () => HeaderRow[]`
+
+Returns the header rows.
+
+### `originalRows: () => BodyRow[]`
+
+Returns the rows built from the data, before plugin transformations.
+
+### `rows: () => BodyRow[]`
+
+Returns every row after plugin transformations.
+
+### `pageRows: () => BodyRow[]`
+
+Returns the rows of the current page.
+
+### `pluginStates: PluginStates`
+
+The same object as <a href="/docs/api/table-view-model#plugins">`TableViewModel#pluginStates`</a>. Only labels receive it; plugins get the other members.

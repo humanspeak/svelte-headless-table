@@ -8,8 +8,7 @@ import type {
 } from '$lib/types/TablePlugin.js'
 import { finalizeAttributes, mergeAttributes } from '$lib/utils/attributes.js'
 import type { Clonable } from '$lib/utils/clone.js'
-import { derivedKeys } from '$lib/utils/store.js'
-import { derived, fromStore, writable, type Readable, type Writable } from 'svelte/store'
+import { untrack } from 'svelte'
 
 /**
  * Initialization options for a TableComponent.
@@ -19,9 +18,65 @@ export interface TableComponentInit {
     id: string
 }
 
+type AnyElementHook = ElementHook<unknown, Record<string, unknown>>
+
+/** A plugin's hook factory for one component kind, with the plugin's name. */
+export type HookEntry<Component> = readonly [
+    pluginName: string,
+    factory: (_component: Component) => AnyElementHook
+]
+
+/**
+ * What a view model shares with every component of one kind: the table
+ * state and the hook factories of the plugins that decorate that kind. One
+ * object per kind per view model; a component holds a pointer to it.
+ */
+export interface ComponentBinding<Item, Plugins extends AnyPlugins, Component> {
+    readonly state: TableState<Item, Plugins>
+    readonly hooks: readonly HookEntry<Component>[]
+}
+
+// Assigned by `TableComponent`'s static block, the only code that can reach
+// the private binding field.
+let setBinding: <
+    Item,
+    Plugins extends AnyPlugins,
+    Component extends TableComponent<Item, Plugins, ComponentKeys>
+>(
+    _component: Component,
+    _binding: ComponentBinding<Item, Plugins, Component>
+) => void
+let getState: <Item, Plugins extends AnyPlugins>(
+    _component: TableComponent<Item, Plugins, ComponentKeys>
+) => TableState<Item, Plugins> | undefined
+
+/**
+ * The reactive view of a component: the merged plugin attributes and the
+ * plugin props keyed by plugin name.
+ *
+ * @template Item - The type of data items in the table.
+ * @template Plugins - The plugins used by the table.
+ * @template Key - The component key type (e.g., 'tbody.tr', 'tbody.tr.td').
+ */
+export interface TableComponentCurrent<
+    Item,
+    Plugins extends AnyPlugins,
+    Key extends ComponentKeys
+> {
+    /** The merged HTML attributes from all applied plugins. */
+    readonly attrs: AttributesForKey<Item, Plugins>[Key]
+    /** The plugin props keyed by plugin name. */
+    readonly props: PluginTablePropSet<Plugins>[Key]
+}
+
 /**
  * Abstract base class for all table components (rows, cells, etc.).
- * Provides common functionality for state injection, hook application, and attribute merging.
+ *
+ * A view model binds each component to a shared {@link ComponentBinding}: the
+ * table state plus the hook factories of the plugins that decorate the
+ * component's kind. The factories run lazily, once per component, the first
+ * time `current` is read; `current` then merges the hooks' attributes and
+ * collects their props on every read.
  *
  * @template Item - The type of data items in the table.
  * @template Plugins - The plugins used by the table.
@@ -32,34 +87,28 @@ export abstract class TableComponent<
     Plugins extends AnyPlugins,
     Key extends ComponentKeys
 > implements Clonable<TableComponent<Item, Plugins, Key>> {
+    static {
+        setBinding = (component, binding) => {
+            component.#binding = binding
+            component.#hooks = undefined
+        }
+        getState = (component) => component.#binding?.state
+    }
+
     /** Unique identifier for the component. */
     id: string
 
-    // Bumped by applyHook so `current.*` re-reads over the new hook set. A
-    // plain counter: constructing a row or cell allocates nothing reactive.
-    // The store that lets a reading effect track it is created lazily on the
-    // first `current` read and kept in step by applyHook.
-    #hookVersion = 0
-    #version?: { store: Writable<number>; handle: { readonly current: number } }
+    // The component type is erased (`never`): a field typed with `this` would
+    // make every subclass incompatible with its base. `setBinding` checks the
+    // pairing at the call site instead.
+    #binding: ComponentBinding<Item, Plugins, never> | undefined
 
-    // `fromStore` handles cached per hook version. A handle owns no reactive
-    // state of its own: its subscription is opened under whichever effect
-    // reads `.current` and closed when that effect goes away. Nothing here is
-    // owned by the context that constructed the component, so a row built
-    // inside a short-lived effect cannot go inert when that effect ends.
-    #attrsHandle?: {
-        version: number
-        handle: { readonly current: AttributesForKey<Item, Plugins>[Key] }
-    }
-    #propsHandle?: {
-        version: number
-        handle: { readonly current: PluginTablePropSet<Plugins>[Key] }
-    }
+    // Resolved from the binding on the first `current` read and reset when
+    // the binding changes. Plain data, not rune state: nothing reactive is
+    // allocated per component.
+    #hooks: [string, AnyElementHook][] | undefined
 
-    #currentView?: {
-        readonly attrs: AttributesForKey<Item, Plugins>[Key]
-        readonly props: PluginTablePropSet<Plugins>[Key]
-    }
+    #currentView?: TableComponentCurrent<Item, Plugins, Key>
 
     /**
      * Creates a new TableComponent.
@@ -71,82 +120,77 @@ export abstract class TableComponent<
     }
 
     /**
-     * Runes-native view of the same values the `attrs()` / `props()` stores
-     * expose, created on first access. Read inside a template or an effect to
-     * track updates; reads outside any effect return the current value
-     * (fromStore falls back to `get(store)`), and the values are also correct
-     * under SSR.
+     * The component's reactive attributes and props, created on first access.
+     *
+     * Memo-free: every read of `attrs` / `props` calls the plugin hook
+     * getters, which read plugin rune state, so a read inside a template or an
+     * effect is tracked and a read outside any effect (or under SSR) returns
+     * the current value. Nothing reactive is allocated per component.
      */
-    get current(): {
-        /** The merged HTML attributes from all applied plugins. */
-        readonly attrs: AttributesForKey<Item, Plugins>[Key]
-        /** The plugin props keyed by plugin name. */
-        readonly props: PluginTablePropSet<Plugins>[Key]
-    } {
-        return (this.#currentView ??= this.#createCurrentView())
-    }
-
-    // The version must be observable by the reaction that first reads it, so
-    // it cannot be rune state created inside that read (Svelte does not let a
-    // reaction depend on a signal it created). A writable read through
-    // fromStore is tracked via createSubscriber, outside that capture path.
-    #trackVersion(): number {
-        if (this.#version === undefined) {
-            const store = writable(this.#hookVersion)
-            this.#version = { store, handle: fromStore(store) }
-        }
-        return this.#version.handle.current // tracked by the reading effect
-    }
-
-    #createCurrentView() {
-        // Arrow functions capture `this`, so the getters below can delegate to them.
-        const readAttrs = (): AttributesForKey<Item, Plugins>[Key] => {
-            const version = this.#trackVersion()
-            if (this.#attrsHandle?.version !== version) {
-                this.#attrsHandle = { version, handle: fromStore(this.attrs()) }
-            }
-            return this.#attrsHandle.handle.current
-        }
-        const readProps = (): PluginTablePropSet<Plugins>[Key] => {
-            const version = this.#trackVersion()
-            if (this.#propsHandle?.version !== version) {
-                this.#propsHandle = { version, handle: fromStore(this.props()) }
-            }
-            return this.#propsHandle.handle.current
-        }
-        return {
-            get attrs() {
-                return readAttrs()
-            },
-            get props() {
-                return readProps()
+    get current(): TableComponentCurrent<Item, Plugins, Key> {
+        if (this.#currentView === undefined) {
+            // Arrow functions capture `this`, so the getters below can delegate to them.
+            const readAttrs = () => this.#readAttrs()
+            const readProps = () => this.#readProps()
+            this.#currentView = {
+                get attrs() {
+                    return readAttrs()
+                },
+                get props() {
+                    return readProps()
+                }
             }
         }
+        return this.#currentView
     }
-
-    private attrsForName: Record<string, Readable<Record<string, unknown>>> = {}
 
     /**
-     * Gets the merged HTML attributes from all applied plugins, decorated with
-     * the component's own fixed attributes (see `decorateAttrs`).
-     *
-     * @returns A readable store of merged attributes.
+     * Returns the component's hooks, calling each bound factory with this
+     * component on first use. Untracked, so whatever a factory reads while it
+     * is created does not subscribe the template that triggered the first
+     * `current` read.
      */
-    attrs(): Readable<AttributesForKey<Item, Plugins>[Key]> {
-        return derived(Object.values(this.attrsForName), (attrsArray) => {
-            let mergedAttrs: Record<string, unknown> = {}
-            attrsArray.forEach((hookAttrs) => {
-                mergedAttrs = mergeAttributes(mergedAttrs, hookAttrs)
-            })
-            return this.decorateAttrs(finalizeAttributes(mergedAttrs))
-        }) as Readable<AttributesForKey<Item, Plugins>[Key]>
+    #resolveHooks(): [string, AnyElementHook][] {
+        if (this.#hooks === undefined) {
+            const entries = this.#binding?.hooks ?? []
+            this.#hooks = untrack(() =>
+                entries.map(([name, factory]): [string, AnyElementHook] => [
+                    name,
+                    factory(this as never)
+                ])
+            )
+        }
+        return this.#hooks
+    }
+
+    #readAttrs(): AttributesForKey<Item, Plugins>[Key] {
+        let mergedAttrs: Record<string, unknown> = {}
+        for (const [, hook] of this.#resolveHooks()) {
+            const attrs = hook.attrs
+            if (attrs !== undefined) {
+                mergedAttrs = mergeAttributes(mergedAttrs, attrs())
+            }
+        }
+        return this.decorateAttrs(finalizeAttributes(mergedAttrs)) as AttributesForKey<
+            Item,
+            Plugins
+        >[Key]
+    }
+
+    #readProps(): PluginTablePropSet<Plugins>[Key] {
+        const props: Record<string, unknown> = {}
+        for (const [pluginName, hook] of this.#resolveHooks()) {
+            const getProps = hook.props
+            if (getProps !== undefined) {
+                props[pluginName] = getProps()
+            }
+        }
+        return props as PluginTablePropSet<Plugins>[Key]
     }
 
     /**
      * Adds the component's fixed attributes (such as `role`) to the merged
-     * plugin attributes. Shared by `attrs()` and `current.attrs`, so both
-     * views apply the same decoration. Subclasses override this instead of
-     * wrapping `attrs()`.
+     * plugin attributes. Subclasses override this.
      *
      * @param attrs - The merged and finalized plugin attributes.
      * @returns The attributes to expose.
@@ -155,51 +199,23 @@ export abstract class TableComponent<
         return attrs
     }
 
-    private propsForName: Record<string, Readable<Record<string, unknown>>> = {}
-
-    /**
-     * Gets the merged props from all applied plugins.
-     *
-     * @returns A readable store of plugin props keyed by plugin name.
-     */
-    props(): Readable<PluginTablePropSet<Plugins>[Key]> {
-        return derivedKeys(this.propsForName) as Readable<PluginTablePropSet<Plugins>[Key]>
-    }
-
-    /** Reference to the table state, injected after creation. */
-    state?: TableState<Item, Plugins>
-
-    /**
-     * Injects the table state reference into this component.
-     *
-     * @param state - The table state to inject.
-     */
-    injectState(state: TableState<Item, Plugins>) {
-        this.state = state
-    }
-
-    /**
-     * Applies a plugin hook to this component.
-     * Hooks can provide both props and attributes.
-     *
-     * @param pluginName - The name of the plugin.
-     * @param hook - The element hook containing props and/or attrs.
-     */
-    applyHook(
-        pluginName: string,
-        hook: ElementHook<Record<string, unknown>, Record<string, unknown>>
-    ) {
-        if (hook.props !== undefined) {
-            this.propsForName[pluginName] = hook.props
-        }
-        if (hook.attrs !== undefined) {
-            this.attrsForName[pluginName] = hook.attrs
-        }
-        this.#hookVersion += 1
-        if (this.#version !== undefined) {
-            this.#version.store.set(this.#hookVersion)
-        }
+    /** The table state of the view model this component is bound to. */
+    protected get state(): TableState<Item, Plugins> | undefined {
+        return this.#binding?.state
     }
 
     abstract clone(): TableComponent<Item, Plugins, Key>
 }
+
+/**
+ * Binds a component to a view model. Internal: exported from this module for
+ * the view model and tests, not re-exported from the package entry.
+ */
+export const bindComponent = setBinding
+
+/**
+ * Returns the table state a component is bound to, or `undefined` when it is
+ * unbound. Internal: exported from this module for plugins and tests, not
+ * re-exported from the package entry.
+ */
+export const componentState = getState

@@ -1,10 +1,9 @@
 <script>
-    import { readable } from 'svelte/store'
     import { createTable, Render } from '@humanspeak/svelte-headless-table'
     import { addSortBy } from '@humanspeak/svelte-headless-table/plugins'
     import { createSamples } from '$lib/utils/createSamples'
 
-    const data = readable(createSamples(30, 1, 0, { seed: 2 }))
+    const data = createSamples(30, 1, 0, { seed: 2 })
 
     const table = createTable(data, {
         sort: addSortBy()
@@ -40,7 +39,7 @@
     const { sortKeys } = pluginStates.sort
 </script>
 
-<pre>$sortKeys = {JSON.stringify($sortKeys, null, 2)}</pre>
+<pre>sortKeys.current = {JSON.stringify(sortKeys.current, null, 2)}</pre>
 
 <div class="overflow-x-auto">
     <table class="demo my-0" {...vm.current.tableAttrs}>

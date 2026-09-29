@@ -6,6 +6,7 @@ sidebar_title: addPagination
 
 <script>
   import Admonition from '$lib/components/Admonition.svelte'
+  import SimplePaginationDemo from './SimplePaginationDemo.svelte'
   import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
   if (seo) {
@@ -22,7 +23,7 @@ sidebar_title: addPagination
 
 `addPagination` paginates the table by page index.
 
-<Admonition type="note">Render <code>vm.current.pageRows</code> — or subscribe to <a href="/docs/api/table-view-model#tableviewmodel-pagerows-readable-bodyrow"><code>TableViewModel#pageRows</code></a> instead of <code>TableViewModel#rows</code>.</Admonition>
+<Admonition type="note">Render <a href="/docs/api/table-view-model#tableviewmodel-current-pagerows-bodyrow"><code>vm.current.pageRows</code></a> instead of <code>vm.current.rows</code>.</Admonition>
 
 ```svelte {5,11}
 <script>
@@ -55,10 +56,19 @@ Default `0`.
 Default `10`.
 
 ### `serverSide?: boolean`
-If `true`, use server-side pagination by updating <a href="/docs/api/create-table#createtable-data-plugins-table">`$data`</a>.
+If `true`, use server-side pagination by updating the table's <a href="/docs/api/create-table#createtable-data-plugins-table">data</a>.
 
-### `serverItemCount: Writable<number>`
-Total item count when using server-side pagination. Required if `serverSide = true`.
+### `serverItemCount: number | (() => number) | ReadonlyBox<number>`
+Total item count when using server-side pagination. Required if `serverSide = true`. Pass a getter to make it reactive:
+
+```ts
+let total = $state(0)
+const table = createTable(() => items, {
+  page: addPagination({ serverSide: true, serverItemCount: () => total }),
+})
+```
+
+A Svelte store is rejected with an error. If the count lives in a store you do not own, wrap it with `fromStore` in your own code and pass `() => wrapped.current`.
 
 ## Column Options
 
@@ -78,7 +88,7 @@ const columns = table.createColumns([
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components.</Admonition>
 
 ```svelte
 {#each vm.current.headerRows as headerRow (headerRow.id)}
@@ -99,15 +109,36 @@ const columns = table.createColumns([
 <Admonition type="info">State provided by <code>addPagination</code>.</Admonition>
 
 ```ts {3}
-const vm = table.createViewModel(columns);
-const { pluginStates } = vm;
-const { ... } = pluginStates.page;
+const vm = table.createViewModel(columns)
+const { pluginStates } = vm
+const { pageIndex, pageSize, pageCount, hasPreviousPage, hasNextPage } = pluginStates.page
 ```
 
-### `pageSize: Writable<number>`
-### `pageIndex: Writable<number>`
-### `hasPreviousPage: Readable<boolean>`
-### `hasNextPage: Readable<boolean>`
-### `pageCount: Readable<number>`
+### `pageSize: Box<number>`
+The page size. Writes below `1` are clamped to `1`.
 
+### `pageIndex: Box<number>`
+The page index, 0-based. The value you write is kept, but reads are clamped to the last page, so shrinking the data or growing the page size never shows an empty page.
 
+### `pageCount: ReadonlyBox<number>`
+The total number of pages.
+
+### `hasPreviousPage: ReadonlyBox<boolean>`
+### `hasNextPage: ReadonlyBox<boolean>`
+
+```svelte
+<button onclick={() => (pageIndex.current -= 1)} disabled={!hasPreviousPage.current}>
+  Previous page
+</button>
+{pageIndex.current + 1} out of {pageCount.current}
+<button onclick={() => (pageIndex.current += 1)} disabled={!hasNextPage.current}>
+  Next page
+</button>
+<input type="number" min={1} bind:value={pageSize.current} />
+```
+
+`createPageState({ items, initialPageSize, initialPageIndex, serverSide, serverItemCount })`, where `items` is a getter for the rows to paginate, builds the same state outside a table. It replaces the 6.x `createPageStore`.
+
+## Examples
+
+<SimplePaginationDemo />

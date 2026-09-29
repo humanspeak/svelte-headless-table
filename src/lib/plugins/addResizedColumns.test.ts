@@ -1,7 +1,12 @@
-import { get, readable } from 'svelte/store'
+import { flushSync } from 'svelte'
 import { describe, expect, test } from 'vitest'
 import { createTable } from '../createTable.js'
-import { addResizedColumns } from './addResizedColumns.js'
+import { withEffectRoot } from '../test/effectRoot.test.svelte.js'
+import { addResizedColumns } from './addResizedColumns.svelte.js'
+
+/** The actions are typed `void` for `use:`; at runtime they return `{ destroy }`. */
+const asAction = (action: (_node: Element) => void) =>
+    action as unknown as (_node: Element) => { destroy: () => void }
 
 interface Item {
     name: string
@@ -9,10 +14,10 @@ interface Item {
     status: string
 }
 
-const data = readable<Item[]>([
+const data: Item[] = [
     { name: 'Alice', age: 25, status: 'active' },
     { name: 'Bob', age: 30, status: 'inactive' }
-])
+]
 
 describe('addResizedColumns', () => {
     test('initializes with empty columnWidths', () => {
@@ -21,7 +26,7 @@ describe('addResizedColumns', () => {
         })
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
-        const widths = get(vm.pluginStates.resize.columnWidths)
+        const widths = vm.pluginStates.resize.columnWidths.current
         expect(widths).toEqual({})
     })
 
@@ -37,7 +42,7 @@ describe('addResizedColumns', () => {
             })
         ])
         const vm = table.createViewModel(columns)
-        const widths = get(vm.pluginStates.resize.columnWidths)
+        const widths = vm.pluginStates.resize.columnWidths.current
         expect(widths.name).toBe(200)
     })
 
@@ -53,8 +58,8 @@ describe('addResizedColumns', () => {
             })
         ])
         const vm = table.createViewModel(columns)
-        const headerRows = get(vm.headerRows)
-        const props = get(headerRows[0].cells[0].props())
+        const headerRows = vm.current.headerRows
+        const props = headerRows[0].cells[0].current.props
         expect(props.resize.disabled).toBe(true)
     })
 
@@ -70,8 +75,8 @@ describe('addResizedColumns', () => {
             })
         ])
         const vm = table.createViewModel(columns)
-        const headerRows = get(vm.headerRows)
-        const props = get(headerRows[0].cells[0].props())
+        const headerRows = vm.current.headerRows
+        const props = headerRows[0].cells[0].current.props
         expect(props.resize.disabled).toBe(false)
     })
 
@@ -87,8 +92,8 @@ describe('addResizedColumns', () => {
             })
         ])
         const vm = table.createViewModel(columns)
-        const headerRows = get(vm.headerRows)
-        const attrs = get(headerRows[0].cells[0].attrs())
+        const headerRows = vm.current.headerRows
+        const attrs = headerRows[0].cells[0].current.attrs
         // Style is stringified by finalizeAttributes
         expect((attrs as any).style).toContain('width:150px')
         expect((attrs as any).style).toContain('min-width:150px')
@@ -108,8 +113,8 @@ describe('addResizedColumns', () => {
             })
         ])
         const vm = table.createViewModel(columns)
-        const rows = get(vm.rows)
-        const cellAttrs = get(rows[0].cells[0].attrs())
+        const rows = vm.current.rows
+        const cellAttrs = rows[0].cells[0].current.attrs
         expect((cellAttrs as any).style).toContain('width:150px')
         expect((cellAttrs as any).style).toContain('min-width:150px')
     })
@@ -126,12 +131,12 @@ describe('addResizedColumns', () => {
             })
         ])
         const vm = table.createViewModel(columns)
-        const rows = get(vm.rows)
-        const cellAttrs = get(rows[0].cells[0].attrs())
+        const rows = vm.current.rows
+        const cellAttrs = rows[0].cells[0].current.attrs
         expect((cellAttrs as any).style).toBeUndefined()
     })
 
-    test('columnWidths store is writable and reactive', () => {
+    test('columnWidths is writable and reactive', () => {
         const table = createTable(data, {
             resize: addResizedColumns()
         })
@@ -144,13 +149,13 @@ describe('addResizedColumns', () => {
         ])
         const vm = table.createViewModel(columns)
 
-        vm.pluginStates.resize.columnWidths.set({ name: 250 })
-        const widths = get(vm.pluginStates.resize.columnWidths)
+        vm.pluginStates.resize.columnWidths.current = { name: 250 }
+        const widths = vm.pluginStates.resize.columnWidths.current
         expect(widths.name).toBe(250)
 
         // Verify attrs updated too
-        const rows = get(vm.rows)
-        const cellAttrs = get(rows[0].cells[0].attrs())
+        const rows = vm.current.rows
+        const cellAttrs = rows[0].cells[0].current.attrs
         expect((cellAttrs as any).style).toContain('width:250px')
     })
 
@@ -176,7 +181,7 @@ describe('addResizedColumns', () => {
             })
         ])
         const vm = table.createViewModel(columns)
-        const widths = get(vm.pluginStates.resize.columnWidths)
+        const widths = vm.pluginStates.resize.columnWidths.current
         expect(widths).toEqual({ name: 100, age: 75, status: 200 })
     })
 
@@ -194,5 +199,95 @@ describe('addResizedColumns', () => {
             ])
             table.createViewModel(columns)
         }).not.toThrow()
+    })
+
+    test('reset action removes its dblclick listener on destroy', () => {
+        const table = createTable(data, {
+            resize: addResizedColumns()
+        })
+        const columns = table.createColumns([
+            table.column({
+                accessor: 'name',
+                header: 'Name',
+                plugins: { resize: { initialWidth: 100 } }
+            })
+        ])
+        const vm = table.createViewModel(columns)
+        const headerCell = vm.current.headerRows[0].cells[0]
+        const { resize } = headerCell.current.props
+        const th = document.createElement('th')
+        const handle = document.createElement('div')
+        th.appendChild(handle)
+        // Register the header node (measures 0 under jsdom), then set a width to reset from.
+        const register = asAction(resize)(th)
+        const reset = asAction(resize.reset)(handle)
+        vm.pluginStates.resize.columnWidths.current = { name: 300 }
+
+        handle.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+        expect(vm.pluginStates.resize.columnWidths.current.name).toBe(100)
+
+        vm.pluginStates.resize.columnWidths.current = { name: 300 }
+        reset.destroy()
+        handle.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+        expect(vm.pluginStates.resize.columnWidths.current.name).toBe(300)
+        register.destroy()
+    })
+
+    test('drag action resizes the column from the drag start width', () => {
+        const table = createTable(data, {
+            resize: addResizedColumns()
+        })
+        const columns = table.createColumns([
+            table.column({
+                accessor: 'name',
+                header: 'Name',
+                plugins: { resize: { initialWidth: 100, minWidth: 50, maxWidth: 180 } }
+            })
+        ])
+        const vm = table.createViewModel(columns)
+        const { resize } = vm.current.headerRows[0].cells[0].current.props
+        const handle = document.createElement('div')
+        const drag = asAction(resize.drag)(handle)
+
+        handle.dispatchEvent(new MouseEvent('mousedown', { clientX: 10, bubbles: true }))
+        window.dispatchEvent(new MouseEvent('mousemove', { clientX: 40 }))
+        expect(vm.pluginStates.resize.columnWidths.current.name).toBe(130)
+        window.dispatchEvent(new MouseEvent('mousemove', { clientX: 500 }))
+        expect(vm.pluginStates.resize.columnWidths.current.name).toBe(180)
+        window.dispatchEvent(new MouseEvent('mousemove', { clientX: -500 }))
+        expect(vm.pluginStates.resize.columnWidths.current.name).toBe(50)
+        window.dispatchEvent(new MouseEvent('mouseup'))
+        // The listeners are gone after mouseup.
+        window.dispatchEvent(new MouseEvent('mousemove', { clientX: 40 }))
+        expect(vm.pluginStates.resize.columnWidths.current.name).toBe(50)
+        drag.destroy()
+    })
+
+    test('th and td attrs re-run in an effect when columnWidths changes', () => {
+        const table = createTable(data, {
+            resize: addResizedColumns()
+        })
+        const columns = table.createColumns([
+            table.column({
+                accessor: 'name',
+                header: 'Name',
+                plugins: { resize: { initialWidth: 100 } }
+            })
+        ])
+        const vm = table.createViewModel(columns)
+        const styles: unknown[] = []
+        const stop = withEffectRoot(() => {
+            const th = vm.current.headerRows[0].cells[0]
+            const td = vm.current.rows[0].cells[0]
+            const thAttrs: Record<string, unknown> = th.current.attrs
+            const tdAttrs: Record<string, unknown> = td.current.attrs
+            styles.push([thAttrs.style, tdAttrs.style])
+        })
+        vm.pluginStates.resize.columnWidths.current = { name: 222 }
+        flushSync()
+        stop()
+        expect(styles).toHaveLength(2)
+        expect(String((styles[1] as unknown[])[0])).toContain('width:222px')
+        expect(String((styles[1] as unknown[])[1])).toContain('width:222px')
     })
 })

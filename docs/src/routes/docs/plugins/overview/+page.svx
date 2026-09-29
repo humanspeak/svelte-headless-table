@@ -36,14 +36,14 @@ Svelte Headless Table is designed with extensibility in mind. Its complex featur
   {/each}
 </ul>
 
-## Defining plugins
+## Using plugins
 
 Svelte Headless Table treats each plugin as an extension to its core. Every plugin optionally defines transformations on the rows and columns of the table, and extends the functionality of column definitions, rows, and cells.
 
 For this example, we extend a basic table with `addSortBy` and `addColumnOrder`.
 
 ```ts {3-4}
-const table = createTable(data, {
+const table = createTable(() => data, {
     sort: addSortBy({ disableMultiSort: true }),
     colOrder: addColumnOrder()
 })
@@ -55,7 +55,60 @@ Plugins are configurable via function arguments.
 
 The order in which you define plugins matters – [the order of object keys is predictable](https://www.stefanjudis.com/today-i-learned/property-order-is-predictable-in-javascript-objects-since-es2015/) and plugins are evaluated from first to last.
 
+Per-column options go under the same name in the column definition, and the props a plugin adds to rows and cells are read from `current.props` under that name:
 
+```svelte
+<script>
+    const columns = table.createColumns([
+        table.column({ header: 'Name', accessor: 'name', plugins: { sort: { invert: true } } })
+    ])
+    const vm = table.createViewModel(columns)
+</script>
 
+{#each headerRow.cells as cell (cell.id)}
+    <th {...cell.current.attrs} onclick={cell.current.props.sort.toggle}>
+        <Render of={cell.render()} />
+    </th>
+{/each}
+```
 
+## Controlling plugin state
 
+Each plugin exposes its state on `vm.pluginStates`, under the plugin's name. State is made of small reactive objects with a `current` property, exported from the package root:
+
+- `Box<T>`: `current` can be read and written, e.g. `pageIndex.current += 1`.
+- `ReadonlyBox<T>`: `current` can only be read, e.g. `hasNextPage.current`.
+- `RecordSet` / `ArraySet`: a set with `current` plus `add`, `remove`, `toggle`, `clear` and `has`, e.g. `selectedDataIds.toggle(id)`.
+
+```svelte
+<script>
+    const { sortKeys } = vm.pluginStates.sort
+</script>
+
+<button onclick={() => (sortKeys.current = [])}>Clear sorting</button>
+<pre>{JSON.stringify(sortKeys.current)}</pre>
+```
+
+Reads inside a template, `$derived` or `$effect` are tracked; writes update the table immediately. Values are replaced rather than mutated: assign a new array or object to `current`.
+
+## Defining plugins
+
+A plugin is a function that receives `{ pluginName, tableState, columnOptions, upstream }` and returns its `pluginState` plus any of these optional parts:
+
+- **Derivations.** `deriveRows`, `derivePageRows`, `deriveFlatColumns`, `deriveTableAttrs`, `deriveTableHeadAttrs` and `deriveTableBodyAttrs` each take a getter for the upstream value and return a getter for the transformed value, usually backed by `$derived.by`. The view model chains them in plugin order.
+- **Hooks.** `hooks['thead.tr' | 'thead.tr.th' | 'tbody.tr' | 'tbody.tr.td']` run once per component and return `{ props?: () => Props, attrs?: () => Attrs }`. The getters are called on every read of `current.props` / `current.attrs`, so keep them cheap.
+- **`tableState`.** Its members (`data`, `rows`, `pageRows`, `visibleColumns`, ...) are getters that resolve lazily, so a plugin can read values the view model produces after the plugin was created. Call them inside a `$derived` or a hook getter.
+- **`upstream`.** `upstream.rows`, `upstream.pageRows` and `upstream.flatColumns` are getters for the values entering this plugin's position in each chain — what its own `deriveRows`, `derivePageRows` and `deriveFlatColumns` receive. They work from the moment the plugin is created, whether or not the plugin defines those derive functions.
+
+A minimal `deriveRows` looks like this (plugins that use runes live in `.svelte.ts` files):
+
+```ts
+const deriveRows: DeriveRowsFn<Item> = (rows) => {
+    const filtered = $derived.by(() => rows().filter((row) => keep(row, threshold.current)))
+    return () => filtered
+}
+```
+
+Three rules keep a plugin correct: never write state while a getter or `$derived` evaluates; allocate event handlers once per component in the hook factory; and read pre-transform rows from `upstream` instead of copying them into state.
+
+<Admonition type="tip">The <a href="/docs/guides/migrating-to-v7#writing-a-v7-plugin">migration guide</a> walks through a complete plugin with a <code>deriveRows</code> transformation, a header-cell hook and plugin state.</Admonition>

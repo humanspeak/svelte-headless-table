@@ -1,10 +1,9 @@
 <script>
-    import { derived, readable } from 'svelte/store'
     import { createTable, Render } from '@humanspeak/svelte-headless-table'
     import { addGridLayout } from '@humanspeak/svelte-headless-table/plugins'
     import { createSamples } from '$lib/utils/createSamples'
 
-    const data = readable(createSamples(10, 5, 3, { seed: 1 }))
+    const data = createSamples(10, 5, 3, { seed: 1 })
 
     const table = createTable(data, {
         grid: addGridLayout()
@@ -12,7 +11,10 @@
 
     const columns = table.createColumns([
         table.group({
-            header: (_, { rows }) => derived([rows], ([_rows]) => `Name (${_rows.length} users)`),
+            header:
+                (_, { rows }) =>
+                () =>
+                    `Name (${rows().length} users)`,
             columns: [
                 table.column({ header: 'First Name', accessor: 'firstName' }),
                 table.column({ header: 'Last Name', accessor: 'lastName' })

@@ -1,13 +1,13 @@
-import { get, readable, type Writable } from 'svelte/store'
 import { describe, expect, test } from 'vitest'
 import { createTable } from '../createTable.js'
+import type { Box } from '../reactivity.svelte.js'
 import {
     addColumnFilters,
     matchFilter,
     numberRangeFilter,
     textPrefixFilter
-} from './addColumnFilters.js'
-import { addSubRows } from './addSubRows.js'
+} from './addColumnFilters.svelte.js'
+import { addSubRows } from './addSubRows.svelte.js'
 
 interface Item {
     name: string
@@ -71,7 +71,7 @@ describe('unit tests for exported filter functions', () => {
 
 describe('integration tests', () => {
     test('filters rows by column with matchFilter', () => {
-        const data = readable(sampleData)
+        const data = sampleData
         const table = createTable(data, {
             colFilter: addColumnFilters()
         })
@@ -89,15 +89,15 @@ describe('integration tests', () => {
             })
         ])
         const vm = table.createViewModel(columns)
-        vm.pluginStates.colFilter.filterValues.set({ status: 'active' })
-        const rows = get(vm.rows)
+        vm.pluginStates.colFilter.filterValues.current = { status: 'active' }
+        const rows = vm.current.rows
         expect(rows).toHaveLength(2)
         expect(rows[0].isData() && rows[0].original.name).toBe('Alice')
         expect(rows[1].isData() && rows[1].original.name).toBe('Charlie')
     })
 
     test('AND logic across multiple column filters', () => {
-        const data = readable(sampleData)
+        const data = sampleData
         const table = createTable(data, {
             colFilter: addColumnFilters()
         })
@@ -118,18 +118,18 @@ describe('integration tests', () => {
             })
         ])
         const vm = table.createViewModel(columns)
-        vm.pluginStates.colFilter.filterValues.set({
+        vm.pluginStates.colFilter.filterValues.current = {
             name: 'a',
             status: 'active'
-        })
-        const rows = get(vm.rows)
+        }
+        const rows = vm.current.rows
         // Only Alice matches both: name starts with 'a' AND status is 'active'
         expect(rows).toHaveLength(1)
         expect(rows[0].isData() && rows[0].original.name).toBe('Alice')
     })
 
     test('unset filterValue does not filter', () => {
-        const data = readable(sampleData)
+        const data = sampleData
         const table = createTable(data, {
             colFilter: addColumnFilters()
         })
@@ -144,12 +144,12 @@ describe('integration tests', () => {
         ])
         const vm = table.createViewModel(columns)
         // filterValues is empty, so no filtering should occur
-        const rows = get(vm.rows)
+        const rows = vm.current.rows
         expect(rows).toHaveLength(4)
     })
 
     test('serverSide mode returns all rows', () => {
-        const data = readable(sampleData)
+        const data = sampleData
         const table = createTable(data, {
             colFilter: addColumnFilters({ serverSide: true })
         })
@@ -163,13 +163,13 @@ describe('integration tests', () => {
             })
         ])
         const vm = table.createViewModel(columns)
-        vm.pluginStates.colFilter.filterValues.set({ status: 'active' })
-        const rows = get(vm.rows)
+        vm.pluginStates.colFilter.filterValues.current = { status: 'active' }
+        const rows = vm.current.rows
         expect(rows).toHaveLength(4)
     })
 
     test('preFilteredRows contains rows before filtering', () => {
-        const data = readable(sampleData)
+        const data = sampleData
         const table = createTable(data, {
             colFilter: addColumnFilters()
         })
@@ -183,15 +183,15 @@ describe('integration tests', () => {
             })
         ])
         const vm = table.createViewModel(columns)
-        vm.pluginStates.colFilter.filterValues.set({ status: 'active' })
+        vm.pluginStates.colFilter.filterValues.current = { status: 'active' }
         // Trigger derivation
-        get(vm.rows)
-        const preFiltered = get(vm.pluginStates.colFilter.preFilteredRows)
+        expect(vm.current.rows).toBeDefined()
+        const preFiltered = vm.pluginStates.colFilter.preFilteredRows.current
         expect(preFiltered).toHaveLength(4)
     })
 
-    test('filterValues store is writable and reactive', () => {
-        const data = readable(sampleData)
+    test('filterValues state is writable and reactive', () => {
+        const data = sampleData
         const table = createTable(data, {
             colFilter: addColumnFilters()
         })
@@ -207,17 +207,17 @@ describe('integration tests', () => {
         const vm = table.createViewModel(columns)
 
         // Initially no filter
-        let rows = get(vm.rows)
+        let rows = vm.current.rows
         expect(rows).toHaveLength(4)
 
         // Apply filter
-        vm.pluginStates.colFilter.filterValues.set({ status: 'active' })
-        rows = get(vm.rows)
+        vm.pluginStates.colFilter.filterValues.current = { status: 'active' }
+        rows = vm.current.rows
         expect(rows).toHaveLength(2)
 
         // Clear filter
-        vm.pluginStates.colFilter.filterValues.set({})
-        rows = get(vm.rows)
+        vm.pluginStates.colFilter.filterValues.current = {}
+        rows = vm.current.rows
         expect(rows).toHaveLength(4)
     })
 
@@ -238,7 +238,7 @@ describe('integration tests', () => {
             },
             { name: 'Leaf', status: 'inactive' }
         ]
-        const data = readable(treeData)
+        const data = treeData
         const table = createTable(data, {
             sub: addSubRows({ children: 'children' }),
             colFilter: addColumnFilters()
@@ -257,8 +257,8 @@ describe('integration tests', () => {
             })
         ])
         const vm = table.createViewModel(columns)
-        vm.pluginStates.colFilter.filterValues.set({ status: 'active' })
-        const rows = get(vm.rows)
+        vm.pluginStates.colFilter.filterValues.current = { status: 'active' }
+        const rows = vm.current.rows
         // Parent should remain because it has an active child
         // Leaf should be removed because it's inactive with no children
         expect(rows).toHaveLength(1)
@@ -269,7 +269,7 @@ describe('integration tests', () => {
     })
 
     test('header cell props include render when render function provided', () => {
-        const data = readable(sampleData)
+        const data = sampleData
         const table = createTable(data, {
             colFilter: addColumnFilters()
         })
@@ -289,14 +289,14 @@ describe('integration tests', () => {
             })
         ])
         const vm = table.createViewModel(columns)
-        const headerRows = get(vm.headerRows)
-        const props = get(headerRows[0].cells[0].props())
+        const headerRows = vm.current.headerRows
+        const props = headerRows[0].cells[0].current.props
         expect(props.colFilter).toBeDefined()
         expect(props.colFilter?.render).toBeDefined()
     })
 
     test('column without colFilter plugin returns undefined props', () => {
-        const data = readable(sampleData)
+        const data = sampleData
         const table = createTable(data, {
             colFilter: addColumnFilters()
         })
@@ -308,13 +308,13 @@ describe('integration tests', () => {
             })
         ])
         const vm = table.createViewModel(columns)
-        const headerRows = get(vm.headerRows)
-        const props = get(headerRows[0].cells[0].props())
+        const headerRows = vm.current.headerRows
+        const props = headerRows[0].cells[0].current.props
         expect(props.colFilter).toBeUndefined()
     })
 
     test('initialFilterValue sets initial filter on init', () => {
-        const data = readable(sampleData)
+        const data = sampleData
         const table = createTable(data, {
             colFilter: addColumnFilters()
         })
@@ -331,21 +331,19 @@ describe('integration tests', () => {
             })
         ])
         const vm = table.createViewModel(columns)
-        // The hook sets initialFilterValue inside the props derived
-        // We need to subscribe to the header cell props to trigger it
-        const headerRows = get(vm.headerRows)
-        headerRows[0].cells.forEach((cell) => get(cell.props()))
-        const rows = get(vm.rows)
+        // v7 applies initialFilterValue when the view model creates the plugin,
+        // so no header cell needs to be read first.
+        const rows = vm.current.rows
         expect(rows).toHaveLength(2)
     })
 })
 
 describe('column ids containing dots (regression)', () => {
     test('setting a filter on a column whose id contains a dot does not throw and filters', () => {
-        const table = createTable(readable(sampleData), { colFilter: addColumnFilters() })
-        // The header-cell props expose only `render`; the filter-value store is
+        const table = createTable(sampleData, { colFilter: addColumnFilters() })
+        // The header-cell props expose only `render`; the filter-value box is
         // handed to the column's `render` callback, so capture it there.
-        let filterValue: Writable<unknown> | undefined
+        let filterValue: Box<unknown> | undefined
         const columns = table.createColumns([
             table.column({
                 accessor: 'status',
@@ -363,13 +361,15 @@ describe('column ids containing dots (regression)', () => {
             })
         ])
         const vm = table.createViewModel(columns)
-        const headerCell = get(vm.headerRows)[0].cells[0]
-        get(headerCell.props())
+        const headerCell = vm.current.headerRows[0].cells[0]
+        expect(headerCell.current.props).toBeDefined()
 
         expect(filterValue).toBeDefined()
-        expect(() => filterValue!.set('active')).not.toThrow()
-        expect(get(vm.pluginStates.colFilter.filterValues)).toEqual({ 'status.v1': 'active' })
-        expect(get(vm.rows).map((r) => r.isData() && r.original.status)).toEqual([
+        expect(() => {
+            filterValue!.current = 'active'
+        }).not.toThrow()
+        expect(vm.pluginStates.colFilter.filterValues.current).toEqual({ 'status.v1': 'active' })
+        expect(vm.current.rows.map((r) => r.isData() && r.original.status)).toEqual([
             'active',
             'active'
         ])
@@ -393,7 +393,7 @@ describe('matchMode with sub-rows', () => {
         { name: 'Cara', age: 35, status: 'inactive', children: [] }
     ]
     const build = (config?: { matchMode?: 'self-or-descendants' | 'self' }) => {
-        const table = createTable(readable(treeData), {
+        const table = createTable(treeData, {
             sub: addSubRows({ children: 'children' }),
             colFilter: addColumnFilters(config)
         })
@@ -406,8 +406,8 @@ describe('matchMode with sub-rows', () => {
             })
         ])
         const vm = table.createViewModel(columns)
-        vm.pluginStates.colFilter.filterValues.set({ status: 'active' })
-        return get(vm.rows).map((r) => ({
+        vm.pluginStates.colFilter.filterValues.current = { status: 'active' }
+        return vm.current.rows.map((r) => ({
             name: r.isData() ? r.original.name : '?',
             subs: (r.subRows ?? []).map((s) => (s.isData() ? s.original.name : '?'))
         }))

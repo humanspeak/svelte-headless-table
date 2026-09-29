@@ -1,7 +1,6 @@
-import type { Readable } from 'svelte/store'
 import type { BodyCell, BodyCellAttributes } from '../bodyCells.js'
 import type { BodyRow, BodyRowAttributes } from '../bodyRows.js'
-import type { DataColumn, FlatColumn } from '../columns.js'
+import type { FlatColumn } from '../columns.js'
 import type {
     PluginInitTableState,
     TableAttributes,
@@ -10,6 +9,7 @@ import type {
 } from '../createViewModel.svelte.js'
 import type { HeaderCell, HeaderCellAttributes } from '../headerCells.js'
 import type { HeaderRow, HeaderRowAttributes } from '../headerRows.js'
+import type { Getter } from '../reactivity.svelte.js'
 
 /**
  * A table plugin factory function.
@@ -40,38 +40,77 @@ export type TablePlugin<
 export type TablePluginInit<Item, ColumnOptions> = {
     /** The name/key of this plugin in the plugins object. */
     pluginName: string
-    /** The table state during plugin initialization. */
+    /**
+     * The table state. Its members are getters that resolve lazily, so a
+     * plugin may read values the view model produces after the plugin was
+     * created (for example `tableState.rows()` inside a hook getter).
+     */
     tableState: PluginInitTableState<Item>
     /** Column options keyed by column ID. */
     columnOptions: Record<string, ColumnOptions>
+    /**
+     * The values entering this plugin's position in each derivation chain:
+     * what its own `deriveRows` / `derivePageRows` / `deriveFlatColumns`
+     * receives, available from the moment the plugin is created. Read them
+     * inside a getter, a `$derived` or a hook so the read is tracked.
+     */
+    upstream: PluginUpstream<Item>
+}
+
+/**
+ * The inputs of one plugin's position in the view model's derivation chains.
+ * Every member is a getter the view model resolves lazily, so it is safe to
+ * keep from the moment the plugin is created.
+ *
+ * @template Item - The type of data items in the table.
+ */
+export interface PluginUpstream<Item> {
+    /** The rows before this plugin's `deriveRows`. */
+    rows: Getter<BodyRow<Item>[]>
+    /** The rows before this plugin's `derivePageRows`. */
+    pageRows: Getter<BodyRow<Item>[]>
+    /** The columns before this plugin's `deriveFlatColumns`. */
+    flatColumns: Getter<FlatColumn<Item>[]>
 }
 
 /**
  * A plugin instance returned by a TablePlugin factory.
  * Contains state, transformation functions, and component hooks.
  *
+ * The derive functions take a {@link Getter} for the upstream value and return
+ * a getter for the transformed value, usually backed by a `$derived.by`.
+ * Getters are read inside a `$derived` or a template so their dependencies are
+ * tracked. Rules for plugin authors:
+ *
+ * - Never write rune state (`$state`, a `Box`) while a getter or `$derived` is
+ *   being evaluated; Svelte throws `state_unsafe_mutation`. Clamp on read
+ *   instead of writing back, and expose "pre-transform" values by reading
+ *   the init argument's `upstream` getters rather than copying them into state.
+ * - Allocate event handlers once per component in the hook factory and return
+ *   them from the `props` getter; do not allocate them on every read.
+ *
  * @template Item - The type of data items in the table.
  * @template PluginState - The state exposed by the plugin.
- * @template ColumnOptions - Per-column configuration options.
+ * @template _ColumnOptions - Per-column configuration options (kept for inference by
+ *   {@link PluginColumnConfigs}; not used by the instance shape).
  * @template TablePropSet - Props added to table components.
  * @template TableAttributeSet - Attributes added to table components.
  */
 export type TablePluginInstance<
     Item,
     PluginState,
-    ColumnOptions,
+    _ColumnOptions,
     TablePropSet extends AnyTablePropSet = AnyTablePropSet,
     TableAttributeSet extends AnyTableAttributeSet = AnyTableAttributeSet
 > = {
+    /** State exposed on `viewModel.pluginStates[pluginName]`. */
     pluginState: PluginState
-    transformFlatColumnsFn?: Readable<TransformFlatColumnsFn<Item>>
     deriveFlatColumns?: DeriveFlatColumnsFn<Item>
     deriveRows?: DeriveRowsFn<Item>
     derivePageRows?: DeriveRowsFn<Item>
     deriveTableAttrs?: DeriveFn<TableAttributes<Item>>
     deriveTableHeadAttrs?: DeriveFn<TableHeadAttributes<Item>>
     deriveTableBodyAttrs?: DeriveFn<TableBodyAttributes<Item>>
-    columnOptions?: ColumnOptions
     hooks?: TableHooks<Item, TablePropSet, TableAttributeSet>
 }
 
@@ -87,47 +126,30 @@ export type AnyPlugins = Record<
 >
 
 /**
- * A record of plugin instances, keyed by plugin name.
- * Used internally after plugins are initialized.
- */
-export type AnyPluginInstances = Record<
-    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-    any,
-    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
-    TablePluginInstance<any, any, any, any, any>
->
-
-/**
- * A synchronous function that transforms flat columns.
- *
- * @template Item - The type of data items in the table.
- */
-export type TransformFlatColumnsFn<Item> = (_flatColumns: DataColumn<Item>[]) => DataColumn<Item>[]
-
-/**
- * A reactive function that derives flat columns from a store.
+ * Derives the visible flat columns from the upstream columns.
+ * Receives a getter for the upstream columns and returns a getter for the result.
  *
  * @template Item - The type of data items in the table.
  */
 export type DeriveFlatColumnsFn<Item> = <Col extends FlatColumn<Item>>(
-    _flatColumns: Readable<Col[]>
-) => Readable<Col[]>
+    _flatColumns: Getter<Col[]>
+) => Getter<Col[]>
 
 /**
- * A reactive function that derives rows from a store.
+ * Derives rows from the upstream rows.
+ * Receives a getter for the upstream rows and returns a getter for the result.
  *
  * @template Item - The type of data items in the table.
  */
-export type DeriveRowsFn<Item> = <Row extends BodyRow<Item>>(
-    _rows: Readable<Row[]>
-) => Readable<Row[]>
+export type DeriveRowsFn<Item> = <Row extends BodyRow<Item>>(_rows: Getter<Row[]>) => Getter<Row[]>
 
 /**
- * A generic reactive derivation function.
+ * A generic derivation: a getter for the upstream value in, a getter for the
+ * derived value out.
  *
  * @template T - The type being derived.
  */
-export type DeriveFn<T> = (_obj: Readable<T>) => Readable<T>
+export type DeriveFn<T> = (_value: Getter<T>) => Getter<T>
 
 /**
  * Maps component keys to their corresponding component types.
@@ -204,7 +226,7 @@ export type AnyTableAttributeSet = TableAttributeSet<any>
 
 /**
  * Hooks for attaching props and attributes to table components.
- * Each hook receives a component and returns props/attrs stores.
+ * Each hook receives a component and returns props/attrs getters.
  *
  * @template Item - The type of data items in the table.
  * @template PropSet - The prop set type.
@@ -222,16 +244,18 @@ export type TableHooks<
 
 /**
  * Return type for component hooks.
- * Contains optional readable stores for props and attributes.
+ * Contains optional getters for props and attributes. They are called on every
+ * read of `component.current.props` / `component.current.attrs`, so they
+ * should be cheap and must not write rune state.
  *
  * @template Props - The props type.
  * @template Attributes - The attributes type.
  */
 export type ElementHook<Props, Attributes> = {
-    /** Reactive props store. */
-    props?: Readable<Props>
-    /** Reactive attributes store. */
-    attrs?: Readable<Attributes>
+    /** Returns the plugin's props for the component. */
+    props?: Getter<Props>
+    /** Returns the plugin's attributes for the component. */
+    attrs?: Getter<Attributes>
 }
 
 /**
@@ -274,5 +298,8 @@ export type PluginTablePropSet<Plugins extends AnyPlugins> = {
  * @template Plugins - The plugins record type.
  */
 export type PluginColumnConfigs<Plugins extends AnyPlugins> = Partial<{
-    [K in keyof Plugins]: ReturnType<Plugins[K]>['columnOptions']
+    // trunk-ignore(eslint/@typescript-eslint/no-explicit-any)
+    [K in keyof Plugins]: Plugins[K] extends TablePlugin<any, any, infer ColumnOptions, any, any>
+        ? ColumnOptions | undefined
+        : never
 }>

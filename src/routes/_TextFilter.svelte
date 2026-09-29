@@ -1,15 +1,20 @@
 <script lang="ts">
-    import type { Readable, Writable } from 'svelte/store'
+    import type { Box, ReadonlyBox } from '../lib/index.js'
 
-    export let filterValue: Writable<string>
-    export let values: Readable<string[]>
-    export let testId: string
+    interface Props {
+        filterValue: Box<string | undefined>
+        values: ReadonlyBox<unknown[]>
+        testId: string
+    }
+
+    const { filterValue, values, testId }: Props = $props()
 </script>
 
 <input
     type="text"
-    bind:value={$filterValue}
+    value={filterValue.current ?? ''}
+    oninput={(e) => (filterValue.current = e.currentTarget.value)}
     onclick={(e) => e.stopPropagation()}
-    placeholder="Search {$values.length} records..."
+    placeholder="Search {values.current.length} records..."
     data-testid={testId}
 />

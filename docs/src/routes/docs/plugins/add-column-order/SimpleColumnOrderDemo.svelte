@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
     export const getShuffled = (items: string[]): string[] => {
         items = [...items]
         const shuffled = []
@@ -11,13 +11,12 @@
 </script>
 
 <script lang="ts">
-    import { readable } from 'svelte/store'
     import { onMount } from 'svelte'
     import { createTable, Render } from '@humanspeak/svelte-headless-table'
     import { addColumnOrder } from '@humanspeak/svelte-headless-table/plugins'
     import { createSamples } from '$lib/utils/createSamples'
 
-    const data = readable(createSamples(30, 1, 0, { seed: 9 }))
+    const data = createSamples(30, 1, 0, { seed: 9 })
 
     const table = createTable(data, {
         colOrder: addColumnOrder()
@@ -66,13 +65,13 @@
 
     // Initialize column order on mount
     onMount(() => {
-        $columnIdOrder = vm.current.visibleColumns.map((c) => c.id)
+        columnIdOrder.current = vm.current.visibleColumns.map((c) => c.id)
     })
 </script>
 
-<pre>$columnIdOrder = {JSON.stringify($columnIdOrder, null, 2)}</pre>
+<pre>columnIdOrder.current = {JSON.stringify(columnIdOrder.current, null, 2)}</pre>
 
-<button onclick={() => ($columnIdOrder = getShuffled($columnIdOrder))} class="demo"
+<button onclick={() => (columnIdOrder.current = getShuffled(columnIdOrder.current))} class="demo"
     >Shuffle columns</button
 >
 

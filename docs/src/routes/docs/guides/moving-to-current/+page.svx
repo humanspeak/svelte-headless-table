@@ -22,7 +22,36 @@ sidebar_title: Moving to current.*
 
 Since v6.4, every row, cell and the view model itself expose a `current` object whose values are plain and reactive. A template that reads them needs no `<Subscribe>` wrapper, no `fromStore`, and no `$` prefix. This guide converts an existing store-based template to `current.*`.
 
-<Admonition type="info">Nothing here is required. The store API (<code>$tableAttrs</code>, <code>cell.attrs()</code>, <code>cell.props()</code>, <code>&lt;Subscribe&gt;</code>) keeps working unchanged, and both views can be mixed in one template. Convert when it makes a template simpler.</Admonition>
+<Admonition type="warning">On v7 this migration is mandatory; the store API no longer exists — see <a href="/docs/guides/migrating-to-v7">Migrating to v7</a>. The rest of this page describes 6.4+, where both APIs exist side by side, so you can convert templates before upgrading.</Admonition>
+
+<Admonition type="info">On 6.x nothing here is required. The store API (<code>$tableAttrs</code>, <code>cell.attrs()</code>, <code>cell.props()</code>, <code>&lt;Subscribe&gt;</code>) keeps working unchanged, and both views can be mixed in one template. Convert when it makes a template simpler.</Admonition>
+
+## Hand this to your AI assistant
+
+This conversion is mechanical, which makes it a good job for a coding assistant. Every page of these docs is also published as plain Markdown. Copy this prompt into your assistant from your project's root:
+
+```text
+Convert this project's @humanspeak/svelte-headless-table templates from the
+store API to current.*, staying on version 6.
+
+1. Read https://table.svelte.page/docs/guides/moving-to-current.md in full
+   before changing anything.
+2. Keep the package on 6.x: the installed version must satisfy ^6.4.0. Do not
+   upgrade to 7 in this change.
+3. Apply the guide's "Step by step" section to every template: keep the view
+   model in one variable, replace $tableAttrs / $headerRows / $rows /
+   $pageRows with vm.current.*, unwrap every <Subscribe> and read
+   x.current.attrs and x.current.props, and move actions to
+   use:cell.current.props.<plugin>.
+4. Change templates only. Leave column definitions, createRender calls,
+   plugins and plugin state ($sortKeys, pageIndex.set(...)) exactly as they
+   are: on 6.x they are still stores.
+5. Work through the guide's "Checklist", then remove the Subscribe import
+   where it is no longer used. Run the project's type check and tests and
+   report which files you changed.
+```
+
+If your assistant cannot fetch URLs, paste the contents of <a href="https://table.svelte.page/docs/guides/moving-to-current.md">moving-to-current.md</a> after the prompt. When this is done and shipped, <a href="/docs/guides/migrating-to-v7">Migrating to v7</a> has the prompt for the next step.
 
 ## What changes and what does not
 
@@ -37,8 +66,8 @@ Since v6.4, every row, cell and the view model itself expose a `current` object 
 | `<Subscribe rowAttrs={row.attrs()} let:rowAttrs>` … `{...rowAttrs}` | `{...row.current.attrs}` |
 | `use:props.resize`                           | `use:cell.current.props.resize` |
 | `<Render of={cell.render()} />`              | unchanged                      |
-| `pluginStates.sort.sortKeys` and every other plugin store | unchanged (`$sortKeys` still works) |
-| Column definitions, `createRender`, snippets, plugins | unchanged                      |
+| `pluginStates.sort.sortKeys` and every other plugin store | unchanged on 6.x (store reads still work); on v7 read `sortKeys.current` |
+| Column definitions, `createRender`, snippets, plugins | unchanged on 6.x; on v7 `createRender` takes a props getter instead of a store |
 
 `current.props` has exactly the shape `props()` had: one key per plugin name, with that plugin's props inside. Only the way you read it changes.
 
@@ -143,7 +172,7 @@ Inside a `$derived` or `$effect`, the same reads track and re-run as state chang
 
 ## Things to know
 
-- **Plugin state is still stores.** `pluginStates.<plugin>` (`sortKeys`, `pageIndex`, `selectedDataIds`, `filterValue`, …) is unchanged, so `$pageIndex` and `pageIndex.set(…)` keep working. Only the view-model and component read side gained `current`.
+- **Plugin state is still stores on 6.x.** `pluginStates.<plugin>` (`sortKeys`, `pageIndex`, `selectedDataIds`, `filterValue`, …) is unchanged, so `$`-prefixed reads and `pageIndex.set(…)` keep working. Only the view-model and component read side gained `current`. On v7 plugin state moves to `current` too (`pageIndex.current`); see <a href="/docs/guides/migrating-to-v7#plugin-state">Migrating to v7</a>.
 - **Server rendering** produces the same markup through `current` as through the stores. No change is needed for SvelteKit SSR.
 - **Mixing is fine.** A template can read `vm.current.pageRows` and still wrap one cell in `<Subscribe>`, or read `$pageRows` and use `row.current.attrs`. The two views are backed by the same derivation chain.
 - **`fromStore` is no longer needed** for table stores. If you adopted `{@const attrs = fromStore(cell.attrs())}` in the meantime, replace it with `cell.current.attrs`.

@@ -1,10 +1,9 @@
 <script>
-    import { readable } from 'svelte/store'
     import { createTable, Render } from '@humanspeak/svelte-headless-table'
     import { addTableFilter } from '@humanspeak/svelte-headless-table/plugins'
     import { createSamples } from '$lib/utils/createSamples'
 
-    const data = readable(createSamples(30, 1, 0, { seed: 3 }))
+    const data = createSamples(30, 1, 0, { seed: 3 })
 
     const table = createTable(data, {
         tableFilter: addTableFilter()
@@ -57,7 +56,7 @@
     const { filterValue } = pluginStates.tableFilter
 </script>
 
-<pre>$filterValue = {$filterValue}</pre>
+<pre>filterValue.current = {filterValue.current}</pre>
 
 <div class="overflow-x-auto">
     <table class="demo my-0" {...vm.current.tableAttrs}>
@@ -73,7 +72,11 @@
             {/each}
             <tr>
                 <th colspan={vm.current.visibleColumns.length}>
-                    <input type="text" bind:value={$filterValue} placeholder="Search rows..." />
+                    <input
+                        type="text"
+                        bind:value={filterValue.current}
+                        placeholder="Search rows..."
+                    />
                 </th>
             </tr>
         </thead>

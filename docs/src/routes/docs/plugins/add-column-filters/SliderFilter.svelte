@@ -1,15 +1,32 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
     export const isNumber = (value: unknown): value is number => typeof value === 'number'
 </script>
 
 <script lang="ts">
-    import type { Readable, Writable } from 'svelte/store'
+    import type { Box, ReadonlyBox } from '@humanspeak/svelte-headless-table'
 
-    export let filterValue: Writable<number | undefined>
+    interface Props {
+        filterValue: Box<number | undefined>
+        preFilteredValues: ReadonlyBox<unknown[]>
+    }
 
-    export let preFilteredValues: Readable<unknown[]>
-    $: min = $preFilteredValues.length === 0 ? 0 : Math.min(...$preFilteredValues.filter(isNumber))
-    $: max = $preFilteredValues.length === 0 ? 0 : Math.max(...$preFilteredValues.filter(isNumber))
+    const { filterValue, preFilteredValues }: Props = $props()
+    const min = $derived(
+        preFilteredValues.current.length === 0
+            ? 0
+            : Math.min(...preFilteredValues.current.filter(isNumber))
+    )
+    const max = $derived(
+        preFilteredValues.current.length === 0
+            ? 0
+            : Math.max(...preFilteredValues.current.filter(isNumber))
+    )
 </script>
 
-<input type="range" {min} {max} bind:value={$filterValue} onclick={(e) => e.stopPropagation()} />
+<input
+    type="range"
+    {min}
+    {max}
+    bind:value={filterValue.current}
+    onclick={(e) => e.stopPropagation()}
+/>

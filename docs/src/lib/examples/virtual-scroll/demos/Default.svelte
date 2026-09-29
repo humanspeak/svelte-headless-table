@@ -1,6 +1,5 @@
 <script lang="ts">
-    import { writable } from 'svelte/store'
-    import { Render, createTable } from '@humanspeak/svelte-headless-table'
+    import { Render, box, createTable } from '@humanspeak/svelte-headless-table'
     import { addVirtualScroll, addSortBy } from '@humanspeak/svelte-headless-table/plugins'
     import { ChevronDown, ChevronUp, MoveDown, MoveRight } from '@lucide/svelte'
 
@@ -81,13 +80,15 @@
     // State
     const initialSize = 1000
     let totalItemsLoaded = $state(initialSize)
-    const hasMore = writable(true)
-    const data = writable<DataItem[]>(generateItems(initialSize))
+    // A box the plugin adopts: writing `hasMore.current = false` stops `onLoadMore`.
+    const hasMore = box(true)
+    // Replaced wholesale on every load, so `$state.raw` (no deep proxy) is enough.
+    let items = $state.raw<DataItem[]>(generateItems(initialSize))
 
     let loadingMore = $state(false)
 
     // Create table with virtual scroll
-    const table = createTable(data, {
+    const table = createTable(() => items, {
         sort: addSortBy(),
         virtualScroll: addVirtualScroll<DataItem>({
             estimatedRowHeight: 40,
@@ -105,11 +106,11 @@
         await new Promise((resolve) => setTimeout(resolve, 300))
 
         const newItems = generateItems(1000, totalItemsLoaded)
-        data.update((d) => [...d, ...newItems])
+        items = [...items, ...newItems]
         totalItemsLoaded += 1000
 
         if (totalItemsLoaded >= 50000) {
-            hasMore.set(false)
+            hasMore.current = false
         }
 
         loadingMore = false
@@ -117,9 +118,9 @@
 
     function loadLargeBatch(size: number) {
         const newData = generateItems(size)
-        data.set(newData)
+        items = newData
         totalItemsLoaded = size
-        hasMore.set(size < 50000)
+        hasMore.current = size < 50000
     }
 
     const columns = table.createColumns([
@@ -196,7 +197,7 @@
             <input
                 type="number"
                 min={0}
-                max={$totalRows - 1}
+                max={totalRows.current - 1}
                 bind:value={jumpToRow}
                 class="vs-input"
                 aria-label="Row index"
@@ -213,19 +214,19 @@
         <dl>
             <div>
                 <dt>total</dt>
-                <dd class="num">{$totalRows.toLocaleString()}</dd>
+                <dd class="num">{totalRows.current.toLocaleString()}</dd>
             </div>
             <div>
                 <dt>rendered</dt>
-                <dd class="num">{$renderedRows}</dd>
+                <dd class="num">{renderedRows.current}</dd>
             </div>
             <div>
                 <dt>visible</dt>
-                <dd class="num">{$visibleRange.start}–{$visibleRange.end}</dd>
+                <dd class="num">{visibleRange.current.start}–{visibleRange.current.end}</dd>
             </div>
             <div>
                 <dt>loading</dt>
-                <dd class="num" class:on={$isLoading}>{$isLoading ? 'yes' : 'no'}</dd>
+                <dd class="num" class:on={isLoading.current}>{isLoading.current ? 'yes' : 'no'}</dd>
             </div>
         </dl>
     </fieldset>
@@ -262,11 +263,11 @@
             {/each}
         </thead>
         <tbody {...vm.current.tableBodyAttrs}>
-            {#if $topSpacerHeight > 0}
+            {#if topSpacerHeight.current > 0}
                 <tr class="vs-spacer">
                     <td
                         colspan={vm.current.visibleColumns.length}
-                        style="height: {$topSpacerHeight}px;"
+                        style="height: {topSpacerHeight.current}px;"
                     ></td>
                 </tr>
             {/if}
@@ -281,16 +282,16 @@
                 </tr>
             {/each}
 
-            {#if $bottomSpacerHeight > 0}
+            {#if bottomSpacerHeight.current > 0}
                 <tr class="vs-spacer">
                     <td
                         colspan={vm.current.visibleColumns.length}
-                        style="height: {$bottomSpacerHeight}px;"
+                        style="height: {bottomSpacerHeight.current}px;"
                     ></td>
                 </tr>
             {/if}
 
-            {#if $isLoading}
+            {#if isLoading.current}
                 <tr class="vs-loading">
                     <td colspan={vm.current.visibleColumns.length}> loading more rows… </td>
                 </tr>

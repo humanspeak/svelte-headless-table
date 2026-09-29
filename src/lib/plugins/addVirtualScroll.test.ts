@@ -1,7 +1,10 @@
-import { get, writable } from 'svelte/store'
+import { flushSync } from 'svelte'
 import { beforeAll, describe, expect, test, vi } from 'vitest'
 import { createTable } from '../createTable.js'
-import { addVirtualScroll } from './addVirtualScroll.js'
+import { box, type Box } from '../reactivity.svelte.js'
+import { withEffectRoot } from '../test/effectRoot.test.svelte.js'
+import { addSortBy } from './addSortBy.svelte.js'
+import { addVirtualScroll } from './addVirtualScroll.svelte.js'
 
 interface TestItem {
     id: number
@@ -58,8 +61,8 @@ const DENSE_VIEWPORT_ROWS = 10
 
 /** Build a dense-mode table with the action attached to a 10-row viewport. */
 function createDenseTable(rowCount: number) {
-    const data = writable(createTestData(rowCount))
-    const table = createTable(data, {
+    const data = box(createTestData(rowCount))
+    const table = createTable(() => data.current, {
         virtualScroll: addVirtualScroll<TestItem>({
             estimatedRowHeight: DENSE_ROW_HEIGHT,
             bufferSize: DENSE_BUFFER
@@ -67,19 +70,18 @@ function createDenseTable(rowCount: number) {
     })
     const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
     const vm = table.createViewModel(columns)
-    const unsubscribe = vm.pageRows.subscribe(() => {})
     const state = vm.pluginStates.virtualScroll
     const { node } = attachScrollAction(
         state,
         new FakeScrollElement(DENSE_VIEWPORT_ROWS * DENSE_ROW_HEIGHT)
     )
-    return { data, vm, state, node, unsubscribe }
+    return { data, vm, state, node }
 }
 
 describe('addVirtualScroll', () => {
-    test('exposes required state stores', () => {
-        const data = writable(createTestData(50))
-        const table = createTable(data, {
+    test('exposes required state', () => {
+        const data = box(createTestData(50))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll()
         })
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
@@ -102,36 +104,34 @@ describe('addVirtualScroll', () => {
     })
 
     test('initializes with correct defaults', () => {
-        const data = writable(createTestData(20))
-        const table = createTable(data, {
+        const data = box(createTestData(20))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll()
         })
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
 
         const state = vm.pluginStates.virtualScroll
-        expect(get(state.scrollTop)).toBe(0)
-        expect(get(state.viewportHeight)).toBe(0)
-        expect(get(state.isLoading)).toBe(false)
-        expect(get(state.hasMore)).toBe(false)
+        expect(state.scrollTop.current).toBe(0)
+        expect(state.viewportHeight.current).toBe(0)
+        expect(state.isLoading.current).toBe(false)
+        expect(state.hasMore.current).toBe(false)
     })
 
     test('calculates total rows correctly', () => {
-        const data = writable(createTestData(50))
-        const table = createTable(data, {
+        const data = box(createTestData(50))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll()
         })
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
 
-        // Trigger row derivation
-        get(vm.pageRows)
-        expect(get(vm.pluginStates.virtualScroll.totalRows)).toBe(50)
+        expect(vm.pluginStates.virtualScroll.totalRows.current).toBe(50)
     })
 
     test('calculates total height with estimated row height', () => {
-        const data = writable(createTestData(20))
-        const table = createTable(data, {
+        const data = box(createTestData(20))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll({
                 estimatedRowHeight: 50
             })
@@ -139,16 +139,13 @@ describe('addVirtualScroll', () => {
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
 
-        // Trigger derivation
-        get(vm.pageRows)
-
         // 20 rows * 50px = 1000px
-        expect(get(vm.pluginStates.virtualScroll.totalHeight)).toBe(1000)
+        expect(vm.pluginStates.virtualScroll.totalHeight.current).toBe(1000)
     })
 
     test('accepts boolean for hasMore', () => {
-        const data = writable(createTestData(10))
-        const table = createTable(data, {
+        const data = box(createTestData(10))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll({
                 hasMore: true
             })
@@ -156,29 +153,29 @@ describe('addVirtualScroll', () => {
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
 
-        expect(get(vm.pluginStates.virtualScroll.hasMore)).toBe(true)
+        expect(vm.pluginStates.virtualScroll.hasMore.current).toBe(true)
     })
 
-    test('accepts writable store for hasMore', () => {
-        const hasMoreStore = writable(true)
-        const data = writable(createTestData(10))
-        const table = createTable(data, {
+    test('adopts a box for hasMore', () => {
+        const hasMoreBox = box(true)
+        const data = box(createTestData(10))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll({
-                hasMore: hasMoreStore
+                hasMore: hasMoreBox
             })
         })
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
 
-        expect(get(vm.pluginStates.virtualScroll.hasMore)).toBe(true)
+        expect(vm.pluginStates.virtualScroll.hasMore.current).toBe(true)
 
-        hasMoreStore.set(false)
-        expect(get(vm.pluginStates.virtualScroll.hasMore)).toBe(false)
+        hasMoreBox.current = false
+        expect(vm.pluginStates.virtualScroll.hasMore.current).toBe(false)
     })
 
     test('topSpacerHeight is 0 when at top', () => {
-        const data = writable(createTestData(50))
-        const table = createTable(data, {
+        const data = box(createTestData(50))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll({
                 estimatedRowHeight: 40,
                 bufferSize: 5
@@ -187,17 +184,14 @@ describe('addVirtualScroll', () => {
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
 
-        // Trigger derivation
-        get(vm.pageRows)
-
         // At scroll position 0, top spacer should be 0
-        expect(get(vm.pluginStates.virtualScroll.topSpacerHeight)).toBe(0)
+        expect(vm.pluginStates.virtualScroll.topSpacerHeight.current).toBe(0)
     })
 
     test('does not call onLoadMore when hasMore is false', () => {
         const onLoadMore = vi.fn()
-        const data = writable(createTestData(10))
-        const table = createTable(data, {
+        const data = box(createTestData(10))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll({
                 onLoadMore,
                 hasMore: false,
@@ -206,29 +200,27 @@ describe('addVirtualScroll', () => {
         })
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
-
-        // Trigger derivation
-        get(vm.pageRows)
+        // Mounting checks for more data once; a short table is within the threshold.
+        attachScrollAction(vm.pluginStates.virtualScroll, new FakeScrollElement(400))
 
         expect(onLoadMore).not.toHaveBeenCalled()
     })
 
     test('empty data: renders without error and totalRows is 0', () => {
-        const data = writable<TestItem[]>([])
-        const table = createTable(data, {
+        const data = box<TestItem[]>([])
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll()
         })
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
 
-        get(vm.pageRows)
-        expect(get(vm.pluginStates.virtualScroll.totalRows)).toBe(0)
-        expect(get(vm.pluginStates.virtualScroll.totalHeight)).toBe(0)
+        expect(vm.pluginStates.virtualScroll.totalRows.current).toBe(0)
+        expect(vm.pluginStates.virtualScroll.totalHeight.current).toBe(0)
     })
 
     test('virtualIndex on rows: rows have virtualIndex props', () => {
-        const data = writable(createTestData(5))
-        const table = createTable(data, {
+        const data = box(createTestData(5))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll({
                 estimatedRowHeight: 40
             })
@@ -237,9 +229,9 @@ describe('addVirtualScroll', () => {
         const vm = table.createViewModel(columns)
 
         // pageRows triggers the derivePageRows hook which assigns virtualIndex
-        const rows = get(vm.pageRows)
+        const rows = vm.current.pageRows
         rows.forEach((row) => {
-            const props = get(row.props())
+            const props = row.current.props
             expect(props.virtualScroll).toBeDefined()
             expect(typeof props.virtualScroll.virtualIndex).toBe('number')
             expect(props.virtualScroll.isVirtual).toBe(true)
@@ -247,8 +239,8 @@ describe('addVirtualScroll', () => {
     })
 
     test('measureRow updates height calculations', () => {
-        const data = writable(createTestData(10))
-        const table = createTable(data, {
+        const data = box(createTestData(10))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll({
                 estimatedRowHeight: 40
             })
@@ -256,24 +248,21 @@ describe('addVirtualScroll', () => {
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
 
-        // Trigger derivation
-        get(vm.pageRows)
-
         const state = vm.pluginStates.virtualScroll
-        const initialHeight = get(state.totalHeight)
+        const initialHeight = state.totalHeight.current
         expect(initialHeight).toBe(400) // 10 * 40
 
         // Measure one row as larger than estimated
         state.measureRow('0', 60)
 
         // Total height should increase
-        const newHeight = get(state.totalHeight)
+        const newHeight = state.totalHeight.current
         expect(newHeight).toBeGreaterThan(initialHeight)
     })
 
     test('bottomSpacerHeight calculation', () => {
-        const data = writable(createTestData(100))
-        const table = createTable(data, {
+        const data = box(createTestData(100))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll({
                 estimatedRowHeight: 40,
                 bufferSize: 5
@@ -281,19 +270,17 @@ describe('addVirtualScroll', () => {
         })
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
-
-        get(vm.pageRows)
 
         const state = vm.pluginStates.virtualScroll
         // At scroll position 0 with viewport 0, only buffer rows visible
         // bottomSpacerHeight should account for rows below the visible range
-        const bottomSpacer = get(state.bottomSpacerHeight)
+        const bottomSpacer = state.bottomSpacerHeight.current
         expect(bottomSpacer).toBeGreaterThanOrEqual(0)
     })
 
     test('renderedRows count matches visible range', () => {
-        const data = writable(createTestData(50))
-        const table = createTable(data, {
+        const data = box(createTestData(50))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll({
                 estimatedRowHeight: 40,
                 bufferSize: 5
@@ -302,17 +289,17 @@ describe('addVirtualScroll', () => {
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
 
-        const pageRows = get(vm.pageRows)
+        const pageRows = vm.current.pageRows
         const state = vm.pluginStates.virtualScroll
-        const renderedRows = get(state.renderedRows)
+        const renderedRows = state.renderedRows.current
         // Rendered rows should be ≤ total rows
         expect(renderedRows).toBeLessThanOrEqual(50)
         expect(renderedRows).toBe(pageRows.length)
     })
 
     test('derivePageRows returns subset of rows', () => {
-        const data = writable(createTestData(100))
-        const table = createTable(data, {
+        const data = box(createTestData(100))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll({
                 estimatedRowHeight: 40,
                 bufferSize: 5
@@ -321,14 +308,14 @@ describe('addVirtualScroll', () => {
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
 
-        const pageRows = get(vm.pageRows)
+        const pageRows = vm.current.pageRows
         // With viewport=0 and scrollTop=0, only buffer rows should show
         expect(pageRows.length).toBeLessThanOrEqual(100)
     })
 
     test('getRowHeight override affects row height via measureRow', () => {
-        const data = writable(createTestData(10))
-        const table = createTable(data, {
+        const data = box(createTestData(10))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll({
                 estimatedRowHeight: 40,
                 getRowHeight: (item: TestItem) => 60 + item.id
@@ -337,20 +324,18 @@ describe('addVirtualScroll', () => {
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
 
-        get(vm.pageRows)
-
         const state = vm.pluginStates.virtualScroll
         // getRowHeight is used when measureRow is called
         // Measure one row and verify height changes based on getRowHeight
         state.measureRow('0', 999)
         // After measuring, getRowHeight should be preferred for that row
-        const height = get(state.totalHeight)
+        const height = state.totalHeight.current
         expect(height).toBeGreaterThan(0)
     })
 
     test('onLoadMore config is accepted without error', () => {
         const onLoadMore = vi.fn()
-        const data = writable(createTestData(5))
+        const data = createTestData(5)
         // onLoadMore requires scroll events in DOM to trigger
         // Just verify it can be configured without error
         expect(() => {
@@ -365,33 +350,29 @@ describe('addVirtualScroll', () => {
                 table.column({ accessor: 'name', header: 'Name' })
             ])
             const vm = table.createViewModel(columns)
-            get(vm.pageRows)
+            expect(vm.current.pageRows.length).toBeGreaterThan(0)
         }).not.toThrow()
     })
 
     test('scrollToIndex with no scrollContainer is a no-op', () => {
-        const data = writable(createTestData(50))
-        const table = createTable(data, {
+        const data = box(createTestData(50))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll()
         })
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
-
-        get(vm.pageRows)
 
         // Should not throw
         expect(() => vm.pluginStates.virtualScroll.scrollToIndex(10)).not.toThrow()
     })
 
     test('scrollToIndex with out-of-bounds index is a no-op', () => {
-        const data = writable(createTestData(10))
-        const table = createTable(data, {
+        const data = box(createTestData(10))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll()
         })
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
-
-        get(vm.pageRows)
 
         // Should not throw for negative or out-of-bounds index
         expect(() => vm.pluginStates.virtualScroll.scrollToIndex(-1)).not.toThrow()
@@ -399,8 +380,8 @@ describe('addVirtualScroll', () => {
     })
 
     test('measureRow with getRowHeight prefers getRowHeight', () => {
-        const data = writable(createTestData(10))
-        const table = createTable(data, {
+        const data = box(createTestData(10))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll({
                 estimatedRowHeight: 40,
                 getRowHeight: () => 60
@@ -409,13 +390,11 @@ describe('addVirtualScroll', () => {
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
 
-        get(vm.pageRows)
-
         const state = vm.pluginStates.virtualScroll
         // Even after measuring a row to 100, getRowHeight should take precedence
         state.measureRow('0', 100)
         // Total height should still be based on getRowHeight (60 * 10 = 600)
-        expect(get(state.totalHeight)).toBe(600)
+        expect(state.totalHeight.current).toBe(600)
     })
 })
 
@@ -428,33 +407,42 @@ describe('addVirtualScroll dense mode geometry cost', () => {
      */
 
     test('totalHeight does not recompute while scrolling', () => {
-        const { state, node, unsubscribe } = createDenseTable(100_000)
+        const { state, node } = createDenseTable(100_000)
         let emissions = 0
-        const stop = state.totalHeight.subscribe(() => {
+        let observed = 0
+        const stop = withEffectRoot(() => {
+            observed = state.totalHeight.current
             emissions++
         })
         const afterSubscribe = emissions
 
         node.scroll(1_000_000)
+        flushSync()
         node.scroll(2_000_000)
+        flushSync()
         node.scroll(2_000_040)
+        flushSync()
 
         // Row heights did not change, so neither did the total.
         expect(emissions).toBe(afterSubscribe)
+        expect(observed).toBe(100_000 * DENSE_ROW_HEIGHT)
         stop()
-        unsubscribe()
     })
 
     test('spacer heights do not recompute for scrolls within the same range', () => {
-        const { state, node, unsubscribe } = createDenseTable(100_000)
+        const { state, node } = createDenseTable(100_000)
         node.scroll(2_000_010)
 
         let topEmissions = 0
         let bottomEmissions = 0
-        const stopTop = state.topSpacerHeight.subscribe(() => {
+        let observedTop = 0
+        let observedBottom = 0
+        const stopTop = withEffectRoot(() => {
+            observedTop = state.topSpacerHeight.current
             topEmissions++
         })
-        const stopBottom = state.bottomSpacerHeight.subscribe(() => {
+        const stopBottom = withEffectRoot(() => {
+            observedBottom = state.bottomSpacerHeight.current
             bottomEmissions++
         })
         const top = topEmissions
@@ -462,27 +450,28 @@ describe('addVirtualScroll dense mode geometry cost', () => {
 
         // A sub-row scroll that lands on the same visible range.
         node.scroll(2_000_015)
+        flushSync()
 
         // 10 rows on screen, padded by bufferSize 5 on both ends.
-        expect(get(state.visibleRange)).toEqual({ start: 49_995, end: 50_016 })
+        expect(state.visibleRange.current).toEqual({ start: 49_995, end: 50_016 })
         expect(topEmissions).toBe(top)
         expect(bottomEmissions).toBe(bottom)
+        expect(observedTop).toBe(state.topSpacerHeight.current)
+        expect(observedBottom).toBe(state.bottomSpacerHeight.current)
         stopTop()
         stopBottom()
-        unsubscribe()
     })
 
     test('jumping deep into a large table lands on the right rows', () => {
-        const { vm, state, node, unsubscribe } = createDenseTable(100_000)
+        const { vm, state, node } = createDenseTable(100_000)
 
         node.scroll(50_000 * 40)
 
-        expect(get(state.visibleRange)).toEqual({ start: 49_995, end: 50_015 })
-        expect(get(state.totalHeight)).toBe(100_000 * 40)
-        expect(get(state.topSpacerHeight)).toBe(49_995 * 40)
+        expect(state.visibleRange.current).toEqual({ start: 49_995, end: 50_015 })
+        expect(state.totalHeight.current).toBe(100_000 * 40)
+        expect(state.topSpacerHeight.current).toBe(49_995 * 40)
         // 10 visible rows plus bufferSize 5 above and below.
-        expect(get(vm.pageRows)).toHaveLength(20)
-        unsubscribe()
+        expect(vm.current.pageRows).toHaveLength(20)
     })
 })
 
@@ -505,7 +494,7 @@ describe('addVirtualScroll sparse mode', () => {
         onRangeChange
     }: {
         offset?: number
-        total?: number | ReturnType<typeof writable<number>>
+        total?: number | Box<number>
         bufferSize?: number
         maxScrollHeight?: number
         onRangeChange?: (
@@ -513,9 +502,9 @@ describe('addVirtualScroll sparse mode', () => {
             _context: { signal: AbortSignal }
         ) => void
     } = {}) {
-        const dataOffset = writable(offset)
-        const data = writable(createTestData(PAGE_SIZE))
-        const table = createTable(data, {
+        const dataOffset = box(offset)
+        const data = box(createTestData(PAGE_SIZE))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll<TestItem>({
                 estimatedRowHeight: ROW_HEIGHT,
                 bufferSize,
@@ -527,9 +516,7 @@ describe('addVirtualScroll sparse mode', () => {
         })
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
-        // Keep the derived chain hot so range changes propagate.
-        const unsubscribe = vm.pageRows.subscribe(() => {})
-        return { data, dataOffset, vm, state: vm.pluginStates.virtualScroll, unsubscribe }
+        return { data, dataOffset, vm, state: vm.pluginStates.virtualScroll }
     }
 
     /** Attach the scroll action to a fake container with a 10-row viewport. */
@@ -540,143 +527,133 @@ describe('addVirtualScroll sparse mode', () => {
     const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 
     test('totalRows reports the dataset total, not the loaded window', () => {
-        const { state, unsubscribe } = createSparseTable()
-        expect(get(state.totalRows)).toBe(TOTAL)
-        unsubscribe()
+        const { state } = createSparseTable()
+        expect(state.totalRows.current).toBe(TOTAL)
     })
 
     test('accepts a plain number for totalRows', () => {
-        const { state, unsubscribe } = createSparseTable({ total: 1000 })
-        expect(get(state.totalRows)).toBe(1000)
-        unsubscribe()
+        const { state } = createSparseTable({ total: 1000 })
+        expect(state.totalRows.current).toBe(1000)
     })
 
-    test('reacts to a changing totalRows store', () => {
-        const total = writable(1000)
-        const { state, unsubscribe } = createSparseTable({ total })
-        expect(get(state.totalHeight)).toBe(1000 * ROW_HEIGHT)
-        total.set(2000)
-        expect(get(state.totalHeight)).toBe(2000 * ROW_HEIGHT)
-        unsubscribe()
+    test('reacts to a changing totalRows box', () => {
+        const total = box(1000)
+        const { state } = createSparseTable({ total })
+        expect(state.totalHeight.current).toBe(1000 * ROW_HEIGHT)
+        total.current = 2000
+        expect(state.totalHeight.current).toBe(2000 * ROW_HEIGHT)
     })
 
     test('exposes dataOffset', () => {
-        const { state, dataOffset, unsubscribe } = createSparseTable()
-        expect(get(state.dataOffset)).toBe(OFFSET)
-        dataOffset.set(7)
-        expect(get(state.dataOffset)).toBe(7)
-        unsubscribe()
+        const { state, dataOffset } = createSparseTable()
+        expect(state.dataOffset.current).toBe(OFFSET)
+        dataOffset.current = 7
+        expect(state.dataOffset.current).toBe(7)
     })
 
     describe('under the height cap', () => {
         test('totalHeight is the full natural height', () => {
-            const { state, unsubscribe } = createSparseTable()
-            expect(get(state.totalHeight)).toBe(TOTAL * ROW_HEIGHT)
-            unsubscribe()
+            const { state } = createSparseTable()
+            expect(state.totalHeight.current).toBe(TOTAL * ROW_HEIGHT)
         })
 
         test('visibleRange is absolute and follows the scroll position', () => {
-            const { state, unsubscribe } = createSparseTable()
+            const { state } = createSparseTable()
             const node = attach(state)
 
             node.scroll(OFFSET * ROW_HEIGHT)
 
-            expect(get(state.visibleRange)).toEqual({ start: OFFSET - 2, end: OFFSET + 12 })
-            unsubscribe()
+            expect(state.visibleRange.current).toEqual({ start: OFFSET - 2, end: OFFSET + 12 })
         })
 
         test('renders the intersection of the visible range and the loaded window', () => {
-            const { vm, state, unsubscribe } = createSparseTable()
+            const { vm, state } = createSparseTable()
             const node = attach(state)
 
             node.scroll(OFFSET * ROW_HEIGHT)
 
             // Range starts 2 rows before the window, so those 2 are not resident.
-            expect(get(vm.pageRows)).toHaveLength(12)
-            expect(get(state.renderedRows)).toBe(12)
-            unsubscribe()
+            expect(vm.current.pageRows).toHaveLength(12)
+            expect(state.renderedRows.current).toBe(12)
         })
 
         test('spacers sum to the full dataset height', () => {
-            const { vm, state, unsubscribe } = createSparseTable()
+            const { vm, state } = createSparseTable()
             const node = attach(state)
 
             node.scroll(OFFSET * ROW_HEIGHT)
 
-            const rendered = get(vm.pageRows).length
-            expect(get(state.topSpacerHeight)).toBe(OFFSET * ROW_HEIGHT)
+            const rendered = vm.current.pageRows.length
+            expect(state.topSpacerHeight.current).toBe(OFFSET * ROW_HEIGHT)
             expect(
-                get(state.topSpacerHeight) + rendered * ROW_HEIGHT + get(state.bottomSpacerHeight)
-            ).toBe(get(state.totalHeight))
-            unsubscribe()
+                state.topSpacerHeight.current +
+                    rendered * ROW_HEIGHT +
+                    state.bottomSpacerHeight.current
+            ).toBe(state.totalHeight.current)
         })
 
         test('renders nothing but keeps geometry intact when the window is not resident', () => {
-            const { vm, state, unsubscribe } = createSparseTable()
+            const { vm, state } = createSparseTable()
             const node = attach(state)
 
             // Scroll to the top while the loaded window still sits at OFFSET.
             node.scroll(0)
 
-            expect(get(vm.pageRows)).toHaveLength(0)
-            expect(get(state.renderedRows)).toBe(0)
-            expect(get(state.topSpacerHeight) + get(state.bottomSpacerHeight)).toBe(
-                get(state.totalHeight)
+            expect(vm.current.pageRows).toHaveLength(0)
+            expect(state.renderedRows.current).toBe(0)
+            expect(state.topSpacerHeight.current + state.bottomSpacerHeight.current).toBe(
+                state.totalHeight.current
             )
-            unsubscribe()
         })
 
         test('picks up rows once the caller moves the window to the visible range', () => {
-            const { vm, data, dataOffset, state, unsubscribe } = createSparseTable()
+            const { vm, data, dataOffset, state } = createSparseTable()
             const node = attach(state)
 
             node.scroll(70_000 * ROW_HEIGHT)
-            expect(get(vm.pageRows)).toHaveLength(0)
+            expect(vm.current.pageRows).toHaveLength(0)
 
             // Caller fetches the page covering the new range and evicts the old one.
-            dataOffset.set(70_000 - 2)
-            data.set(createTestData(PAGE_SIZE))
+            dataOffset.current = 70_000 - 2
+            data.current = createTestData(PAGE_SIZE)
 
-            expect(get(vm.pageRows)).toHaveLength(14)
-            expect(get(state.topSpacerHeight)).toBe((70_000 - 2) * ROW_HEIGHT)
-            unsubscribe()
+            expect(vm.current.pageRows).toHaveLength(14)
+            expect(state.topSpacerHeight.current).toBe((70_000 - 2) * ROW_HEIGHT)
         })
 
         test('virtualIndex on rendered rows is absolute', () => {
-            const { vm, state, unsubscribe } = createSparseTable()
+            const { vm, state } = createSparseTable()
             const node = attach(state)
 
             node.scroll(OFFSET * ROW_HEIGHT)
 
-            const [firstRow] = get(vm.pageRows)
-            expect(get(firstRow.props()).virtualScroll.virtualIndex).toBe(OFFSET)
-            unsubscribe()
+            const [firstRow] = vm.current.pageRows
+            expect(firstRow.current.props.virtualScroll.virtualIndex).toBe(OFFSET)
         })
 
         test('virtualIndex updates when the window moves under reused rows', () => {
             // Rows are keyed by ID in templates, and IDs repeat across windows.
             // A frozen prop would leave the second window reporting the first
             // window's indices.
-            const { vm, data, dataOffset, state, unsubscribe } = createSparseTable()
+            const { vm, data, dataOffset, state } = createSparseTable()
             const node = attach(state)
 
             node.scroll(OFFSET * ROW_HEIGHT)
-            const firstIds = get(vm.pageRows).map((r) => r.id)
-            expect(get(get(vm.pageRows)[0].props()).virtualScroll.virtualIndex).toBe(OFFSET)
+            const firstIds = vm.current.pageRows.map((r) => r.id)
+            expect(vm.current.pageRows[0].current.props.virtualScroll.virtualIndex).toBe(OFFSET)
 
             node.scroll(70_000 * ROW_HEIGHT)
-            dataOffset.set(70_000)
-            data.set(createTestData(PAGE_SIZE))
+            dataOffset.current = 70_000
+            data.current = createTestData(PAGE_SIZE)
 
-            const movedRows = get(vm.pageRows)
+            const movedRows = vm.current.pageRows
             // Same row IDs as before — only the offset changed.
             expect(movedRows.map((r) => r.id)).toEqual(firstIds)
-            expect(get(movedRows[0].props()).virtualScroll.virtualIndex).toBe(70_000)
-            unsubscribe()
+            expect(movedRows[0].current.props.virtualScroll.virtualIndex).toBe(70_000)
         })
 
         test('scrollToIndex targets the natural offset', () => {
-            const { state, unsubscribe } = createSparseTable()
+            const { state } = createSparseTable()
             const node = attach(state)
 
             state.scrollToIndex(70_000)
@@ -685,43 +662,39 @@ describe('addVirtualScroll sparse mode', () => {
                 top: 70_000 * ROW_HEIGHT,
                 behavior: 'auto'
             })
-            unsubscribe()
         })
     })
 
     describe('above the height cap', () => {
         test('caps totalHeight so the browser does not clamp the container', () => {
-            const { state, unsubscribe } = createSparseTable({ total: HUGE_TOTAL })
+            const { state } = createSparseTable({ total: HUGE_TOTAL })
             attach(state)
-            expect(get(state.totalHeight)).toBe(CAP)
-            expect(get(state.totalHeight)).toBeLessThan(HUGE_TOTAL * ROW_HEIGHT)
-            unsubscribe()
+            expect(state.totalHeight.current).toBe(CAP)
+            expect(state.totalHeight.current).toBeLessThan(HUGE_TOTAL * ROW_HEIGHT)
         })
 
         test('the last row is reachable at maximum scroll', () => {
-            const { state, unsubscribe } = createSparseTable({ total: HUGE_TOTAL })
+            const { state } = createSparseTable({ total: HUGE_TOTAL })
             const node = attach(state)
 
             node.scroll(CAP - node.clientHeight)
 
-            expect(get(state.visibleRange).end).toBe(HUGE_TOTAL)
-            unsubscribe()
+            expect(state.visibleRange.current.end).toBe(HUGE_TOTAL)
         })
 
         test('the middle of the dataset is reachable at half scroll', () => {
-            const { state, unsubscribe } = createSparseTable({ total: HUGE_TOTAL })
+            const { state } = createSparseTable({ total: HUGE_TOTAL })
             const node = attach(state)
 
             node.scroll((CAP - node.clientHeight) / 2)
 
-            const { start } = get(state.visibleRange)
+            const { start } = state.visibleRange.current
             expect(start).toBeGreaterThan(1_990_000)
             expect(start).toBeLessThan(2_010_000)
-            unsubscribe()
         })
 
         test('scrollToIndex reaches a row far past the cap', () => {
-            const { state, unsubscribe } = createSparseTable({ total: HUGE_TOTAL })
+            const { state } = createSparseTable({ total: HUGE_TOTAL })
             const node = attach(state)
 
             state.scrollToIndex(2_000_000)
@@ -733,16 +706,15 @@ describe('addVirtualScroll sparse mode', () => {
 
             // Applying it must actually bring row 2,000,000 into view.
             node.scroll(top)
-            const { start, end } = get(state.visibleRange)
+            const { start, end } = state.visibleRange.current
             expect(start).toBeLessThanOrEqual(2_000_000)
             expect(end).toBeGreaterThan(2_000_000)
-            unsubscribe()
         })
 
         test.each(['start', 'center', 'end', 'auto'] as const)(
             'scrollToIndex(%s) brings the row into view',
             (align) => {
-                const { state, unsubscribe } = createSparseTable({ total: HUGE_TOTAL })
+                const { state } = createSparseTable({ total: HUGE_TOTAL })
                 const node = attach(state)
 
                 state.scrollToIndex(2_000_000, { align })
@@ -751,10 +723,9 @@ describe('addVirtualScroll sparse mode', () => {
                 expect(top).toBeLessThanOrEqual(CAP - node.clientHeight)
 
                 node.scroll(top)
-                const { start, end } = get(state.visibleRange)
+                const { start, end } = state.visibleRange.current
                 expect(start).toBeLessThanOrEqual(2_000_000)
                 expect(end).toBeGreaterThan(2_000_000)
-                unsubscribe()
             }
         )
 
@@ -765,11 +736,10 @@ describe('addVirtualScroll sparse mode', () => {
             // of rows and push the requested row off screen entirely.
             const tops: Record<string, number> = {}
             for (const align of ['start', 'center', 'end'] as const) {
-                const { state, unsubscribe } = createSparseTable({ total: HUGE_TOTAL })
+                const { state } = createSparseTable({ total: HUGE_TOTAL })
                 const node = attach(state)
                 state.scrollToIndex(2_000_000, { align })
                 tops[align] = node.scrollTo.mock.calls[0][0].top
-                unsubscribe()
             }
 
             expect(tops.end).toBeLessThan(tops.center)
@@ -784,64 +754,62 @@ describe('addVirtualScroll sparse mode', () => {
         })
 
         test('scrollToIndex(auto) is a no-op for a row already in view', () => {
-            const { state, unsubscribe } = createSparseTable({ total: HUGE_TOTAL })
+            const { state } = createSparseTable({ total: HUGE_TOTAL })
             const node = attach(state)
 
             node.scroll((CAP - node.clientHeight) / 2)
-            const { start, end } = get(state.visibleRange)
+            const { start, end } = state.visibleRange.current
             const alreadyVisible = Math.floor((start + end) / 2)
 
             state.scrollToIndex(alreadyVisible, { align: 'auto' })
 
             expect(node.scrollTo).not.toHaveBeenCalled()
-            unsubscribe()
         })
 
         test('spacers sum to the capped height', () => {
-            const { vm, state, dataOffset, data, unsubscribe } = createSparseTable({
+            const { vm, state, dataOffset, data } = createSparseTable({
                 total: HUGE_TOTAL
             })
             const node = attach(state)
 
             node.scroll((CAP - node.clientHeight) / 2)
-            const { start } = get(state.visibleRange)
-            dataOffset.set(start)
-            data.set(createTestData(PAGE_SIZE))
+            const { start } = state.visibleRange.current
+            dataOffset.current = start
+            data.current = createTestData(PAGE_SIZE)
 
-            const rendered = get(vm.pageRows).length
+            const rendered = vm.current.pageRows.length
             expect(rendered).toBeGreaterThan(0)
             expect(
-                get(state.topSpacerHeight) + rendered * ROW_HEIGHT + get(state.bottomSpacerHeight)
-            ).toBeCloseTo(get(state.totalHeight), 5)
-            unsubscribe()
+                state.topSpacerHeight.current +
+                    rendered * ROW_HEIGHT +
+                    state.bottomSpacerHeight.current
+            ).toBeCloseTo(state.totalHeight.current, 5)
         })
 
         test('never places the first rendered row above the container', () => {
-            const { state, unsubscribe } = createSparseTable({ total: HUGE_TOTAL })
+            const { state } = createSparseTable({ total: HUGE_TOTAL })
             const node = attach(state)
 
             for (const top of [0, 1, 100, 5_000, CAP / 2, CAP - node.clientHeight]) {
                 node.scroll(top)
-                expect(get(state.topSpacerHeight)).toBeGreaterThanOrEqual(0)
+                expect(state.topSpacerHeight.current).toBeGreaterThanOrEqual(0)
             }
-            unsubscribe()
         })
     })
 
     test('scrollToIndex is bounded by the dataset total, not the loaded window', () => {
-        const { state, unsubscribe } = createSparseTable()
+        const { state } = createSparseTable()
         const node = attach(state)
 
         state.scrollToIndex(TOTAL)
         state.scrollToIndex(-1)
 
         expect(node.scrollTo).not.toHaveBeenCalled()
-        unsubscribe()
     })
 
     test('onRangeChange reports absolute ranges as the window moves', async () => {
         const onRangeChange = vi.fn()
-        const { state, unsubscribe } = createSparseTable({ onRangeChange })
+        const { state } = createSparseTable({ onRangeChange })
         const node = attach(state)
 
         node.scroll(70_000 * ROW_HEIGHT)
@@ -851,24 +819,23 @@ describe('addVirtualScroll sparse mode', () => {
             { start: 69_998, end: 70_012 },
             expect.objectContaining({ signal: expect.any(AbortSignal) })
         )
-        unsubscribe()
     })
 
     test('onRangeChange does not fire again for an unchanged range', async () => {
         const onRangeChange = vi.fn()
-        const { state, unsubscribe } = createSparseTable({ onRangeChange })
+        const { state } = createSparseTable({ onRangeChange })
         const node = attach(state)
 
         node.scroll(70_000 * ROW_HEIGHT + 10)
         await flush()
         const callsAfterScroll = onRangeChange.mock.calls.length
+        expect(callsAfterScroll).toBeGreaterThan(0)
 
         // Sub-row scrolling that lands on the same range must not re-fetch.
         node.scroll(70_000 * ROW_HEIGHT + 15)
         await flush()
 
         expect(onRangeChange).toHaveBeenCalledTimes(callsAfterScroll)
-        unsubscribe()
     })
 
     test('supersedes the in-flight range request when the range moves again', async () => {
@@ -876,7 +843,7 @@ describe('addVirtualScroll sparse mode', () => {
         const onRangeChange = vi.fn((_range, context: { signal: AbortSignal }) => {
             signals.push(context.signal)
         })
-        const { state, unsubscribe } = createSparseTable({ onRangeChange })
+        const { state } = createSparseTable({ onRangeChange })
         const node = attach(state)
 
         node.scroll(70_000 * ROW_HEIGHT)
@@ -891,7 +858,6 @@ describe('addVirtualScroll sparse mode', () => {
             expect(signal.aborted).toBe(true)
         }
         expect(signals[signals.length - 1].aborted).toBe(false)
-        unsubscribe()
     })
 
     test('abandons the in-flight range request when the container is destroyed', async () => {
@@ -899,7 +865,7 @@ describe('addVirtualScroll sparse mode', () => {
         const onRangeChange = vi.fn((_range, context: { signal: AbortSignal }) => {
             signals.push(context.signal)
         })
-        const { state, unsubscribe } = createSparseTable({ onRangeChange })
+        const { state } = createSparseTable({ onRangeChange })
         const node = new FakeScrollElement(10 * ROW_HEIGHT)
         const action = state.virtualScroll(node as any)
 
@@ -910,13 +876,12 @@ describe('addVirtualScroll sparse mode', () => {
         action?.destroy?.()
 
         expect(signals[signals.length - 1].aborted).toBe(true)
-        unsubscribe()
     })
 
     test('dense mode still reports data-relative ranges to onRangeChange', async () => {
         const onRangeChange = vi.fn()
-        const data = writable(createTestData(50))
-        const table = createTable(data, {
+        const data = box(createTestData(50))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll<TestItem>({
                 estimatedRowHeight: ROW_HEIGHT,
                 bufferSize: 5,
@@ -925,7 +890,9 @@ describe('addVirtualScroll sparse mode', () => {
         })
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
-        const unsubscribe = vm.pageRows.subscribe(() => {})
+        // Range changes are reported while the scroll action is mounted. A
+        // zero-height container leaves just the buffer in range.
+        vm.pluginStates.virtualScroll.virtualScroll(new FakeScrollElement(0) as any)
 
         await flush()
 
@@ -933,28 +900,26 @@ describe('addVirtualScroll sparse mode', () => {
             { start: 0, end: 5 },
             expect.objectContaining({ signal: expect.any(AbortSignal) })
         )
-        expect(get(vm.pluginStates.virtualScroll.dataOffset)).toBe(0)
-        unsubscribe()
+        expect(vm.pluginStates.virtualScroll.dataOffset.current).toBe(0)
     })
 
     describe('viewportRange', () => {
         test('excludes the render buffer that visibleRange pads with', () => {
-            const { state, unsubscribe } = createSparseTable()
+            const { state } = createSparseTable()
             const node = attach(state)
 
             node.scroll(OFFSET * ROW_HEIGHT)
 
             // The viewport is exactly 10 rows tall, so that is what a
             // "rows N-M of T" readout should report...
-            expect(get(state.viewportRange)).toEqual({ start: OFFSET, end: OFFSET + 10 })
+            expect(state.viewportRange.current).toEqual({ start: OFFSET, end: OFFSET + 10 })
             // ...while visibleRange stays padded by bufferSize on both ends,
             // because it drives what gets mounted.
-            expect(get(state.visibleRange)).toEqual({ start: OFFSET - 2, end: OFFSET + 12 })
-            unsubscribe()
+            expect(state.visibleRange.current).toEqual({ start: OFFSET - 2, end: OFFSET + 12 })
         })
 
         test('includes the last row at the true bottom of the dataset', () => {
-            const { state, unsubscribe } = createSparseTable()
+            const { state } = createSparseTable()
             const node = attach(state)
 
             // Scroll past the end; the container clamps to its own maximum.
@@ -963,28 +928,26 @@ describe('addVirtualScroll sparse mode', () => {
             // `end` is exclusive, so the final row is only reported when this
             // equals the dataset total. Re-deriving the mapping in app code and
             // clamping against `totalHeight` alone drops it.
-            expect(get(state.viewportRange).end).toBe(TOTAL)
-            unsubscribe()
+            expect(state.viewportRange.current.end).toBe(TOTAL)
         })
 
         test('includes the last row at the bottom of a compressed dataset', () => {
-            const { state, unsubscribe } = createSparseTable({ total: HUGE_TOTAL })
+            const { state } = createSparseTable({ total: HUGE_TOTAL })
             const node = attach(state)
 
             node.scroll(CAP - node.clientHeight)
 
-            expect(get(state.viewportRange).end).toBe(HUGE_TOTAL)
-            unsubscribe()
+            expect(state.viewportRange.current.end).toBe(HUGE_TOTAL)
         })
 
         test('stays within visibleRange at every scroll position', () => {
-            const { state, unsubscribe } = createSparseTable({ total: HUGE_TOTAL })
+            const { state } = createSparseTable({ total: HUGE_TOTAL })
             const node = attach(state)
 
             for (const top of [0, 1, 100, 5_000, CAP / 2, CAP - node.clientHeight]) {
                 node.scroll(top)
-                const viewport = get(state.viewportRange)
-                const visible = get(state.visibleRange)
+                const viewport = state.viewportRange.current
+                const visible = state.visibleRange.current
 
                 // A consumer reporting `viewportRange` must never name a row the
                 // plugin did not consider visible.
@@ -993,22 +956,20 @@ describe('addVirtualScroll sparse mode', () => {
                 expect(viewport.start).toBeLessThan(viewport.end)
                 expect(viewport.end).toBeLessThanOrEqual(HUGE_TOTAL)
             }
-            unsubscribe()
         })
 
         test('is reported in absolute indices, independent of the loaded window', () => {
-            const { state, dataOffset, unsubscribe } = createSparseTable()
+            const { state, dataOffset } = createSparseTable()
             const node = attach(state)
 
             node.scroll(OFFSET * ROW_HEIGHT)
-            const before = get(state.viewportRange)
+            const before = state.viewportRange.current
             expect(before).toEqual({ start: OFFSET, end: OFFSET + 10 })
 
             // Moving the resident window does not move the viewport.
-            dataOffset.set(OFFSET - 100)
+            dataOffset.current = OFFSET - 100
 
-            expect(get(state.viewportRange)).toEqual(before)
-            unsubscribe()
+            expect(state.viewportRange.current).toEqual(before)
         })
     })
 })
@@ -1030,24 +991,20 @@ describe('addVirtualScroll survives a view model rebuild', () => {
      * identity every time.
      */
     function createRebuildableTable() {
-        const data = writable(createTestData(ROW_COUNT))
-        const table = createTable(data, {
+        const data = box(createTestData(ROW_COUNT))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll<TestItem>({
                 estimatedRowHeight: ROW_HEIGHT,
                 bufferSize: 5
             })
         })
-        const teardowns: (() => void)[] = []
         const buildViewModel = () => {
             const columns = table.createColumns([
                 table.column({ accessor: 'name', header: 'Name' })
             ])
-            const vm = table.createViewModel(columns)
-            teardowns.push(vm.pageRows.subscribe(() => {}))
-            return vm
+            return table.createViewModel(columns)
         }
-        const cleanup = () => teardowns.forEach((stop) => stop())
-        return { buildViewModel, cleanup }
+        return { buildViewModel }
     }
 
     /** Attach the scroll action to a fresh container of the standard height. */
@@ -1055,81 +1012,95 @@ describe('addVirtualScroll survives a view model rebuild', () => {
         attachScrollAction(state, new FakeScrollElement(VIEWPORT))
 
     test('the scroll action keeps its identity across a rebuild', () => {
-        const { buildViewModel, cleanup } = createRebuildableTable()
+        const { buildViewModel } = createRebuildableTable()
         const first = buildViewModel().pluginStates.virtualScroll.virtualScroll
         const second = buildViewModel().pluginStates.virtualScroll.virtualScroll
 
         // A changed identity is a silent no-op for `use:`, which is what leaves
         // the DOM node bound to an instance nothing reads any more.
         expect(second).toBe(first)
-        cleanup()
     })
 
     test('viewport height survives a rebuild', () => {
-        const { buildViewModel, cleanup } = createRebuildableTable()
+        const { buildViewModel } = createRebuildableTable()
         const before = buildViewModel().pluginStates.virtualScroll
         attach(before)
-        expect(get(before.viewportHeight)).toBe(VIEWPORT)
+        expect(before.viewportHeight.current).toBe(VIEWPORT)
 
         const after = buildViewModel().pluginStates.virtualScroll
 
         // A zero-height viewport collapses the visible range to the buffer.
-        expect(get(after.viewportHeight)).toBe(VIEWPORT)
-        cleanup()
+        expect(after.viewportHeight.current).toBe(VIEWPORT)
     })
 
     test('scroll position survives a rebuild', () => {
-        const { buildViewModel, cleanup } = createRebuildableTable()
+        const { buildViewModel } = createRebuildableTable()
         const before = buildViewModel().pluginStates.virtualScroll
         const { node } = attach(before)
         node.scroll(4_000)
-        expect(get(before.scrollTop)).toBe(4_000)
+        expect(before.scrollTop.current).toBe(4_000)
 
         const after = buildViewModel().pluginStates.virtualScroll
 
-        expect(get(after.scrollTop)).toBe(4_000)
-        cleanup()
+        expect(after.scrollTop.current).toBe(4_000)
     })
 
     test('the rebuilt view model renders the scrolled range, not just the buffer', () => {
-        const { buildViewModel, cleanup } = createRebuildableTable()
+        const { buildViewModel } = createRebuildableTable()
         const before = buildViewModel().pluginStates.virtualScroll
         const { node } = attach(before)
         node.scroll(4_000)
-        const range = get(before.visibleRange)
+        const range = before.visibleRange.current
         expect(range.start).toBeGreaterThan(0)
 
         const afterVm = buildViewModel()
         const after = afterVm.pluginStates.virtualScroll
-        get(afterVm.pageRows)
 
-        expect(get(after.visibleRange)).toEqual(range)
-        cleanup()
+        expect(after.visibleRange.current).toEqual(range)
     })
 
     test('measured row heights survive a rebuild', () => {
-        const { buildViewModel, cleanup } = createRebuildableTable()
+        const { buildViewModel } = createRebuildableTable()
         const beforeVm = buildViewModel()
         const before = beforeVm.pluginStates.virtualScroll
-        get(beforeVm.pageRows)
-        const estimatedTotal = get(before.totalHeight)
+        const estimatedTotal = before.totalHeight.current
         // One row measures taller than the estimate. Unmeasured rows fall back
         // to the average of what has been measured, so this moves the total.
         before.measureRow('0', ROW_HEIGHT + 60)
-        const measuredTotal = get(before.totalHeight)
+        const measuredTotal = before.totalHeight.current
         expect(measuredTotal).not.toBe(estimatedTotal)
 
         const afterVm = buildViewModel()
-        get(afterVm.pageRows)
 
         // Heights are keyed by row id, so a rebuild over the same rows must not
         // send the table back to `estimatedRowHeight` and visibly resettle.
-        expect(get(afterVm.pluginStates.virtualScroll.totalHeight)).toBe(measuredTotal)
-        cleanup()
+        expect(afterVm.pluginStates.virtualScroll.totalHeight.current).toBe(measuredTotal)
+    })
+
+    test('geometry and row props follow the most recently built view model', () => {
+        // Sort state is per view model; virtual scroll state is per plugin result.
+        const table = createTable(createTestData(ROW_COUNT), {
+            sort: addSortBy<TestItem>(),
+            virtualScroll: addVirtualScroll<TestItem>({
+                estimatedRowHeight: ROW_HEIGHT,
+                bufferSize: 5
+            })
+        })
+        const columns = () => table.createColumns([table.column({ accessor: 'id', header: 'ID' })])
+        const first = table.createViewModel(columns())
+        expect(first.current.pageRows[0].current.props.virtualScroll.virtualIndex).toBe(0)
+
+        const second = table.createViewModel(columns())
+        second.pluginStates.sort.sortKeys.current = [{ id: 'id', order: 'desc' }]
+
+        // The rebuilt view model's rows come in reverse, so row '999' is first.
+        const [firstRow] = second.current.pageRows
+        expect(firstRow.id).toBe(String(ROW_COUNT - 1))
+        expect(firstRow.current.props.virtualScroll.virtualIndex).toBe(0)
     })
 
     test('re-attaching the action restores the scroll position onto the new node', () => {
-        const { buildViewModel, cleanup } = createRebuildableTable()
+        const { buildViewModel } = createRebuildableTable()
         const state = buildViewModel().pluginStates.virtualScroll
         const first = attach(state)
         first.node.scroll(4_000)
@@ -1140,8 +1111,25 @@ describe('addVirtualScroll survives a view model rebuild', () => {
         const second = attach(state)
 
         expect(second.node.scrollTop).toBe(4_000)
-        expect(get(state.scrollTop)).toBe(4_000)
-        cleanup()
+        expect(state.scrollTop.current).toBe(4_000)
+    })
+
+    test('getRowHeight still wins after the scroll container remounts', () => {
+        const data = box(createTestData(10))
+        const table = createTable(() => data.current, {
+            virtualScroll: addVirtualScroll({ estimatedRowHeight: 40, getRowHeight: () => 60 })
+        })
+        const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
+        const state = table.createViewModel(columns).pluginStates.virtualScroll
+
+        // Read once so the rows are synced, then mount, unmount and mount again.
+        expect(state.totalHeight.current).toBe(400)
+        const first = attach(state)
+        first.destroy()
+        attach(state)
+
+        state.measureRow('0', 100)
+        expect(state.totalHeight.current).toBe(600)
     })
 
     test('one plugin result drives one table', () => {
@@ -1149,7 +1137,7 @@ describe('addVirtualScroll survives a view model rebuild', () => {
         // tables built from the same `addVirtualScroll(...)` share scroll state.
         const plugin = addVirtualScroll<TestItem>({ estimatedRowHeight: ROW_HEIGHT })
         const build = () => {
-            const table = createTable(writable(createTestData(ROW_COUNT)), {
+            const table = createTable(createTestData(ROW_COUNT), {
                 virtualScroll: plugin
             })
             const columns = table.createColumns([
@@ -1168,22 +1156,20 @@ describe('addVirtualScroll survives a view model rebuild', () => {
     })
 
     test('destroying the action retains geometry for the next mount', () => {
-        const { buildViewModel, cleanup } = createRebuildableTable()
+        const { buildViewModel } = createRebuildableTable()
         const vm = buildViewModel()
         const state = vm.pluginStates.virtualScroll
         const { node, destroy } = attach(state)
         node.scroll(4_000)
-        get(vm.pageRows)
         state.measureRow('0', ROW_HEIGHT + 60)
-        const measuredTotal = get(state.totalHeight)
+        const measuredTotal = state.totalHeight.current
 
         destroy()
 
         // Unmount tears down listeners and cancels in-flight work; it must not
         // discard the state a remount is supposed to pick back up.
-        expect(get(state.scrollTop)).toBe(4_000)
-        expect(get(state.totalHeight)).toBe(measuredTotal)
-        cleanup()
+        expect(state.scrollTop.current).toBe(4_000)
+        expect(state.totalHeight.current).toBe(measuredTotal)
     })
 })
 
@@ -1197,7 +1183,7 @@ describe('addVirtualScroll container lifecycle', () => {
     const ROW_HEIGHT = 40
     const VIEWPORT = 400
 
-    function createScrollTable(data = writable(createTestData(1_000))) {
+    function createScrollTable(data = createTestData(1_000)) {
         const table = createTable(data, {
             virtualScroll: addVirtualScroll<TestItem>({
                 estimatedRowHeight: ROW_HEIGHT,
@@ -1206,15 +1192,14 @@ describe('addVirtualScroll container lifecycle', () => {
         })
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
-        const stop = vm.pageRows.subscribe(() => {})
-        return { state: vm.pluginStates.virtualScroll, stop }
+        return { state: vm.pluginStates.virtualScroll }
     }
 
     const mount = (state: { virtualScroll: (_node: HTMLElement) => unknown }) =>
         attachScrollAction(state, new FakeScrollElement(VIEWPORT))
 
     test('a superseded container does not lose the binding to a late teardown', () => {
-        const { state, stop } = createScrollTable()
+        const { state } = createScrollTable()
         const outgoing = mount(state)
         // The replacement mounts before the outgoing node's transition ends.
         const incoming = mount(state)
@@ -1224,11 +1209,10 @@ describe('addVirtualScroll container lifecycle', () => {
 
         expect(incoming.node.scrollTo).toHaveBeenCalled()
         expect(outgoing.node.scrollTo).not.toHaveBeenCalled()
-        stop()
     })
 
     test('the binding falls back to a container that is still mounted', () => {
-        const { state, stop } = createScrollTable()
+        const { state } = createScrollTable()
         const first = mount(state)
         const second = mount(state)
 
@@ -1236,23 +1220,21 @@ describe('addVirtualScroll container lifecycle', () => {
         state.scrollToIndex(500, { align: 'start' })
 
         expect(first.node.scrollTo).toHaveBeenCalled()
-        stop()
     })
 
     test('tearing down the last container leaves the plugin driving nothing', () => {
-        const { state, stop } = createScrollTable()
+        const { state } = createScrollTable()
         const only = mount(state)
 
         only.destroy()
         state.scrollToIndex(500, { align: 'start' })
 
         expect(only.node.scrollTo).not.toHaveBeenCalled()
-        stop()
     })
 
-    test('two tables over one data store scroll independently', () => {
+    test('two tables over one data array scroll independently', () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-        const data = writable(createTestData(1_000))
+        const data = createTestData(1_000)
         const left = createScrollTable(data)
         const right = createScrollTable(data)
         const leftContainer = mount(left.state)
@@ -1264,35 +1246,32 @@ describe('addVirtualScroll container lifecycle', () => {
         // scrolling: separate `addVirtualScroll()` results, so separate
         // geometry. The shared-instance warning is for one result driving two
         // tables, which this is not.
-        expect(get(left.state.scrollTop)).toBe(4_000)
-        expect(get(right.state.scrollTop)).toBe(0)
+        expect(left.state.scrollTop.current).toBe(4_000)
+        expect(right.state.scrollTop.current).toBe(0)
         expect(warn).not.toHaveBeenCalled()
 
         warn.mockRestore()
-        left.stop()
-        right.stop()
     })
 })
 
 describe('addVirtualScroll viewportRange in dense mode', () => {
     test('reports only the rows the viewport covers, not the buffered ones', () => {
-        const { state, node, unsubscribe } = createDenseTable(100_000)
+        const { state, node } = createDenseTable(100_000)
 
         node.scroll(50_000 * DENSE_ROW_HEIGHT)
 
-        expect(get(state.viewportRange)).toEqual({ start: 50_000, end: 50_010 })
+        expect(state.viewportRange.current).toEqual({ start: 50_000, end: 50_010 })
         // The buffer pads what gets mounted above the viewport.
-        expect(get(state.visibleRange).start).toBe(50_000 - DENSE_BUFFER)
-        unsubscribe()
+        expect(state.visibleRange.current.start).toBe(50_000 - DENSE_BUFFER)
     })
 
     test('is always contained by the range that gets mounted', () => {
-        const { state, node, unsubscribe } = createDenseTable(100_000)
+        const { state, node } = createDenseTable(100_000)
 
         for (const top of [0, 17, 400, 40_000, 2_000_015, 100_000 * DENSE_ROW_HEIGHT]) {
             node.scroll(top)
-            const viewport = get(state.viewportRange)
-            const visible = get(state.visibleRange)
+            const viewport = state.viewportRange.current
+            const visible = state.visibleRange.current
             if (viewport.end === viewport.start) {
                 continue
             }
@@ -1301,19 +1280,16 @@ describe('addVirtualScroll viewportRange in dense mode', () => {
             expect(visible.start).toBeLessThanOrEqual(viewport.start)
             expect(visible.end).toBeGreaterThanOrEqual(viewport.end)
         }
-        unsubscribe()
     })
 
     test('reports an empty range for an empty table', () => {
-        const { state, unsubscribe } = createDenseTable(0)
-        expect(get(state.viewportRange)).toEqual({ start: 0, end: 0 })
-        unsubscribe()
+        const { state } = createDenseTable(0)
+        expect(state.viewportRange.current).toEqual({ start: 0, end: 0 })
     })
 
     test('covers the whole table when it is shorter than the viewport', () => {
-        const { state, unsubscribe } = createDenseTable(4)
-        expect(get(state.viewportRange)).toEqual({ start: 0, end: 4 })
-        unsubscribe()
+        const { state } = createDenseTable(4)
+        expect(state.viewportRange.current).toEqual({ start: 0, end: 4 })
     })
 })
 
@@ -1351,8 +1327,8 @@ describe('addVirtualScroll with content above the rows', () => {
         }) as unknown as HTMLElement
 
     function build(bufferSize: number) {
-        const data = writable(createTestData(200))
-        const table = createTable(data, {
+        const data = box(createTestData(200))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll<TestItem>({
                 estimatedRowHeight: ROW_HEIGHT,
                 bufferSize
@@ -1360,11 +1336,10 @@ describe('addVirtualScroll with content above the rows', () => {
         })
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
-        const unsubscribe = vm.pageRows.subscribe(() => {})
         const state = vm.pluginStates.virtualScroll
         const node = new OffsetScrollElement()
         state.virtualScroll(node as any)
-        return { vm, state, node, unsubscribe }
+        return { vm, state, node }
     }
 
     /** Mount the first rendered row, which is what reveals the offset. */
@@ -1373,14 +1348,14 @@ describe('addVirtualScroll with content above the rows', () => {
         state: ReturnType<typeof build>['state'],
         node: OffsetScrollElement
     ) => {
-        const first = get(vm.pageRows).at(0)
+        const first = vm.current.pageRows.at(0)
         if (first !== undefined) {
-            state.measureRowAction(rowNode(node, get(state.topSpacerHeight)), first.id)
+            state.measureRowAction(rowNode(node, state.topSpacerHeight.current), first.id)
         }
     }
 
     test('reports the rows the user can actually see, not ones shifted by the header', () => {
-        const { vm, state, node, unsubscribe } = build(5)
+        const { vm, state, node } = build(5)
 
         node.scroll(400)
         settle(vm, state, node)
@@ -1388,30 +1363,28 @@ describe('addVirtualScroll with content above the rows', () => {
 
         // Container band [400,800] maps to row-space [360,760] once the 40px
         // header is accounted for, i.e. rows 9-18.
-        expect(get(state.viewportRange)).toEqual({ start: 9, end: 19 })
-        unsubscribe()
+        expect(state.viewportRange.current).toEqual({ start: 9, end: 19 })
     })
 
     test('mounts rows covering the viewport even with no buffer to absorb the shift', () => {
-        const { vm, state, node, unsubscribe } = build(0)
+        const { vm, state, node } = build(0)
 
         node.scroll(400)
         settle(vm, state, node)
         node.scroll(400)
 
-        const visible = get(state.visibleRange)
+        const visible = state.visibleRange.current
         // Row 9 is the top row on screen; without the offset it is left unmounted
         // and a header-sized blank strip appears.
         expect(visible.start).toBeLessThanOrEqual(9)
-        expect(get(state.topSpacerHeight) + HEADER_HEIGHT).toBeLessThanOrEqual(node.scrollTop)
-        unsubscribe()
+        expect(state.topSpacerHeight.current + HEADER_HEIGHT).toBeLessThanOrEqual(node.scrollTop)
     })
 
     test('sparse mode accounts for the offset too', () => {
         const TOTAL = 100_000
-        const dataOffset = writable(0)
-        const data = writable(createTestData(500))
-        const table = createTable(data, {
+        const dataOffset = box(0)
+        const data = box(createTestData(500))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll<TestItem>({
                 estimatedRowHeight: ROW_HEIGHT,
                 bufferSize: 2,
@@ -1421,27 +1394,24 @@ describe('addVirtualScroll with content above the rows', () => {
         })
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
-        const unsubscribe = vm.pageRows.subscribe(() => {})
         const state = vm.pluginStates.virtualScroll
         const node = new OffsetScrollElement()
         state.virtualScroll(node as any)
 
         node.scroll(400)
-        const first = get(vm.pageRows)[0]
-        state.measureRowAction(rowNode(node, get(state.topSpacerHeight)), first.id)
+        const first = vm.current.pageRows[0]
+        state.measureRowAction(rowNode(node, state.topSpacerHeight.current), first.id)
         node.scroll(400)
 
         // Same shift as dense: container [400,800] is row space [360,760].
-        expect(get(state.viewportRange)).toEqual({ start: 9, end: 19 })
-        unsubscribe()
+        expect(state.viewportRange.current).toEqual({ start: 9, end: 19 })
     })
 
     test('is a no-op when the rows start at the container origin', () => {
-        const { state, node, unsubscribe } = build(5)
+        const { state, node } = build(5)
         node.scroll(400)
         // No row measured, so no offset is known: the plain mapping still holds.
-        expect(get(state.viewportRange)).toEqual({ start: 10, end: 20 })
-        unsubscribe()
+        expect(state.viewportRange.current).toEqual({ start: 10, end: 20 })
     })
 })
 
@@ -1494,8 +1464,8 @@ describe('addVirtualScroll with a sticky header', () => {
         }) as unknown as HTMLElement
 
     function build() {
-        const data = writable(createTestData(300))
-        const table = createTable(data, {
+        const data = box(createTestData(300))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll<TestItem>({
                 estimatedRowHeight: ROW_HEIGHT,
                 bufferSize: 5
@@ -1503,11 +1473,10 @@ describe('addVirtualScroll with a sticky header', () => {
         })
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
-        const unsubscribe = vm.pageRows.subscribe(() => {})
         const state = vm.pluginStates.virtualScroll
         const node = new StickyContainer()
         state.virtualScroll(node as any)
-        return { vm, state, node, unsubscribe }
+        return { vm, state, node }
     }
 
     const settle = (
@@ -1517,26 +1486,25 @@ describe('addVirtualScroll with a sticky header', () => {
         top: number
     ) => {
         node.scroll(top)
-        const first = get(vm.pageRows).at(0)
+        const first = vm.current.pageRows.at(0)
         if (first !== undefined) {
-            state.measureRowAction(rowNode(node, get(state.topSpacerHeight)), first.id)
+            state.measureRowAction(rowNode(node, state.topSpacerHeight.current), first.id)
         }
         node.scroll(top)
     }
 
     test('is harmless on a header that scrolls away with the rows', () => {
-        const { vm, state, node, unsubscribe } = build()
+        const { vm, state, node } = build()
         state.measureHeaderAction(inFlowHeaderNode(node))
 
         settle(vm, state, node, 400)
 
         // Identical to leaving the action off: the header is long gone by here.
-        expect(get(state.viewportRange)).toEqual({ start: 9, end: 19 })
-        unsubscribe()
+        expect(state.viewportRange.current).toEqual({ start: 9, end: 19 })
     })
 
     test('scrollToIndex clears the header instead of parking the row behind it', () => {
-        const { vm, state, node, unsubscribe } = build()
+        const { vm, state, node } = build()
         state.measureHeaderAction(stickyHeaderNode())
         settle(vm, state, node, 400)
 
@@ -1547,12 +1515,11 @@ describe('addVirtualScroll with a sticky header', () => {
         expect(node.scrollTo).toHaveBeenCalledWith(
             expect.objectContaining({ top: 40 + 20 * ROW_HEIGHT - HEADER_HEIGHT })
         )
-        unsubscribe()
     })
 
     test('excludes rows hidden behind the header', () => {
-        const data = writable(createTestData(300))
-        const table = createTable(data, {
+        const data = box(createTestData(300))
+        const table = createTable(() => data.current, {
             virtualScroll: addVirtualScroll<TestItem>({
                 estimatedRowHeight: ROW_HEIGHT,
                 bufferSize: 5
@@ -1560,20 +1527,18 @@ describe('addVirtualScroll with a sticky header', () => {
         })
         const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
         const vm = table.createViewModel(columns)
-        const unsubscribe = vm.pageRows.subscribe(() => {})
         const state = vm.pluginStates.virtualScroll
         const node = new StickyContainer()
         state.virtualScroll(node as any)
         state.measureHeaderAction(stickyHeaderNode())
 
         node.scroll(400)
-        const first = get(vm.pageRows)[0]
-        state.measureRowAction(rowNode(node, get(state.topSpacerHeight)), first.id)
+        const first = vm.current.pageRows[0]
+        state.measureRowAction(rowNode(node, state.topSpacerHeight.current), first.id)
         node.scroll(400)
 
         // Container band [400,800]; the header covers [400,440], so the rows on
         // screen occupy [440,800] — row space [400,760], i.e. rows 10-18.
-        expect(get(state.viewportRange)).toEqual({ start: 10, end: 19 })
-        unsubscribe()
+        expect(state.viewportRange.current).toEqual({ start: 10, end: 19 })
     })
 })

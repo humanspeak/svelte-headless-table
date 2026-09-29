@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
     const textPrefixFilter: ColumnFilterFn = ({ filterValue, value }) => {
         return String(value).toLowerCase().startsWith(String(filterValue).toLowerCase())
     }
@@ -22,7 +22,6 @@
 </script>
 
 <script lang="ts">
-    import { readable } from 'svelte/store'
     import { createRender, createTable, Render } from '@humanspeak/svelte-headless-table'
     import {
         addColumnFilters,
@@ -34,7 +33,7 @@
     import SliderFilter from './SliderFilter.svelte'
     import { createSamples } from '$lib/utils/createSamples'
 
-    const data = readable(createSamples(30, 1, 0, { seed: 5 }))
+    const data = createSamples(30, 1, 0, { seed: 5 })
 
     const table = createTable(data, {
         filter: addColumnFilters()
@@ -121,7 +120,7 @@
     const { filterValues } = pluginStates.filter
 </script>
 
-<pre>$filterValues = {JSON.stringify($filterValues, null, 2)}</pre>
+<pre>filterValues.current = {JSON.stringify(filterValues.current, null, 2)}</pre>
 
 <div class="overflow-x-auto">
     <table class="demo my-0" {...vm.current.tableAttrs}>

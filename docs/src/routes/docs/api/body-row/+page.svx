@@ -32,25 +32,15 @@ An `id` that uniquely identifies the row.
 
 `id` may be delimited by `>` to represent the `id` of parent rows if they exist.
 
-### `attrs: () => Readable<BodyRowAttributes>`
-
-A `Readable` store with attributes to apply onto the `<tr>` element.
-
-### `props: () => Readable<BodyRowProps>`
-
-A `Readable` store with additional properties derived from plugin view model extensions.
-
-<Admonition type="tip">See also <a href="/docs/plugins/overview">Plugin View Model Extensions</a>.</Admonition>
-
 ### `current: { attrs: BodyRowAttributes; props: BodyRowProps }`
 
-The same attributes and props as plain reactive values, for runes-style templates. `current.attrs` is ready to spread onto the `tr` element and `current.props` holds the plugin state; both update in place as state changes, with no store subscription, `$` prefix or `Subscribe` wrapper. Reads outside a template or effect return the current value, and server rendering produces the same markup as the store path.
+The attributes and plugin props of the `<tr>` element as plain reactive values. `current.attrs` is ready to spread onto the element; `current.props` holds each plugin's props, keyed by plugin name. Both update in place as table and plugin state change. Reads outside a template or effect return the current value, and server rendering produces the same markup.
 
 ```svelte
-<tr {...row.current.attrs}>
+<tr {...row.current.attrs} class:selected={row.current.props.select.selected}>
 ```
 
-<Admonition type="tip">`current.*` and the `attrs()` / `props()` stores are two views of the same data; mix them freely.</Admonition>
+<Admonition type="tip">See also <a href="/docs/plugins/overview">Plugin View Model Extensions</a>. v7 removed the <code>attrs()</code> and <code>props()</code> store methods; see <a href="/docs/guides/migrating-to-v7">Migrating to v7</a>.</Admonition>
 
 ### `cells: BodyCell[]`
 
@@ -117,7 +107,7 @@ One common pattern is to define additional properties on the data items of the d
 
 ```svelte
 <script>
-  const data = writable([
+  const data = [
     {
       name: "Ada Lovelace",
       age: 28,
@@ -129,7 +119,7 @@ One common pattern is to define additional properties on the data items of the d
       disabled: false,
     },
     ...
-  ]);
+  ];
   ...
 </script>
 ...

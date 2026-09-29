@@ -23,14 +23,14 @@ sidebar_title: createRender
 
 `createRender` lets you define complex Svelte component behaviors within the script.
 
-It combines a component with props and events to create a `ComponentRenderConfig` that is passed into <a href="/docs/api/render">`Render#of`</a> to dynamically render Svelte components.
+It combines a component with its props to create a `ComponentRenderConfig` that is passed into <a href="/docs/api/render">`Render#of`</a> to dynamically render Svelte components.
 
 `createRender` accepts a Svelte component and either:
 
 1. an object of static props; or
-2. a `Readable` object for dynamic props.
+2. a getter returning the props, for dynamic props.
 
-To define event handlers, pass them as `on<event>` props (for example `onclick`), the same way you would on any Svelte 5 component.
+Event handlers are ordinary props: pass them as `on<event>` (for example `onclick`), the same way you would on any Svelte 5 component.
 
 ## Usage
 
@@ -51,94 +51,75 @@ Creates a render configuration with a Svelte component and static props.
 <Render of={profile} />
 ```
 
+Props may themselves be reactive objects. The plugin state boxes are the common case: pass the box, and let the component read and write its `current`.
+
+```ts
+cell: ({ row }, { pluginStates }) => {
+    const { isSelected, isSomeSubRowsSelected } = pluginStates.select.getRowState(row)
+    return createRender(SelectIndicator, { isSelected, isSomeSubRowsSelected })
+}
+```
+
 ```svelte
-<script>
-  import Profile from './Profile.svelte';
-  const profile = createRender(Profile, { name: 'Alan Turing' });
+<!-- SelectIndicator.svelte -->
+<script lang="ts">
+    import type { Box, ReadonlyBox } from '@humanspeak/svelte-headless-table'
+
+    const { isSelected, isSomeSubRowsSelected }: {
+        isSelected: Box<boolean>
+        isSomeSubRowsSelected: ReadonlyBox<boolean>
+    } = $props()
 </script>
 
-<Render of={profile} />
+<input
+    type="checkbox"
+    checked={isSelected.current}
+    indeterminate={isSomeSubRowsSelected.current}
+    onchange={(e) => (isSelected.current = e.currentTarget.checked)}
+/>
 ```
 
 ---
 
-### `createRender: (component: Component, props?: Readable<Props>) => ComponentRenderConfig`
+### `createRender: (component: Component, props?: () => Props) => ComponentRenderConfig`
 
-Creates a render configuration with a Svelte component and dynamic props.
+Creates a render configuration with a Svelte component and dynamic props. `<Render>` calls the getter inside its template, so the component re-renders with new props when the rune state the getter reads changes.
 
 ```svelte
 <script>
     import Profile from './Profile.svelte'
-    const name = writable('Grace Hopper')
-    const profile = createRender(
-        Profile,
-        derived(name, (n) => ({ name: n }))
-    )
+    let name = $state('Grace Hopper')
+    const profile = createRender(Profile, () => ({ name }))
 </script>
 
+<input bind:value={name} />
 <Render of={profile} />
 ```
 
-```svelte
-<script>
-  import { writable, derived } from 'svelte/store';
-  import Profile from './Profile.svelte';
-  const name = writable('Grace Hopper');
-  const dynamicProfile = createRender(
-    Profile,
-    derived(name, n => ({ name: n }))
-  );
-</script>
+### Event handlers
 
-<Render of={dynamicProfile} />
-```
-
-### `.on(type: EventType, handler: (ev) => void)`
-
-<Admonition type="warning">`.on()` is deprecated and will be removed in the next major release. Pass the handler as an `on&lt;event&gt;` prop instead: `createRender(Button, &#123; onclick: handler &#125;)`.</Admonition>
-
-`ComponentRenderConfig` exposes an `.on()` method that allows events to be defined and attached to the component when it is mounted. Each call sets the matching `on<type>` prop on the component.
+Pass handlers as `on<event>` props:
 
 ```svelte
 <script>
     import Notice from './Notice.svelte'
-    const noticeProps = writable({ count: 0 })
-    const notice = createRender(Notice, noticeProps)
-        .on('click', () => $noticeProps.count++)
-        .on('click', (ev) => console.log(ev))
+    let count = $state(0)
+    const notice = createRender(Notice, () => ({
+        count,
+        onclick: () => count++
+    }))
 </script>
 
 <Render of={notice} />
 ```
 
-```svelte
-<script lang="ts">
-  import Notice from './Notice.svelte';
-  const noticeProps = writable({ count: 0 });
-  const notice = createRender(Notice, noticeProps)
-    .on('click', (() => $noticeProps.count++))
-    .on('click', ev => console.log(ev));
-</script>
+<Admonition type="info">v7 removed <code>ComponentRenderConfig#on()</code> and <code>eventHandlers</code>. Replace <code>.on('click', handler)</code> with an <code>onclick</code> prop.</Admonition>
 
-<Render of={notice} />
-```
+## `createSnippetRender: (snippet: Snippet<[Args]>, args?: Args | (() => Args)) => SnippetRenderConfig`
 
-To migrate, pass the handler as an `on<event>` prop instead of chaining `.on()`:
+Creates a render configuration from a Svelte 5 snippet instead of a component. The snippet receives a single argument, either a static value or a getter returning it (the snippet re-renders when the rune state the getter reads changes). Omit `args` for snippets that take no argument.
 
-```svelte
-<script>
-    import Notice from './Notice.svelte'
-    const notice = createRender(Notice, {
-        onclick: (ev) => console.log(ev)
-    })
-</script>
-
-<Render of={notice} />
-```
-
-## `createSnippetRender: (snippet: Snippet<[Args]>, args?: Args | Readable<Args>) => SnippetRenderConfig`
-
-Creates a render configuration from a Svelte 5 snippet instead of a component. The snippet receives a single argument, which can be a static value or a `Readable` store (the snippet re-renders when the store changes). Omit `args` for snippets that take no argument.
+<Admonition type="warning">A function passed as <code>args</code> is always called as a getter. To pass a function as the snippet's argument, wrap it: <code>createSnippetRender(snippet, () =&gt; fn)</code>.</Admonition>
 
 This works from `<script>` because Svelte hoists top-level snippets, so a snippet declared in the component's markup can be referenced while defining columns.
 

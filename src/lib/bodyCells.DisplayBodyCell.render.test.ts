@@ -2,6 +2,7 @@ import { DisplayBodyCell } from './bodyCells.js'
 import { DataBodyRow } from './bodyRows.js'
 import { DisplayColumn } from './columns.js'
 import type { TableState } from './createViewModel.svelte.js'
+import { bindComponent } from './tableComponent.svelte.js'
 
 interface User {
     firstName: string
@@ -44,7 +45,7 @@ it('renders dynamic label with state', () => {
         label: ({ row }) => `row ${row.id} checked`
     })
 
-    actual.injectState(state)
+    bindComponent(actual, { state, hooks: [] })
 
     expect(actual.render()).toBe('row 0 checked')
 })

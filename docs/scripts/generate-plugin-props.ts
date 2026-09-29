@@ -27,7 +27,9 @@ interface PropDoc {
 type PropSetDoc = Partial<Record<ComponentKey, PropDoc[]>>
 
 const pluginFiles = readdirSync(pluginsDir)
-    .filter((f) => /^add[A-Z].*\.ts$/.test(f) && !f.includes('.test.') && !f.endsWith('.types.ts'))
+    // v7 plugins are runes modules (`addSortBy.svelte.ts`); `addVirtualScroll.types.ts`
+    // and the `*.test.ts` files do not match.
+    .filter((f) => /^add[A-Z]\w*\.svelte\.ts$/.test(f) && !f.includes('.test.'))
     .map((f) => path.join(pluginsDir, f))
 
 const program = ts.createProgram(pluginFiles, {

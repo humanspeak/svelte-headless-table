@@ -63,7 +63,7 @@ Exclude a column from the export.
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components.</Admonition>
 
 ```svelte
 {#each vm.current.headerRows as headerRow (headerRow.id)}
@@ -79,18 +79,22 @@ Exclude a column from the export.
 <Admonition type="info">State provided by <code>addDataExport</code>.</Admonition>
 
 ```ts {3}
-const vm = table.createViewModel(columns);
-const { pluginStates } = vm;
-const { ... } = pluginStates.export;
+const vm = table.createViewModel(columns)
+const { pluginStates } = vm
+const { exportedData } = pluginStates.export
 ```
 
-### `exportedData: Readable<DataExport>`
+### `exportedData: ReadonlyBox<DataExport>`
 The exported data. `DataExport` is:
 
 - `Record<string, unknown>[]` if `format` is `'object'`
 - `string` if `format` is `'json'`
 - `string` if `format` is `'csv'`
 
-Subscribe to `exportedData` or use `get` to compute once.
+Read `exportedData.current` when you need it, for example in a download button's click handler. It is computed lazily on read and reflects the current rows and columns:
+
+```svelte
+<button onclick={() => download(exportedData.current)}>Export</button>
+```
 
 

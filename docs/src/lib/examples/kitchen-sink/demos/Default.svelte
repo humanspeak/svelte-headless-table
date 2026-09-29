@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { derived, readable } from 'svelte/store'
     import { Render, createTable, createRender } from '@humanspeak/svelte-headless-table'
     import {
         addColumnFilters,
@@ -37,7 +36,7 @@
     // children. (8, 2, 1) → 8 parents × 8 children = 72 rows total,
     // enough to demo expand/collapse without making pagination redraw
     // a 100k-row dataset on every refresh.
-    const data = readable(createSamples(8, 2, 1, { seed: 42 }))
+    const data = createSamples(8, 2, 1, { seed: 42 })
 
     const table = createTable(data, {
         subRows: addSubRows({
@@ -121,12 +120,10 @@
             }
         }),
         table.group({
-            header: (_, { rows, pageRows }) =>
-                derived(
-                    [rows, pageRows],
-                    ([_rows, _pageRows]) =>
-                        `Name (${_rows.length} records, ${_pageRows.length} in page)`
-                ),
+            header:
+                (_, { rows, pageRows }) =>
+                () =>
+                    `Name (${rows().length} records, ${pageRows().length} in page)`,
             columns: [
                 table.column({
                     header: createRender(Italic, { text: 'First Name' }),
@@ -160,10 +157,7 @@
         }),
         table.group({
             header: (_, { rows }) =>
-                createRender(
-                    Italic,
-                    derived(rows, (_rows) => ({ text: `Info (${_rows.length} samples)` }))
-                ),
+                createRender(Italic, () => ({ text: `Info (${rows().length} samples)` })),
             columns: [
                 table.column({
                     header: 'Age',
@@ -246,18 +240,12 @@
     const { hiddenColumnIds } = pluginStates.hideColumns
     const { columnWidths } = pluginStates.resize
 
-    // `const` + `$state` — mutation goes through the rune's Proxy, the
-    // binding itself never reassigns. `let` would trigger
-    // `eslint/prefer-const`; ESLint's prefer-const doesn't know about runes.
-    const hideForId: Record<string, boolean> = $state(
-        Object.fromEntries(ids.map((id) => [id, false]))
-    )
-
-    $effect(() => {
-        $hiddenColumnIds = Object.entries(hideForId)
-            .filter(([, hide]) => hide)
-            .map(([id]) => id)
-    })
+    // Assign a new array to change the hidden columns; the table updates on its own.
+    const setHidden = (id: string, hide: boolean) => {
+        hiddenColumnIds.current = hide
+            ? [...hiddenColumnIds.current, id]
+            : hiddenColumnIds.current.filter((hiddenId) => hiddenId !== id)
+    }
 </script>
 
 <div class="ks-toolbar">
@@ -266,7 +254,12 @@
         <div class="ks-checks">
             {#each ids as id (id)}
                 <label class="ks-check" for="hide-{id}">
-                    <input id="hide-{id}" type="checkbox" bind:checked={hideForId[id]} />
+                    <input
+                        id="hide-{id}"
+                        type="checkbox"
+                        checked={hiddenColumnIds.current.includes(id)}
+                        onchange={(e) => setHidden(id, e.currentTarget.checked)}
+                    />
                     <span>{id}</span>
                 </label>
             {/each}
@@ -279,21 +272,21 @@
             <button
                 type="button"
                 class="ks-btn"
-                onclick={() => $pageIndex--}
-                disabled={!$hasPreviousPage}>‹ prev</button
+                onclick={() => (pageIndex.current -= 1)}
+                disabled={!hasPreviousPage.current}>‹ prev</button
             >
             <span class="ks-pager-meta">
-                <strong>{$pageIndex + 1}</strong> / {$pageCount}
+                <strong>{pageIndex.current + 1}</strong> / {pageCount.current}
             </span>
             <button
                 type="button"
                 class="ks-btn"
-                onclick={() => $pageIndex++}
-                disabled={!$hasNextPage}>next ›</button
+                onclick={() => (pageIndex.current += 1)}
+                disabled={!hasNextPage.current}>next ›</button
             >
             <label class="ks-inline" for="page-size">
                 <span>rows</span>
-                <input id="page-size" type="number" min={1} bind:value={$pageSize} />
+                <input id="page-size" type="number" min={1} bind:value={pageSize.current} />
             </label>
         </div>
     </fieldset>
@@ -307,8 +300,8 @@
                 // The plugin's columnIdOrder starts empty and falls back to
                 // declaration order. Seed it with the live ID list on first
                 // shuffle so a single click actually rearranges columns.
-                const current = $columnIdOrder.length ? $columnIdOrder : ids
-                $columnIdOrder = getShuffled(current)
+                const current = columnIdOrder.current.length ? columnIdOrder.current : ids
+                columnIdOrder.current = getShuffled(current)
             }}
         >
             <Shuffle size={14} strokeWidth={2.25} />
@@ -375,7 +368,7 @@
                 <th colspan={vm.current.visibleColumns.length}>
                     <input
                         type="text"
-                        bind:value={$filterValue}
+                        bind:value={filterValue.current}
                         placeholder="Search all rows…"
                         class="ks-search"
                     />
@@ -409,14 +402,14 @@
     <summary>plugin state · debug</summary>
     <pre>{JSON.stringify(
             {
-                groupByIds: $groupByIds,
-                sortKeys: $sortKeys,
-                filterValues: $filterValues,
-                selectedDataIds: $selectedDataIds,
-                columnIdOrder: $columnIdOrder,
-                hiddenColumnIds: $hiddenColumnIds,
-                expandedIds: $expandedIds,
-                columnWidths: $columnWidths
+                groupByIds: groupByIds.current,
+                sortKeys: sortKeys.current,
+                filterValues: filterValues.current,
+                selectedDataIds: selectedDataIds.current,
+                columnIdOrder: columnIdOrder.current,
+                hiddenColumnIds: hiddenColumnIds.current,
+                expandedIds: expandedIds.current,
+                columnWidths: columnWidths.current
             },
             null,
             2

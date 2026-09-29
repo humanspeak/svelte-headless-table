@@ -1,11 +1,11 @@
 <script lang="ts">
     import { ChevronDown, ChevronRight } from '@lucide/svelte'
-    import type { Readable, Writable } from 'svelte/store'
+    import type { Box, ReadonlyBox } from '@humanspeak/svelte-headless-table'
 
     type Props = {
-        isExpanded: Writable<boolean>
-        canExpand: Readable<boolean>
-        isAllSubRowsExpanded: Readable<boolean>
+        isExpanded: Box<boolean>
+        canExpand: boolean
+        isAllSubRowsExpanded: ReadonlyBox<boolean>
         depth: number
     }
 
@@ -13,22 +13,22 @@
 
     const toggle = (e: MouseEvent) => {
         e.stopPropagation()
-        isExpanded.update((v) => !v)
+        isExpanded.current = !isExpanded.current
     }
 </script>
 
 <button
     type="button"
     class="ks-expand"
-    class:expanded={$isExpanded}
-    disabled={!$canExpand}
+    class:expanded={isExpanded.current}
+    disabled={!canExpand}
     onclick={toggle}
-    aria-expanded={$canExpand ? $isExpanded : undefined}
-    aria-label={$canExpand ? ($isExpanded ? 'Collapse row' : 'Expand row') : undefined}
+    aria-expanded={canExpand ? isExpanded.current : undefined}
+    aria-label={canExpand ? (isExpanded.current ? 'Collapse row' : 'Expand row') : undefined}
     style="--depth: {depth}"
 >
-    {#if $canExpand}
-        {#if $isExpanded}
+    {#if canExpand}
+        {#if isExpanded.current}
             <ChevronDown size={14} strokeWidth={2.5} />
         {:else}
             <ChevronRight size={14} strokeWidth={2.5} />

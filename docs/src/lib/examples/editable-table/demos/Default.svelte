@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { writable } from 'svelte/store'
     import {
         Render,
         createTable,
@@ -10,32 +9,26 @@
     import { createSamples, type Sample } from '$lib/utils/createSamples'
     import EditableCell from './EditableCell.svelte'
 
-    const data = writable(createSamples(100, 1, 0, { seed: 11 }))
+    // `$state.raw`: rows are replaced, never mutated in place, so no deep proxy.
+    let items = $state.raw(createSamples(100, 1, 0, { seed: 11 }))
 
     const updateData = (rowDataId: string, columnId: string, newValue: unknown) => {
         let coerced: unknown = newValue
         if (['age', 'visits', 'progress'].includes(columnId)) {
             const n = parseInt(String(newValue), 10)
-            if (isNaN(n)) {
-                $data = $data
-                return
-            }
+            if (isNaN(n)) return
             coerced = n
         }
         if (columnId === 'status') {
-            if (!['relationship', 'single', 'complicated'].includes(String(newValue))) {
-                $data = $data
-                return
-            }
+            if (!['relationship', 'single', 'complicated'].includes(String(newValue))) return
         }
         const idx = parseInt(rowDataId, 10)
-        const currentItem = $data[idx]
         const key = columnId as keyof Sample
-        $data[idx] = { ...currentItem, [key]: coerced } as Sample
-        $data = $data
+        // Assign a new array so the table re-derives its rows.
+        items = items.map((item, i) => (i === idx ? ({ ...item, [key]: coerced } as Sample) : item))
     }
 
-    const table = createTable(data)
+    const table = createTable(() => items)
 
     const EditableCellLabel: DataLabel<Sample> = ({ column, row, value }) =>
         createRender(EditableCell, {

@@ -1,5 +1,6 @@
 import type { TableState } from './createViewModel.svelte.js'
 import { HeaderCell } from './headerCells.js'
+import { bindComponent } from './tableComponent.svelte.js'
 
 interface User {
     firstName: string
@@ -37,14 +38,14 @@ const state = {
 } as unknown as TableState<User>
 
 it('renders dynamic label with state', () => {
-    const actual = new TestHeaderCell({
+    const actual = new TestHeaderCell<User>({
         id: '0',
         label: (_, { columns }) => `${columns.length} columns`,
         colspan: 1,
         colstart: 1
     })
 
-    actual.injectState(state as any)
+    bindComponent(actual, { state, hooks: [] })
 
     expect(actual.render()).toBe('0 columns')
 })

@@ -1,12 +1,11 @@
 <script>
-    import { readable } from 'svelte/store'
     import { createTable, Render } from '@humanspeak/svelte-headless-table'
 
-    const data = readable([
+    const data = [
         { name: 'Ada Lovelace', age: 21 },
         { name: 'Barbara Liskov', age: 52 },
         { name: 'Richard Hamming', age: 38 }
-    ])
+    ]
 
     const table = createTable(data)
 

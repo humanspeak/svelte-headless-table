@@ -23,19 +23,18 @@ sidebar_title: addVirtualScroll
 
 `addVirtualScroll` enables virtualized table rendering for large datasets (10,000+ rows). Only visible rows plus a configurable buffer are rendered in the DOM, dramatically improving performance.
 
-<Admonition type="note">Render <code>vm.current.pageRows</code> — or subscribe to <a href="/docs/api/table-view-model#tableviewmodel-pagerows-readable-bodyrow"><code>TableViewModel#pageRows</code></a> instead of <code>TableViewModel#rows</code>.</Admonition>
+<Admonition type="note">Render <a href="/docs/api/table-view-model#tableviewmodel-current-pagerows-bodyrow"><code>vm.current.pageRows</code></a> instead of <code>vm.current.rows</code>.</Admonition>
 
 ## Basic Usage
 
 ```svelte
 <script>
-  import { writable } from 'svelte/store';
   import { createTable } from '@humanspeak/svelte-headless-table';
   import { addVirtualScroll } from '@humanspeak/svelte-headless-table/plugins';
 
-  const data = writable(largeDataset); // 10,000+ rows
+  let data = $state.raw(largeDataset); // 10,000+ rows
 
-  const table = createTable(data, {
+  const table = createTable(() => data, {
     virtualScroll: addVirtualScroll({
       estimatedRowHeight: 48,
       bufferSize: 10
@@ -65,9 +64,9 @@ sidebar_title: addVirtualScroll
     </thead>
     <tbody {...vm.current.tableBodyAttrs}>
       <!-- Top spacer -->
-      {#if $topSpacerHeight > 0}
+      {#if topSpacerHeight.current > 0}
         <tr>
-          <td colspan={vm.current.visibleColumns.length} style="height: {$topSpacerHeight}px; padding: 0; border: none;"></td>
+          <td colspan={vm.current.visibleColumns.length} style="height: {topSpacerHeight.current}px; padding: 0; border: none;"></td>
         </tr>
       {/if}
 
@@ -83,9 +82,9 @@ sidebar_title: addVirtualScroll
       {/each}
 
       <!-- Bottom spacer -->
-      {#if $bottomSpacerHeight > 0}
+      {#if bottomSpacerHeight.current > 0}
         <tr>
-          <td colspan={vm.current.visibleColumns.length} style="height: {$bottomSpacerHeight}px; padding: 0; border: none;"></td>
+          <td colspan={vm.current.visibleColumns.length} style="height: {bottomSpacerHeight.current}px; padding: 0; border: none;"></td>
         </tr>
       {/if}
     </tbody>
@@ -110,9 +109,12 @@ sidebar_title: addVirtualScroll
 `addVirtualScroll` supports infinite scroll with the `onLoadMore` and `hasMore` options:
 
 ```ts
-const hasMore = writable(true);
+import { box } from '@humanspeak/svelte-headless-table';
 
-const table = createTable(data, {
+let data = $state.raw(firstPage);
+const hasMore = box(true); // the plugin adopts the box
+
+const table = createTable(() => data, {
   virtualScroll: addVirtualScroll({
     estimatedRowHeight: 48,
     bufferSize: 10,
@@ -120,10 +122,10 @@ const table = createTable(data, {
     hasMore,
     onLoadMore: async () => {
       const moreData = await fetchMoreItems();
-      data.update(d => [...d, ...moreData]);
+      data = [...data, ...moreData];
 
       if (noMoreData) {
-        hasMore.set(false);
+        hasMore.current = false; // stops further onLoadMore calls
       }
     }
   })
@@ -134,18 +136,18 @@ const table = createTable(data, {
 
 Infinite scroll is append-only: reaching row 2,000,000 means loading every row before it. For datasets that are too large to materialize, pass `totalRows` to opt into **sparse mode**. The caller owns fetching and eviction; the plugin owns geometry.
 
-In sparse mode the table's `data` store holds only the rows currently resident, `dataOffset` says where that window starts in the full dataset, and `onRangeChange` tells you when to move it. All indices the plugin reports — `visibleRange`, `viewportRange`, `scrollToIndex`, `virtualIndex` — are absolute indices into the full dataset.
+In sparse mode the table's `data` holds only the rows currently resident, `dataOffset` says where that window starts in the full dataset, and `onRangeChange` tells you when to move it. All indices the plugin reports — `visibleRange`, `viewportRange`, `scrollToIndex`, `virtualIndex` — are absolute indices into the full dataset.
 
 ```ts
-const totalRows = writable(0); // filled from a cheap count query
-const dataOffset = writable(0); // absolute index of data[0]
-const data = writable([]); // only the resident window
+let totalRows = $state(0); // filled from a cheap count query
+let dataOffset = $state(0); // absolute index of data[0]
+let data = $state.raw([]); // only the resident window
 
-const table = createTable(data, {
+const table = createTable(() => data, {
   virtualScroll: addVirtualScroll({
     estimatedRowHeight: 32,
-    totalRows,
-    dataOffset,
+    totalRows: () => totalRows,
+    dataOffset: () => dataOffset,
     onRangeChange: async ({ start, end }, { signal }) => {
       // Fetch just the pages intersecting the range, and drop the rest.
       const { rows, offset } = await fetchWindow(start, end, { signal });
@@ -153,8 +155,8 @@ const table = createTable(data, {
       // early response can land after a fast later one and republish a window
       // the user has already scrolled away from.
       if (signal.aborted) return;
-      dataOffset.set(offset);
-      data.set(rows);
+      dataOffset = offset;
+      data = rows;
     }
   })
 });
@@ -177,7 +179,7 @@ A few things to know:
 - **Row heights are uniform in sparse mode.** Rows outside the resident window can't be measured, so geometry uses the running average of the measured ones. Measurements still refine that average; `getRowHeight` feeds it but doesn't position individual rows.
 - **`onRangeChange` fires more than once during startup** as the viewport is measured. Debounce or de-duplicate in the handler if your fetch is expensive.
 - **Async handlers must respect `signal`.** It is aborted as soon as a newer range supersedes the one being served, and when the scroll container is destroyed. Pass it to `fetch` to cancel the request, and re-check `signal.aborted` before writing to `data` / `dataOffset` — otherwise out-of-order responses will republish a stale window.
-- **It is safe to update stores from `onRangeChange`.** The callback is deferred to a microtask, so it never writes to a store mid-derivation.
+- **It is safe to update state from `onRangeChange`.** The callback is deferred to a microtask, so it never writes state mid-derivation.
 - **Keep `dataOffset` and `data` in sync.** A stale offset shifts every rendered row.
 
 ## One instance per table
@@ -193,12 +195,12 @@ const table = createTable(data, { virtualScroll: addVirtualScroll({ ... }) });
 
 Hoisting a single result to module scope and passing it to two `createTable` calls makes both tables share a scroll position and a height cache. That warns in the console.
 
-To scroll two views of the same data independently, give each its own table over the same `data` store:
+To scroll two views of the same data independently, give each its own table over the same data:
 
 ```ts
-const data = writable(items);
-const left = createTable(data, { virtualScroll: addVirtualScroll({ ... }) });
-const right = createTable(data, { virtualScroll: addVirtualScroll({ ... }) });
+let items = $state.raw(initialItems);
+const left = createTable(() => items, { virtualScroll: addVirtualScroll({ ... }) });
+const right = createTable(() => items, { virtualScroll: addVirtualScroll({ ... }) });
 ```
 
 <Admonition type="warning">Two view models built from a <em>single</em> table share one scroll position. A rebuild and a second concurrent view look the same from inside the plugin — both are another <code>createViewModel</code> call while a container is mounted — so use two tables when you need two independent viewports.</Admonition>
@@ -222,8 +224,8 @@ Default `10`. Number of rows to render above and below the visible area. Higher 
 ### `onLoadMore?: () => void | Promise<void>`
 Callback fired when more data should be loaded (infinite scroll). Return a promise to indicate when loading is complete.
 
-### `hasMore?: Writable<boolean> | boolean`
-Whether there is more data available to load. Can be a boolean or a Writable store.
+### `hasMore?: Box<boolean> | boolean`
+Whether there is more data available to load. A boolean, or a `Box<boolean>` (create one with `box(true)`). A box is adopted, so writing `hasMore.current = false` stops further `onLoadMore` calls.
 
 ### `loadMoreThreshold?: number`
 Default `200`. Number of pixels from the bottom to trigger `onLoadMore`.
@@ -231,43 +233,43 @@ Default `200`. Number of pixels from the bottom to trigger `onLoadMore`.
 ### `getRowHeight?: (item: Item) => number`
 Optional function to get the exact height of a specific row. Enables precise variable row heights.
 
-### `totalRows?: Readable<number> | number`
-Total number of rows in the full dataset, independent of how many are loaded. Supplying this opts into [sparse mode](#sparse-mode-server-paged-datasets).
+### `totalRows?: number | (() => number) | ReadonlyBox<number>`
+Total number of rows in the full dataset, independent of how many are loaded. Supplying this opts into [sparse mode](#sparse-mode-server-paged-datasets). Pass a getter or a box to make it reactive; a Svelte store is rejected with an error.
 
-### `dataOffset?: Readable<number> | number`
-Default `0`. Absolute index of the first row held in the table's `data` store. Sparse mode only — keep it in sync with `data` whenever the resident window moves.
+### `dataOffset?: number | (() => number) | ReadonlyBox<number>`
+Default `0`. Absolute index of the first row held in the table's `data`. Sparse mode only — keep it in sync with `data` whenever the resident window moves. Pass a getter or a box to make it reactive.
 
 ### `maxScrollHeight?: number`
 Default `16_000_000`. Largest height, in pixels, to give the scroll container. Sparse mode only. When `totalRows × rowHeight` exceeds this, the scroll range is compressed onto it so the tail of the dataset stays reachable — see [the scroll-height ceiling](#browser-scroll-height-ceiling).
 
 ### `onRangeChange?: (range: { start: number; end: number }, context: { signal: AbortSignal }) => void`
-Fired whenever the visible range changes, so a caller can fetch the pages intersecting it and evict the ones that have scrolled away. In sparse mode the range is in absolute dataset indices. Invoked on a microtask, so it is safe to update stores from within it.
+Fired whenever the visible range changes, so a caller can fetch the pages intersecting it and evict the ones that have scrolled away. In sparse mode the range is in absolute dataset indices. Invoked on a microtask, so it is safe to update state from within it. Unchanged from 6.x.
 
 `context.signal` is aborted as soon as a newer range supersedes this one, or when the scroll container is destroyed. Async handlers should pass it to `fetch` and re-check `signal.aborted` before publishing results.
 
 ## Prop Set
 
-<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components, or subscribe to <code>.props()</code>. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
+<Admonition type="info">Extensions to the view model. Read <code>current.props</code> on table components. The lists below are generated from the plugin's TypeScript prop-set type, so they match the published package exactly.</Admonition>
 
 <PluginProps set="VirtualScrollPropSet" pluginKey="virtualScroll" />
 
 ## Plugin State
 
-<Admonition type="info">State provided by <code>addVirtualScroll</code>.</Admonition>
+<Admonition type="info">State provided by <code>addVirtualScroll</code>. The values are <code>ReadonlyBox</code>es: read their <code>current</code> property.</Admonition>
 
 ```ts {3}
-const vm = table.createViewModel(columns);
-const { pluginStates } = vm;
-const { ... } = pluginStates.virtualScroll;
+const vm = table.createViewModel(columns)
+const { pluginStates } = vm
+const { virtualScroll, topSpacerHeight, bottomSpacerHeight, measureRowAction } = pluginStates.virtualScroll
 ```
 
 ### `virtualScroll: Action<HTMLElement>`
 Svelte action to attach to the scroll container. Handles scroll event listeners and viewport tracking.
 
-### `topSpacerHeight: Readable<number>`
+### `topSpacerHeight: ReadonlyBox<number>`
 Height of the top spacer element in pixels.
 
-### `bottomSpacerHeight: Readable<number>`
+### `bottomSpacerHeight: ReadonlyBox<number>`
 Height of the bottom spacer element in pixels.
 
 ### `measureRowAction: Action<HTMLElement, string>`
@@ -284,16 +286,16 @@ scrollToIndex(100, {
 });
 ```
 
-### `visibleRange: Readable<{ start: number; end: number }>`
+### `visibleRange: ReadonlyBox<{ start: number; end: number }>`
 Range of currently rendered row indices, padded by `bufferSize` on both ends. Absolute dataset indices in sparse mode. Use this to decide what to fetch; use `viewportRange` to tell the user what they are looking at.
 
-### `viewportRange: Readable<{ start: number; end: number }>`
+### `viewportRange: ReadonlyBox<{ start: number; end: number }>`
 Rows actually intersecting the viewport, with no render buffer — the range a "rows N–M of T" footer, a scroll-progress readout or a "jump to row" indicator should report. Absolute dataset indices in sparse mode, with any scroll-range compression already undone, so you never re-derive that mapping yourself. `end` is exclusive.
 
 ```svelte
 <tfoot>
   <tr><td>
-    Rows {$viewportRange.start + 1}–{$viewportRange.end} of {$totalRows}
+    Rows {viewportRange.current.start + 1}–{viewportRange.current.end} of {totalRows.current}
   </td></tr>
 </tfoot>
 ```
@@ -311,28 +313,28 @@ A sticky header keeps the space it occupies in the document, so the plugin alrea
 
 You don't need it for a header that scrolls away with the rows; that case is measured automatically. Attaching it to one anyway is harmless, since it reports no overlap once it's out of view.
 
-### `totalHeight: Readable<number>`
+### `totalHeight: ReadonlyBox<number>`
 Total height of all rows (for scroll container sizing).
 
-### `totalRows: Readable<number>`
+### `totalRows: ReadonlyBox<number>`
 Total number of rows in the dataset. In sparse mode this is the configured dataset total rather than the number of rows loaded.
 
-### `dataOffset: Readable<number>`
-Absolute index of the first row held in the table's `data` store. Always `0` outside sparse mode.
+### `dataOffset: ReadonlyBox<number>`
+Absolute index of the first row held in the table's `data`. Always `0` outside sparse mode.
 
-### `renderedRows: Readable<number>`
+### `renderedRows: ReadonlyBox<number>`
 Number of rows currently rendered in the DOM.
 
-### `scrollTop: Readable<number>`
+### `scrollTop: ReadonlyBox<number>`
 Current scroll position of the container.
 
-### `viewportHeight: Readable<number>`
+### `viewportHeight: ReadonlyBox<number>`
 Height of the scroll container viewport.
 
-### `isLoading: Readable<boolean>`
+### `isLoading: ReadonlyBox<boolean>`
 Whether more data is currently being loaded.
 
-### `hasMore: Readable<boolean>`
+### `hasMore: ReadonlyBox<boolean>`
 Whether there is more data available to load.
 
 ### `measureRow: (rowId: string, height: number) => void`

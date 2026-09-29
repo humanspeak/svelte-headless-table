@@ -1,8 +1,8 @@
 import '@testing-library/jest-dom/vitest'
 import { render, screen } from '@testing-library/svelte'
 import { tick } from 'svelte'
-import { writable } from 'svelte/store'
 import { Render, createRender } from '../index.js'
+import { box } from '../reactivity.svelte.js'
 import Fixture from './Fixture.test.svelte'
 import Wrapper from './Wrapper.test.svelte'
 
@@ -11,11 +11,11 @@ it('renders a string config', () => {
     expect(screen.getByText('hello')).toBeInTheDocument()
 })
 
-it('renders a readable config and tracks updates', async () => {
-    const store = writable('one')
-    render(Render, { props: { of: store } })
+it('renders a getter config and tracks updates', async () => {
+    const value = box('one')
+    render(Render, { props: { of: () => value.current } })
     expect(screen.getByText('one')).toBeInTheDocument()
-    store.set('two')
+    value.current = 'two'
     await tick()
     expect(screen.getByText('two')).toBeInTheDocument()
 })
@@ -25,11 +25,11 @@ it('renders a component config with static props', () => {
     expect(screen.getByTestId('fixture')).toHaveTextContent('a:1')
 })
 
-it('renders a component config with readable props and tracks updates', async () => {
-    const props = writable({ label: 'a', count: 1 })
-    render(Render, { props: { of: createRender(Fixture, props) } })
+it('renders a component config with getter props and tracks updates', async () => {
+    const props = box({ label: 'a', count: 1 })
+    render(Render, { props: { of: createRender(Fixture, () => props.current) } })
     expect(screen.getByTestId('fixture')).toHaveTextContent('a:1')
-    props.set({ label: 'b', count: 2 })
+    props.current = { label: 'b', count: 2 }
     await tick()
     expect(screen.getByTestId('fixture')).toHaveTextContent('b:2')
 })
@@ -41,13 +41,6 @@ it('renders slotted children', () => {
     // Fixture has no children outlet, so the child string is not rendered,
     // but the parent must still mount without error.
     expect(screen.getByTestId('fixture')).toHaveTextContent('p:0')
-})
-
-it('maps .on() handlers to on<type> props', () => {
-    const handler = () => {}
-    const config = createRender(Fixture).on('click', handler)
-    expect(config.props?.onclick).toBe(handler)
-    expect(config.eventHandlers).toHaveLength(1)
 })
 
 it('replaces children with .slot()', () => {
