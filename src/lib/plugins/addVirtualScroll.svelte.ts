@@ -251,6 +251,17 @@ export const addVirtualScroll = <Item>({
     // plain variable assigned while page rows derive: it is not reactive state.
     let firstRenderedRowId: string | undefined
 
+    // The mounted `<tr>` for each row `measureRowAction` is attached to, so
+    // the offset can be re-read whenever the header is, rather than only when
+    // the first row happens to mount or resize.
+    // A plain registry of DOM nodes, not state.
+    // trunk-ignore(eslint/svelte/prefer-svelte-reactivity)
+    const rowNodes = new Map<string, HTMLElement>()
+
+    // Whether a row has ever revealed `contentOffset`. Until one does, the
+    // header is the only evidence of where the rows begin.
+    let rowsLocated = false
+
     // How much of the viewport's top edge is currently painted over by the
     // header. Zero unless `measureHeaderAction` is attached: an in-flow header
     // needs no such correction, because it scrolls away and `contentOffset`
@@ -285,20 +296,74 @@ export const addVirtualScroll = <Item>({
     })
 
     /**
+     * Where the container's scroll origin sits on screen. Scroll positions are
+     * measured from inside the border, so a rect's `top` alone is out by the
+     * border's width.
+     */
+    const scrollOriginTop = (container: HTMLElement) =>
+        container.getBoundingClientRect().top + container.clientTop
+
+    /**
+     * Learn how far the rows sit below the container's scroll origin, from
+     * where the first rendered row actually landed.
+     *
+     * That row is laid out directly after the top spacer, so whatever is left
+     * once the spacer is subtracted is the content the caller put above the
+     * rows — normally an in-flow `<thead>`. Measured from the DOM because the
+     * plugin cannot see the caller's markup.
+     *
+     * Compares the DOM against `topSpacerHeight`, so it must run while the two
+     * agree: before a write that moves the range, not after.
+     */
+    const measureContentOffset = () => {
+        if (scrollContainer === null || firstRenderedRowId === undefined) {
+            return
+        }
+        const rect = rowNodes.get(firstRenderedRowId)?.getBoundingClientRect()
+        // A row with no height is not laid out, so it cannot say where it is.
+        if (rect === undefined || rect.height <= 0) {
+            return
+        }
+        const rowTop = rect.top - scrollOriginTop(scrollContainer) + scrollContainer.scrollTop
+        const offset = Math.max(0, rowTop - topSpacerHeight())
+        rowsLocated = true
+        if (offset !== contentOffset.current) {
+            contentOffset.current = offset
+        }
+    }
+
+    /**
      * Re-read how far the header currently reaches into the viewport.
      *
      * Cheap enough for the scroll path: one rect per element, and only when a
      * header has been declared. Sticky elements move relative to the container
      * on every scroll, so there is no cheaper signal to hang this off.
+     *
+     * @param resized - The header changed size, so what it revealed about
+     *   where the rows begin no longer holds.
      */
-    const measureHeaderOverlap = () => {
+    const measureHeaderOverlap = (resized = false) => {
         if (headerNode === null || scrollContainer === null) {
             return
         }
-        const containerTop = scrollContainer.getBoundingClientRect().top
-        const overlap = Math.max(0, headerNode.getBoundingClientRect().bottom - containerTop)
+        const overlap = Math.max(
+            0,
+            headerNode.getBoundingClientRect().bottom - scrollOriginTop(scrollContainer)
+        )
         if (overlap !== headerOverlap.current) {
             headerOverlap.current = overlap
+        }
+        if (rowsLocated) {
+            return
+        }
+        // No row has said where the rows begin, which is the case when rows
+        // are not measured with `measureRowAction`. A header is laid out above
+        // the rows, so they begin no higher than the furthest it has been seen
+        // to reach — exactly there for a header at the top of the container.
+        // Without this the header's whole height reads as hidden rows.
+        const extent = resized ? overlap : Math.max(contentOffset.current, overlap)
+        if (extent !== contentOffset.current) {
+            contentOffset.current = extent
         }
     }
 
@@ -541,9 +606,18 @@ export const addVirtualScroll = <Item>({
      */
     const handleScroll = (event: Event) => {
         const target = event.target as HTMLElement
-        scrollTop.current = target.scrollTop
 
-        measureHeaderOverlap()
+        // The header is re-read on every scroll, so where the rows begin is
+        // too: `rowViewport` subtracts one from the other, and a pair read at
+        // different times reports rows hidden that are in plain view. Read
+        // ahead of the write below, while the DOM still shows the range the
+        // spacer was derived for.
+        if (headerNode !== null) {
+            measureContentOffset()
+            measureHeaderOverlap()
+        }
+
+        scrollTop.current = target.scrollTop
         checkLoadMore()
     }
 
@@ -580,11 +654,23 @@ export const addVirtualScroll = <Item>({
 
         // Create ResizeObserver to track viewport size changes
         const resizeObserver = new ResizeObserver((entries) => {
+            // A narrower container can wrap the header and push the rows
+            // down. Read ahead of the write, as on scroll.
+            measureContentOffset()
             for (const entry of entries) {
                 viewportHeight.current = entry.contentRect.height
             }
         })
         resizeObserver.observe(node)
+
+        // Rows and header mount before their container, so neither could be
+        // placed against it at the time. Do it now rather than leaving it to
+        // their ResizeObservers, which a window that is not being rendered
+        // never runs.
+        untrack(() => {
+            measureContentOffset()
+            measureHeaderOverlap()
+        })
 
         // Attach scroll listener
         node.addEventListener('scroll', handleScroll, { passive: true })
@@ -726,7 +812,9 @@ export const addVirtualScroll = <Item>({
         // A header that grows — a filter row appearing, text wrapping — changes
         // how much it covers without any scrolling to trigger a re-read.
         const resizeObserver = new ResizeObserver(() => {
-            measureHeaderOverlap()
+            // The rows moved with it, and they do not resize to say so.
+            measureContentOffset()
+            measureHeaderOverlap(true)
         })
         resizeObserver.observe(node)
 
@@ -738,6 +826,9 @@ export const addVirtualScroll = <Item>({
                 }
                 headerNode = null
                 headerOverlap.current = 0
+                if (!rowsLocated) {
+                    contentOffset.current = 0
+                }
             }
         }
     }
@@ -769,42 +860,27 @@ export const addVirtualScroll = <Item>({
     }
 
     /**
-     * Learn how far the rows sit below the container's scroll origin, from
-     * where the first rendered row actually landed.
-     *
-     * That row is laid out directly after the top spacer, so whatever is left
-     * once the spacer is subtracted is the content the caller put above the
-     * rows — normally an in-flow `<thead>`. Measured from the DOM because the
-     * plugin cannot see the caller's markup, and re-measured on every mount so
-     * a header that changes height corrects itself on the next scroll.
-     */
-    const measureContentOffset = (node: HTMLElement, rowId: string, rect: DOMRect) => {
-        if (scrollContainer === null || rowId !== firstRenderedRowId) {
-            return
-        }
-        const containerTop = scrollContainer.getBoundingClientRect().top
-        const rowTop = rect.top - containerTop + scrollContainer.scrollTop
-        const offset = Math.max(0, rowTop - topSpacerHeight())
-        if (offset !== contentOffset.current) {
-            contentOffset.current = offset
-        }
-    }
-
-    /**
      * Svelte action to automatically measure row height.
      * Attach to each <tr> element: <tr use:measureRowAction={row.id}>
      */
     const measureRowAction: Action<HTMLElement, string> = (node, rowId) => {
+        rowNodes.set(rowId, node)
+
         // Measure initial height. Reads happen outside any tracking context,
         // so an action run inside a template effect does not subscribe it to
         // the geometry it updates.
         const measure = () =>
             untrack(() => {
+                // Located before its height is recorded: a new measurement
+                // moves the average, and with it the spacer this row is
+                // compared against, ahead of the DOM.
+                if (rowId === firstRenderedRowId) {
+                    measureContentOffset()
+                }
                 const rect = node.getBoundingClientRect()
                 if (rect.height > 0) {
                     measureRow(rowId, rect.height)
                 }
-                measureContentOffset(node, rowId, rect)
             })
 
         // Measure on mount
@@ -818,11 +894,19 @@ export const addVirtualScroll = <Item>({
 
         return {
             update(newRowId: string) {
+                // Another node may already have taken over the old ID.
+                if (rowNodes.get(rowId) === node) {
+                    rowNodes.delete(rowId)
+                }
                 rowId = newRowId
+                rowNodes.set(rowId, node)
                 measure()
             },
             destroy() {
                 resizeObserver.disconnect()
+                if (rowNodes.get(rowId) === node) {
+                    rowNodes.delete(rowId)
+                }
             }
         }
     }
