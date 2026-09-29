@@ -5,6 +5,7 @@ import {
     box,
     derivedBox,
     keyedBox,
+    readonlyBox,
     type Box,
     type Getter,
     type ReadonlyBox
@@ -232,11 +233,7 @@ export const addColumnFilters =
         // `deriveRows`; nothing is written while deriving.
         let upstreamRows: Getter<BodyRow<Item>[]> = () => []
         let filteredRows: Getter<BodyRow<Item>[]> = () => []
-        const preFilteredRows: ReadonlyBox<BodyRow<Item>[]> = {
-            get current() {
-                return upstreamRows()
-            }
-        }
+        const preFilteredRows = readonlyBox(() => upstreamRows())
 
         const pluginState: ColumnFiltersState<Item> = { filterValues, preFilteredRows }
 

@@ -95,7 +95,6 @@ describe('withoutKey / withoutKeys', () => {
     })
 })
 
-// Ported from the v6 `utils/store.arraySetStore.test.ts`.
 describe('ArraySet', () => {
     it('initializes correctly', () => {
         const actual = new ArraySet()
@@ -206,7 +205,6 @@ describe('ArraySet', () => {
     })
 })
 
-// Ported from the v6 record set store tests (`utils/store.*.test.ts`).
 describe('RecordSet', () => {
     const initial = () => ({ 1: true, 2: true, 3: true })
 

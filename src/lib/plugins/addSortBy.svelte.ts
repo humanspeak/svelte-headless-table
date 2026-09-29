@@ -1,6 +1,6 @@
 import type { DataBodyCell } from '../bodyCells.js'
 import type { BodyRow } from '../bodyRows.js'
-import type { Box, Getter, ReadonlyBox } from '../reactivity.svelte.js'
+import { readonlyBox, type Box, type Getter, type ReadonlyBox } from '../reactivity.svelte.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { compare } from '../utils/compare.js'
 import { isShiftClick } from '../utils/event.js'
@@ -297,11 +297,7 @@ export const addSortBy =
         // "Pre-sorted rows" read through the upstream getter captured when the
         // view model calls `deriveRows`; nothing is written while deriving.
         let upstreamRows: Getter<BodyRow<Item>[]> = () => []
-        const preSortedRows: ReadonlyBox<BodyRow<Item>[]> = {
-            get current() {
-                return upstreamRows()
-            }
-        }
+        const preSortedRows = readonlyBox(() => upstreamRows())
 
         const deriveRows: DeriveRowsFn<Item> = (rows) => {
             upstreamRows = rows

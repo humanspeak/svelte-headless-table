@@ -1,4 +1,3 @@
-import type { BodyCell } from '$lib/bodyCells.js'
 import { getBodyRows, getColumnedBodyRows, type BodyRow, type DataBodyRow } from '$lib/bodyRows.js'
 import { getFlatColumns, type Column, type FlatColumn } from '$lib/columns.js'
 import type { Table } from '$lib/createTable.js'
@@ -316,7 +315,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     const originalRows = $derived(getBodyRows(data(), flatColumns, { rowDataId }))
 
     // The getters resolve lazily, so plugins created below can read values
-    // the chain produces later (there are no stand-in stores any more). They
+    // the chain produces later. They
     // reference `const`s declared further down; nothing calls them before the
     // chain is built.
     const pluginInitTableState: PluginInitTableState<Item, Plugins> = {
@@ -357,12 +356,16 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
 
     // ---- Table attributes ---------------------------------------------------
 
+    // Folds each plugin's derive function over the base getter, first to last.
+    const chain = <T>(fns: DeriveFn<T>[], base: Getter<T>): Getter<T> =>
+        fns.reduce((getter, fn) => fn(getter), base)
+
     const deriveTableAttrsFns: DeriveFn<TableAttributes<Item>>[] = pluginInstances
         .map((pluginInstance) => pluginInstance.deriveTableAttrs)
         .filter(nonUndefined)
-    let tableAttrs: Getter<TableAttributes<Item>> = () => ({ role: 'table' })
-    for (const fn of deriveTableAttrsFns) tableAttrs = fn(tableAttrs)
-    const tableAttrsFn = tableAttrs
+    const tableAttrsFn = chain<TableAttributes<Item>>(deriveTableAttrsFns, () => ({
+        role: 'table'
+    }))
     const finalizedTableAttrs = $derived.by(() =>
         measure(
             'tableAttrs',
@@ -373,9 +376,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     const deriveTableHeadAttrsFns: DeriveFn<TableHeadAttributes<Item>>[] = pluginInstances
         .map((pluginInstance) => pluginInstance.deriveTableHeadAttrs)
         .filter(nonUndefined)
-    let tableHeadAttrs: Getter<TableHeadAttributes<Item>> = () => ({})
-    for (const fn of deriveTableHeadAttrsFns) tableHeadAttrs = fn(tableHeadAttrs)
-    const tableHeadAttrsFn = tableHeadAttrs
+    const tableHeadAttrsFn = chain<TableHeadAttributes<Item>>(deriveTableHeadAttrsFns, () => ({}))
     const finalizedTableHeadAttrs = $derived.by(() =>
         measure(
             'tableHeadAttrs',
@@ -386,9 +387,9 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     const deriveTableBodyAttrsFns: DeriveFn<TableBodyAttributes<Item>>[] = pluginInstances
         .map((pluginInstance) => pluginInstance.deriveTableBodyAttrs)
         .filter(nonUndefined)
-    let tableBodyAttrs: Getter<TableBodyAttributes<Item>> = () => ({ role: 'rowgroup' })
-    for (const fn of deriveTableBodyAttrsFns) tableBodyAttrs = fn(tableBodyAttrs)
-    const tableBodyAttrsFn = tableBodyAttrs
+    const tableBodyAttrsFn = chain<TableBodyAttributes<Item>>(deriveTableBodyAttrsFns, () => ({
+        role: 'rowgroup'
+    }))
     const finalizedTableBodyAttrs = $derived.by(() =>
         measure(
             'tableBodyAttrs',
@@ -437,10 +438,6 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
     // same row objects) the existing getters already track the new state.
     // A WeakSet, not rune state — it is written while deriving.
     const hookedRows = new WeakSet<BodyRow<Item, Plugins>>()
-    const injectCellState = (cell: BodyCell<Item, Plugins>) => {
-        cell.injectState(tableState)
-    }
-
     // Mutating the row and cell objects this derivation produced (state
     // injection, hooks) is allowed; assigning rune state here is not.
     const injectedRows = $derived.by(() =>
@@ -450,7 +447,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
                 if (hookedRows.has(row)) continue
                 hookedRows.add(row)
                 row.injectState(tableState)
-                row.cells.forEach(injectCellState)
+                for (const cell of row.cells) cell.injectState(tableState)
                 for (const [pluginName, trHook] of trHookEntries) {
                     row.applyHook(pluginName, trHook(row))
                 }
@@ -507,7 +504,7 @@ export const createViewModel = <Item, Plugins extends AnyPlugins = AnyPlugins>(
             tableAttrs: deriveTableAttrsFns.length + 1, // +1 for finalized
             tableHeadAttrs: deriveTableHeadAttrsFns.length + 1,
             tableBodyAttrs: deriveTableBodyAttrsFns.length + 1,
-            visibleColumns: deriveFlatColumnsFns.length + 1, // +1 for injected
+            visibleColumns: deriveFlatColumnsFns.length + 1, // +1 for the view model's own
             rows: deriveRowsFns.length + 2, // +2 for columned + injected
             pageRows: derivePageRowsFns.length + 1 // +1 for injected
         },

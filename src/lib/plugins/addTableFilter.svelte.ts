@@ -1,5 +1,5 @@
 import type { BodyRow } from '../bodyRows.js'
-import { box, type Box, type Getter, type ReadonlyBox } from '../reactivity.svelte.js'
+import { box, readonlyBox, type Box, type Getter, type ReadonlyBox } from '../reactivity.svelte.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { textPrefixFilter } from './addColumnFilters.svelte.js'
 
@@ -243,11 +243,7 @@ export const addTableFilter =
         // `deriveRows`; nothing is written while deriving.
         let upstreamRows: Getter<BodyRow<Item>[]> = () => []
         let tableCellMatches: Getter<Record<string, boolean>> = () => ({})
-        const preFilteredRows: ReadonlyBox<BodyRow<Item>[]> = {
-            get current() {
-                return upstreamRows()
-            }
-        }
+        const preFilteredRows = readonlyBox(() => upstreamRows())
 
         const pluginState: TableFilterState<Item> = { filterValue, preFilteredRows }
 

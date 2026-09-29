@@ -1,7 +1,14 @@
 import { untrack } from 'svelte'
 import type { Action } from 'svelte/action'
 import type { BodyRow } from '../bodyRows.js'
-import { box, type Getter, type ReadonlyBox } from '../reactivity.svelte.js'
+import {
+    box,
+    isBox,
+    readonlyBox,
+    toGetter,
+    type Getter,
+    type ReadonlyBox
+} from '../reactivity.svelte.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 import { HeightManager } from '../utils/HeightManager.js'
 import { resolveAlignedOffset } from '../utils/scrollAlign.js'
@@ -43,42 +50,14 @@ const DEFAULTS = {
     maxScrollHeight: 16_000_000
 } as const
 
-const STORE_CONFIG_ERROR = (name: string) =>
+const storeConfigError = (name: string) =>
     `addVirtualScroll: ${name} must be a number, a getter or a box; Svelte stores are not accepted in v7 — see the migration guide`
 
-const isBox = <T>(value: unknown): value is ReadonlyBox<T> =>
-    typeof value === 'object' && value !== null && 'current' in value
+const isNumber = (value: unknown): value is number => typeof value === 'number'
 
-/**
- * Normalise a `number | Getter<number> | ReadonlyBox<number> | undefined`
- * config value into a getter, rejecting Svelte stores.
- */
-const toGetter = (
-    name: string,
-    value: number | Getter<number> | ReadonlyBox<number> | undefined,
-    fallback: number
-): Getter<number> => {
-    if (value === undefined) {
-        return () => fallback
-    }
-    if (typeof value === 'number') {
-        return () => value
-    }
-    if (typeof value === 'function') {
-        return value
-    }
-    if (isBox<number>(value)) {
-        return () => value.current
-    }
-    throw new Error(STORE_CONFIG_ERROR(name))
-}
-
-/** Wraps a getter as a {@link ReadonlyBox}. */
-const readonlyBox = <T>(get: Getter<T>): ReadonlyBox<T> => ({
-    get current() {
-        return get()
-    }
-})
+/** Normalise an optional numeric config value into a getter, rejecting Svelte stores. */
+const numberGetter = (name: string, value: unknown, fallback: number): Getter<number> =>
+    value === undefined ? () => fallback : toGetter(value, isNumber, storeConfigError(name))
 
 const EMPTY_RANGE: VisibleRange = { start: 0, end: 0 }
 
@@ -188,8 +167,8 @@ export const addVirtualScroll = <Item>({
     // size of the full dataset and `dataOffset` is the absolute index of
     // the first resident row.
     const isSparse = totalRowsConfig !== undefined
-    const datasetRows = toGetter('totalRows', totalRowsConfig, 0)
-    const dataOffset = toGetter('dataOffset', dataOffsetConfig, 0)
+    const datasetRows = numberGetter('totalRows', totalRowsConfig, 0)
+    const dataOffset = numberGetter('dataOffset', dataOffsetConfig, 0)
 
     // Loading state
     const isLoading = box(false)
@@ -943,7 +922,7 @@ export const addVirtualScroll = <Item>({
         boundData = data
     }
 
-    // Rebuilding this per view model is what used to strand the mounted
+    // Rebuilding this per view model would strand the mounted
     // container on a dead closure.
     const instance = {
         pluginState,

@@ -43,8 +43,7 @@ describe('View model derivation chain performance', () => {
             }
         ])
 
-        // addSelectedRows is parked until plan 003, so this stack has five
-        // plugins instead of v6's six.
+        // Five plugins, enough to exercise every derivation stage.
         const table = createTable(() => data.current, {
             sort: addSortBy(),
             filter: addColumnFilters(),
@@ -190,7 +189,7 @@ describe('View model derivation chain performance', () => {
 
         expect(vm.current.pageRows).toBeDefined()
 
-        // Baseline pinned in v6 (one `get(vm.pageRows)`); the runes chain must
+        // Baseline for one read of `vm.current.pageRows`; the chain must
         // not derive more on one read.
         expect({ ...vm._debug.derivationCalls }).toEqual({
             tableAttrs: 0,

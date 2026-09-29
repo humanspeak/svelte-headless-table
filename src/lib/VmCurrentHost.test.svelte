@@ -13,7 +13,7 @@
     }
 
     // A minimal v7 row-selection plugin (a `tbody.tr` props hook over a
-    // RecordSet). It stands in for addSelectedRows, parked until plan 003.
+    // RecordSet). A minimal plugin keeps this host independent of addSelectedRows.
     const addTestSelect =
         (): TablePlugin<
             Item,

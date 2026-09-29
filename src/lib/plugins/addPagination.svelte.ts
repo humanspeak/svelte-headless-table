@@ -1,5 +1,12 @@
 import type { BodyRow } from '../bodyRows.js'
-import { box, derivedBox, type Box, type Getter, type ReadonlyBox } from '../reactivity.svelte.js'
+import {
+    box,
+    derivedBox,
+    toGetter,
+    type Box,
+    type Getter,
+    type ReadonlyBox
+} from '../reactivity.svelte.js'
 import type { DeriveRowsFn, NewTablePropSet, TablePlugin } from '../types/TablePlugin.js'
 
 /**
@@ -21,11 +28,12 @@ export type PaginationConfig = {
           /** Server-side pagination mode. */
           serverSide: true
           /**
-           * The total item count on the server: a number, or a getter returning
-           * it (reactive when it reads rune state). Svelte stores are not
-           * accepted; wrap one with `fromStore` and pass `() => wrapped.current`.
+           * The total item count on the server: a number, a getter returning
+           * it (reactive when it reads rune state) or a box holding it. Svelte
+           * stores are not accepted; wrap one with `fromStore` and pass
+           * `() => wrapped.current`.
            */
-          serverItemCount: number | Getter<number>
+          serverItemCount: number | Getter<number> | ReadonlyBox<number>
       }
 )
 
@@ -52,24 +60,9 @@ export interface PaginationState {
 const MIN_PAGE_SIZE = 1
 
 const SERVER_ITEM_COUNT_STORE_ERROR =
-    'addPagination: serverItemCount must be a number or a getter, e.g. serverItemCount: () => total; Svelte stores are not accepted in v7 — see the migration guide'
+    'addPagination: serverItemCount must be a number, a getter or a box, e.g. serverItemCount: () => total; Svelte stores are not accepted in v7 — see the migration guide'
 
-/**
- * Normalises `serverItemCount` to a getter, rejecting Svelte stores.
- *
- * @param count - A number or a getter.
- * @returns A getter for the count.
- * @throws Error if `count` is a Svelte store.
- */
-const toCountGetter = (count: number | Getter<number>): Getter<number> => {
-    if (typeof count === 'function') {
-        return count
-    }
-    if (typeof count !== 'number') {
-        throw new Error(SERVER_ITEM_COUNT_STORE_ERROR)
-    }
-    return () => count
-}
+const isNumber = (value: unknown): value is number => typeof value === 'number'
 
 /**
  * Configuration for {@link createPageState}.
@@ -84,7 +77,7 @@ export interface PageStateConfig {
     /** Whether pagination is server-side. */
     serverSide?: boolean | undefined
     /** Total item count from the server (server-side mode). */
-    serverItemCount?: number | Getter<number> | undefined
+    serverItemCount?: number | Getter<number> | ReadonlyBox<number> | undefined
 }
 
 /**
@@ -115,7 +108,7 @@ export const createPageState = ({
 
     const itemCount: Getter<number> =
         serverSide && serverItemCount !== undefined
-            ? toCountGetter(serverItemCount)
+            ? toGetter(serverItemCount, isNumber, SERVER_ITEM_COUNT_STORE_ERROR)
             : () => items().length
     const pageCount = derivedBox(() => Math.ceil(itemCount() / pageSize.current))
 

@@ -1,7 +1,6 @@
-// The reactive primitives the v7 core and its plugins are built on. They replace
-// v6 Svelte store helpers (`writable`, `derived`, the keyed-property store and
-// the array/record set stores) with rune state that uses the `current`
-// vocabulary Svelte itself uses (`fromStore`, `MediaQuery`).
+// The reactive primitives the core and its plugins are built on: rune state
+// behind the `current` vocabulary Svelte itself uses (`fromStore`,
+// `MediaQuery`).
 //
 // Values are held in `$state.raw`: a write replaces the value and notifies
 // readers, exactly like `store.set`. Nothing is deep-proxied, so a value read
@@ -82,8 +81,64 @@ export const derivedBox = <T>(fn: Getter<T>): ReadonlyBox<T> => {
 }
 
 /**
- * A writable view of one key of a record box (replaces the v6 keyed-property store). The
- * key is used verbatim: keys containing `.` or `[` are ordinary keys. Writing
+ * A read-only view over a getter. Unlike {@link derivedBox} nothing is
+ * memoised: `current` calls `get` on every read, so it follows a getter that
+ * is reassigned after the box was created.
+ *
+ * @template T - The type of the value.
+ * @param get - Returns the current value.
+ * @returns A {@link ReadonlyBox} that reads through `get`.
+ */
+export const readonlyBox = <T>(get: Getter<T>): ReadonlyBox<T> => ({
+    get current() {
+        return get()
+    }
+})
+
+/** Whether `value` looks like a Svelte store (it has a `subscribe` function). */
+export const isStore = (value: unknown): boolean =>
+    ((typeof value === 'object' && value !== null) || typeof value === 'function') &&
+    'subscribe' in value &&
+    typeof value.subscribe === 'function'
+
+/** Whether `value` is a box (an object with a `current` property). */
+export const isBox = <T>(value: unknown): value is ReadonlyBox<T> =>
+    typeof value === 'object' && value !== null && 'current' in value
+
+/**
+ * Normalises a value, a getter or a box to a getter. Svelte stores and
+ * anything else that is not a `T` are rejected with `errorMessage`, so a
+ * caller passing a store gets a clear error instead of silently empty data.
+ *
+ * @template T - The type of the value.
+ * @param value - A `T`, a getter returning one, or a box holding one.
+ * @param isValue - Recognises a plain `T`.
+ * @param errorMessage - Thrown when `value` is none of the accepted forms.
+ * @returns A getter for the value.
+ * @throws Error if `value` is a Svelte store or otherwise unusable.
+ */
+export const toGetter = <T>(
+    value: unknown,
+    isValue: (_candidate: unknown) => _candidate is T,
+    errorMessage: string
+): Getter<T> => {
+    if (isStore(value)) {
+        throw new Error(errorMessage)
+    }
+    if (isValue(value)) {
+        return () => value
+    }
+    if (typeof value === 'function') {
+        return value as Getter<T>
+    }
+    if (isBox<T>(value)) {
+        return () => value.current
+    }
+    throw new Error(errorMessage)
+}
+
+/**
+ * A writable view of one key of a record box. The key is used verbatim: keys containing `.` or `[` are ordinary keys. Writing
  * replaces the parent record with a shallow copy, so readers of the parent are
  * notified; writing `undefined` removes the key.
  *
@@ -135,8 +190,7 @@ const withFalseRemoved = <K extends string>(record: Record<K, boolean>): Record<
     Object.fromEntries(Object.entries(record).filter(([, v]) => v === true)) as Record<K, boolean>
 
 /**
- * A reactive set of string keys stored as a `Record<K, true>` (replaces the v6
- * record set store). `false` entries are dropped on every write, so
+ * A reactive set of string keys stored as a `Record<K, true>`. `false` entries are dropped on every write, so
  * `current` only ever holds `true` values.
  *
  * @template K - The key type.
@@ -170,6 +224,7 @@ export class RecordSet<K extends string = string> implements Box<Record<K, boole
 
     /** Adds `key` to the set. */
     add(key: K): void {
+        if (this.has(key)) return
         this.#record = { ...this.#record, [key]: true }
     }
 
@@ -183,6 +238,7 @@ export class RecordSet<K extends string = string> implements Box<Record<K, boole
 
     /** Removes `key` from the set. */
     remove(key: K): void {
+        if (!this.has(key)) return
         this.#record = withoutKey(this.#record, key)
     }
 
@@ -225,8 +281,7 @@ export interface ArraySetOptions<T> {
 }
 
 /**
- * A reactive ordered set of items stored as an array (replaces the v6
- * `arraySetStore`). Every write assigns a new array.
+ * A reactive ordered set of items stored as an array. Every write assigns a new array.
  *
  * @template T - The item type.
  */

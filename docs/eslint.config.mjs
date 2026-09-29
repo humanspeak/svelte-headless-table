@@ -1,5 +1,6 @@
 import { includeIgnoreFile } from '@eslint/compat'
 import js from '@eslint/js'
+import tsParser from '@typescript-eslint/parser'
 import prettier from 'eslint-config-prettier'
 import svelte from 'eslint-plugin-svelte'
 import unusedImports from 'eslint-plugin-unused-imports'
@@ -91,13 +92,13 @@ export default [
     },
     {
         // Also covers `*.svelte.ts` / `*.svelte.js` (Svelte 5 typed-runes
-        // files) — without `parser: ts.parser` as the inner parser, the
+        // files) — without the TypeScript parser as the inner parser, the
         // svelte-eslint-parser chokes on TypeScript generic-call syntax
         // like `$state<T>()`.
         files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
         languageOptions: {
             parserOptions: {
-                parser: ts.parser
+                parser: tsParser
             }
         }
     }

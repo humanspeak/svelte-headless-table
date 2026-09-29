@@ -313,7 +313,6 @@
     const { pageIndex, pageCount, pageSize, hasPreviousPage, hasNextPage } = pluginStates.page
     const { expandedIds } = pluginStates.expand
     const { columnIdOrder } = pluginStates.orderColumns
-    // columnIdOrder.current = ['expanded', ...groupByIds.current]
     const { hiddenColumnIds } = pluginStates.hideColumns
     hiddenColumnIds.current = ['progress']
     const { columnWidths } = pluginStates.resize

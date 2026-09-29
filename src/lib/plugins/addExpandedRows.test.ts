@@ -1,10 +1,10 @@
 import { flushSync } from 'svelte'
 import type { Sample } from '../../routes/_createSamples.js'
 import { createTable } from '../createTable.js'
+import { deepState } from '../test/deepState.test.svelte.js'
 import { withEffectRoot } from '../test/effectRoot.test.svelte.js'
 import { addExpandedRows } from './addExpandedRows.svelte.js'
 import { addSubRows } from './addSubRows.svelte.js'
-import { deepState } from './deepState.test.svelte.js'
 
 const data: Sample[] = [
     {

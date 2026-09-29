@@ -58,7 +58,7 @@ Default `10`.
 ### `serverSide?: boolean`
 If `true`, use server-side pagination by updating the table's <a href="/docs/api/create-table#createtable-data-plugins-table">data</a>.
 
-### `serverItemCount: number | (() => number)`
+### `serverItemCount: number | (() => number) | ReadonlyBox<number>`
 Total item count when using server-side pagination. Required if `serverSide = true`. Pass a getter to make it reactive:
 
 ```ts

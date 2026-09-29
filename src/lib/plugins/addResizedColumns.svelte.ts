@@ -114,7 +114,7 @@ const withWidth = (
 
 /**
  * Sums the widths of a group's columns. Undefined until every column has a width
- * (a partial sum would be wrong, and the old NaN result was not valid CSS).
+ * (a partial sum would be wrong, and a NaN width is not valid CSS).
  * @internal
  */
 const groupWidth = (widths: Record<string, number>, ids: string[]): number | undefined => {
@@ -144,15 +144,6 @@ const styleFor = (width: number | undefined) => {
             'box-sizing': 'border-box' as const
         }
     }
-}
-
-/**
- * Internal state for tracking column widths during resize operations.
- * @internal
- */
-type ColumnsWidthState = {
-    current: Record<string, number>
-    start: Record<string, number>
 }
 
 /**
@@ -203,18 +194,10 @@ export const addResizedColumns =
             )
         )
 
-        const columnsWidthState = box<ColumnsWidthState>({
-            current: initialWidths,
-            start: {}
-        })
-        const columnWidths: Box<Record<string, number>> = {
-            get current() {
-                return columnsWidthState.current.current
-            },
-            set current(next) {
-                columnsWidthState.current = { ...columnsWidthState.current, current: next }
-            }
-        }
+        const columnWidths = box(initialWidths)
+        // Widths at the start of the drag in progress. Written by `dragStart`
+        // and read by `dragMove`; nothing renders from it, so it is not state.
+        let startWidths: Record<string, number> = {}
 
         const pluginState: ResizedColumnsState = { columnWidths }
 
@@ -236,22 +219,14 @@ export const addResizedColumns =
                         if (target === null) return
                         event.stopPropagation()
                         event.preventDefault()
-                        if (cell.isGroup()) {
-                            cell.ids.forEach((id) => {
-                                if (nodeForId.has(id)) {
-                                    columnWidths.current = withWidth(
-                                        columnWidths.current,
-                                        id,
-                                        initialWidths[id]
-                                    )
-                                }
-                            })
-                        } else if (nodeForId.has(cell.id)) {
-                            columnWidths.current = withWidth(
-                                columnWidths.current,
-                                cell.id,
-                                initialWidths[cell.id]
-                            )
+                        for (const id of cell.isGroup() ? cell.ids : [cell.id]) {
+                            if (nodeForId.has(id)) {
+                                columnWidths.current = withWidth(
+                                    columnWidths.current,
+                                    id,
+                                    initialWidths[id]
+                                )
+                            }
                         }
                     }
                     let tapedTwice = false
@@ -273,13 +248,10 @@ export const addResizedColumns =
                         event.stopPropagation()
                         event.preventDefault()
                         dragStartXPosForId.set(cell.id, getDragXPos(event))
-                        const state = columnsWidthState.current
-                        const ids = cell.isGroup() ? cell.ids : [cell.id]
-                        let start = state.start
-                        for (const id of ids) {
-                            start = withWidth(start, id, state.current[id])
+                        const current = columnWidths.current
+                        for (const id of cell.isGroup() ? cell.ids : [cell.id]) {
+                            startWidths = withWidth(startWidths, id, current[id])
                         }
-                        columnsWidthState.current = { ...state, start }
                         if (event instanceof MouseEvent) {
                             window.addEventListener('mousemove', dragMove)
                             window.addEventListener('mouseup', dragEnd)
@@ -295,60 +267,45 @@ export const addResizedColumns =
                         const dragStartXPos = dragStartXPosForId.get(cell.id)
                         if (dragStartXPos === undefined) return
                         const deltaWidth = getDragXPos(event) - dragStartXPos
-                        const state = columnsWidthState.current
-                        const updatedState = {
-                            ...state,
-                            current: { ...state.current }
-                        }
+                        const widths = { ...columnWidths.current }
                         if (cell.isGroup()) {
                             const enabledIds = cell.ids.filter(
                                 (id) => !disabledResizeIds.includes(id)
                             )
                             let totalStartWidth = 0
                             for (const id of enabledIds) {
-                                totalStartWidth += state.start[id] ?? 0
+                                totalStartWidth += startWidths[id] ?? 0
                             }
                             enabledIds.forEach((id) => {
-                                const startWidth = state.start[id]
+                                const startWidth = startWidths[id]
                                 if (startWidth !== undefined) {
-                                    updatedState.current[id] = Math.max(
+                                    widths[id] = Math.max(
                                         0,
                                         startWidth + deltaWidth * (startWidth / totalStartWidth)
                                     )
                                 }
                             })
                         } else {
-                            const startWidth = state.start[cell.id]
+                            const startWidth = startWidths[cell.id]
                             const { minWidth = 0, maxWidth } = columnOptions[cell.id] ?? {}
                             if (startWidth !== undefined) {
-                                updatedState.current[cell.id] = Math.min(
+                                widths[cell.id] = Math.min(
                                     Math.max(minWidth, startWidth + deltaWidth),
                                     ...(maxWidth === undefined ? [] : [maxWidth])
                                 )
                             }
                         }
-                        columnsWidthState.current = updatedState
+                        columnWidths.current = widths
                     }
                     const dragEnd = (event: Event) => {
                         event.stopPropagation()
                         event.preventDefault()
-                        if (cell.isGroup()) {
-                            cell.ids.forEach((id) => {
-                                const node = nodeForId.get(id)
-                                if (node !== undefined) {
-                                    columnWidths.current = withWidth(
-                                        columnWidths.current,
-                                        id,
-                                        node.getBoundingClientRect().width
-                                    )
-                                }
-                            })
-                        } else {
-                            const node = nodeForId.get(cell.id)
+                        for (const id of cell.isGroup() ? cell.ids : [cell.id]) {
+                            const node = nodeForId.get(id)
                             if (node !== undefined) {
                                 columnWidths.current = withWidth(
                                     columnWidths.current,
-                                    cell.id,
+                                    id,
                                     node.getBoundingClientRect().width
                                 )
                             }

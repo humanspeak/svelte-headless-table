@@ -1,6 +1,9 @@
 import type { Component, ComponentProps, Snippet } from 'svelte'
 import type { Getter } from '../reactivity.svelte.js'
 
+// trunk-ignore(eslint/@typescript-eslint/no-explicit-any): props are contravariant; `any` is the only default every component is assignable to
+type AnyComponent = Component<any>
+
 /**
  * Configuration type for rendering Svelte components or primitive values.
  *
@@ -12,9 +15,6 @@ import type { Getter } from '../reactivity.svelte.js'
  *
  * @template TComponent - The Svelte component type.
  */
-// trunk-ignore(eslint/@typescript-eslint/no-explicit-any): props are contravariant; `any` is the only default every component is assignable to
-type AnyComponent = Component<any>
-
 export type RenderConfig<TComponent extends Component = AnyComponent> =
     | ComponentRenderConfig<TComponent>
     // Snippet args are contravariant; `any` accepts a snippet of any argument type

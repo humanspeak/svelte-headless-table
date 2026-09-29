@@ -37,7 +37,7 @@ it('updates current.attrs when plugin state changes outside the template', async
     expect(screen.getByTestId('th-age').getAttribute('style') ?? '').not.toContain('123px')
 })
 
-// v7 semantics (plan 001 spike, test 7): the hook record is plain data, since
+// v7 semantics: the hook record is plain data, since
 // hooks are applied while the view model derives, where writing rune state is
 // illegal. A late `applyHook` (internal API) is visible to the next read and
 // rendered the next time that cell's template re-runs, but does not schedule a

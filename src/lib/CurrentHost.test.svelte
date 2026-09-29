@@ -15,7 +15,7 @@
     }
 
     // A minimal v7 column-width plugin (a `thead.tr.th` attrs hook over a
-    // record box). It stands in for addResizedColumns, parked until plan 003.
+    // record box). A minimal plugin keeps this host independent of addResizedColumns.
     const addTestWidths =
         (): TablePlugin<
             Item,

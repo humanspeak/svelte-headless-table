@@ -213,8 +213,7 @@ export const addSelectedRows =
 
         // Views read `selectedDataIds` on access and own no reactive state, so
         // they cannot go stale. A WeakMap keeps one view per row object without
-        // an eviction policy or an `invalidate()` call (v6 keyed an LRU cache by
-        // `row.id`, which forced both).
+        // an eviction policy or an `invalidate()` call.
         const rowStates = new WeakMap<BodyRow<Item>, SelectedRowsRowState>()
 
         const getRowState = (row: BodyRow<Item>): SelectedRowsRowState => {

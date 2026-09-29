@@ -17,7 +17,7 @@ import {
     type CreateViewModelOptions,
     type TableViewModel
 } from '$lib/createViewModel.svelte.js'
-import type { Getter } from '$lib/reactivity.svelte.js'
+import { toGetter, type Getter } from '$lib/reactivity.svelte.js'
 import type { AnyPlugins } from '$lib/types/TablePlugin.js'
 import { arrayEquals, getDuplicates } from '$lib/utils/array.js'
 
@@ -42,24 +42,8 @@ const STORE_DATA_ERROR =
  * @returns A getter for the data array.
  * @throws Error if `data` is a Svelte store (an object with a `subscribe` method).
  */
-const toDataGetter = <Item>(data: TableData<Item>): Getter<Item[]> => {
-    const maybeStore: unknown = data
-    if (
-        ((typeof maybeStore === 'object' && maybeStore !== null) ||
-            typeof maybeStore === 'function') &&
-        'subscribe' in maybeStore &&
-        typeof maybeStore.subscribe === 'function'
-    ) {
-        throw new Error(STORE_DATA_ERROR)
-    }
-    if (typeof data === 'function') {
-        return data
-    }
-    if (!Array.isArray(data)) {
-        throw new Error(STORE_DATA_ERROR)
-    }
-    return () => data
-}
+const toDataGetter = <Item>(data: TableData<Item>): Getter<Item[]> =>
+    toGetter(data, (value): value is Item[] => Array.isArray(value), STORE_DATA_ERROR)
 
 /**
  * Core table class that provides methods for defining columns and creating view models.
