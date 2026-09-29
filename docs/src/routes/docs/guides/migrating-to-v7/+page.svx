@@ -20,6 +20,32 @@ sidebar_title: Migrating to v7
 
 # Migrating to v7
 
+## Hand this to your AI assistant
+
+Every page of these docs is also published as plain Markdown, so a coding assistant can read the guide directly. Copy this prompt into it from your project's root:
+
+```text
+Upgrade this project from @humanspeak/svelte-headless-table 6.x to 7.
+
+1. Read https://table.svelte.page/docs/guides-migrating-to-v7.md in full before
+   changing anything. Any docs page /docs/<section>/<page> is also available
+   as Markdown at https://table.svelte.page/docs/<section>-<page>.md, for
+   example https://table.svelte.page/docs/plugins-add-pagination.md.
+2. If any template still uses <Subscribe>, $headerRows / $rows / $pageRows /
+   $tableAttrs, or cell.attrs() / cell.props(), convert it to current.* first,
+   following https://table.svelte.page/docs/guides-moving-to-current.md.
+3. Install @humanspeak/svelte-headless-table@^7 and apply every row of the
+   guide's "Breaking changes at a glance" table. Table data must be an array
+   or a getter, never a Svelte store. Plugin state is read and written through
+   .current. Files that create $state must be .svelte or .svelte.ts.
+4. Run every grep in the guide's "Checklist" section and fix each hit. Review
+   every initialFilterValue: it is now applied when the view model is built.
+5. Run the project's type check and tests. Report what you changed, and list
+   anything you could not convert with the file and line.
+```
+
+If your assistant cannot fetch URLs, paste the contents of <a href="https://table.svelte.page/docs/guides-migrating-to-v7.md">guides-migrating-to-v7.md</a> after the prompt, or give it <a href="https://table.svelte.page/llms-full.txt">llms-full.txt</a>, which is the whole documentation in one file.
+
 ## What v7 is
 
 v7 rebuilds the core on Svelte 5 runes: the view model is a chain of `$derived` values and the library imports nothing from `svelte/store`. `current.*` (`vm.current`, `row.current`, `cell.current`) is now the only way to read the table, and plugin state is plain reactive objects with a `current` property. Plugins are written against getters instead of stores.
