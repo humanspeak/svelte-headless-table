@@ -8,6 +8,22 @@
 > (`.agents/.plans/v7-followups/README.md`) — unless a reviewer dispatched
 > you and told you they maintain the index.
 >
+> Revision 2026-09-29 (guard, after the executor's STOP in Step 2): the
+> instruction to replace `row.state` in `addDataExport` with the plugin's
+> init `tableState` was wrong. That object is a `PluginInitTableState` and
+> has no `pluginStates`, while display-column `data(cell, state)` functions
+> read `state.pluginStates` (see `src/routes/kitchen-sink/+page.svelte`
+> lines 117–140). Instead, `tableComponent.svelte.ts` exposes a second
+> module function beside `bindComponent`, set up through the same static
+> block: `componentState(component)` returns the bound `TableState` or
+> `undefined`. `addDataExport` calls `componentState(row)`. Like
+> `bindComponent` it is not exported from `src/lib/index.ts`. The plugin
+> contract and `PluginInitTableState` do not change. Also accepted from the
+> executor's report: the private binding field is typed with `never` for
+> its component parameter (typing it with `this` breaks `clone()`
+> overrides), and the lazily resolved fields are declared `| undefined`
+> rather than optional (`exactOptionalPropertyTypes`).
+>
 > **Drift check (run first)**: `git diff --stat 317a8c8..HEAD -- src/lib/tableComponent.svelte.ts src/lib/createViewModel.svelte.ts src/lib/bodyRows.ts src/lib/bodyCells.ts src/lib/headerRows.ts src/lib/headerCells.ts src/lib/plugins/addDataExport.svelte.ts`
 > If any of these changed since this plan was written, compare the "Current
 > state" excerpts against the live code before proceeding; on a mismatch,
@@ -277,9 +293,10 @@ Inside the class:
 Update the class JSDoc ("Provides common functionality for state injection,
 hook application, and attribute merging") to describe the binding.
 
-In `src/lib/plugins/addDataExport.svelte.ts` replace `row.state` with the
-`tableState` from the plugin's init argument (add it to the destructured
-init if it is not already there).
+In `src/lib/plugins/addDataExport.svelte.ts` replace `row.state` with
+`componentState(row)`, imported from `'../tableComponent.svelte.js'` (see
+the revision note at the top). Do not thread the init `tableState` through
+the export helpers.
 
 Delete `src/lib/tableComponent.applyHook.test.ts`. In
 `src/lib/tableComponent.current.test.ts` delete the "picks up a hook applied
