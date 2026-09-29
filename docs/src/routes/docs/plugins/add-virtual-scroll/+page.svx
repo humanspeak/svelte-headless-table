@@ -313,6 +313,10 @@ A sticky header keeps the space it occupies in the document, so the plugin alrea
 
 You don't need it for a header that scrolls away with the rows; that case is measured automatically. Attaching it to one anyway is harmless, since it reports no overlap once it's out of view.
 
+The header and the position of the rows are read together — on scroll, when the header resizes, and when the scroll container mounts — so a header that grows (a filter row appearing, a title wrapping) can't leave the range naming row 2 at the top of the table.
+
+If your rows aren't measured with `measureRowAction`, the plugin has no row to locate and assumes they begin where the header ends. That is exact for a header at the top of the scroll container; put anything else between the header and the rows and you need `measureRowAction` for the range to account for it.
+
 ### `totalHeight: ReadonlyBox<number>`
 Total height of all rows (for scroll container sizing).
 

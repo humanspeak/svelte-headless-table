@@ -1,5 +1,5 @@
 import { flushSync } from 'svelte'
-import { beforeAll, describe, expect, test, vi } from 'vitest'
+import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest'
 import { createTable } from '../createTable.js'
 import { box, type Box } from '../reactivity.svelte.js'
 import { withEffectRoot } from '../test/effectRoot.test.svelte.js'
@@ -27,6 +27,7 @@ class FakeScrollElement extends EventTarget {
     scrollTop = 0
     scrollTo = vi.fn()
     clientHeight: number
+    clientTop = 0
     constructor(clientHeight: number) {
         super()
         this.clientHeight = clientHeight
@@ -1308,6 +1309,7 @@ describe('addVirtualScroll with content above the rows', () => {
         scrollTop = 0
         scrollTo = vi.fn()
         clientHeight = VIEWPORT
+        clientTop = 0
         getBoundingClientRect() {
             return { top: 0, height: this.clientHeight } as DOMRect
         }
@@ -1430,6 +1432,7 @@ describe('addVirtualScroll with a sticky header', () => {
         scrollTop = 0
         scrollTo = vi.fn()
         clientHeight = VIEWPORT
+        clientTop = 0
         getBoundingClientRect() {
             return { top: 0, height: this.clientHeight } as DOMRect
         }
@@ -1540,5 +1543,243 @@ describe('addVirtualScroll with a sticky header', () => {
         // Container band [400,800]; the header covers [400,440], so the rows on
         // screen occupy [440,800] — row space [400,760], i.e. rows 10-18.
         expect(state.viewportRange.current).toEqual({ start: 10, end: 19 })
+    })
+})
+
+describe('addVirtualScroll keeps the header and the rows in step', () => {
+    const ROW_HEIGHT = 40
+    const VIEWPORT = 400
+
+    /** A container whose header height, and so where its rows begin, can change. */
+    class Container extends EventTarget {
+        style: Record<string, string> = {}
+        scrollTop = 0
+        scrollTo = vi.fn()
+        clientHeight = VIEWPORT
+        clientTop = 0
+        headerHeight = 40
+        /** Height of the top spacer as last rendered into the DOM. */
+        renderedSpacer = 0
+        getBoundingClientRect() {
+            return { top: 0, height: this.clientHeight } as DOMRect
+        }
+        scroll(top: number) {
+            this.scrollTop = top
+            this.dispatchEvent(new Event('scroll'))
+        }
+    }
+
+    /** Pinned to the top of the viewport, inside the container's border. */
+    const stickyHeaderNode = (container: Container) =>
+        ({
+            getBoundingClientRect: () => ({
+                top: container.clientTop,
+                bottom: container.clientTop + container.headerHeight,
+                height: container.headerHeight
+            })
+        }) as unknown as HTMLElement
+
+    /** The first rendered `<tr>`, laid out after the header and the spacer. */
+    const firstRowNode = (container: Container, height = ROW_HEIGHT) =>
+        ({
+            getBoundingClientRect: () => ({
+                top:
+                    container.clientTop +
+                    container.headerHeight +
+                    container.renderedSpacer -
+                    container.scrollTop,
+                height
+            })
+        }) as unknown as HTMLElement
+
+    /** ResizeObserver callbacks, so a test can deliver a resize by hand. */
+    let resizeCallbacks: (() => void)[] = []
+    const originalResizeObserver = globalThis.ResizeObserver
+
+    beforeAll(() => {
+        ;(globalThis as any).ResizeObserver = class {
+            constructor(callback: () => void) {
+                resizeCallbacks.push(callback)
+            }
+            observe() {}
+            unobserve() {}
+            disconnect() {}
+        }
+    })
+
+    afterAll(() => {
+        globalThis.ResizeObserver = originalResizeObserver
+    })
+
+    function build(estimatedRowHeight = ROW_HEIGHT) {
+        resizeCallbacks = []
+        const data = box(createTestData(300))
+        const table = createTable(() => data.current, {
+            virtualScroll: addVirtualScroll<TestItem>({ estimatedRowHeight, bufferSize: 5 })
+        })
+        const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
+        const vm = table.createViewModel(columns)
+        return { vm, state: vm.pluginStates.virtualScroll, node: new Container() }
+    }
+
+    const firstRowId = (vm: ReturnType<typeof build>['vm']) => {
+        const first = vm.current.pageRows.at(0)
+        if (first === undefined) {
+            throw new Error('no rows rendered')
+        }
+        return first.id
+    }
+
+    test('names row 0 at the top after the header grows', () => {
+        const { vm, state, node } = build()
+        state.virtualScroll(node as any)
+        const resizeHeader = resizeCallbacks.length
+        state.measureHeaderAction(stickyHeaderNode(node))
+        state.measureRowAction(firstRowNode(node), firstRowId(vm))
+        expect(state.viewportRange.current).toEqual({ start: 0, end: 9 })
+
+        // A filter row appears. The rows move down with it but do not resize,
+        // so only the header's observer fires.
+        node.headerHeight = 80
+        resizeCallbacks[resizeHeader]()
+
+        // The header covers [0,80] and the rows begin at 80: none are hidden.
+        expect(state.viewportRange.current).toEqual({ start: 0, end: 8 })
+    })
+
+    test('names row 0 at the top after scrolling away and back', () => {
+        const { vm, state, node } = build()
+        state.virtualScroll(node as any)
+        state.measureHeaderAction(stickyHeaderNode(node))
+        state.measureRowAction(firstRowNode(node), firstRowId(vm))
+
+        // Within the buffer, so row 0 stays mounted and is not measured again.
+        node.scroll(120)
+        node.headerHeight = 80
+        node.scroll(0)
+        node.scroll(0)
+
+        expect(state.viewportRange.current).toEqual({ start: 0, end: 8 })
+    })
+
+    test('places rows and header that mounted before their container', () => {
+        const { vm, state, node } = build()
+        // Svelte runs the actions of a container's children before its own.
+        state.measureHeaderAction(stickyHeaderNode(node))
+        state.measureRowAction(firstRowNode(node), firstRowId(vm))
+
+        state.virtualScroll(node as any)
+        node.scroll(400)
+
+        // No ResizeObserver has run. Container band [400,800], header over
+        // [400,440], rows begin at 40: row space [400,760].
+        expect(state.viewportRange.current).toEqual({ start: 10, end: 19 })
+    })
+
+    test('does not count the header as hidden rows when no row is measured', () => {
+        const { state, node } = build()
+        state.virtualScroll(node as any)
+        state.measureHeaderAction(stickyHeaderNode(node))
+
+        node.scroll(0)
+        expect(state.viewportRange.current).toEqual({ start: 0, end: 9 })
+
+        node.scroll(400)
+        expect(state.viewportRange.current).toEqual({ start: 10, end: 19 })
+    })
+
+    test('names row 0 for fixed-height sparse rows in a window that is not rendered', () => {
+        // As reported: rows fixed at 32px and never measured, a 36.6px sticky
+        // header, and no ResizeObserver delivery, so the header is first read
+        // on a scroll event.
+        const data = box(createTestData(200))
+        const table = createTable(() => data.current, {
+            virtualScroll: addVirtualScroll<TestItem>({
+                estimatedRowHeight: 32,
+                bufferSize: 6,
+                totalRows: 100_000,
+                dataOffset: 0
+            })
+        })
+        const columns = table.createColumns([table.column({ accessor: 'name', header: 'Name' })])
+        const state = table.createViewModel(columns).pluginStates.virtualScroll
+        const node = new Container()
+        node.clientHeight = 384
+        node.headerHeight = 36.6
+
+        state.measureHeaderAction(stickyHeaderNode(node))
+        state.virtualScroll(node as any)
+        // 347.4px of rows below the header is 10.86 rows.
+        expect(state.viewportRange.current).toEqual({ start: 0, end: 11 })
+
+        node.scroll(3200)
+        expect(state.viewportRange.current).toEqual({ start: 100, end: 111 })
+
+        node.scroll(0)
+        expect(state.viewportRange.current).toEqual({ start: 0, end: 11 })
+    })
+
+    test('lands scrollToIndex on its row when no row is measured', () => {
+        const { state, node } = build()
+        state.virtualScroll(node as any)
+        state.measureHeaderAction(stickyHeaderNode(node))
+        node.scroll(0)
+
+        state.scrollToIndex(20, { align: 'start' })
+
+        // Row 20 begins at container 40 + 800, and must clear the 40px header.
+        expect(node.scrollTo).toHaveBeenCalledWith(expect.objectContaining({ top: 800 }))
+    })
+
+    test('a measured row takes over from the header', () => {
+        const { vm, state, node } = build()
+        state.virtualScroll(node as any)
+        state.measureHeaderAction(stickyHeaderNode(node))
+        node.scroll(0)
+
+        // A toolbar sits between the header and the rows, which only a row
+        // can reveal.
+        const toolbar = 40
+        const rowNode = {
+            getBoundingClientRect: () => ({
+                top: node.headerHeight + toolbar - node.scrollTop,
+                height: ROW_HEIGHT
+            })
+        } as unknown as HTMLElement
+        state.measureRowAction(rowNode, firstRowId(vm))
+
+        // Rows begin at 80, so the band is [0,320] of row space.
+        expect(state.viewportRange.current).toEqual({ start: 0, end: 8 })
+    })
+
+    test('measures from inside the container border', () => {
+        const { vm, state, node } = build()
+        node.clientTop = 10
+        state.virtualScroll(node as any)
+        state.measureRowAction(firstRowNode(node), firstRowId(vm))
+
+        // 5px into row 9: counting the border as content would end at row 9.
+        node.scroll(5)
+        node.scroll(5)
+
+        // Container band [5,405] less the 40px header is row space [-35,365].
+        expect(state.viewportRange.current).toEqual({ start: 0, end: 10 })
+    })
+
+    test('locates the first row against the spacer the DOM is showing', () => {
+        // Rows turn out taller than estimated, so each measurement moves the
+        // average and with it the height of the unmeasured rows above.
+        const { vm, state, node } = build(20)
+        state.virtualScroll(node as any)
+
+        node.scroll(4000)
+        node.renderedSpacer = state.topSpacerHeight.current
+        state.measureRowAction(firstRowNode(node), firstRowId(vm))
+        node.renderedSpacer = state.topSpacerHeight.current
+
+        // Rows begin 40px down whatever the spacer has since become, so the
+        // band is [3960,4360] of row space at 40px a row.
+        node.scroll(4000)
+        expect(state.viewportRange.current).toEqual({ start: 99, end: 109 })
     })
 })
