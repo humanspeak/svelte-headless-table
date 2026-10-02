@@ -166,6 +166,7 @@ export default [
             'playwright.config.ts',
             'svelte.config.js',
             'scripts/*.mjs',
+            '.github/scripts/*.mjs',
             'vitest.setup.ts'
         ],
         ...ts.configs.disableTypeChecked
