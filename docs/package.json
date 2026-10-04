@@ -37,7 +37,7 @@
         "@eslint/js": "^10.0.1",
         "@faker-js/faker": "^10.6.0",
         "@internationalized/date": "^3.12.4",
-        "@lucide/svelte": "^1.48.0",
+        "@lucide/svelte": "^1.49.0",
         "@playwright/test": "^1.63.0",
         "@sveltejs/adapter-auto": "^7.0.1",
         "@sveltejs/adapter-cloudflare": "^7.2.9",
