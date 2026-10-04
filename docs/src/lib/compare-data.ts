@@ -27,7 +27,7 @@ export const competitors: Competitor[] = [
         name: 'TanStack Table',
         tagline: 'A focused Svelte table API vs a larger multi-framework ecosystem',
         description:
-            'Both libraries are MIT-licensed, headless, TypeScript-first, and native to Svelte 5. TanStack Table v9 provides a runes-native Svelte adapter over a high-performance core shared across ten frameworks. @humanspeak/svelte-headless-table is the narrower option: its public API, documentation, stores, plugin state, and component renderers are designed only for Svelte. The choice is focus and familiarity versus ecosystem breadth and advanced features — not Svelte 5 support or licensing.',
+            'Both libraries are MIT-licensed, headless, TypeScript-first, and native to Svelte 5. TanStack Table v9 provides a runes-native Svelte adapter over a high-performance core shared across ten frameworks. @humanspeak/svelte-headless-table is the narrower option: its public API, documentation, rune-backed view model, plugin state, and component renderers are designed only for Svelte. The choice is focus and familiarity versus ecosystem breadth and advanced features — not Svelte 5 support or licensing.',
         website: 'https://tanstack.com/table',
         github: 'https://github.com/TanStack/table',
         npm: '@tanstack/svelte-table',
@@ -38,7 +38,7 @@ export const competitors: Competitor[] = [
                 name: 'Svelte 5 Support',
                 us: true,
                 them: true,
-                note: 'Both packages support Svelte 5 natively. `@tanstack/svelte-table@9.1.2` declares `svelte: ^5.0.0` and uses runes with Svelte-aware atom bindings.'
+                note: 'Both packages support Svelte 5 natively. `@tanstack/svelte-table@9.2.4` declares `svelte: ^5.0.0` and uses runes with Svelte-aware atom bindings.'
             },
             { name: 'TypeScript Support', us: true, them: true },
             {
@@ -71,7 +71,7 @@ export const competitors: Competitor[] = [
             { name: 'Editable Data', us: 'createRender(EditableCell)', them: 'Documented pattern' },
             {
                 name: 'API Style',
-                us: 'Svelte stores + named plugin builders + pluginStates',
+                us: 'Svelte 5 runes + current.* view model + named plugins + pluginStates',
                 them: 'TanStack Store atoms + framework adapter'
             },
             { name: 'GitHub Stars', us: 'Smaller community', them: '28k+' },
@@ -84,8 +84,8 @@ export const competitors: Competitor[] = [
         ],
         prosUs: [
             'Svelte-only public API and documentation — there is no framework-neutral guide to translate into Svelte concepts',
-            'Table behaviours are named plugins on one createTable call, with their stores grouped under pluginStates',
-            'Cell renderers are ordinary Svelte components through createRender, and the view model exposes familiar Svelte stores',
+            'Table behaviours are named plugins on one createTable call, with their reactive state grouped under pluginStates',
+            'Cell renderers are ordinary Svelte components through createRender, and the rune-backed view model exposes table data and attributes through current.*',
             'Integrated addVirtualScroll plugin for semantic table virtualization without choosing and wiring a separate virtualizer'
         ],
         prosThem: [
@@ -108,7 +108,7 @@ export const competitors: Competitor[] = [
             'Virtualization requires choosing and integrating TanStack Virtual or another virtualizer'
         ],
         verdict:
-            'TanStack Table is the stronger default when you need pinning, a large ecosystem, published performance work, or one table model across frameworks. Choose @humanspeak/svelte-headless-table when your application is Svelte-only, its focused feature set covers the job, and you prefer named plugins, pluginStates, Svelte stores, and Svelte component renderers over adopting the broader TanStack model. Both are native to Svelte 5, headless, TypeScript-first, and MIT.',
+            'TanStack Table is the stronger default when you need pinning, a large ecosystem, published performance work, or one table model across frameworks. Choose @humanspeak/svelte-headless-table when your application is Svelte-only, its focused feature set covers the job, and you prefer named plugins, pluginStates, a rune-backed current.* view model, and Svelte component renderers over adopting the broader TanStack model. Both are native to Svelte 5, headless, TypeScript-first, and MIT.',
         keywords: [
             'tanstack table',
             'tanstack svelte table',
@@ -122,7 +122,7 @@ export const competitors: Competitor[] = [
         name: '@vincjo/datatables',
         tagline: 'Server-friendly table handlers vs a broader plugin-composed table model',
         description:
-            'Both libraries are MIT-licensed, TypeScript-first, and native to Svelte 5. @vincjo/datatables centres on a TableHandler with concise client- and server-side APIs plus optional prebuilt controls. @humanspeak/svelte-headless-table uses named plugins and a store-based view model to cover a broader set of structural table behaviours. Vincjo is the more direct fit for server-driven CRUD tables; ours is the stronger fit for grouped, hierarchical, resizable, reorderable, or virtualized tables.',
+            'Both libraries are MIT-licensed, TypeScript-first, and native to Svelte 5. @vincjo/datatables centres on a TableHandler with concise client- and server-side APIs plus optional prebuilt controls. @humanspeak/svelte-headless-table uses named plugins and a rune-backed current.* view model to cover a broader set of structural table behaviours. Vincjo is the more direct fit for server-driven CRUD tables; ours is the stronger fit for grouped, hierarchical, resizable, reorderable, or virtualized tables.',
         website: 'https://vincjo.fr/datatables',
         github: 'https://github.com/vincjo/datatables',
         npm: '@vincjo/datatables',
@@ -143,7 +143,7 @@ export const competitors: Competitor[] = [
             { name: 'Pagination', us: true, them: true },
             {
                 name: 'Server-Side / Lazy Mode',
-                us: 'BYO — store handles the fetch',
+                us: 'BYO — wire plugin state into data fetching',
                 them: 'First-class lazy-loading mode'
             },
             { name: 'Row Selection', us: true, them: true },
@@ -163,7 +163,7 @@ export const competitors: Competitor[] = [
         ],
         prosUs: [
             'Group-by, expansion, column reorder / resize / hide, and virtual scroll are first-class plugins',
-            'Named plugin stores expose each behaviour through one pluginStates object',
+            'Named plugins expose reactive state through one pluginStates object, with state values read and written via .current',
             'Cell renderers are ordinary Svelte components through createRender'
         ],
         prosThem: [
@@ -370,7 +370,7 @@ export const competitors: Competitor[] = [
                 name: 'Svelte 5 Native',
                 us: true,
                 them: false,
-                note: '`ag-grid-svelte@0.3.0` is an unofficial wrapper declaring `svelte: ^3` and `ag-grid-community: ^28 || ^29 || ^30`; current `ag-grid-community` is v36.1.0. Direct JavaScript mounting remains possible.'
+                note: '`ag-grid-svelte@0.3.0` is an unofficial wrapper declaring `svelte: ^3` and `ag-grid-community: ^28 || ^29 || ^30`; current `ag-grid-community` is v36.2.0. Direct JavaScript mounting remains possible.'
             },
             { name: 'First-Party Svelte Support', us: true, them: false },
             { name: 'TypeScript Support', us: true, them: true },
@@ -396,7 +396,7 @@ export const competitors: Competitor[] = [
             },
             {
                 name: 'Server-Side Row Model',
-                us: 'BYO — store handles fetch',
+                us: 'BYO — wire plugin state into data fetching',
                 them: 'Enterprise only'
             },
             { name: 'Range / Cell Selection', us: false, them: 'Enterprise only' },
@@ -481,7 +481,7 @@ export const competitors: Competitor[] = [
             { name: 'Licence', us: 'MIT', them: 'Non-commercial free / Commercial paid' }
         ],
         prosUs: [
-            'First-party Svelte 5 API with familiar stores and Svelte component renderers',
+            'First-party Svelte 5 API with rune-backed state and Svelte component renderers',
             'Application owns semantic table markup and can use any design system',
             'MIT licence permits commercial use without a paid Handsontable licence',
             'Focused table-state surface when spreadsheet interactions are unnecessary'
