@@ -288,7 +288,7 @@ importers:
         version: 5.3.0
       '@humanspeak/docs-kit':
         specifier: github:humanspeak/docs-kit#2026.9.10
-        version: https://codeload.github.com/humanspeak/docs-kit/tar.gz/9650ea563bc94ed534543644d5a46c5ab540b62f(@humanspeak/svelte-markdown@1.9.5(shiki@4.4.3)(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@humanspeak/svelte-motion@1.4.4(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@internationalized/date@3.12.4)(@lucide/svelte@1.48.0(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.1(@typescript-eslint/types@8.70.1))(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(svelte@5.57.1(@typescript-eslint/types@8.70.1))(typescript@6.0.3)(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(mode-watcher@1.1.0(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(shiki@4.4.3)(svelte@5.57.1(@typescript-eslint/types@8.70.1))(zod@4.6.5)
+        version: https://codeload.github.com/humanspeak/docs-kit/tar.gz/9650ea563bc94ed534543644d5a46c5ab540b62f(@humanspeak/svelte-markdown@1.9.5(shiki@4.4.3)(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@humanspeak/svelte-motion@1.4.4(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@internationalized/date@3.12.4)(@lucide/svelte@1.49.0(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.1(@typescript-eslint/types@8.70.1))(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(svelte@5.57.1(@typescript-eslint/types@8.70.1))(typescript@6.0.3)(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(mode-watcher@1.1.0(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(shiki@4.4.3)(svelte@5.57.1(@typescript-eslint/types@8.70.1))(zod@4.6.5)
       '@humanspeak/svelte-headless-table':
         specifier: workspace:*
         version: link:..
@@ -321,8 +321,8 @@ importers:
         specifier: ^3.12.4
         version: 3.12.4
       '@lucide/svelte':
-        specifier: ^1.48.0
-        version: 1.48.0(svelte@5.57.1(@typescript-eslint/types@8.70.1))
+        specifier: ^1.49.0
+        version: 1.49.0(svelte@5.57.1(@typescript-eslint/types@8.70.1))
       '@playwright/test':
         specifier: ^1.63.0
         version: 1.63.0
@@ -1288,8 +1288,8 @@ packages:
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
 
-  '@lucide/svelte@1.48.0':
-    resolution: {integrity: sha512-bLimVDjehxu3fpu9XEUpqEkBk2sJAHAT2sVcLHhlM70EdNsXuj9ZnYENWv5xgw3+05h4i5TirAxTiTgnZZf8gw==}
+  '@lucide/svelte@1.49.0':
+    resolution: {integrity: sha512-RFH6Vx7dj6hshcBa1qJ0nKAWwkh385jJbDwF1WVg7yflC89310BsA55SEmJnaSRfr03dAyZMMLUC1EMGBu0Z0Q==}
     peerDependencies:
       svelte: ^5
 
@@ -4789,11 +4789,11 @@ snapshots:
 
   '@humanfs/types@0.15.0': {}
 
-  '@humanspeak/docs-kit@https://codeload.github.com/humanspeak/docs-kit/tar.gz/9650ea563bc94ed534543644d5a46c5ab540b62f(@humanspeak/svelte-markdown@1.9.5(shiki@4.4.3)(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@humanspeak/svelte-motion@1.4.4(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@internationalized/date@3.12.4)(@lucide/svelte@1.48.0(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.1(@typescript-eslint/types@8.70.1))(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(svelte@5.57.1(@typescript-eslint/types@8.70.1))(typescript@6.0.3)(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(mode-watcher@1.1.0(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(shiki@4.4.3)(svelte@5.57.1(@typescript-eslint/types@8.70.1))(zod@4.6.5)':
+  '@humanspeak/docs-kit@https://codeload.github.com/humanspeak/docs-kit/tar.gz/9650ea563bc94ed534543644d5a46c5ab540b62f(@humanspeak/svelte-markdown@1.9.5(shiki@4.4.3)(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@humanspeak/svelte-motion@1.4.4(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@internationalized/date@3.12.4)(@lucide/svelte@1.49.0(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.1(@typescript-eslint/types@8.70.1))(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(svelte@5.57.1(@typescript-eslint/types@8.70.1))(typescript@6.0.3)(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(mode-watcher@1.1.0(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(shiki@4.4.3)(svelte@5.57.1(@typescript-eslint/types@8.70.1))(zod@4.6.5)':
     dependencies:
       '@humanspeak/svelte-motion': 1.4.4(svelte@5.57.1(@typescript-eslint/types@8.70.1))
       '@humanspeak/svelte-satori-fix': 0.0.6(svelte@5.57.1(@typescript-eslint/types@8.70.1))
-      '@lucide/svelte': 1.48.0(svelte@5.57.1(@typescript-eslint/types@8.70.1))
+      '@lucide/svelte': 1.49.0(svelte@5.57.1(@typescript-eslint/types@8.70.1))
       '@resvg/resvg-js': 2.6.2
       '@sveltejs/kit': 2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.1(@typescript-eslint/types@8.70.1))(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(svelte@5.57.1(@typescript-eslint/types@8.70.1))(typescript@6.0.3)(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
       bits-ui: 2.19.3(@internationalized/date@3.12.4)(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.1(@typescript-eslint/types@8.70.1))(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(svelte@5.57.1(@typescript-eslint/types@8.70.1))(typescript@6.0.3)(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(svelte@5.57.1(@typescript-eslint/types@8.70.1))
@@ -4986,7 +4986,7 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@lucide/svelte@1.48.0(svelte@5.57.1(@typescript-eslint/types@8.70.1))':
+  '@lucide/svelte@1.49.0(svelte@5.57.1(@typescript-eslint/types@8.70.1))':
     dependencies:
       svelte: 5.57.1(@typescript-eslint/types@8.70.1)
 
