@@ -288,13 +288,13 @@ importers:
         version: 5.3.0
       '@humanspeak/docs-kit':
         specifier: github:humanspeak/docs-kit#2026.9.10
-        version: https://codeload.github.com/humanspeak/docs-kit/tar.gz/9650ea563bc94ed534543644d5a46c5ab540b62f(@humanspeak/svelte-markdown@1.9.5(shiki@4.4.3)(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@humanspeak/svelte-motion@1.4.4(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@internationalized/date@3.12.4)(@lucide/svelte@1.48.0(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.1(@typescript-eslint/types@8.70.1))(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(svelte@5.57.1(@typescript-eslint/types@8.70.1))(typescript@6.0.3)(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(mode-watcher@1.1.0(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(shiki@4.4.3)(svelte@5.57.1(@typescript-eslint/types@8.70.1))(zod@4.6.5)
+        version: https://codeload.github.com/humanspeak/docs-kit/tar.gz/9650ea563bc94ed534543644d5a46c5ab540b62f(@humanspeak/svelte-markdown@1.9.5(shiki@4.5.0)(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@humanspeak/svelte-motion@1.4.4(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@internationalized/date@3.12.4)(@lucide/svelte@1.48.0(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.1(@typescript-eslint/types@8.70.1))(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(svelte@5.57.1(@typescript-eslint/types@8.70.1))(typescript@6.0.3)(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(mode-watcher@1.1.0(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(shiki@4.5.0)(svelte@5.57.1(@typescript-eslint/types@8.70.1))(zod@4.6.5)
       '@humanspeak/svelte-headless-table':
         specifier: workspace:*
         version: link:..
       '@humanspeak/svelte-markdown':
         specifier: ^1.9.5
-        version: 1.9.5(shiki@4.4.3)(svelte@5.57.1(@typescript-eslint/types@8.70.1))
+        version: 1.9.5(shiki@4.5.0)(svelte@5.57.1(@typescript-eslint/types@8.70.1))
       '@humanspeak/svelte-motion':
         specifier: ^1.4.4
         version: 1.4.4(svelte@5.57.1(@typescript-eslint/types@8.70.1))
@@ -420,8 +420,8 @@ importers:
         specifier: ^0.8.1
         version: 0.8.1(prettier-plugin-organize-imports@4.3.0(prettier@3.9.9)(typescript@6.0.3))(prettier-plugin-svelte@4.1.1(prettier@3.9.9)(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(prettier@3.9.9)
       shiki:
-        specifier: ^4.4.3
-        version: 4.4.3
+        specifier: ^4.5.0
+        version: 4.5.0
       svelte:
         specifier: ^5.57.1
         version: 5.57.1(@typescript-eslint/types@8.70.1)
@@ -1511,32 +1511,32 @@ packages:
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
 
-  '@shikijs/core@4.4.3':
-    resolution: {integrity: sha512-QCR4q2ZO/ILJEuwiBMel4wdcTDb1JGwfjKTxPDF6x8ixOaluPrVqIn06C99AcRPhmYlBR56d/Fb+GN58GzExpg==}
+  '@shikijs/core@4.5.0':
+    resolution: {integrity: sha512-6CIgwq+bt2JZ3OSjb/nBkkwEf/CfpHcbam+Mg5Pllco7HAGRQ2/EFhZrrJtbyNTgKwknfVS+llsXGygiDGwJWw==}
     engines: {node: '>=20'}
 
-  '@shikijs/engine-javascript@4.4.3':
-    resolution: {integrity: sha512-FbOjFJp9VLdo1Wevs10BBtVxiTWwNLqZh5Gkhjgda/ioL15YOgeSl9n+6XMa3qRlPQzfhFNe641SrynFHYG0nQ==}
+  '@shikijs/engine-javascript@4.5.0':
+    resolution: {integrity: sha512-Ed6UdEj84LyYkwnxM5CvSMWAD+id9ExTYri0/+x41U9zrgNifPSS9lZm0JqBP0VfYI8yr8tY5nbNq9+p9R0kFA==}
     engines: {node: '>=20'}
 
-  '@shikijs/engine-oniguruma@4.4.3':
-    resolution: {integrity: sha512-EcOQkxdxGQrc1Row/cC2c96/v1dbZqGnEVu1qTuT/MJmp6+cXCvQussowVmCv5Tqr3KuY3c7IbM6HTW3LJ1k9w==}
+  '@shikijs/engine-oniguruma@4.5.0':
+    resolution: {integrity: sha512-dKVmbJecVdB9recl8a/CU4jdpNXyjJQrIcesIkpS70s5HS02ohpnCSpMUbotPnEUzbAcLQ+S4hwZYbkBBiTcJw==}
     engines: {node: '>=20'}
 
-  '@shikijs/langs@4.4.3':
-    resolution: {integrity: sha512-ePic0yfAJGOF83D5wBHK/00EjK65oahBYxFk5epgq33WRv7X9UuxLEV8PtR0szC0z8dl7INIpIodB99JRFlR+A==}
+  '@shikijs/langs@4.5.0':
+    resolution: {integrity: sha512-wwBTqwduXSz0X4v9Qa2EWeFaYJEw1clCncWjoRNQRbVDu3SPRTRWucnouYapKj3b8Q+sk/41Vbc4B5c8nuYzLA==}
     engines: {node: '>=20'}
 
-  '@shikijs/primitive@4.4.3':
-    resolution: {integrity: sha512-m0wBeLDQDeIxRdUmrCPdQqfuUamDwRL5isCfYbguKD6NiaKpVbsv+3J81DyIKgNW5h4WAIIr8T4EkgQrBBxvaQ==}
+  '@shikijs/primitive@4.5.0':
+    resolution: {integrity: sha512-UM7ShlA8oz0OWxLLO8BmO9Ip6fVqdkt8yF0EH7nOCqHfrx1eEAzF0ZUVK7L+I8NEgeu1PEWSRlxaiPPeCb4iDg==}
     engines: {node: '>=20'}
 
-  '@shikijs/themes@4.4.3':
-    resolution: {integrity: sha512-w8UHjeUnIR965KMWJHUPXOc2mNJUnK3vpVLYLvw5IYU2mnTTJ89E24OrJDBNiJDQ0qzb0tc4l7mrIXx5cFeIyw==}
+  '@shikijs/themes@4.5.0':
+    resolution: {integrity: sha512-zGb87H3UBbpuI4yoh5UguB1XbU+2BDU3kflM7UfZ+Cy2hWo9lBtqjSVK20gmLY6ukYl040hAypGXMgud9vul8Q==}
     engines: {node: '>=20'}
 
-  '@shikijs/types@4.4.3':
-    resolution: {integrity: sha512-UEJxmRR++MAGR6hugn0vgVS2W/6lWAts84FFSrnlH9sP0LNol7E5+NQ792pH8liWUhyMyjhTgSUH3k7iD7tc5g==}
+  '@shikijs/types@4.5.0':
+    resolution: {integrity: sha512-drtPrtD8N0DENyD2cyt6Ajy+IWsiCLgMxODwLTpvH1UsN6a9jf90tNTPjqwHvA+0Lzu9e0txk8DjfqH1p9UJRw==}
     engines: {node: '>=20'}
 
   '@shikijs/vscode-textmate@10.0.2':
@@ -3787,8 +3787,8 @@ packages:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
 
-  shiki@4.4.3:
-    resolution: {integrity: sha512-Mb/GvXPHBAXdgGIcnfU5L3ldpn1XcxrGkPHwqgRx17/I2XRfqlFKk2vGkHWINn1kdXvzJZeuO3is6I9KLPFm0g==}
+  shiki@4.5.0:
+    resolution: {integrity: sha512-OcRW72ngQvc+MSVWBRIovC/BTW589iUE/Vxav7VeM4RcY9MUjqB+IR6ILG1k9nuW6LiG/nct9uma4/MBtnZbmQ==}
     engines: {node: '>=20'}
 
   side-channel-list@1.0.1:
@@ -4789,7 +4789,7 @@ snapshots:
 
   '@humanfs/types@0.15.0': {}
 
-  '@humanspeak/docs-kit@https://codeload.github.com/humanspeak/docs-kit/tar.gz/9650ea563bc94ed534543644d5a46c5ab540b62f(@humanspeak/svelte-markdown@1.9.5(shiki@4.4.3)(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@humanspeak/svelte-motion@1.4.4(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@internationalized/date@3.12.4)(@lucide/svelte@1.48.0(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.1(@typescript-eslint/types@8.70.1))(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(svelte@5.57.1(@typescript-eslint/types@8.70.1))(typescript@6.0.3)(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(mode-watcher@1.1.0(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(shiki@4.4.3)(svelte@5.57.1(@typescript-eslint/types@8.70.1))(zod@4.6.5)':
+  '@humanspeak/docs-kit@https://codeload.github.com/humanspeak/docs-kit/tar.gz/9650ea563bc94ed534543644d5a46c5ab540b62f(@humanspeak/svelte-markdown@1.9.5(shiki@4.5.0)(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@humanspeak/svelte-motion@1.4.4(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@internationalized/date@3.12.4)(@lucide/svelte@1.48.0(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.1(@typescript-eslint/types@8.70.1))(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(svelte@5.57.1(@typescript-eslint/types@8.70.1))(typescript@6.0.3)(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(mode-watcher@1.1.0(svelte@5.57.1(@typescript-eslint/types@8.70.1)))(shiki@4.5.0)(svelte@5.57.1(@typescript-eslint/types@8.70.1))(zod@4.6.5)':
     dependencies:
       '@humanspeak/svelte-motion': 1.4.4(svelte@5.57.1(@typescript-eslint/types@8.70.1))
       '@humanspeak/svelte-satori-fix': 0.0.6(svelte@5.57.1(@typescript-eslint/types@8.70.1))
@@ -4806,15 +4806,15 @@ snapshots:
       svelte: 5.57.1(@typescript-eslint/types@8.70.1)
       tailwind-merge: 3.7.0
     optionalDependencies:
-      '@humanspeak/svelte-markdown': 1.9.5(shiki@4.4.3)(svelte@5.57.1(@typescript-eslint/types@8.70.1))
-      shiki: 4.4.3
+      '@humanspeak/svelte-markdown': 1.9.5(shiki@4.5.0)(svelte@5.57.1(@typescript-eslint/types@8.70.1))
+      shiki: 4.5.0
     transitivePeerDependencies:
       - '@internationalized/date'
       - zod
 
   '@humanspeak/memory-cache@1.2.0': {}
 
-  '@humanspeak/svelte-markdown@1.9.5(shiki@4.4.3)(svelte@5.57.1(@typescript-eslint/types@8.70.1))':
+  '@humanspeak/svelte-markdown@1.9.5(shiki@4.5.0)(svelte@5.57.1(@typescript-eslint/types@8.70.1))':
     dependencies:
       '@humanspeak/memory-cache': 1.2.0
       github-slugger: 2.0.0
@@ -4822,7 +4822,7 @@ snapshots:
       marked: 18.0.14
       svelte: 5.57.1(@typescript-eslint/types@8.70.1)
     optionalDependencies:
-      shiki: 4.4.3
+      shiki: 4.5.0
 
   '@humanspeak/svelte-motion@1.4.4(svelte@5.57.1(@typescript-eslint/types@8.70.1))':
     dependencies:
@@ -5128,40 +5128,40 @@ snapshots:
 
   '@rtsao/scc@1.1.0': {}
 
-  '@shikijs/core@4.4.3':
+  '@shikijs/core@4.5.0':
     dependencies:
-      '@shikijs/primitive': 4.4.3
-      '@shikijs/types': 4.4.3
+      '@shikijs/primitive': 4.5.0
+      '@shikijs/types': 4.5.0
       '@shikijs/vscode-textmate': 10.0.2
       '@types/hast': 3.0.5
       hast-util-to-html: 9.0.5
 
-  '@shikijs/engine-javascript@4.4.3':
+  '@shikijs/engine-javascript@4.5.0':
     dependencies:
-      '@shikijs/types': 4.4.3
+      '@shikijs/types': 4.5.0
       '@shikijs/vscode-textmate': 10.0.2
       oniguruma-to-es: 4.3.6
 
-  '@shikijs/engine-oniguruma@4.4.3':
+  '@shikijs/engine-oniguruma@4.5.0':
     dependencies:
-      '@shikijs/types': 4.4.3
+      '@shikijs/types': 4.5.0
       '@shikijs/vscode-textmate': 10.0.2
 
-  '@shikijs/langs@4.4.3':
+  '@shikijs/langs@4.5.0':
     dependencies:
-      '@shikijs/types': 4.4.3
+      '@shikijs/types': 4.5.0
 
-  '@shikijs/primitive@4.4.3':
+  '@shikijs/primitive@4.5.0':
     dependencies:
-      '@shikijs/types': 4.4.3
+      '@shikijs/types': 4.5.0
       '@shikijs/vscode-textmate': 10.0.2
       '@types/hast': 3.0.5
 
-  '@shikijs/themes@4.4.3':
+  '@shikijs/themes@4.5.0':
     dependencies:
-      '@shikijs/types': 4.4.3
+      '@shikijs/types': 4.5.0
 
-  '@shikijs/types@4.4.3':
+  '@shikijs/types@4.5.0':
     dependencies:
       '@shikijs/vscode-textmate': 10.0.2
       '@types/hast': 3.0.5
@@ -7554,14 +7554,14 @@ snapshots:
 
   shebang-regex@3.0.0: {}
 
-  shiki@4.4.3:
+  shiki@4.5.0:
     dependencies:
-      '@shikijs/core': 4.4.3
-      '@shikijs/engine-javascript': 4.4.3
-      '@shikijs/engine-oniguruma': 4.4.3
-      '@shikijs/langs': 4.4.3
-      '@shikijs/themes': 4.4.3
-      '@shikijs/types': 4.4.3
+      '@shikijs/core': 4.5.0
+      '@shikijs/engine-javascript': 4.5.0
+      '@shikijs/engine-oniguruma': 4.5.0
+      '@shikijs/langs': 4.5.0
+      '@shikijs/themes': 4.5.0
+      '@shikijs/types': 4.5.0
       '@shikijs/vscode-textmate': 10.0.2
       '@types/hast': 3.0.5
 
