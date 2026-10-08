@@ -29,10 +29,11 @@
         "@humanspeak/svelte-headless-table": "workspace:*",
         "@humanspeak/svelte-markdown": "^1.9.5",
         "@humanspeak/svelte-motion": "^1.4.4",
-        "github-slugger": "^2.0.0"
+        "github-slugger": "^2.0.0",
+        "posthog-js": "^1.438.1"
     },
     "devDependencies": {
-        "@cloudflare/workers-types": "^5.20260926.1",
+        "@cloudflare/workers-types": "^5.20261006.1",
         "@eslint/compat": "^2.1.1",
         "@eslint/js": "^10.0.1",
         "@faker-js/faker": "^10.6.0",
@@ -85,7 +86,7 @@
         "vaul-svelte": "1.0.0-next.7",
         "vite": "^8.3.1",
         "vitest": "^4.1.11",
-        "wrangler": "^4.141.0",
+        "wrangler": "^4.148.0",
         "zod": "^4.6.5"
     },
     "volta": {
