@@ -50,7 +50,7 @@
         "@tailwindcss/vite": "^4.3.3",
         "@tanstack/table-core": "^9.2.4",
         "@typescript-eslint/eslint-plugin": "^8.70.1",
-        "@typescript-eslint/parser": "^8.70.1",
+        "@typescript-eslint/parser": "^8.71.0",
         "autoprefixer": "^10.6.1",
         "bits-ui": "^2.19.3",
         "chokidar-cli": "^3.0.0",
