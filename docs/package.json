@@ -30,7 +30,7 @@
         "@humanspeak/svelte-markdown": "^1.9.5",
         "@humanspeak/svelte-motion": "^1.4.4",
         "github-slugger": "^2.0.0",
-        "posthog-js": "^1.438.1"
+        "posthog-js": "^1.438.2"
     },
     "devDependencies": {
         "@cloudflare/workers-types": "^5.20261006.1",
