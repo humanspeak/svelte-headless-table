@@ -5,7 +5,7 @@ description: Build your first table with Svelte Headless Table
 
 <script>
   import Demo from './Demo.svelte';
-  import Admonition from '$lib/components/Admonition.svelte'
+  import Admonition from '#lib/components/Admonition.svelte'
   import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
   if (seo) {

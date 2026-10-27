@@ -8,8 +8,8 @@
         type ExampleSection
     } from '@humanspeak/docs-kit'
     import { Boxes, Layers, Puzzle } from '@lucide/svelte'
-    import { demoCodeSample } from '$lib/demo-loaders'
-    import KitchenSinkDefault from '$lib/examples/kitchen-sink/demos/Default.svelte'
+    import { demoCodeSample } from '#lib/demo-loaders.js'
+    import KitchenSinkDefault from '#lib/examples/kitchen-sink/demos/Default.svelte'
 
     const breadcrumbs = getBreadcrumbContext()
     const seo = getSeoContext()

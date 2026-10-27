@@ -8,7 +8,7 @@ description: Extending the functionality of Svelte Headless Table with powerful 
 Svelte Headless Table is designed with extensibility in mind. Its complex features are powered by an extensive suite of plugins.
 
 <script>
-  import Admonition from '$lib/components/Admonition.svelte'
+  import Admonition from '#lib/components/Admonition.svelte'
   import { CircleCheck } from '@lucide/svelte'
   import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()

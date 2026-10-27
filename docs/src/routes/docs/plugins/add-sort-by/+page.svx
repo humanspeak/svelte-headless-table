@@ -5,8 +5,8 @@ sidebar_title: addSortBy
 ---
 
 <script>
-  import Admonition from '$lib/components/Admonition.svelte'
-  import PluginProps from '$lib/components/PluginProps.svelte'
+  import Admonition from '#lib/components/Admonition.svelte'
+  import PluginProps from '#lib/components/PluginProps.svelte'
   import SimpleSortingDemo from './SimpleSortingDemo.svelte'
   import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()

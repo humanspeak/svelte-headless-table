@@ -6,7 +6,7 @@ sidebar_title: Render
 
 <script>
   import { Render, createRender } from '@humanspeak/svelte-headless-table';
-  import Admonition from '$lib/components/Admonition.svelte'
+  import Admonition from '#lib/components/Admonition.svelte'
   import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()
   if (seo) {

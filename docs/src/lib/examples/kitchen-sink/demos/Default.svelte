@@ -18,17 +18,17 @@
     } from '@humanspeak/svelte-headless-table/plugins'
     import { ChevronDown, ChevronUp, Layers, Shuffle } from '@lucide/svelte'
 
-    import { mean, sum } from '$lib/utils/math'
-    import { getShuffled } from '$lib/utils/getShuffled'
-    import { createSamples } from '$lib/utils/createSamples'
-    import Italic from '$lib/examples/_shared/Italic.svelte'
-    import Profile from '$lib/examples/_shared/Profile.svelte'
-    import TextFilter from '$lib/examples/_shared/TextFilter.svelte'
-    import NumberRangeFilter from '$lib/examples/_shared/NumberRangeFilter.svelte'
-    import SelectFilter from '$lib/examples/_shared/SelectFilter.svelte'
-    import ExpandIndicator from '$lib/examples/_shared/ExpandIndicator.svelte'
-    import { getDistinct } from '$lib/utils/array'
-    import SelectIndicator from '$lib/examples/_shared/SelectIndicator.svelte'
+    import { mean, sum } from '#lib/utils/math.js'
+    import { getShuffled } from '#lib/utils/getShuffled.js'
+    import { createSamples } from '#lib/utils/createSamples.js'
+    import Italic from '#lib/examples/_shared/Italic.svelte'
+    import Profile from '#lib/examples/_shared/Profile.svelte'
+    import TextFilter from '#lib/examples/_shared/TextFilter.svelte'
+    import NumberRangeFilter from '#lib/examples/_shared/NumberRangeFilter.svelte'
+    import SelectFilter from '#lib/examples/_shared/SelectFilter.svelte'
+    import ExpandIndicator from '#lib/examples/_shared/ExpandIndicator.svelte'
+    import { getDistinct } from '#lib/utils/array.js'
+    import SelectIndicator from '#lib/examples/_shared/SelectIndicator.svelte'
 
     // `createSamples(length, depth, breadth)` creates `length` items at
     // every level (not just the top), and `breadth` *arrays* of children
