@@ -6,7 +6,7 @@
         type DataLabel
     } from '@humanspeak/svelte-headless-table'
 
-    import { createSamples, type Sample } from '$lib/utils/createSamples'
+    import { createSamples, type Sample } from '#lib/utils/createSamples.js'
     import EditableCell from './EditableCell.svelte'
 
     // `$state.raw`: rows are replaced, never mutated in place, so no deep proxy.

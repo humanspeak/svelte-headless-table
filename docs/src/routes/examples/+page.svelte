@@ -1,6 +1,6 @@
 <script lang="ts">
     import { BrutIndexV2, getBreadcrumbContext, getSeoContext } from '@humanspeak/docs-kit'
-    import sitemapManifest from '$lib/sitemap-manifest.json'
+    import sitemapManifest from '#lib/sitemap-manifest.json'
     import type { PageData } from './$types'
 
     type ExampleData = {

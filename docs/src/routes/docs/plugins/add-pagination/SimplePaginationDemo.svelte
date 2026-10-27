@@ -1,7 +1,7 @@
 <script>
     import { createTable, Render } from '@humanspeak/svelte-headless-table'
     import { addPagination } from '@humanspeak/svelte-headless-table/plugins'
-    import { createSamples } from '$lib/utils/createSamples'
+    import { createSamples } from '#lib/utils/createSamples.js'
 
     const data = createSamples(100, 1, 0, { seed: 10 })
 

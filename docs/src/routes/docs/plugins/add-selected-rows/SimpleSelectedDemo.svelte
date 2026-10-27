@@ -5,7 +5,7 @@
         addExpandedRows,
         addSelectedRows
     } from '@humanspeak/svelte-headless-table/plugins'
-    import { createSamples } from '$lib/utils/createSamples'
+    import { createSamples } from '#lib/utils/createSamples.js'
     import ExpandIndicator from '../add-expanded-rows/ExpandIndicator.svelte'
     import SelectIndicator from './SelectIndicator.svelte'
 

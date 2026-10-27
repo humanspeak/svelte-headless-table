@@ -5,7 +5,7 @@ sidebar_title: addPagination
 ---
 
 <script>
-  import Admonition from '$lib/components/Admonition.svelte'
+  import Admonition from '#lib/components/Admonition.svelte'
   import SimplePaginationDemo from './SimplePaginationDemo.svelte'
   import { getSeoContext } from '@humanspeak/docs-kit'
   const seo = getSeoContext()

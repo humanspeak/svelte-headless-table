@@ -1,11 +1,11 @@
 <script lang="ts">
     /**
      * Renders a plugin's prop set from the generated
-     * `$lib/generated/plugin-props.json` (built from the library's TypeScript
+     * `#lib/generated/plugin-props.json` (built from the library's TypeScript
      * types by `scripts/generate-plugin-props.ts`), so the documented shape of
      * `cell.current.props.<key>` cannot drift from the code.
      */
-    import pluginProps from '$lib/generated/plugin-props.json'
+    import pluginProps from '#lib/generated/plugin-props.json'
 
     interface PropDoc {
         name: string

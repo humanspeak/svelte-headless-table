@@ -1,7 +1,7 @@
 <script>
     import { createTable, Render } from '@humanspeak/svelte-headless-table'
     import { addGridLayout } from '@humanspeak/svelte-headless-table/plugins'
-    import { createSamples } from '$lib/utils/createSamples'
+    import { createSamples } from '#lib/utils/createSamples.js'
 
     const data = createSamples(10, 5, 3, { seed: 1 })
 

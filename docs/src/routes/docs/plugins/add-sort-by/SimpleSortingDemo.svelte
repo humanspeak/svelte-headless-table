@@ -1,7 +1,7 @@
 <script>
     import { createTable, Render } from '@humanspeak/svelte-headless-table'
     import { addSortBy } from '@humanspeak/svelte-headless-table/plugins'
-    import { createSamples } from '$lib/utils/createSamples'
+    import { createSamples } from '#lib/utils/createSamples.js'
 
     const data = createSamples(30, 1, 0, { seed: 2 })
 

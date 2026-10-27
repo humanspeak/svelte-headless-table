@@ -1,9 +1,9 @@
 <script lang="ts">
     import { DocsLayoutV2, PagerV2, getDocsTitleByPath, type PagerItem } from '@humanspeak/docs-kit'
-    import { docsConfig } from '$lib/docs-config'
-    import favicon from '$lib/assets/logo.svg'
-    import { docsSections, headerNav, tableLoveAndRespect } from '$lib/docsNav'
-    import sitemapManifest from '$lib/sitemap-manifest.json'
+    import { docsConfig } from '#lib/docs-config.js'
+    import favicon from '#lib/assets/logo.svg'
+    import { docsSections, headerNav, tableLoveAndRespect } from '#lib/docsNav.js'
+    import sitemapManifest from '#lib/sitemap-manifest.json'
     import rootPkg from '../../../../package.json'
     import '@fontsource-variable/inter/index.css'
     import '@fontsource-variable/jetbrains-mono/index.css'

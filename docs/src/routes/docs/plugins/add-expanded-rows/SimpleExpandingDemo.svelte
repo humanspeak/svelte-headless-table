@@ -1,8 +1,8 @@
 <script>
-    import { dev } from '$app/environment'
+    import { dev } from '$app/env'
     import { createTable, Render, createRender } from '@humanspeak/svelte-headless-table'
     import { addSubRows, addExpandedRows } from '@humanspeak/svelte-headless-table/plugins'
-    import { createSamples } from '$lib/utils/createSamples'
+    import { createSamples } from '#lib/utils/createSamples.js'
     import ExpandIndicator from './ExpandIndicator.svelte'
 
     const data = createSamples(10, 2, 3, { seed: 6 })

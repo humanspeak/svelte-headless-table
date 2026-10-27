@@ -8,8 +8,8 @@
         type ExampleSection
     } from '@humanspeak/docs-kit'
     import { Keyboard, Pencil, Workflow } from '@lucide/svelte'
-    import { demoCodeSamples } from '$lib/demo-loaders'
-    import EditableTableDefault from '$lib/examples/editable-table/demos/Default.svelte'
+    import { demoCodeSamples } from '#lib/demo-loaders.js'
+    import EditableTableDefault from '#lib/examples/editable-table/demos/Default.svelte'
 
     const breadcrumbs = getBreadcrumbContext()
     const seo = getSeoContext()

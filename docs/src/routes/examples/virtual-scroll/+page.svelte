@@ -8,8 +8,8 @@
         type ExampleSection
     } from '@humanspeak/docs-kit'
     import { Database, Gauge, Layers } from '@lucide/svelte'
-    import { demoCodeSample } from '$lib/demo-loaders'
-    import VirtualScrollDefault from '$lib/examples/virtual-scroll/demos/Default.svelte'
+    import { demoCodeSample } from '#lib/demo-loaders.js'
+    import VirtualScrollDefault from '#lib/examples/virtual-scroll/demos/Default.svelte'
 
     const breadcrumbs = getBreadcrumbContext()
     const seo = getSeoContext()
