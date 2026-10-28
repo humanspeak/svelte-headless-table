@@ -1,0 +1,15 @@
+{
+    "$schema": "https://context7.com/schema/context7.json",
+    "description": "Headless, runes-native table library for Svelte 5: sorting, filtering, pagination, grouping, selection, column resize/order/hide, virtual scroll and data export as composable plugins. Maintained successor to svelte-headless-table.",
+    "excludeFiles": ["CLAUDE.md", "AGENTS.md"],
+    "excludeFolders": ["src", "docs", "tests", "scripts", "static", "dist"],
+    "folders": ["skills"],
+    "projectTitle": "@humanspeak/svelte-headless-table",
+    "rules": [
+        "Import core APIs from '@humanspeak/svelte-headless-table' and plugins from '@humanspeak/svelte-headless-table/plugins', never from the unscoped 'svelte-headless-table' package (Svelte 4, unmaintained).",
+        "v7 has no Svelte stores: pass createTable an array or a getter (createTable(() => items)), never readable()/writable().",
+        "Read the table through current: vm.current.headerRows / pageRows / tableAttrs, row.current.attrs, cell.current.attrs and cell.current.props. <Subscribe>, $pageRows and cell.attrs() were removed in v7.",
+        "Plugin state on vm.pluginStates.<name> is Box-based: read and write .current (pageIndex.current += 1) and assign new arrays or objects instead of mutating.",
+        "Render cells with <Render of={cell.render()} /> and custom content with createRender(Component, props) or createSnippetRender(snippet, args); pass event handlers as on<event> props."
+    ]
+}
