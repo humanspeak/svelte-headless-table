@@ -95,7 +95,7 @@
         "@faker-js/faker": "^10.6.0",
         "@playwright/test": "^1.63.0",
         "@sveltejs/adapter-auto": "^7.0.1",
-        "@sveltejs/kit": "^2.70.3",
+        "@sveltejs/kit": "^3.0.0",
         "@sveltejs/package": "^2.5.8",
         "@sveltejs/vite-plugin-svelte": "^7.3.1",
         "@tanstack/svelte-table": "^9.3.1",
