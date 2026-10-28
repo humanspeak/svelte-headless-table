@@ -25,7 +25,8 @@
         "typescript",
         "sveltekit",
         "customizable",
-        "accessible"
+        "accessible",
+        "tanstack-intent"
     ],
     "homepage": "https://table.svelte.page",
     "bugs": {
@@ -55,7 +56,8 @@
     "files": [
         "dist",
         "!dist/**/*.test.*",
-        "!dist/**/*.spec.*"
+        "!dist/**/*.spec.*",
+        "skills"
     ],
     "scripts": {
         "build": "vite build && npm run package",
