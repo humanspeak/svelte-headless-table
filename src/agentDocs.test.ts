@@ -1,10 +1,8 @@
-import { render, screen } from '@testing-library/svelte'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { renderLlmsPrepend } from '../scripts/llmsPrepend.js'
 import * as lib from './lib/index.js'
 import * as plugins from './lib/plugins/index.js'
-import LlmsExample from './routes/_LlmsExample.svelte'
 
 // Agent-facing docs (the `skills/` folder shipped in the npm package, and the
 // hand-written block prepended to /llms.txt) are read by coding assistants as
@@ -227,44 +225,33 @@ describe('agent doc snippets', () => {
 })
 
 describe('llms.txt prepend', () => {
-    const example = () => readFileSync(join(root, 'src/routes/_LlmsExample.svelte'), 'utf8')
+    const rendered = () => renderLlmsPrepend(prependTemplate(), root)
 
     it('takes the Svelte peer range from package.json instead of hard-coding it', () => {
         expect(prependTemplate()).not.toContain(pkg.peerDependencies.svelte)
         expect(prependTemplate()).toContain('{{sveltePeer}}')
-        expect(renderLlmsPrepend(prependTemplate(), root)).toContain(
-            `svelte: ${pkg.peerDependencies.svelte}`
+        expect(rendered()).toContain(`svelte: ${pkg.peerDependencies.svelte}`)
+    })
+
+    // Code examples drift (the v6 one outlived the v7 release); the docs pages
+    // and skills carry them, and are checked. The prepend states rules and links.
+    it('carries no code examples, only the install command', () => {
+        const fences = [...rendered().matchAll(/^```(\w*)/gm)].map(([, lang]) => lang)
+        expect(fences.filter((lang) => lang !== '' && lang !== 'sh')).toEqual([])
+    })
+
+    it('points agents at the quick start and the shipped skills', () => {
+        expect(rendered()).toContain(
+            'https://table.svelte.page/docs/getting-started/quick-start.md'
         )
+        for (const name of EXPECTED_SKILLS) expect(rendered()).toContain(`\`${name}\``)
     })
 
-    it('inlines the compiled example with public import paths', () => {
-        const rendered = renderLlmsPrepend(prependTemplate(), root)
-        const publicSource = example()
-            .replaceAll("'$lib/plugins/index.js'", "'@humanspeak/svelte-headless-table/plugins'")
-            .replaceAll("'$lib/index.js'", "'@humanspeak/svelte-headless-table'")
-        expect(rendered).toContain(`\`\`\`svelte\n${publicSource.trim()}\n\`\`\``)
-        expect(rendered).not.toContain('$lib')
+    it('leaves no unresolved placeholders', () => {
+        expect(rendered()).not.toContain('{{')
     })
 
-    it('leaves no unresolved placeholders or include markers', () => {
-        const rendered = renderLlmsPrepend(prependTemplate(), root)
-        expect(rendered).not.toMatch(/\{\{|<!-- include:/)
-    })
-
-    it('fails loudly on an unknown placeholder or a missing include', () => {
+    it('fails loudly on an unknown placeholder', () => {
         expect(() => renderLlmsPrepend('{{nope}}', root)).toThrow(/nope/)
-        expect(() =>
-            renderLlmsPrepend('<!-- include: src/routes/_Missing.svelte -->', root)
-        ).toThrow(/_Missing/)
-    })
-
-    it('ships an example that renders a working table', () => {
-        render(LlmsExample)
-        expect(screen.getAllByRole('columnheader').map((th) => th.textContent.trim())).toEqual([
-            'Name',
-            'Role'
-        ])
-        expect(screen.getAllByRole('row')).toHaveLength(3)
-        expect(screen.getByText('1 / 1')).toBeInTheDocument()
     })
 })

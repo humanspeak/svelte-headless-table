@@ -24,12 +24,12 @@ import { writeLlmsPrepend } from '../scripts/llmsPrepend.js'
 import { competitors, ours } from './src/lib/compare-data.js'
 import { docsConfig } from './src/lib/docs-config.js'
 
-// `llms-prepend.md` is a template (Svelte peer range, the compiled example
-// component); render it before the llms plugins read it. Rendering here,
+// `llms-prepend.md` is a template (the Svelte peer range comes from
+// package.json); render it before the llms plugins read it. Rendering here,
 // not in a `buildStart` hook, because Rollup runs `buildStart` in parallel.
 const repoRoot = fileURLToPath(new URL('..', import.meta.url))
 const llmsPrependTemplate = fileURLToPath(new URL('llms-prepend.md', import.meta.url))
-const llmsPrependInputs = [llmsPrependTemplate, join(repoRoot, 'src/routes/_LlmsExample.svelte')]
+const llmsPrependInputs = [llmsPrependTemplate, join(repoRoot, 'package.json')]
 const llmsPrependOutput = '.generated/llms-prepend.md'
 const renderLlmsPrepend = () =>
     writeLlmsPrepend(
@@ -73,7 +73,7 @@ export default defineConfig({
         {
             name: 'llms-prepend-template',
             configureServer(server) {
-                // Re-render on template or example edits; llmsPlugin watches the output.
+                // Re-render on template or package.json edits; llmsPlugin watches the output.
                 server.watcher.add(llmsPrependInputs)
                 server.watcher.on('change', (file) => {
                     if (llmsPrependInputs.includes(file)) renderLlmsPrepend()

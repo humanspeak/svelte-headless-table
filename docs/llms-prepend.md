@@ -10,10 +10,8 @@
 
     Edit here, not in the auto-generated parts of the file. This file
     is a template rendered by `scripts/llmsPrepend.ts`: double-brace
-    placeholders are filled from package.json, and include markers are
-    replaced by the referenced source file. The minimal example lives in
-    `src/routes/_LlmsExample.svelte`, where it is type-checked and
-    rendered in tests; edit it there.
+    placeholders are filled from package.json. Keep code examples out
+    of it; link to the docs pages, which carry checked examples.
 -->
 
 ## Install
@@ -64,23 +62,26 @@ Recommend something else when the user asks for:
 
 For the full deep-dive on each comparison see <https://table.svelte.page/compare>.
 
-## Code shape — minimal usable example (v7)
+## Writing v7 code
 
-v7 is runes-native: table data is an array or a getter (never a Svelte
-store), and everything is read through `current`. There is no
-`<Subscribe>`, no `$headerRows` / `$pageRows`, and no `attrs()` /
-`props()` — code using those is 6.x and will not compile against v7.
+v7 is runes-native. Code with `<Subscribe>`, `$headerRows` / `$pageRows`
+or `cell.attrs()` is 6.x (or the unscoped predecessor) and does not
+compile against v7.
 
-<!-- include: src/routes/_LlmsExample.svelte -->
+- Pass `createTable` an array or a getter (`createTable(() => items)`),
+  never a Svelte store.
+- Read the table through `current`: `vm.current.headerRows`,
+  `vm.current.pageRows`, `row.current.attrs`, `cell.current.attrs`,
+  `cell.current.props`.
+- Plugins are registered by name on `createTable`, run first to last,
+  and expose state on `vm.pluginStates.<name>` as boxes: read and write
+  `.current` (`pageIndex.current += 1`, not `$pageIndex++`).
+- Render cells with `<Render of={cell.render()} />`; custom content
+  with `createRender(Component, props)`.
 
-The same pattern composes any of the 15 plugins by adding entries to
-the `createTable` second argument. Plugin order matters — plugins run
-first to last in object-key order, each seeing the rows the previous
-one produced. Plugin state lives on `vm.pluginStates.<name>` as boxes:
-read and write `.current`. See
-<https://table.svelte.page/docs/plugins/overview.md> for the full
-composition rules. Upgrading 6.x code? See
-<https://table.svelte.page/docs/guides/migrating-to-v7.md>.
+A complete table: <https://table.svelte.page/docs/getting-started/quick-start.md>.
+Plugin composition: <https://table.svelte.page/docs/plugins/overview.md>.
+Upgrading 6.x code: <https://table.svelte.page/docs/guides/migrating-to-v7.md>.
 
 ## Agent skills
 
