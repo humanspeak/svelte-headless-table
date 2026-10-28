@@ -1,7 +1,10 @@
+import { render, screen } from '@testing-library/svelte'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
+import { renderLlmsPrepend } from '../scripts/llmsPrepend.js'
 import * as lib from './lib/index.js'
 import * as plugins from './lib/plugins/index.js'
+import LlmsExample from './routes/_LlmsExample.svelte'
 
 // Agent-facing docs (the `skills/` folder shipped in the npm package, and the
 // hand-written block prepended to /llms.txt) are read by coding assistants as
@@ -48,7 +51,14 @@ const walk = (dir: string): string[] =>
 const skillFiles = () =>
     existsSync(skillsDir) ? walk(skillsDir).filter((f) => f.endsWith('.md')) : []
 
-const agentDocFiles = () => [...skillFiles(), join(root, 'docs/llms-prepend.md')]
+const prependTemplateFile = join(root, 'docs/llms-prepend.md')
+const prependTemplate = () => readFileSync(prependTemplateFile, 'utf8')
+
+// The prepend is checked as rendered, since that is what lands in /llms.txt.
+const agentDocs = () => [
+    ...skillFiles().map((file) => ({ file, text: readFileSync(file, 'utf8') })),
+    { file: prependTemplateFile, text: renderLlmsPrepend(prependTemplate(), root) }
+]
 
 interface Snippet {
     file: string
@@ -58,8 +68,8 @@ interface Snippet {
     legacy: boolean
 }
 
-const snippetsOf = (file: string): Snippet[] => {
-    const lines = readFileSync(file, 'utf8').split('\n')
+const snippetsOf = ({ file, text }: { file: string; text: string }): Snippet[] => {
+    const lines = text.split('\n')
     const snippets: Snippet[] = []
     for (let i = 0; i < lines.length; i++) {
         const open = /^\s*```(\w*)/.exec(lines[i])
@@ -84,7 +94,7 @@ const snippetsOf = (file: string): Snippet[] => {
 
 const CODE_LANGS = ['ts', 'js', 'svelte', 'typescript', 'javascript']
 const currentSnippets = () =>
-    agentDocFiles()
+    agentDocs()
         .flatMap(snippetsOf)
         .filter((s) => !s.legacy && CODE_LANGS.includes(s.lang))
 
@@ -213,5 +223,48 @@ describe('agent doc snippets', () => {
             }
         }
         expect(problems).toEqual([])
+    })
+})
+
+describe('llms.txt prepend', () => {
+    const example = () => readFileSync(join(root, 'src/routes/_LlmsExample.svelte'), 'utf8')
+
+    it('takes the Svelte peer range from package.json instead of hard-coding it', () => {
+        expect(prependTemplate()).not.toContain(pkg.peerDependencies.svelte)
+        expect(prependTemplate()).toContain('{{sveltePeer}}')
+        expect(renderLlmsPrepend(prependTemplate(), root)).toContain(
+            `svelte: ${pkg.peerDependencies.svelte}`
+        )
+    })
+
+    it('inlines the compiled example with public import paths', () => {
+        const rendered = renderLlmsPrepend(prependTemplate(), root)
+        const publicSource = example()
+            .replaceAll("'$lib/plugins/index.js'", "'@humanspeak/svelte-headless-table/plugins'")
+            .replaceAll("'$lib/index.js'", "'@humanspeak/svelte-headless-table'")
+        expect(rendered).toContain(`\`\`\`svelte\n${publicSource.trim()}\n\`\`\``)
+        expect(rendered).not.toContain('$lib')
+    })
+
+    it('leaves no unresolved placeholders or include markers', () => {
+        const rendered = renderLlmsPrepend(prependTemplate(), root)
+        expect(rendered).not.toMatch(/\{\{|<!-- include:/)
+    })
+
+    it('fails loudly on an unknown placeholder or a missing include', () => {
+        expect(() => renderLlmsPrepend('{{nope}}', root)).toThrow(/nope/)
+        expect(() =>
+            renderLlmsPrepend('<!-- include: src/routes/_Missing.svelte -->', root)
+        ).toThrow(/_Missing/)
+    })
+
+    it('ships an example that renders a working table', () => {
+        render(LlmsExample)
+        expect(screen.getAllByRole('columnheader').map((th) => th.textContent.trim())).toEqual([
+            'Name',
+            'Role'
+        ])
+        expect(screen.getAllByRole('row')).toHaveLength(3)
+        expect(screen.getByText('1 / 1')).toBeInTheDocument()
     })
 })

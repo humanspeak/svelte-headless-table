@@ -14,12 +14,30 @@ import { sveltekit } from '@sveltejs/kit/vite'
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 import tailwindcss from '@tailwindcss/vite'
 import { mdsvex } from 'mdsvex'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { createHighlighter } from 'shiki'
 import { defineConfig } from 'vitest/config'
 
 import rootPkg from '../package.json' with { type: 'json' }
+import { writeLlmsPrepend } from '../scripts/llmsPrepend.js'
 import { competitors, ours } from './src/lib/compare-data.js'
 import { docsConfig } from './src/lib/docs-config.js'
+
+// `llms-prepend.md` is a template (Svelte peer range, the compiled example
+// component); render it before the llms plugins read it. Rendering here,
+// not in a `buildStart` hook, because Rollup runs `buildStart` in parallel.
+const repoRoot = fileURLToPath(new URL('..', import.meta.url))
+const llmsPrependTemplate = fileURLToPath(new URL('llms-prepend.md', import.meta.url))
+const llmsPrependInputs = [llmsPrependTemplate, join(repoRoot, 'src/routes/_LlmsExample.svelte')]
+const llmsPrependOutput = '.generated/llms-prepend.md'
+const renderLlmsPrepend = () =>
+    writeLlmsPrepend(
+        llmsPrependTemplate,
+        fileURLToPath(new URL(llmsPrependOutput, import.meta.url)),
+        repoRoot
+    )
+renderLlmsPrepend()
 
 // Create highlighter instance
 const highlighter = await createHighlighter({
@@ -50,6 +68,16 @@ export default defineConfig({
             configureServer(server) {
                 // Each docs-kit plugin watches its own inputs through Vite's shared watcher.
                 server.watcher.setMaxListeners(20)
+            }
+        },
+        {
+            name: 'llms-prepend-template',
+            configureServer(server) {
+                // Re-render on template or example edits; llmsPlugin watches the output.
+                server.watcher.add(llmsPrependInputs)
+                server.watcher.on('change', (file) => {
+                    if (llmsPrependInputs.includes(file)) renderLlmsPrepend()
+                })
             }
         },
         // `extraPages` injects the dynamic `/compare/<slug>` routes — which
@@ -84,7 +112,7 @@ export default defineConfig({
             siteUrl: docsConfig.url,
             pkgName: rootPkg.name,
             description: docsConfig.description,
-            prepend: 'llms-prepend.md',
+            prepend: llmsPrependOutput,
             comparisons: {
                 ours,
                 competitors,
@@ -94,7 +122,7 @@ export default defineConfig({
         llmsFullPlugin({
             siteUrl: docsConfig.url,
             pkgName: rootPkg.name,
-            prepend: 'llms-prepend.md'
+            prepend: llmsPrependOutput
         }),
         socialCardsPlugin({
             npmPackage: docsConfig.npmPackage,
